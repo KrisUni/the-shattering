@@ -18,18 +18,26 @@ const ENEMY_DISTANCE := 30.0
 const APPROACH_DISTANCE := 20.0
 # A tap: held this many physics frames, far shorter than a swing or a hold.
 const TAP_FRAMES := 3
-# How many physics frames after the enemy begins to wind up that a Roll must be tapped, at
-# the latest, for his untouchable window to cover the enemy's active frames. The tap is
-# held TAP_FRAMES and the Roll's window opens a few frames into it; this puts the middle of
-# the window at the middle of the enemy's active frames. Worked out from the tuning data
-# files, and checked by the test itself.
-const ROLL_LEAD_FRAMES := 6
+# In physics frames. A time times the frames a second is a whole number of frames that can
+# land a hair above it (0.05 s at 60 frames a second is 3.0000000000000004), so a time is
+# taken to be that many frames when it is within this much of it.
+const FRAME_SLACK := 0.001
+# In seconds. How much later than in the data file the Roll's untouchable window is made to
+# open in the second run of the Roll test.
+const WINDOW_OPENS_LATER_BY := 0.05
 # The most physics frames any wait in these tests may take.
 const WAIT_FRAME_LIMIT := 240
 # The most Light swings Almos is given to kill the enemy.
 const MOST_SWINGS := 10
 # How many physics frames the test runs after the exchange it is about, to let it play out.
 const SETTLE_FRAMES := 10
+
+# How much later the Roll's untouchable window opens than in the data file: not at all, and by
+# WINDOW_OPENS_LATER_BY. The tap must be timed from the data in both.
+var window_params = ParameterFactory.named_parameters(
+	["opens_later_by"],
+	[[0.0], [WINDOW_OPENS_LATER_BY]],
+)
 
 var _almos_input: AlmosInput
 var _rig: EnemyRig
@@ -81,14 +89,15 @@ func test_it_walks_up_to_almos_and_its_first_strike_hits_him() -> void:
 	assert_almost_eq(almos.health.current, almos.tuning.health_maximum - attack.damage, TOLERANCE)
 
 
-func test_it_does_not_hit_almos_while_he_is_untouchable_in_a_roll() -> void:
+func test_it_does_not_hit_almos_while_he_is_untouchable_in_a_roll(params = use_parameters(window_params)) -> void:
 	var attack := _rig.tuning_with().attack
 	# A Roll that carries him nowhere, so that he stays under the swing for all of it.
 	var rolling_on_the_spot := (load(AlmosInput.TUNING_PATH) as PlayerTuning).duplicate() as PlayerTuning
 	rolling_on_the_spot.roll_distance = 0.0
+	rolling_on_the_spot.roll_untouchable_start += params.opens_later_by
 	var almos = _spawn_fight(rolling_on_the_spot)
 	_rig.sample_also("untouchable", func(): return almos.untouchable)
-	await _rig.wait_frames(attack.startup_frames - ROLL_LEAD_FRAMES)
+	await _rig.wait_frames(_frames_to_wait_before_tapping_roll(attack, rolling_on_the_spot))
 
 	await _tap(&"roll")
 	await _rig.wait_frames(attack.active_frames + SETTLE_FRAMES)
@@ -171,6 +180,42 @@ func _aim_almos_swing_at_the_first_active_frame_of_the_enemy() -> void:
 	var attack := _rig.tuning_with().attack
 	await _rig.wait_frames(attack.startup_frames - swing.startup_frames)
 	await _tap(&"attack_light")
+
+
+# How many physics frames to wait after the enemy begins to wind up before tapping Roll, so
+# that Almos's untouchable window covers the enemy's active frames. It is worked out from the
+# enemy's attack and Almos's tuning, counting frames from 0, the one the enemy begins to wind
+# up in.
+#
+#   The enemy's Hitbox is on, and hurts, in frames startup .. startup + active - 1.
+#
+#   A tap is TAP_FRAMES of the button held. After n waits the test is at the start of frame
+#   n - 1, so a tap made then is first seen in frame n - 1, let go of TAP_FRAMES frames later,
+#   and the Roll starts in the frame it is let go of, with its first step: n - 1 + TAP_FRAMES.
+#   Called R, so n = R - TAP_FRAMES + 1.
+#
+#   After frame f the Roll has taken k = f - R + 1 steps, one frame long each. He is
+#   untouchable once k steps last as long as roll_untouchable_start, up to but not including
+#   the k that last as long as that plus roll_untouchable_duration:
+#       k_open  = ceil(roll_untouchable_start * frames a second)
+#       k_close = ceil((roll_untouchable_start + roll_untouchable_duration) * frames a second)
+#   so he is untouchable in frames R - 1 + k_open .. R - 1 + k_close - 1.
+#
+#   The window covers the strike when it opens by the first active frame and closes no sooner
+#   than the last: that bounds R from above and below. R is taken in the middle of what is
+#   allowed, so that a frame either way would still be covered. The test itself checks that he
+#   is untouchable in every frame the Hitbox is on.
+func _frames_to_wait_before_tapping_roll(attack: AttackData, player: PlayerTuning) -> int:
+	var frames_a_second := float(Engine.physics_ticks_per_second)
+	var k_open := ceili(player.roll_untouchable_start * frames_a_second - FRAME_SLACK)
+	var k_close := ceili((player.roll_untouchable_start + player.roll_untouchable_duration) * frames_a_second - FRAME_SLACK)
+	var first_active := attack.startup_frames
+	var last_active := attack.startup_frames + attack.active_frames - 1
+	var latest_roll_start := first_active + 1 - k_open
+	var earliest_roll_start := last_active + 2 - k_close
+	assert_lte(earliest_roll_start, latest_roll_start, "his untouchable window should be at least as long as the enemy's active frames, or no Roll can cover them")
+	var roll_start := floori((earliest_roll_start + latest_roll_start) / 2.0)
+	return roll_start - TAP_FRAMES + 1
 
 
 # Presses this button and lets go again after a few frames.
