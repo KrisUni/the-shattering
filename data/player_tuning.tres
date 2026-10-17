@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="PlayerTuning" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/player_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+walk_speed = 120.0
