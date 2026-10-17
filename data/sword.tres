@@ -35,6 +35,7 @@ active_frames = 6
 recovery_frames = 26
 damage = 25.0
 stamina_cost = 30.0
+charge_start_frames = 8
 charge_frames_max = 60
 charged_damage = 60.0
 charged_stamina_cost = 70.0

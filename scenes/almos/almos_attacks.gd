@@ -4,11 +4,13 @@ extends Node
 ## button presses to the Hitbox being switched on and off. Every number comes from the
 ## Weapon's data.
 ##
-## A swing is startup, active and recovery frames one after the other. Charging a Heavy
-## attack comes before its swing. From the first frame of the charge or the swing until its
-## recovery ends he is committed: Almos can do nothing else. A press of an attack button in
-## the last frames of a recovery is kept, and the attack it asked for begins as the recovery
-## ends. A press at any other time during an attack is lost.
+## A swing is startup, active and recovery frames one after the other. Holding the Heavy
+## attack button comes before its swing, and the charge only starts building once the button
+## has been held for the charge start, so a quick tap gives the plain Heavy attack. From the
+## first frame of the hold or the swing until its recovery ends he is committed: Almos can
+## do nothing else. A press of an attack button in the last frames of a recovery is kept, and
+## the attack it asked for begins as the recovery ends. A press at any other time during an
+## attack is lost.
 
 ## Which attack button a press was of.
 enum Press { NONE, LIGHT, HEAVY }
@@ -27,7 +29,8 @@ var attacking: bool:
 	get:
 		return _frame >= 0
 
-## Whether a Heavy attack is being charged: the button is held and the swing has not begun.
+## Whether he is holding the Heavy attack button for a swing that has not begun. The charge
+## itself only builds once the button has been held for the charge start.
 var charging: bool:
 	get:
 		return _charging
@@ -48,7 +51,9 @@ var _frame := -1
 var _swing: AttackData
 var _light_swing := 0
 var _charging := false
-var _charge_frames := 0
+# How many physics frames the Heavy attack button has been held, the frame of the press
+# included.
+var _frames_held := 0
 # The press kept in the buffer window for the end of the swing under way, if any.
 var _queued := Press.NONE
 
@@ -114,20 +119,25 @@ func _begin_charge() -> void:
 	if stamina.current <= 0.0:
 		return
 	_charging = true
-	_charge_frames = 0
+	_frames_held = 0
 	_light_swing = 0
 
 
-# Charging goes on for as long as the button is held, up to the full charge, and the swing
-# begins when it is let go or the charge is full.
+# The button is held for as long as it stays down, up to the full charge, and the swing
+# begins when it is let go or the charge is full. What the charge has built then depends on
+# how long it was held.
 func _charge(aim: Vector2) -> void:
 	var heavy := weapon.heavy_attack
-	if Input.is_action_pressed(&"attack_heavy") and _charge_frames < heavy.charge_frames_max:
-		_charge_frames += 1
+	if Input.is_action_pressed(&"attack_heavy") and _frames_held < heavy.charge_frames_max:
+		_frames_held += 1
 		return
 	_charging = false
-	# Damage and cost grow in a straight line from the uncharged to the fully charged ones.
-	var charge := float(_charge_frames) / heavy.charge_frames_max
+	# Nothing is charged until the button has been held for the charge start, so a tap gives
+	# the plain Heavy attack. From there damage and cost grow in a straight line from the
+	# plain ones to those of a full charge, which comes when the button has been held for
+	# charge_frames_max.
+	var built := float(_frames_held - heavy.charge_start_frames)
+	var charge := clampf(built / (heavy.charge_frames_max - heavy.charge_start_frames), 0.0, 1.0)
 	if stamina.spend(lerpf(heavy.stamina_cost, heavy.charged_stamina_cost, charge)):
 		_begin_swing(heavy, lerpf(heavy.damage, heavy.charged_damage, charge), aim)
 

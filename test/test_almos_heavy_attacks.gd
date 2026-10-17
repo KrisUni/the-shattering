@@ -7,7 +7,9 @@ extends GutTest
 ## arithmetic, never from how the code works them out.
 ##
 ## How long the button was held is read from the samples: the number of them that show him
-## charging is the number of physics frames the Heavy attack was charged for.
+## charging is the number of physics frames the button was held for, which is not the same
+## as how much charge it built: that starts only once the button has been held for the
+## charge start, so a quick tap builds none.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const AttackRig := preload("res://test/helpers/attack_rig.gd")
@@ -17,6 +19,8 @@ const WEAPON_PATH := AlmosInput.WEAPON_PATH
 const SETTLE_FRAMES := AlmosInput.SETTLE_FRAMES
 # A tap: held this many physics frames, far shorter than a swing or a charge.
 const TAP_FRAMES := 3
+# The key the Heavy attack button is pressed with when a test needs a real key event.
+const HEAVY_KEY := KEY_K
 # How many physics frames a test charges for when the amount does not matter, short of a
 # full charge.
 const SOME_CHARGE_FRAMES := 20
@@ -44,8 +48,22 @@ var heavy_binding_params = ParameterFactory.named_parameters(
 	],
 )
 
-# How much of the full charge the button is held for before it is let go.
-var charge_fraction_params = [0.25, 0.5, 0.75]
+# How many physics frames the button is held for when it is let go before the charge starts:
+# a single frame, a few, the last one before the charge start, and the charge start itself,
+# which has built nothing yet. Each is worked out from the data file when the test runs.
+var short_hold_params = [1, TAP_FRAMES, _heavy_data().charge_start_frames - 1, _heavy_data().charge_start_frames]
+
+# How many physics frames the button is held for when it is let go part way up the charge:
+# just past the charge start, half way between it and the full charge, and one short of the
+# full charge. Each is worked out from the data file when the test runs.
+var partial_hold_params = ParameterFactory.named_parameters(
+	["where", "frames"],
+	[
+		["just past the charge start", _heavy_data().charge_start_frames + 1],
+		["half way up", _heavy_data().charge_start_frames + (_heavy_data().charge_frames_max - _heavy_data().charge_start_frames) / 2],
+		["one short of the full charge", _heavy_data().charge_frames_max - 1],
+	],
+)
 
 var _almos_input: AlmosInput
 var _rig: AttackRig
@@ -61,24 +79,27 @@ func after_each() -> void:
 	_almos_input.release_everything()
 
 
-func test_a_heavy_tap_hits_for_the_uncharged_damage_after_its_startup_frames_and_costs_the_uncharged_stamina() -> void:
+func test_letting_go_before_the_charge_starts_gives_the_plain_heavy_attack(frames = use_parameters(short_hold_params)) -> void:
 	var heavy := _weapon().heavy_attack
+	assert_gt(frames, 0, "the button should be held for some frames")
+	assert_true(frames <= heavy.charge_start_frames, "the button should be let go by the time the charge starts")
 	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
 	await _rig.wait_frames(SETTLE_FRAMES)
 	var before: float = _rig.almos.stamina.current
 
-	await _tap_heavy()
+	await _hold_heavy_for(frames)
+	await _wait_for_the_swing_to_begin()
 	await _rig.wait_frames(heavy.startup_frames + heavy.active_frames + SETTLE_FRAMES)
 
-	assert_eq(_frames_charged(), 0, "a tap this short should build no charge")
+	assert_eq(_frames_held(), frames, "frames the button was held for: the test should have held it as long as it meant to")
 	var begun := _rig.first_sample_where("attacking")
 	assert_gt(begun, 0, "the swing should have begun")
-	assert_almost_eq(_rig.samples[begun].stamina, before - heavy.stamina_cost, STAMINA_TOLERANCE, "stamina spent as the swing begins")
+	assert_almost_eq(_rig.samples[begun].stamina, before - heavy.stamina_cost, STAMINA_TOLERANCE, "held for %d frames: stamina spent as the swing begins" % frames)
 	var hits := _rig.hits()
-	assert_eq(hits.size(), 1, "the target should have been hit once")
+	assert_eq(hits.size(), 1, "held for %d frames: the target should have been hit once" % frames)
 	if hits.is_empty():
 		return
-	assert_almost_eq(hits[0].damage, heavy.damage, HEALTH_TOLERANCE)
+	assert_almost_eq(hits[0].damage, heavy.damage, HEALTH_TOLERANCE, "held for %d frames: damage" % frames)
 	assert_eq(hits[0].sample - begun, heavy.startup_frames, "frames after the swing begins that the hit lands")
 
 
@@ -94,11 +115,11 @@ func test_holding_the_heavy_button_charges_to_the_maximum_and_the_swing_comes_ou
 	await _rig.wait_frames(heavy.startup_frames + heavy.active_frames + SETTLE_FRAMES)
 
 	assert_true(Input.is_action_pressed(&"attack_heavy"), "the button should still be held")
-	assert_eq(_frames_charged(), heavy.charge_frames_max, "frames he charged for before the swing came out")
+	assert_eq(_frames_held(), heavy.charge_frames_max, "frames the button was held for before the swing came out")
 	# Holding on past the swing does not start another charge.
 	await _wait_for_the_swing_to_end()
 	await _rig.wait_frames(heavy.charge_frames_max)
-	assert_eq(_frames_charged(), heavy.charge_frames_max, "he should not charge again while the button is still held")
+	assert_eq(_frames_held(), heavy.charge_frames_max, "he should not start another charge while the button is still held")
 	var begun := _rig.first_sample_where("attacking")
 	assert_almost_eq(_rig.samples[begun].stamina, before - heavy.charged_stamina_cost, STAMINA_TOLERANCE, "stamina spent as the swing begins")
 	var hits := _rig.hits()
@@ -107,28 +128,50 @@ func test_holding_the_heavy_button_charges_to_the_maximum_and_the_swing_comes_ou
 		assert_almost_eq(hits[0].damage, heavy.charged_damage, HEALTH_TOLERANCE)
 
 
-func test_letting_go_part_way_through_the_charge_hits_and_costs_in_proportion(fraction = use_parameters(charge_fraction_params)) -> void:
+func test_letting_go_part_way_up_the_charge_hits_and_costs_in_proportion(params = use_parameters(partial_hold_params)) -> void:
 	var heavy := _weapon().heavy_attack
-	var charge := roundi(heavy.charge_frames_max * fraction)
+	var frames: int = params.frames
+	assert_gt(frames, heavy.charge_start_frames, "the button should be held past the charge start")
+	assert_lt(frames, heavy.charge_frames_max, "the button should be let go before the charge is full")
 	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
 	await _rig.wait_frames(SETTLE_FRAMES)
 	var before: float = _rig.almos.stamina.current
 
-	_almos_input.press_action(&"attack_heavy")
-	await _wait_until_charged_for(charge)
-	_almos_input.release_action(&"attack_heavy")
+	await _hold_heavy_for(frames)
 	await _wait_for_the_swing_to_begin()
 	await _rig.wait_frames(heavy.startup_frames + heavy.active_frames + SETTLE_FRAMES)
 
-	assert_eq(_frames_charged(), charge, "frames he charged for before the swing came out")
-	var expected_damage := _damage_after(heavy, charge)
-	var expected_cost := _cost_after(heavy, charge)
+	assert_eq(_frames_held(), frames, "frames the button was held for: the test should have held it as long as it meant to")
+	var expected_damage := _damage_after(heavy, frames)
+	var expected_cost := _cost_after(heavy, frames)
+	assert_gt(expected_damage, heavy.damage, "%s: a partial charge should hit harder than none" % params.where)
+	assert_lt(expected_damage, heavy.charged_damage, "%s: a partial charge should hit softer than a full one" % params.where)
 	var begun := _rig.first_sample_where("attacking")
-	assert_almost_eq(_rig.samples[begun].stamina, before - expected_cost, STAMINA_TOLERANCE, "stamina spent as the swing begins")
+	assert_almost_eq(_rig.samples[begun].stamina, before - expected_cost, STAMINA_TOLERANCE, "%s: stamina spent as the swing begins" % params.where)
+	var hits := _rig.hits()
+	assert_eq(hits.size(), 1, "%s: the target should have been hit once" % params.where)
+	if not hits.is_empty():
+		assert_almost_eq(hits[0].damage, expected_damage, HEALTH_TOLERANCE, "%s: damage" % params.where)
+
+
+func test_half_way_between_the_charge_start_and_the_full_charge_hits_and_costs_the_average_of_the_two() -> void:
+	var heavy := _weapon().heavy_attack
+	var ramp := heavy.charge_frames_max - heavy.charge_start_frames
+	assert_eq(ramp % 2, 0, "the frames from the charge start to the full charge should split in half evenly")
+	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
+	await _rig.wait_frames(SETTLE_FRAMES)
+	var before: float = _rig.almos.stamina.current
+
+	await _hold_heavy_for(heavy.charge_start_frames + ramp / 2)
+	await _wait_for_the_swing_to_begin()
+	await _rig.wait_frames(heavy.startup_frames + heavy.active_frames + SETTLE_FRAMES)
+
+	var begun := _rig.first_sample_where("attacking")
+	assert_almost_eq(_rig.samples[begun].stamina, before - (heavy.stamina_cost + heavy.charged_stamina_cost) / 2.0, STAMINA_TOLERANCE, "stamina spent as the swing begins")
 	var hits := _rig.hits()
 	assert_eq(hits.size(), 1, "the target should have been hit once")
 	if not hits.is_empty():
-		assert_almost_eq(hits[0].damage, expected_damage, HEALTH_TOLERANCE)
+		assert_almost_eq(hits[0].damage, (heavy.damage + heavy.charged_damage) / 2.0, HEALTH_TOLERANCE)
 
 
 func test_the_sword_data_makes_the_heavy_attack_slower_and_harder_hitting_and_more_so_when_charged() -> void:
@@ -137,7 +180,8 @@ func test_the_sword_data_makes_the_heavy_attack_slower_and_harder_hitting_and_mo
 	for light in weapon.light_attacks:
 		assert_gt(heavy.startup_frames, light.startup_frames, "the Heavy attack should start up more slowly than every swing of the Light attack")
 		assert_gt(heavy.damage, light.damage, "the Heavy attack should hit harder than every swing of the Light attack")
-	assert_gt(heavy.charge_frames_max, 0, "the Heavy attack should take some time to charge")
+	assert_gt(heavy.charge_start_frames, 0, "the charge should not start the instant the button is pressed")
+	assert_lt(heavy.charge_start_frames, heavy.charge_frames_max, "the charge should start before it is full")
 	assert_gt(heavy.charged_damage, heavy.damage, "a full charge should hit harder")
 	assert_gt(heavy.charged_stamina_cost, heavy.stamina_cost, "a full charge should cost more Stamina")
 
@@ -164,7 +208,7 @@ func test_charging_spends_no_stamina_until_the_swing_comes_out() -> void:
 	var before: float = _rig.almos.stamina.current
 
 	_almos_input.press_action(&"attack_heavy")
-	await _wait_until_charged_for(SOME_CHARGE_FRAMES)
+	await _wait_until_held_for(SOME_CHARGE_FRAMES)
 	_almos_input.release_action(&"attack_heavy")
 	await _wait_for_the_swing_to_begin()
 
@@ -237,7 +281,7 @@ func test_a_heavy_button_held_from_a_light_swing_starts_charging_as_its_recovery
 	await _tap_light()
 	await _rig.wait_to_press_for_swing_frame(_swing_frames(light) - weapon.attack_buffer_frames)
 	_almos_input.press_action(&"attack_heavy")
-	await _wait_until_charged_for(SOME_CHARGE_FRAMES)
+	await _wait_until_held_for(SOME_CHARGE_FRAMES)
 	_almos_input.release_action(&"attack_heavy")
 	await _rig.wait_frames(SETTLE_FRAMES)
 
@@ -317,7 +361,7 @@ func test_he_stands_still_while_charging() -> void:
 	await _rig.wait_frames(SETTLE_FRAMES)
 
 	_almos_input.press_action(&"attack_heavy")
-	await _wait_until_charged_for(SOME_CHARGE_FRAMES)
+	await _wait_until_held_for(SOME_CHARGE_FRAMES)
 	_almos_input.release_action(&"attack_heavy")
 	await _wait_for_the_swing_to_begin()
 
@@ -335,14 +379,14 @@ func test_tapping_roll_while_charging_does_nothing() -> void:
 	var before: float = _rig.almos.stamina.current
 
 	_almos_input.press_action(&"attack_heavy")
-	await _wait_until_charged_for(SOME_CHARGE_FRAMES)
+	await _wait_until_held_for(SOME_CHARGE_FRAMES)
 	await _tap_roll()
-	await _wait_until_charged_for(2 * SOME_CHARGE_FRAMES)
+	await _wait_until_held_for(2 * SOME_CHARGE_FRAMES)
 	_almos_input.release_action(&"attack_heavy")
 	await _wait_for_the_swing_to_begin()
 
 	assert_eq(_rig.first_sample_where("rolling"), -1, "he should not roll while charging")
-	assert_eq(_frames_charged(), 2 * SOME_CHARGE_FRAMES, "the charge should have gone on through the tap")
+	assert_eq(_frames_held(), 2 * SOME_CHARGE_FRAMES, "the button should have stayed held through the tap")
 	var begun := _rig.first_sample_where("attacking")
 	assert_almost_eq(_rig.samples[begun].stamina, before - _cost_after(heavy, 2 * SOME_CHARGE_FRAMES), STAMINA_TOLERANCE, "only the swing should have been paid for")
 
@@ -354,9 +398,9 @@ func test_a_light_press_while_charging_is_ignored() -> void:
 	var before: float = _rig.almos.stamina.current
 
 	_almos_input.press_action(&"attack_heavy")
-	await _wait_until_charged_for(SOME_CHARGE_FRAMES)
+	await _wait_until_held_for(SOME_CHARGE_FRAMES)
 	await _tap_light()
-	await _wait_until_charged_for(2 * SOME_CHARGE_FRAMES)
+	await _wait_until_held_for(2 * SOME_CHARGE_FRAMES)
 	_almos_input.release_action(&"attack_heavy")
 	await _wait_for_the_swing_to_begin()
 	await _wait_for_the_swing_to_end()
@@ -371,6 +415,12 @@ func _weapon() -> WeaponData:
 	var weapon := load(WEAPON_PATH) as WeaponData
 	assert_not_null(weapon, "the sword data file should load")
 	return weapon
+
+
+# The Heavy attack of the sword data file, for the parameters of tests, which are worked out
+# before any test runs.
+static func _heavy_data() -> HeavyAttackData:
+	return (load(WEAPON_PATH) as WeaponData).heavy_attack
 
 
 func _tuning() -> PlayerTuning:
@@ -388,19 +438,26 @@ func _tuning_with(changes: Dictionary) -> PlayerTuning:
 	return tuning
 
 
-# The damage and the Stamina cost of a Heavy attack charged for this many physics frames,
-# which grow in a straight line from the uncharged ones to those of a full charge.
-func _damage_after(heavy: HeavyAttackData, charge_frames: int) -> float:
-	return heavy.damage + (heavy.charged_damage - heavy.damage) * charge_frames / heavy.charge_frames_max
+# The damage and the Stamina cost of a Heavy attack whose button was held for this many
+# physics frames. Nothing is charged until the button has been held for the charge start;
+# from there the charge grows in a straight line to a full one at charge_frames_max, and
+# damage and cost grow with it from the plain ones to those of a full charge.
+func _damage_after(heavy: HeavyAttackData, frames_held: int) -> float:
+	return heavy.damage + (heavy.charged_damage - heavy.damage) * _charge_after(heavy, frames_held)
 
 
-func _cost_after(heavy: HeavyAttackData, charge_frames: int) -> float:
-	return heavy.stamina_cost + (heavy.charged_stamina_cost - heavy.stamina_cost) * charge_frames / heavy.charge_frames_max
+func _cost_after(heavy: HeavyAttackData, frames_held: int) -> float:
+	return heavy.stamina_cost + (heavy.charged_stamina_cost - heavy.stamina_cost) * _charge_after(heavy, frames_held)
 
 
-# How many physics frames the Heavy attack was charged for: the samples that show him
-# charging.
-func _frames_charged() -> int:
+# How much of a full charge, from 0 to 1, the button held for this many physics frames builds.
+func _charge_after(heavy: HeavyAttackData, frames_held: int) -> float:
+	return clampf(float(frames_held - heavy.charge_start_frames) / (heavy.charge_frames_max - heavy.charge_start_frames), 0.0, 1.0)
+
+
+# How many physics frames the button was held for: the samples that show him charging,
+# which he does from the press, before the charge itself has started.
+func _frames_held() -> int:
 	var frames := 0
 	for sample in _rig.samples:
 		if sample.charging:
@@ -408,14 +465,14 @@ func _frames_charged() -> int:
 	return frames
 
 
-# Waits until he has been charging for this many frames, so that letting go now ends the
-# charge at exactly that many.
-func _wait_until_charged_for(frames: int) -> void:
+# Waits until the button has been held for this many frames, so that letting go now ends the
+# hold at exactly that many.
+func _wait_until_held_for(frames: int) -> void:
 	for i in WAIT_FRAME_LIMIT:
-		if _frames_charged() >= frames:
+		if _frames_held() >= frames:
 			return
 		await get_tree().physics_frame
-	fail_test("he should have charged for %d frames" % frames)
+	fail_test("the button should have been held for %d frames" % frames)
 
 
 func _wait_for_the_swing_to_begin() -> void:
@@ -447,9 +504,19 @@ func _tap_roll() -> void:
 	_almos_input.release_action(&"roll")
 
 
-# Presses the Heavy attack button and lets go again at the next frame, too soon to build
-# any charge.
+# Holds the Heavy attack button down for this many physics frames and lets go, as a keyboard
+# does: with real key events that take effect between two physics frames. A script that
+# presses and releases an action in the same breath gives the game no such frames to see the
+# button down in, which is not how a person taps. The game acts on a press from the physics
+# frame after the one it was made in, so the key is let go one frame later than the frames
+# it is to be held for; the samples show how long it really was held.
+func _hold_heavy_for(frames: int) -> void:
+	_almos_input.press_key(HEAVY_KEY, true)
+	await _rig.wait_frames(frames + 1)
+	_almos_input.release_key(HEAVY_KEY, true)
+
+
+# Taps the Heavy attack button: holds it for a single physics frame, too soon to build any
+# charge.
 func _tap_heavy() -> void:
-	_almos_input.press_action(&"attack_heavy")
-	await _rig.wait_frames(1)
-	_almos_input.release_action(&"attack_heavy")
+	await _hold_heavy_for(1)
