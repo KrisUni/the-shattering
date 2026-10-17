@@ -21,4 +21,3 @@ shape = SubResource("CircleShape2D_body")
 
 [node name="Stamina" type="Node" parent="."]
 script = ExtResource("3_stamina")
-tuning = ExtResource("2_tuning")

@@ -36,8 +36,8 @@ var untouchable: bool:
 
 @export var tuning: PlayerTuning
 
-## What Roll and Sprint spend, and what the Stamina bar shows. In almos.tscn it is
-## given the same tuning data file as Almos.
+## What Roll and Sprint spend, and what the Stamina bar shows. It is given Almos's tuning,
+## so his tuning is the only one to set.
 @onready var stamina: Stamina = $Stamina
 @onready var _placeholder: Polygon2D = $Placeholder
 
@@ -50,6 +50,15 @@ var _roll_button_held_for := 0.0
 # button is let go. Without it, the sliver of Stamina that comes back when the refill
 # pause ends would pay for one frame of Sprint, which would start the pause again.
 var _out_of_breath := false
+
+
+func _enter_tree() -> void:
+	# Done here, not in _ready, so that every node's _ready finds Stamina already filled in
+	# whatever order the nodes are in: the Stamina bar reads it in its _ready. Giving
+	# Stamina its tuning refills it, so it is only given a different one.
+	var own_stamina := $Stamina as Stamina
+	if own_stamina.tuning != tuning:
+		own_stamina.tuning = tuning
 
 
 func _physics_process(delta: float) -> void:

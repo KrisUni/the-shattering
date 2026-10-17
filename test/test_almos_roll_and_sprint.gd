@@ -642,9 +642,7 @@ func _spawn_almos(tuning: PlayerTuning = null) -> Node2D:
 	assert_not_null(scene, "the Almos scene should load")
 	_almos = scene.instantiate()
 	if tuning != null:
-		# In almos.tscn Almos and his Stamina share one tuning data file; so do they here.
 		_almos.tuning = tuning
-		_almos.get_node("Stamina").tuning = tuning
 	add_child_autofree(_almos)
 	_samples.clear()
 	get_tree().physics_frame.connect(_take_sample)
