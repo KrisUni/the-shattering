@@ -20,12 +20,13 @@ const VELOCITY_TOLERANCE := 0.01
 const MEASURED_FRAMES := 5
 # Long enough for a drain of Stamina to show well above rounding error.
 const SPRINT_MEASURED_FRAMES := 10
-# Frames to hold the Roll button for, comfortably past a hold threshold of 12 frames.
-const HOLD_PAST_THRESHOLD_FRAMES := 20
 # How many frames of sprint a test leaves him the Stamina for.
 const SPRINT_FRAMES_LEFT := 6
 # A refill pause short enough that the tests do not spend long waiting it out.
 const SHORT_REFILL_PAUSE := 0.3
+# A refill pause longer than any wait in these tests, for tests that need Stamina to stay
+# where it was left.
+const LONG_REFILL_PAUSE := 10.0
 # How long, in seconds, past the end of the refill pause a test carries on.
 const SECONDS_PAST_PAUSE := 0.3
 # How far, in seconds, either side of the end of the refill pause a test looks.
@@ -49,11 +50,11 @@ var duration_params = ParameterFactory.named_parameters(
 	[[0.2, 12], [0.27, 17]],
 )
 
-# How many physics frames the Roll button is held, standing still, and whether that rolls.
-# At 60 frames per second the hold threshold of 0.2 s is 12 frames.
+# How long the Roll button is held, standing still, as a multiple of the hold threshold,
+# and whether that rolls.
 var press_params = ParameterFactory.named_parameters(
-	["frames", "rolls"],
-	[[8, true], [16, false], [30, false]],
+	["threshold_multiple", "rolls"],
+	[[0.5, true], [1.5, false], [2.5, false]],
 )
 
 # How many physics frames either side of the hold threshold the Roll button is held for,
@@ -103,7 +104,7 @@ func test_tapping_roll_with_nothing_pushed_rolls_the_way_he_faces() -> void:
 
 
 func test_a_roll_costs_the_tuned_stamina_once_at_its_start() -> void:
-	_spawn_almos()
+	_spawn_almos(_tuning_with_long_refill_pause())
 	await wait_physics_frames(SETTLE_FRAMES)
 	var before: float = _almos.stamina.current
 
@@ -117,7 +118,7 @@ func test_a_roll_costs_the_tuned_stamina_once_at_its_start() -> void:
 
 
 func test_tapping_roll_at_zero_stamina_does_nothing() -> void:
-	_spawn_almos()
+	_spawn_almos(_tuning_with_long_refill_pause())
 	_press_action(&"move_right")
 	_almos.stamina.spend(_almos.stamina.maximum)
 	await wait_physics_frames(SETTLE_FRAMES)
@@ -130,7 +131,7 @@ func test_tapping_roll_at_zero_stamina_does_nothing() -> void:
 
 
 func test_a_roll_with_less_stamina_than_it_costs_still_goes_ahead_and_empties_it() -> void:
-	_spawn_almos()
+	_spawn_almos(_tuning_with_long_refill_pause())
 	_almos.stamina.spend(_almos.stamina.maximum - _tuning().roll_stamina_cost / 3.0)
 	await wait_physics_frames(SETTLE_FRAMES)
 
@@ -231,8 +232,8 @@ func test_he_faces_the_way_he_rolls_whatever_is_pushed_during_the_roll() -> void
 
 
 func test_a_tap_early_in_a_roll_is_ignored() -> void:
-	var tuning := _tuning()
-	_spawn_almos()
+	var tuning := _tuning_with_long_refill_pause()
+	_spawn_almos(tuning)
 	_press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	var before: float = _almos.stamina.current
@@ -267,8 +268,8 @@ func test_holding_the_button_through_a_roll_neither_cuts_it_short_nor_makes_him_
 
 
 func test_a_tap_in_the_last_moments_of_a_roll_queues_another_that_starts_as_it_ends() -> void:
-	var tuning := _tuning()
-	_spawn_almos()
+	var tuning := _tuning_with_long_refill_pause()
+	_spawn_almos(tuning)
 	_press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	var before: float = _almos.stamina.current
@@ -302,8 +303,8 @@ func test_taps_in_the_last_moments_of_a_roll_queue_only_one_more_roll() -> void:
 
 
 func test_a_queued_roll_needs_stamina_of_its_own() -> void:
-	var tuning := _tuning()
-	_spawn_almos()
+	var tuning := _tuning_with_long_refill_pause()
+	_spawn_almos(tuning)
 	_press_action(&"move_right")
 	_almos.stamina.spend(_almos.stamina.maximum - tuning.roll_stamina_cost)
 	await wait_physics_frames(SETTLE_FRAMES)
@@ -376,7 +377,7 @@ func test_sprint_starts_once_the_button_has_been_held_for_the_threshold() -> voi
 
 
 func test_holding_roll_only_sprints_while_he_is_pushing_a_direction() -> void:
-	var hold_frames := ceili(_tuning().roll_hold_threshold * Engine.physics_ticks_per_second) + 2 * SETTLE_FRAMES
+	var hold_frames := _frames_to_reach(_tuning().roll_hold_threshold) + 2 * SETTLE_FRAMES
 	_spawn_almos()
 	_press_action(&"roll")
 	await wait_physics_frames(hold_frames)
@@ -434,9 +435,7 @@ func test_a_press_shorter_than_the_hold_threshold_is_a_tap_and_a_longer_one_is_n
 	_spawn_almos()
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	_press_action(&"roll")
-	await wait_physics_frames(params.frames)
-	_release_action(&"roll")
+	await _hold_roll_for(_frames_to_reach(_tuning().roll_hold_threshold * params.threshold_multiple))
 	await wait_physics_frames(SETTLE_FRAMES + 2)
 
 	assert_eq(_first_sample_where("rolling") != -1, params.rolls, "rolled or not")
@@ -479,21 +478,25 @@ func test_stamina_refills_once_he_stops_sprinting_and_the_pause_has_passed() -> 
 	assert_almost_eq(_samples.back().stamina, level_when_stopped, STAMINA_TOLERANCE, "nothing should come back during the pause")
 
 	await _wait_for_samples(ceili((REFILL_MARGIN + SECONDS_PAST_PAUSE) * Engine.physics_ticks_per_second))
-	var seconds_refilling := (_samples.size() - 1 - stopped_at) * _frame_seconds() - tuning.stamina_refill_pause
-	assert_almost_eq(_samples.back().stamina - level_when_stopped, tuning.stamina_refill_rate * seconds_refilling, 2.0 * tuning.stamina_refill_rate * _frame_seconds(), "it should refill at the tuned rate once the pause is over")
+	# The pause began two frames before that sample: with the last frame he sprinted in, and
+	# the one after it, in which he was already walking.
+	var seconds_since_spending := (_samples.size() - 1 - stopped_at + 2) * _frame_seconds()
+	var seconds_refilling := seconds_since_spending - tuning.stamina_refill_pause
+	assert_almost_eq(_samples.back().stamina - level_when_stopped, tuning.stamina_refill_rate * seconds_refilling, STAMINA_TOLERANCE, "it should refill at the tuned rate once the pause is over")
 
 
 func test_he_cannot_start_a_sprint_at_zero_stamina() -> void:
-	_spawn_almos()
+	var tuning := _tuning_with_long_refill_pause()
+	_spawn_almos(tuning)
 	_almos.stamina.spend(_almos.stamina.maximum)
 	_press_action(&"move_right")
 	_press_action(&"roll")
-	await wait_physics_frames(HOLD_PAST_THRESHOLD_FRAMES)
+	await wait_physics_frames(_frames_to_reach(tuning.roll_hold_threshold) + SETTLE_FRAMES)
 	await _wait_for_samples(MEASURED_FRAMES)
 
 	assert_eq(_first_sample_where("sprinting"), -1, "he should not sprint with nothing to spend")
 	var last := _samples.size() - 1
-	assert_almost_eq(_average_velocity(last - MEASURED_FRAMES, MEASURED_FRAMES), Vector2(_tuning().walk_speed, 0.0), Vector2.ONE * VELOCITY_TOLERANCE, "he should walk instead")
+	assert_almost_eq(_average_velocity(last - MEASURED_FRAMES, MEASURED_FRAMES), Vector2(tuning.walk_speed, 0.0), Vector2.ONE * VELOCITY_TOLERANCE, "he should walk instead")
 
 
 func test_he_drops_to_walking_when_stamina_runs_out_mid_sprint_though_the_button_is_still_held() -> void:
@@ -639,6 +642,11 @@ func _tuning() -> PlayerTuning:
 	var tuning := load(TUNING_PATH) as PlayerTuning
 	assert_not_null(tuning, "the player tuning data file should load")
 	return tuning
+
+
+# The tuning data file's numbers, but with a refill pause no test waits out.
+func _tuning_with_long_refill_pause() -> PlayerTuning:
+	return _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE})
 
 
 # The tuning data file's numbers, with these properties changed, for a test that needs a
