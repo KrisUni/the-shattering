@@ -11,35 +11,59 @@ A Nar born to the Path of the Deep, required to wear a Seal. Almos is Marked.
 _Avoid_: Marked one, Deep mage
 
 **Seal**:
-The ring the Marked wear around the neck, which stops them channelling. Almos's Seal breaks at the end of the Base of the tree.
+The ring the Marked wear around the neck, which stops them channelling. Being an unsealed Marked is a crime among the Nar. At the end of the Base of the tree, Emrys breaks Almos's Seal while they are caught together.
 _Avoid_: Ring, neck ring, collar
 
 ### Areas
 
-In play order: Base of the tree → Dungeons → Upper tree → Lands between → Tempest. The areas are fully connected: the player can return to any area, including the arch tree, at any time.
+In play order: Base of the tree → Dungeons → Upper tree or Catacombs → Lands between → Tempest. The areas are fully connected: the player can return to any area, including the arch tree, at any time.
+
+**Open map**:
+An area laid out as one continuous space that the camera follows Almos through. Open maps join each other through doorways or paths with a short load.
+_Avoid_: Overworld, level, zone
+
+**Room**:
+A single screen-sized space inside a building or the Dungeons. Leaving through an edge or door moves the view to the next Room. Smaller buildings within an Open map, and the whole of the Dungeons, are built from Rooms.
+_Avoid_: Screen, chamber
 
 **Base of the tree**:
-The first area, at the foot of the arch tree, where the game begins. Its enemies are creatures that have crept in from the dark, until its last stretch, when Almos is caught and the Nar guards turn on him. It ends when his Seal breaks and he is thrown into the Dungeons.
+The first area, at the foot of the arch tree, where the game begins. It opens with an errand: Emrys, already dying, sends Almos down through the lower tree for something he needs, and the errand teaches movement and combat. Its enemies are creatures that have crept in from the dark, until its last stretch: back from the errand, Almos finds Emrys draining a dying Nar and they are caught together, Emrys breaks Almos's Seal, and the Nar guards turn on Almos. The area ends with Almos thrown into the Dungeons while Emrys escapes.
 _Avoid_: Tree base, roots
 
+**Capture**:
+How the Base of the tree ends. If the Nar guards bring Almos's Health to zero, or he reaches the dead end of the last stretch, they take him to the Dungeons. It is not a death: no Remains are left and he keeps his Experience.
+_Avoid_: Arrest, forced death
+
 **Dungeons**:
-The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with Flame draw. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
+The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in a cell of living roots and gets out by burning through it with his first Flame draw. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with Flame draw. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
 _Avoid_: Prison, cells, roots
 
+**Store room**:
+A guarded Room deep in the Dungeons, off the direct route out, where Almos's confiscated Weapon and Armour are kept. Recovering them is optional. His gear at this point is modest; nothing in it is precious.
+_Avoid_: Armoury, evidence room, stash
+
 **Upper tree**:
-The trunk and canopy of the arch tree, which Almos climbs to escape from the Dungeons and from which he leaves the tree. The area of Jumps and Deadly falls. Its enemies are Nar guards hunting the fugitive, some attacking from higher branches, and creatures of the canopy. He meets no NPCs here.
+The trunk and canopy of the arch tree, reached from the Dungeons by a guarded path. Almos leaves it by climbing down the Great root. The area of Jumps and Deadly falls. Its enemies are Nar guards hunting the fugitive, some attacking from higher branches, and creatures of the canopy. He meets no NPCs here.
 _Avoid_: Canopy, treetop, branches
 
+**Great root**:
+A huge root that arches from the arch tree's canopy down to the ground beyond its gates, linking the Upper tree to the Lands between.
+_Avoid_: Vine, outer root, ladder
+
+**Catacombs**:
+A hidden series of dark corridors leading from the Dungeons underground to the Lands between: an alternative to the Upper tree, not a shortcut, and about as long. Nothing later in the game depends on which route the player took. They are old Nar burial chambers in near-total darkness, lined with resting Undead, so the player must balance each torch between light to see by and a fireball to fight with.
+_Avoid_: Tunnels, crypts, sewers
+
 **Lands between**:
-The ground beyond the arch tree that Almos reaches after his escape, where he meets the Mage teacher and fights the Lesser god. Its enemies are wild creatures of the dark and the Undead.
+The ground beyond the arch tree that Almos reaches after his escape, where he meets the Time Keeper and fights the Lesser god. Its enemies are wild creatures of the dark and the Undead.
 _Avoid_: Wilds, outlands, midlands
 
 **Tempest**:
-The storm-wracked band between the dayside and the Shadowlands; the last of the first areas. Its enemies are storm-hardened creatures and hostile mages, Necro mages among them. Its Wind pushes the player, and Lightning strikes the ground.
+The storm-wracked band between the dayside and the Shadowlands; the last of the first areas. Its enemies are storm-hardened creatures and hostile mages, Necro mages among them. Its Wind pushes the player, and Lightning strikes the ground. Meeting Mani and Cersei here is a story moment, not an ending: the first areas have no closing scene and simply stop where their content runs out.
 _Avoid_: Twilight zone, storm belt
 
 **Vision**:
-The dreamlike place in the Lands between that Almos enters by touching something toxic, where he fights the Lesser god. Dying there leaves his Remains at the entrance in the real world.
+The dreamlike place in the Lands between that Almos enters by touching a field of glowing fungus, where he fights the Lesser god. Dying there leaves his Remains at the entrance in the real world.
 _Avoid_: Dream, trip, hallucination
 
 **Fugitive**:
@@ -57,7 +81,7 @@ _Avoid_: Bolt, thunder strike
 ### Player state
 
 **Health**, **Stamina**, **Mana**:
-The player's three bars. Only Stamina refills by itself; Health and Mana come back only at Checkpoints and from Flasks. Almos has no Mana bar at first: he gains it from the Mage teacher early in the Lands between.
+The player's three bars. Only Stamina refills by itself; Health and Mana come back only at Checkpoints and from Flasks. Almos has no Mana bar at first: he gains it from the Time Keeper early in the Lands between.
 _Avoid_: HP, energy, FP, mana points
 
 **Health Flask**, **Mana Flask**:
@@ -97,8 +121,8 @@ The marker left where the player died, holding all the Experience not yet cashed
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. It is also where Experience is cashed in for Levels and where Armour is changed. Resting at one brings back every ordinary enemy; Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
-_Avoid_: Bonfire, save point, shrine (until a lore name is chosen)
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. It is also where Experience is cashed in for Levels and where Armour is changed. Resting at one brings back every ordinary enemy; Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+_Avoid_: Bonfire, save point, shrine
 
 ### Movement and combat
 
@@ -131,11 +155,11 @@ A slower, harder swing that can be charged by holding and builds more Stagger th
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
-A channelled ability with its own button. Spells normally cost Mana and Stamina, since channelling is physical work. Almos's first Spell is Flame draw; the Mage teacher teaches him Shove, Pull and Deep bolt.
+A channelled ability with its own button. Spells normally cost Mana and Stamina, since channelling is physical work. Almos's first Spell is Flame draw; Shove, Pull and Deep bolt come from the Time Keeper's lessons in channelling.
 _Avoid_: Magic, ability, skill, cast
 
 **Flame draw**:
-Almos's first Spell, discovered in the Dungeons: he channels the fire out of a magical torch and throws it as a single fireball. It costs Health and Stamina instead of Mana and Stamina, and each torch's flame can be drawn only once. That includes a torch carried as a Weapon, which is left as an unlit club. Torches on walls and stands relight whenever enemies return.
+Almos's first Spell, discovered in the Dungeons: he channels the fire out of a magical torch and throws it as a single fireball. It costs Health and Stamina instead of Mana and Stamina, and each torch's flame can be drawn only once. That includes a torch carried as a Weapon, which lights the way while it burns and is left as an unlit club once drawn. Torches on walls and stands relight whenever enemies return.
 _Avoid_: Torch spell, fire grab, flame weapon
 
 **Shove**:
@@ -153,6 +177,10 @@ _Avoid_: Magic missile, mana bolt, blast
 **Storm draw**:
 Catching a Parried Lightning strike and throwing it as a single bolt, in the manner of Flame draw. It costs Stamina only, since the storm supplies the power. A caught bolt lasts only a few seconds before it fades.
 _Avoid_: Lightning catch, bolt throw, thunder parry
+
+**Fire**:
+Burning started by a fireball. Anything flammable, such as living roots, barrels, curtains, wooden doors or dry fungus, catches and spreads it to flammable things nearby. Fire hurts anyone standing in it, Almos included, and a burning Hiding spot forces him out. Burnt Hiding spots and fungus come back whenever enemies return; anything burnt that blocked a path stays open for good.
+_Avoid_: Flames, burning, blaze
 
 **Roll**:
 The player's preferred defence: a quick evasive move in any direction that costs stamina and briefly makes the player untouchable.
@@ -217,8 +245,8 @@ A young Marked child in the Base of the tree, on whom Emrys draws to stay alive.
 _Avoid_: The child, the Marked child
 
 **Time Keeper**:
-A dying Time Keeper met in the Lands between, who tells Almos of the lost city and its memory tree.
-_Avoid_: The old one, the keeper
+A dying Time Keeper met early in the Lands between, before the Lesser god. The Time Keeper is also Almos's teacher: gives him his Mana bar and teaches him to channel, meaning control, breath, intent and cost. Shove, Pull and Deep bolt are what that control becomes through Almos's own Path. The Time Keeper also tells him of the lost city and its memory tree before dying.
+_Avoid_: Mage teacher, mentor, the old one, the keeper
 
 **Mani**:
 A wind-casting mage met in the Tempest.
@@ -228,22 +256,38 @@ _Avoid_: The storm mage
 Mani's ally, a healer, met in the Tempest.
 _Avoid_: The healer
 
-**Mage teacher**:
-The mage Almos meets early in the Lands between, who gives him his Mana bar and teaches him Shove, Pull and Deep bolt before he faces the Lesser god.
-_Avoid_: Mentor, master, trainer
-
 ### Enemies
+
+**Pursuit**:
+An enemy chasing the player once it has noticed him. A pursuing enemy follows him through a Room's exit after a short delay. Pursuit ends at once when the player gets into a Hiding spot while out of the enemy's Sight, or after he has stayed out of its Sight long enough. The enemy then returns to its post and slowly recovers its Health.
+_Avoid_: Aggro, agro, alert, hunting
+
+**Sight**:
+The cone in front of an enemy within which it can notice the player. The cone shrinks in darkness, and a torch put out with Flame draw darkens its surroundings.
+_Avoid_: Vision (that is the dream place), line of sight, view cone, detection
+
+**Noise**:
+The sound the player makes by Sprinting, Rolling and fighting; walking makes none.
+_Avoid_: Sound, loudness
+
+**Sound hunter**:
+A creature that notices the player by Noise instead of Sight, so darkness does not help against it.
+_Avoid_: Blind hunter, listener
+
+**Hiding spot**:
+Any place common sense says a person could hide, such as a barrel, under a bed or behind a curtain. If an enemy sees the player get in, it drags him out with an Unblockable grab.
+_Avoid_: Cover, stealth spot, hidey-hole
 
 **Boss**:
 A unique enemy fought only at a story turning point. Once killed it stays dead. The only Boss in the first areas is the Lesser god, in the Lands between.
 _Avoid_: Miniboss, elite, guardian
 
 **Lesser god**:
-The minor deity Almos meets in the Vision in the Lands between, who takes his ability to sleep in a trade; the first Boss.
+The minor deity Almos meets in the Vision in the Lands between; the first Boss. It offers him a truth in exchange for his ability to sleep, and will not let him leave the Vision without a bargain; refusing only brings the offer back. Once he agrees and the trade is made, it still refuses to let him leave. The Boss fight is his escape from the Vision. The trade happens once; on later attempts the god greets him briefly and the fight begins.
 _Avoid_: Dream god, the god
 
 **Undead**:
-A mage who channelled beyond their physical capacity until no humanity was left. Most stand motionless; some wake and fight.
+A body still animated by the magical energy left in it after its mage overcast and died; the person is gone. Most stand motionless; now and then one wakes by pure chance, with no pattern, and fights. A waking Undead always gives a clear warning and takes a moment to rise before it can attack.
 _Avoid_: Zombie, hollow, revenant
 
 **Necro mage**:
