@@ -60,7 +60,7 @@ Agents never merge.
 
 ## Verification
 
-Tests use GUT and run headless through `scripts/test.sh`, which runs the headless import pass before every run (about 5 seconds, so a new `class_name` is always registered) and fails the run if GUT skipped a test script because it would not load. `GODOT` must point at a Godot 4.7 binary (it defaults to `godot` on PATH).
+Tests use GUT and run headless through `scripts/test.sh`, which runs the headless import pass before every run (about 5 seconds, so a new `class_name` is always registered) and fails the run if GUT skipped a test script because it would not load. `GODOT` must point at a Godot 4.7 binary (it defaults to `godot` on PATH). The script runs Godot at a fixed 60 frames a second, so the suite takes seconds and no test depends on wall-clock time. Separately, GUT would otherwise start a test inside the physics frame the previous test ended in, so a test script that puts physics-processing nodes in the tree and reads what happens frame by frame begins its `before_each` by awaiting a process frame, which starts each test between two physics frames; a plain unit test such as `test_stamina.gd` does not need it.
 
 | Area | Guide | Narrow test | Full suite |
 | --- | --- | --- | --- |

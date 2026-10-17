@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Runs the GUT suite headless: the whole suite, or one test file passed as the
-# first argument (res://test/test_x.gd, or a path relative to the repository root).
+# Runs the GUT suite headless at a fixed 60 frames a second: the whole suite, or
+# one test file passed as the first argument (res://test/test_x.gd, or a path
+# relative to the repository root). The fixed frame rate lets physics step as
+# fast as it can, so the suite takes seconds and no test depends on wall-clock time.
 # GODOT must point at a Godot 4.7 binary; it defaults to `godot` on PATH.
 #
 # Exit status: GUT's own (0 when everything passes, non-zero when a test fails),
@@ -21,7 +23,15 @@ if ! import_log="$("$GODOT" --headless --path "$ROOT" --import 2>&1)"; then
 	exit 1
 fi
 
-args=(--headless --path "$ROOT" -s addons/gut/gut_cmdln.gd)
+# --fixed-fps 60 (a Godot option, so it comes before -s) makes every main-loop
+# iteration advance exactly one physics frame and run as fast as it can instead
+# of waiting for the clock, so the suite takes seconds and no test depends on
+# wall-clock time. That holds because 60 matches the project's physics tick rate
+# (Godot's default, physics/common/physics_ticks_per_second, which project.godot
+# does not set). Keep the two equal: if the tick rate ever changes, change this
+# flag with it. -gpaint_after=0 (a GUT option) stops GUT from inserting a
+# frame between tests based on how much wall-clock time has passed.
+args=(--headless --fixed-fps 60 --path "$ROOT" -s addons/gut/gut_cmdln.gd -gpaint_after=0)
 if [[ $# -gt 0 ]]; then
 	test_file="$1"
 	[[ "$test_file" == res://* ]] || test_file="res://${test_file#./}"
