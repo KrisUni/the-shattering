@@ -541,6 +541,33 @@ func test_tapping_the_space_key_rolls() -> void:
 	assert_almost_eq(_roll_displacement(), Vector2.DOWN * _tuning().roll_distance, Vector2.ONE * POSITION_TOLERANCE)
 
 
+func test_a_tap_pressed_and_let_go_within_one_physics_frame_still_rolls() -> void:
+	_spawn_almos()
+	await wait_physics_frames(SETTLE_FRAMES)
+
+	# Both events are flushed together, so no physics frame ever sees the key down.
+	_press_key(KEY_SPACE)
+	_release_everything()
+	await _wait_for_the_roll_to_finish()
+
+	assert_almost_eq(_roll_displacement(), Vector2.DOWN * _tuning().roll_distance, Vector2.ONE * POSITION_TOLERANCE)
+
+
+func test_letting_go_and_pressing_again_within_one_physics_frame_still_ends_the_first_press() -> void:
+	_spawn_almos()
+	await wait_physics_frames(SETTLE_FRAMES)
+	_press_key(KEY_SPACE)
+	await wait_physics_frames(TAP_FRAMES)
+
+	# The button is up and down again before the next physics frame, so it is never seen up.
+	_release_everything()
+	_press_key(KEY_SPACE)
+	Input.flush_buffered_events()
+	await _wait_for_the_roll_to_finish()
+
+	assert_almost_eq(_roll_displacement(), Vector2.DOWN * _tuning().roll_distance, Vector2.ONE * POSITION_TOLERANCE)
+
+
 func test_tapping_the_bottom_right_face_button_of_a_pad_rolls() -> void:
 	_spawn_almos()
 	await wait_physics_frames(SETTLE_FRAMES)

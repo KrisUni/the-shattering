@@ -89,14 +89,21 @@ func _face(direction: Vector2) -> void:
 # The button is polled every frame, rather than listening for its events, so that it
 # reads the same whether it was pressed by a key, a pad or an action press. A press let
 # go before the hold threshold is a tap. A longer one was a hold (a Sprint, if he was
-# moving), so letting go of it does not Roll.
+# moving), so letting go of it does not Roll. A press and release that both land before
+# the same frame never show the button down, so the just-pressed and just-released
+# checks catch them.
 func _roll_button_tapped(delta: float) -> bool:
-	if Input.is_action_pressed(&"roll"):
+	var pressed := Input.is_action_pressed(&"roll")
+	var tapped := false
+	if _roll_button_held_for > 0.0 and (not pressed or Input.is_action_just_released(&"roll")):
+		# The press we were timing is over, even if the button went down again this frame.
+		tapped = _roll_button_held_for < tuning.roll_hold_threshold
+		_roll_button_held_for = 0.0
+		_out_of_breath = false
+	elif Input.is_action_just_pressed(&"roll") and not pressed:
+		tapped = true
+	if pressed:
 		_roll_button_held_for += delta
-		return false
-	var tapped := _roll_button_held_for > 0.0 and _roll_button_held_for < tuning.roll_hold_threshold
-	_roll_button_held_for = 0.0
-	_out_of_breath = false
 	return tapped
 
 
