@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/almos/almos.tscn" id="1_almos"]
+[ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="2_stamina_bar"]
 
 [node name="TestRoom" type="Node2D"]
 
@@ -10,3 +11,14 @@ polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
 
 [node name="Almos" parent="." instance=ExtResource("1_almos")]
 position = Vector2(576, 324)
+
+[node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="StaminaBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("stamina")]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 216.0
+offset_bottom = 32.0
+show_percentage = false
+script = ExtResource("2_stamina_bar")
+stamina = NodePath("../../Almos/Stamina")

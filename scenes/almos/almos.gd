@@ -9,6 +9,9 @@ var facing := Vector2.DOWN
 
 @export var tuning: PlayerTuning
 
+## What Roll and Sprint spend, and what the Stamina bar shows. In almos.tscn it is
+## given the same tuning data file as Almos.
+@onready var stamina: Stamina = $Stamina
 @onready var _placeholder: Polygon2D = $Placeholder
 
 

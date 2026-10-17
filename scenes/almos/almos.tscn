@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/almos/almos.gd" id="1_script"]
 [ext_resource type="Resource" path="res://data/player_tuning.tres" id="2_tuning"]
+[ext_resource type="Script" path="res://scripts/stamina.gd" id="3_stamina"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -17,3 +18,7 @@ polygon = PackedVector2Array(14, 0, -10, -10, -4, 0, -10, 10)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
+
+[node name="Stamina" type="Node" parent="."]
+script = ExtResource("3_stamina")
+tuning = ExtResource("2_tuning")
