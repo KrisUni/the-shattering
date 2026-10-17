@@ -1,6 +1,6 @@
 # ADR-0001: Build each area as an Open map, with Rooms for buildings and the Dungeons
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-17
 - **Authors:** KrisUni, drafted with Claude
 
