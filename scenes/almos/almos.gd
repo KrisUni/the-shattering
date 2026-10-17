@@ -27,6 +27,22 @@ var sprinting: bool:
 	get:
 		return _state == State.SPRINTING
 
+## Whether a Light or Heavy attack is under way: its startup, active and recovery frames.
+var attacking: bool:
+	get:
+		return _attacks.attacking
+
+## Whether a Heavy attack is being charged: he holds the button and has not swung yet.
+var charging: bool:
+	get:
+		return _attacks.charging
+
+## Which swing of the Light attack combo is under way, from 1, or 0 when none is. A Heavy
+## attack, or none at all, is 0.
+var light_swing: int:
+	get:
+		return _attacks.light_swing
+
 ## Whether Almos cannot be hurt at this moment: during part of a Roll.
 var untouchable: bool:
 	get:
@@ -36,6 +52,10 @@ var untouchable: bool:
 
 @export var tuning: PlayerTuning
 
+## The Weapon he carries: the attacks he can make. It is given to his attacks, so this is
+## the only one to set.
+@export var weapon: WeaponData
+
 ## What Roll and Sprint spend, and what the Stamina bar shows. It is given Almos's tuning,
 ## so his tuning is the only one to set.
 @onready var stamina: Stamina = $Stamina
@@ -44,6 +64,7 @@ var untouchable: bool:
 ## tuning, so his tuning is the only one to set.
 @onready var health: Health = $Health
 @onready var _hurtbox: Hurtbox = $Hurtbox
+@onready var _attacks: AlmosAttacks = $Attacks
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
@@ -67,6 +88,8 @@ func _enter_tree() -> void:
 	var own_health := $Health as Health
 	if own_health.maximum != tuning.health_maximum:
 		own_health.maximum = tuning.health_maximum
+	# Handing over the weapon changes nothing else, so it needs no check first.
+	($Attacks as AlmosAttacks).weapon = weapon
 
 
 func _ready() -> void:
@@ -85,10 +108,14 @@ func _physics_process(delta: float) -> void:
 	# start in that same frame and follow it without a gap.
 	if rolling and _roll_time >= tuning.roll_duration - TIME_SLACK:
 		_end_roll(direction)
-	if tapped:
+	_attacks.advance(facing, not rolling)
+	# An attack commits him, so a tap in it is lost, not kept for after it.
+	if tapped and not _attacks.committed:
 		_on_roll_tapped(direction)
 	if rolling:
 		_roll(delta)
+	elif _attacks.committed:
+		_stand_still()
 	else:
 		_move_freely(direction, delta)
 	# Turning the placeholder shape stands in for the eight facing sprites.
@@ -107,6 +134,13 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 		_face(direction)
 	velocity = direction * (tuning.sprint_speed if sprint else tuning.walk_speed)
 	move_and_slide()
+
+
+# An attack commits him: he neither walks nor sprints from the moment he begins charging a
+# Heavy attack or swinging until the recovery is over.
+func _stand_still() -> void:
+	_state = State.WALKING
+	velocity = Vector2.ZERO
 
 
 # Whether he is trying to Sprint: pushing a direction with the Roll button held to the

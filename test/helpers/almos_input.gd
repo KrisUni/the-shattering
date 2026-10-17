@@ -6,6 +6,7 @@ extends RefCounted
 
 const ALMOS_SCENE_PATH := "res://scenes/almos/almos.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
+const WEAPON_PATH := "res://data/sword.tres"
 
 # Frames to let a pressed input reach Almos before we start measuring.
 const SETTLE_FRAMES := 2
@@ -24,13 +25,16 @@ func _init(test: GutTest) -> void:
 	_test = test
 
 
-# Almos in the test's scene tree, given this tuning if there is one. The test frees him.
-func spawn_almos(tuning: PlayerTuning = null):
+# Almos in the test's scene tree, given this tuning and this weapon data if there are any.
+# The test frees him.
+func spawn_almos(tuning: PlayerTuning = null, weapon: WeaponData = null):
 	var scene := load(ALMOS_SCENE_PATH) as PackedScene
 	_test.assert_not_null(scene, "the Almos scene should load")
 	var almos = scene.instantiate()
 	if tuning != null:
 		almos.tuning = tuning
+	if weapon != null:
+		almos.weapon = weapon
 	_test.add_child_autofree(almos)
 	return almos
 
@@ -73,6 +77,27 @@ func press_joypad_button(button: JoyButton) -> void:
 	event.device = 0
 	event.button_index = button
 	event.pressed = true
+	Input.parse_input_event(event)
+	_held_events.append(event)
+
+
+# A mouse button, pressed with the pointer at the top left of the window.
+func press_mouse_button(button: MouseButton) -> void:
+	var event := InputEventMouseButton.new()
+	event.button_index = button
+	event.button_mask = 1 << (button - 1)
+	event.pressed = true
+	Input.parse_input_event(event)
+	_held_events.append(event)
+
+
+# A pad on the first device, with this axis pushed to this value, such as a trigger pulled
+# right in. Letting go puts it back to 0.
+func push_joypad_axis(axis: JoyAxis, value: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.device = 0
+	event.axis = axis
+	event.axis_value = value
 	Input.parse_input_event(event)
 	_held_events.append(event)
 

@@ -5,6 +5,9 @@
 [ext_resource type="Script" path="res://scripts/stamina.gd" id="3_stamina"]
 [ext_resource type="Script" path="res://scripts/health.gd" id="4_health"]
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="5_hurtbox"]
+[ext_resource type="Resource" path="res://data/sword.tres" id="6_weapon"]
+[ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="7_hitbox"]
+[ext_resource type="Script" path="res://scenes/almos/almos_attacks.gd" id="8_attacks"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -12,10 +15,14 @@ radius = 12.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_hurtbox"]
 radius = 12.0
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sword"]
+size = Vector2(28, 28)
+
 [node name="Almos" type="CharacterBody2D"]
 motion_mode = 1
 script = ExtResource("1_script")
 tuning = ExtResource("2_tuning")
+weapon = ExtResource("6_weapon")
 
 [node name="Placeholder" type="Polygon2D" parent="."]
 color = Color(0.45, 0.25, 0.7, 1)
@@ -39,3 +46,23 @@ health = NodePath("../Health")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 shape = SubResource("CircleShape2D_hurtbox")
+
+[node name="Sword" type="Area2D" parent="."]
+visible = false
+collision_layer = 0
+collision_mask = 4
+monitorable = false
+script = ExtResource("7_hitbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Sword"]
+position = Vector2(28, 0)
+shape = SubResource("RectangleShape2D_sword")
+
+[node name="Placeholder" type="Polygon2D" parent="Sword"]
+color = Color(0.85, 0.85, 0.95, 1)
+polygon = PackedVector2Array(14, -14, 42, -14, 42, 14, 14, 14)
+
+[node name="Attacks" type="Node" parent="." node_paths=PackedStringArray("hitbox", "stamina")]
+script = ExtResource("8_attacks")
+hitbox = NodePath("../Sword")
+stamina = NodePath("../Stamina")
