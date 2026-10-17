@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_tuning")
 walk_speed = 120.0
+health_maximum = 100.0
 stamina_maximum = 120.0
 stamina_refill_rate = 40.0
 stamina_refill_pause = 1.0

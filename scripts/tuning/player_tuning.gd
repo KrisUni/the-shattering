@@ -5,6 +5,9 @@ extends Resource
 ## Walking speed, in pixels per second.
 @export var walk_speed: float
 
+## The most Health Almos can have. A full bar is this much.
+@export var health_maximum: float
+
 ## The most Stamina Almos can have. A full bar is this much.
 @export var stamina_maximum: float
 

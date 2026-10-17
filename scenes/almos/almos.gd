@@ -39,6 +39,11 @@ var untouchable: bool:
 ## What Roll and Sprint spend, and what the Stamina bar shows. It is given Almos's tuning,
 ## so his tuning is the only one to set.
 @onready var stamina: Stamina = $Stamina
+
+## What hits take off, and what the Health bar shows. It is given its maximum from Almos's
+## tuning, so his tuning is the only one to set.
+@onready var health: Health = $Health
+@onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
@@ -53,12 +58,19 @@ var _out_of_breath := false
 
 
 func _enter_tree() -> void:
-	# Done here, not in _ready, so that every node's _ready finds Stamina already filled in
-	# whatever order the nodes are in: the Stamina bar reads it in its _ready. Giving
-	# Stamina its tuning refills it, so it is only given a different one.
+	# Done here, not in _ready, so that every node's _ready finds Stamina and Health already
+	# filled in whatever order the nodes are in: the bars read them in their _ready. Giving
+	# either its numbers refills it, so each is only given a different one.
 	var own_stamina := $Stamina as Stamina
 	if own_stamina.tuning != tuning:
 		own_stamina.tuning = tuning
+	var own_health := $Health as Health
+	if own_health.maximum != tuning.health_maximum:
+		own_health.maximum = tuning.health_maximum
+
+
+func _ready() -> void:
+	_hurtbox.is_untouchable = func() -> bool: return untouchable
 
 
 func _physics_process(delta: float) -> void:
