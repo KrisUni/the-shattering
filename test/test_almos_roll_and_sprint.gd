@@ -412,6 +412,19 @@ func test_holding_roll_only_sprints_while_he_is_pushing_a_direction() -> void:
 	assert_false(_samples.back().sprinting, "he should stop sprinting when he stops moving")
 
 
+func test_holding_the_button_past_the_threshold_standing_still_spends_no_stamina() -> void:
+	var tuning := _tuning_with_long_refill_pause()
+	_spawn_almos(tuning)
+	_almos.stamina.spend(tuning.stamina_maximum / 2.0)
+	var left: float = _almos.stamina.current
+
+	_press_action(&"roll")
+	await wait_physics_frames(_frames_to_reach(tuning.roll_hold_threshold) + 2 * SETTLE_FRAMES)
+
+	for i in _samples.size():
+		assert_almost_eq(_samples[i].stamina, left, STAMINA_TOLERANCE, "sample %d: standing still should cost no stamina" % i)
+
+
 func test_sprinting_spends_the_tuned_stamina_per_second() -> void:
 	_spawn_almos()
 	_press_action(&"move_right")

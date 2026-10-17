@@ -72,12 +72,10 @@ func _physics_process(delta: float) -> void:
 
 
 func _move_freely(direction: Vector2, delta: float) -> void:
-	# Stamina is only spent while he is trying to sprint. When spend() fails it is gone,
-	# which drops him back to walking until the button is let go and held again.
 	var sprint := false
-	if direction != Vector2.ZERO \
-			and _held_to_the_threshold() \
-			and not _out_of_breath:
+	if _wants_to_sprint(direction):
+		# The only place a Sprint is paid for. When spend() fails Stamina is gone, which
+		# drops him back to walking until the button is let go and held again.
 		sprint = stamina.spend(tuning.sprint_stamina_per_second * delta)
 		_out_of_breath = not sprint
 	_state = State.SPRINTING if sprint else State.WALKING
@@ -85,6 +83,13 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 		_face(direction)
 	velocity = direction * (tuning.sprint_speed if sprint else tuning.walk_speed)
 	move_and_slide()
+
+
+# Whether he is trying to Sprint: pushing a direction with the Roll button held to the
+# threshold, and not already out of breath. It only asks; paying for the Sprint is up to
+# the caller.
+func _wants_to_sprint(direction: Vector2) -> bool:
+	return direction != Vector2.ZERO and _held_to_the_threshold() and not _out_of_breath
 
 
 func _face(direction: Vector2) -> void:
