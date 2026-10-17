@@ -9,8 +9,9 @@ extends Node
 ## has been held for the charge start, so a quick tap gives the plain Heavy attack. From the
 ## first frame of the hold or the swing until its recovery ends he is committed: Almos can
 ## do nothing else. A press of an attack button in the last frames of a recovery is kept, and
-## the attack it asked for begins as the recovery ends. A press at any other time during an
-## attack is lost.
+## the attack it asked for begins as the recovery ends. There is room for one kept press, and
+## the latest press wins, the one made on the very frame the recovery ends included. A press
+## at any other time during an attack is lost.
 
 ## Which attack button a press was of.
 enum Press { NONE, LIGHT, HEAVY }
@@ -66,6 +67,10 @@ var _queued := Press.NONE
 func advance(aim: Vector2, can_start: bool) -> void:
 	var press := _pressed()
 	if attacking and _frame >= _swing_frames():
+		# A press seen on this frame is later than one kept for it, so it takes its place:
+		# the latest press wins.
+		if press != Press.NONE and _queued != Press.NONE:
+			_queued = press
 		_end_swing()
 		# A press that was kept for the end of the swing is made as it ends.
 		if _queued != Press.NONE:

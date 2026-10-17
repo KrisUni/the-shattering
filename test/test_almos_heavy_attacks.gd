@@ -67,6 +67,19 @@ var partial_hold_params = ParameterFactory.named_parameters(
 	],
 )
 
+# Two different presses in the run of a Light swing, the second made either in the last frame
+# of the buffer window or on the frame the swing ends. The latest press is the one that comes
+# out, whichever button it was and whichever frame the second press is made in.
+var two_presses_params = ParameterFactory.named_parameters(
+	["name", "first", "second", "on_ending_frame"],
+	[
+		["Light then Heavy in the buffer window", &"attack_light", &"attack_heavy", false],
+		["Heavy then Light in the buffer window", &"attack_heavy", &"attack_light", false],
+		["Light then Heavy on the frame the swing ends", &"attack_light", &"attack_heavy", true],
+		["Heavy then Light on the frame the swing ends", &"attack_heavy", &"attack_light", true],
+	],
+)
+
 var _almos_input: AlmosInput
 var _rig: AttackRig
 
@@ -342,6 +355,88 @@ func test_a_light_press_in_the_buffer_window_of_a_heavy_swing_starts_the_combo_o
 		assert_eq(_rig.samples[i].light_swing, 0, "sample %d: no swing of the Light combo should be under way in the Heavy attack" % i)
 
 
+func test_the_latest_of_two_presses_comes_out_as_the_swing_ends(params = use_parameters(two_presses_params)) -> void:
+	var weapon := _weapon()
+	var first_swing := weapon.light_attacks[0]
+	var second_swing := weapon.light_attacks[1]
+	var heavy := weapon.heavy_attack
+	var swing_end := _swing_frames(first_swing)
+	var first_press := swing_end - weapon.attack_buffer_frames
+	var second_press := swing_end if params.on_ending_frame else swing_end - 1
+	assert_gt(second_press - first_press, TAP_FRAMES, "the second press should come after the first has been let go")
+	# What the second press makes, and what it takes: the Heavy attack is the plain one, as the
+	# button is tapped. A Light press after the Light swing goes on with the combo.
+	var comes_out: AttackData = heavy if params.second == &"attack_heavy" else second_swing
+	assert_ne(heavy.damage, second_swing.damage, "the attacks should hurt differently, so that the one that comes out shows")
+	assert_ne(heavy.stamina_cost, second_swing.stamina_cost, "the attacks should cost differently, so that the one that comes out shows")
+	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
+	await _rig.wait_frames(SETTLE_FRAMES)
+	var before: float = _rig.almos.stamina.current
+
+	await _tap_light()
+	await _rig.wait_to_press_for_swing_frame(first_press)
+	await _tap_button(params.first)
+	await _rig.wait_to_press_for_swing_frame(second_press)
+	await _tap_button(params.second)
+	# A Heavy attack pressed on the frame the swing ends is held down in it, so it charges for
+	# a frame before it swings: the swings are counted, not the stretch they make together.
+	await _rig.wait_frames(_swing_frames(comes_out) + SETTLE_FRAMES)
+
+	assert_eq(_frames_attacked(), swing_end + _swing_frames(comes_out), "%s: the second press should make the swing that follows the Light swing, and nothing follow it" % params.name)
+	var damages: Array[float] = []
+	for hit in _rig.hits():
+		damages.append(hit.damage)
+	assert_eq(damages, [first_swing.damage, comes_out.damage], "%s: damage of each hit" % params.name)
+	assert_almost_eq(_rig.samples.back().stamina, before - first_swing.stamina_cost - comes_out.stamina_cost, STAMINA_TOLERANCE, "%s: only the Light swing and the one the second press asked for should have been paid for" % params.name)
+
+
+# Both attack buttons pressed in the same frame is a Light attack: where it falls, in the
+# buffer window of a swing or with nothing under way.
+func test_both_attack_buttons_pressed_in_the_same_frame_in_the_buffer_window_make_the_next_light_swing() -> void:
+	var weapon := _weapon()
+	var first := weapon.light_attacks[0]
+	var second := weapon.light_attacks[1]
+	assert_ne(first.damage, second.damage, "the swings should hurt differently, so that the order they come in shows")
+	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
+	await _rig.wait_frames(SETTLE_FRAMES)
+	var before: float = _rig.almos.stamina.current
+
+	await _tap_light()
+	await _rig.wait_to_press_for_swing_frame(_swing_frames(first) - weapon.attack_buffer_frames)
+	await _tap_both()
+	await _wait_for_the_swing_to_end()
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	var span := _rig.attack_span()
+	assert_eq(span.y - span.x, _swing_frames(first) + _swing_frames(second), "the second Light swing should follow the first, and nothing follow it")
+	var damages: Array[float] = []
+	for hit in _rig.hits():
+		damages.append(hit.damage)
+	assert_eq(damages, [first.damage, second.damage], "damage of each hit")
+	assert_eq(_rig.first_sample_where("charging"), -1, "the Heavy attack should not have been held")
+	assert_almost_eq(_rig.samples.back().stamina, before - first.stamina_cost - second.stamina_cost, STAMINA_TOLERANCE, "only the two Light swings should have been paid for")
+
+
+func test_both_attack_buttons_pressed_in_the_same_frame_with_nothing_under_way_make_the_first_light_swing() -> void:
+	var first := _weapon().light_attacks[0]
+	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
+	await _rig.wait_frames(SETTLE_FRAMES)
+	var before: float = _rig.almos.stamina.current
+
+	await _tap_both()
+	await _wait_for_the_swing_to_end()
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	var span := _rig.attack_span()
+	assert_eq(span.y - span.x, _swing_frames(first), "only the first Light swing should have been made")
+	assert_eq(_rig.first_sample_where("charging"), -1, "the Heavy attack should not have been held")
+	var hits := _rig.hits()
+	assert_eq(hits.size(), 1, "the target should have been hit once")
+	if not hits.is_empty():
+		assert_almost_eq(hits[0].damage, first.damage, HEALTH_TOLERANCE)
+	assert_almost_eq(_rig.samples.back().stamina, before - first.stamina_cost, STAMINA_TOLERANCE, "only the Light swing should have been paid for")
+
+
 func test_a_heavy_press_outside_the_buffer_window_is_ignored() -> void:
 	var weapon := _weapon()
 	var light := weapon.light_attacks[0]
@@ -497,6 +592,16 @@ func _frames_held() -> int:
 	return frames
 
 
+# How many physics frames he was attacking for, all swings together: the samples that show him
+# attacking.
+func _frames_attacked() -> int:
+	var frames := 0
+	for sample in _rig.samples:
+		if sample.attacking:
+			frames += 1
+	return frames
+
+
 # Waits until the button has been held for this many frames, so that letting go now ends the
 # hold at exactly that many.
 func _wait_until_held_for(frames: int) -> void:
@@ -534,6 +639,24 @@ func _tap_roll() -> void:
 	_almos_input.press_action(&"roll")
 	await _rig.wait_frames(TAP_FRAMES)
 	_almos_input.release_action(&"roll")
+
+
+# Taps the attack button with this action: a Light press is a quick tap of the action, a Heavy
+# press a real tap of the key.
+func _tap_button(action: StringName) -> void:
+	if action == &"attack_heavy":
+		await _tap_heavy()
+	else:
+		await _tap_light()
+
+
+# Presses both attack buttons in the same frame and lets go again after a few frames.
+func _tap_both() -> void:
+	_almos_input.press_action(&"attack_light")
+	_almos_input.press_action(&"attack_heavy")
+	await _rig.wait_frames(TAP_FRAMES)
+	_almos_input.release_action(&"attack_light")
+	_almos_input.release_action(&"attack_heavy")
 
 
 # Holds the Heavy attack button down for this many physics frames and lets go, as a keyboard
