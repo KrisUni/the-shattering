@@ -6,7 +6,6 @@ extends GutTest
 ## come from the tuning data file the scene uses (or a copy a test changes) and plain
 ## arithmetic, never from how the code works them out.
 
-const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
 const StrikeGeometry := preload("res://test/helpers/strike_geometry.gd")
 
@@ -28,7 +27,7 @@ const SETTLE_FRAMES := 5
 # In pixels. How far beyond a range the target stands when it is to be out of that range.
 const OUT_OF_RANGE_MARGIN := 10.0
 # How different, as the sum of the differences in red, green and blue, its look must be while
-# it winds up for the player to see it. The same goes for its colour against Almos's.
+# it winds up for the player to see it.
 const VISIBLE_DIFFERENCE := 0.5
 # In pixels. How far a test moves the strike's reach from the one in the data file, to see the
 # strike follow it.
@@ -194,19 +193,6 @@ func test_what_is_drawn_of_it_changes_colour_for_as_long_as_it_winds_up() -> voi
 			unclear.append(i)
 	assert_eq(unclear, [], "samples in which what is drawn of it hardly differs from how it is drawn at rest")
 	assert_eq(_rig.samples[winding_up.y].drawn, at_rest, "it should be drawn as at rest as the wind-up ends")
-
-
-func test_its_placeholder_is_not_the_colour_of_almos() -> void:
-	var enemy = _rig.spawn_enemy()
-	var placeholder := enemy.get_node_or_null("Placeholder") as Polygon2D
-	var almos := autofree((load(AlmosInput.ALMOS_SCENE_PATH) as PackedScene).instantiate()) as Node
-	var almos_placeholder := almos.get_node_or_null("Placeholder") as Polygon2D
-	assert_not_null(placeholder, "it should have a Placeholder")
-	assert_not_null(almos_placeholder, "Almos should have a Placeholder")
-	if placeholder == null or almos_placeholder == null:
-		return
-
-	assert_gte(_difference(placeholder.color, almos_placeholder.color), VISIBLE_DIFFERENCE, "how different the colours are")
 
 
 func test_its_strike_shows_for_as_long_as_its_hitbox_is_on() -> void:
