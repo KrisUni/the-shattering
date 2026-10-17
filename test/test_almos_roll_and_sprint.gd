@@ -36,6 +36,8 @@ const STAMINA_TOLERANCE := 0.0001
 const FACING_TOLERANCE := 0.0001
 # In seconds. Added to one physics frame wherever a time can only be told to the nearest frame.
 const TIME_TOLERANCE := 0.0001
+# In frames. Keeps a time that is a whole number of frames from being counted as one more.
+const FRAME_COUNT_ALLOWANCE := 0.0001
 # The most game time, in seconds, any wait in these tests may take.
 const WAIT_LIMIT := 3.0
 
@@ -52,6 +54,14 @@ var duration_params = ParameterFactory.named_parameters(
 var press_params = ParameterFactory.named_parameters(
 	["frames", "rolls"],
 	[[8, true], [16, false], [30, false]],
+)
+
+# How many physics frames either side of the hold threshold the Roll button is held for,
+# standing still, and whether that rolls. The first whole number of frames that reaches the
+# threshold is a hold, so it does not Roll; one frame fewer is still a tap.
+var threshold_edge_params = ParameterFactory.named_parameters(
+	["frames_from_threshold", "rolls"],
+	[[-1, true], [0, false]],
 )
 
 var _almos: Node2D
@@ -142,7 +152,7 @@ func test_he_becomes_untouchable_the_tuned_time_into_a_roll() -> void:
 	assert_false(untouchable.is_empty(), "he should be untouchable at some point in the roll")
 	if untouchable.is_empty():
 		return
-	assert_almost_eq(_seconds_into_roll(untouchable[0]), _tuning().roll_untouchable_start, _frame_seconds() + TIME_TOLERANCE)
+	assert_eq(_frames_into_roll(untouchable[0]), _frames_to_reach(_tuning().roll_untouchable_start), "frames into the roll when he becomes untouchable")
 
 
 func test_he_stays_untouchable_for_the_tuned_duration() -> void:
@@ -157,7 +167,9 @@ func test_he_stays_untouchable_for_the_tuned_duration() -> void:
 	if untouchable.is_empty():
 		return
 	assert_eq(untouchable.back() - untouchable[0] + 1, untouchable.size(), "he should be untouchable in one unbroken stretch")
-	assert_almost_eq(untouchable.size() * _frame_seconds(), _tuning().roll_untouchable_duration, _frame_seconds() + TIME_TOLERANCE)
+	var tuning := _tuning()
+	var expected_frames := _frames_to_reach(tuning.roll_untouchable_start + tuning.roll_untouchable_duration) - _frames_to_reach(tuning.roll_untouchable_start)
+	assert_eq(untouchable.size(), expected_frames, "frames he stays untouchable for")
 
 
 func test_he_can_be_hurt_again_before_the_roll_ends() -> void:
@@ -360,8 +372,7 @@ func test_sprint_starts_once_the_button_has_been_held_for_the_threshold() -> voi
 	_press_action(&"roll")
 	await _wait_for_sprinting()
 
-	var started_after := (_first_sample_where("sprinting") - pressed_at) * _frame_seconds()
-	assert_almost_eq(started_after, tuning.roll_hold_threshold, 2.0 * _frame_seconds() + TIME_TOLERANCE)
+	assert_eq(_first_sample_where("sprinting") - pressed_at, _frames_to_reach(tuning.roll_hold_threshold), "frames after the press that he starts sprinting")
 
 
 func test_holding_roll_only_sprints_while_he_is_pushing_a_direction() -> void:
@@ -407,6 +418,16 @@ func test_letting_go_after_a_sprint_does_not_roll() -> void:
 	await wait_physics_frames(SETTLE_FRAMES + 2)
 
 	assert_eq(_first_sample_where("rolling"), -1, "he should not roll when the button that made him sprint is let go")
+
+
+func test_a_press_held_for_exactly_the_hold_threshold_is_not_a_tap(params = use_parameters(threshold_edge_params)) -> void:
+	_spawn_almos()
+	await wait_physics_frames(SETTLE_FRAMES)
+
+	await _hold_roll_for(_frames_to_reach(_tuning().roll_hold_threshold) + params.frames_from_threshold)
+	await wait_physics_frames(SETTLE_FRAMES + 2)
+
+	assert_eq(_first_sample_where("rolling") != -1, params.rolls, "rolled or not")
 
 
 func test_a_press_shorter_than_the_hold_threshold_is_a_tap_and_a_longer_one_is_not(params = use_parameters(press_params)) -> void:
@@ -682,6 +703,18 @@ func _tap_roll() -> void:
 	_release_action(&"roll")
 
 
+# Holds the Roll button for exactly this many physics frames: it is down for the first of
+# them and up again for the frame after the last. It waits on the physics_frame signal,
+# which comes before Almos is processed in a frame, because wait_physics_frames can span
+# one frame more than it is asked for.
+func _hold_roll_for(frames: int) -> void:
+	await get_tree().physics_frame
+	_press_action(&"roll")
+	for i in frames:
+		await get_tree().physics_frame
+	_release_action(&"roll")
+
+
 # The first stretch of samples in which Almos was rolling, as Vector2i(first, end): the
 # index of the first sample showing him rolling and of the first showing him done. Either
 # is -1 if it has not happened yet.
@@ -723,10 +756,20 @@ func _frame_seconds() -> float:
 	return 1.0 / Engine.physics_ticks_per_second
 
 
-# How long into the roll the sample at this index was taken: after that many physics
-# frames of rolling.
+# How many physics frames it takes to reach this many seconds: the first whole number of
+# frames whose length is at least that long.
+func _frames_to_reach(seconds: float) -> int:
+	return ceili(seconds * Engine.physics_ticks_per_second - FRAME_COUNT_ALLOWANCE)
+
+
+# How many physics frames into the roll the sample at this index was taken.
+func _frames_into_roll(index: int) -> int:
+	return index - _roll_span().x + 1
+
+
+# How long into the roll the sample at this index was taken.
 func _seconds_into_roll(index: int) -> float:
-	return float(index - _roll_span().x + 1) * _frame_seconds()
+	return float(_frames_into_roll(index)) * _frame_seconds()
 
 
 # The indices of the samples in which he was untouchable.

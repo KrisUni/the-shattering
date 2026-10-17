@@ -3,8 +3,12 @@ extends CharacterBody2D
 # Almos's sprites show eight facings, so his facing is always one of eight directions.
 const FACING_STEP := TAU / 8.0
 
-# Frame lengths added up one by one can land a hair short of a whole number of seconds;
-# without this slack a Roll would run one more frame, with nothing left to move.
+# Frame lengths added up one by one can land a hair short of a whole number of seconds
+# (twelve of them at 60 frames a second add up to 0.19999999999999998). A summed time is
+# compared with a tuned time through this slack, so that a tuned time which is a whole
+# number of frames counts as reached on that frame, not the next. Without it a Roll would
+# run one more frame with nothing left to move, the untouchable window would be a frame
+# too long and the hold threshold a frame too late.
 const TIME_SLACK := 0.000001
 
 enum State { WALKING, SPRINTING, ROLLING }
@@ -26,8 +30,9 @@ var sprinting: bool:
 ## Whether Almos cannot be hurt at this moment: during part of a Roll.
 var untouchable: bool:
 	get:
-		var window_start := tuning.roll_untouchable_start
-		return rolling and _roll_time >= window_start and _roll_time < window_start + tuning.roll_untouchable_duration
+		var window_start := tuning.roll_untouchable_start - TIME_SLACK
+		var window_end := tuning.roll_untouchable_start + tuning.roll_untouchable_duration - TIME_SLACK
+		return rolling and _roll_time >= window_start and _roll_time < window_end
 
 @export var tuning: PlayerTuning
 
@@ -71,7 +76,7 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 	# which drops him back to walking until the button is let go and held again.
 	var sprint := false
 	if direction != Vector2.ZERO \
-			and _roll_button_held_for >= tuning.roll_hold_threshold \
+			and _held_to_the_threshold() \
 			and not _out_of_breath:
 		sprint = stamina.spend(tuning.sprint_stamina_per_second * delta)
 		_out_of_breath = not sprint
@@ -97,7 +102,7 @@ func _roll_button_tapped(delta: float) -> bool:
 	var tapped := false
 	if _roll_button_held_for > 0.0 and (not pressed or Input.is_action_just_released(&"roll")):
 		# The press we were timing is over, even if the button went down again this frame.
-		tapped = _roll_button_held_for < tuning.roll_hold_threshold
+		tapped = not _held_to_the_threshold()
 		_roll_button_held_for = 0.0
 		_out_of_breath = false
 	elif Input.is_action_just_pressed(&"roll") and not pressed:
@@ -105,6 +110,12 @@ func _roll_button_tapped(delta: float) -> bool:
 	if pressed:
 		_roll_button_held_for += delta
 	return tapped
+
+
+# Whether the press being timed has lasted as long as the hold threshold: from then on it
+# is a hold, and letting go of it is not a tap.
+func _held_to_the_threshold() -> bool:
+	return _roll_button_held_for >= tuning.roll_hold_threshold - TIME_SLACK
 
 
 func _start_roll(direction: Vector2) -> void:
