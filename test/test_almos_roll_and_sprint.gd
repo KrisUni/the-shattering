@@ -493,6 +493,42 @@ func test_he_drops_to_walking_when_stamina_runs_out_mid_sprint_though_the_button
 	assert_almost_eq(_average_velocity(last - MEASURED_FRAMES, MEASURED_FRAMES), Vector2(tuning.walk_speed, 0.0), Vector2.ONE * VELOCITY_TOLERANCE, "he should be walking")
 
 
+func test_running_out_mid_sprint_ends_it_until_the_button_is_let_go_and_held_again() -> void:
+	var tuning := _tuning_with({"stamina_refill_pause": SHORT_REFILL_PAUSE})
+	_spawn_almos(tuning)
+	# Just enough for a few frames of sprint.
+	_almos.stamina.spend(tuning.stamina_maximum - tuning.sprint_stamina_per_second * SPRINT_FRAMES_LEFT * _frame_seconds())
+	_press_action(&"move_right")
+	_press_action(&"roll")
+	await _wait_for_sprinting()
+	var ran_out: bool = await wait_until(func(): return _samples.back().stamina <= 0.0, WAIT_LIMIT, "stamina should run out")
+	assert_true(ran_out, "his stamina should have run out")
+	var ran_out_at := _first_sample_without_stamina()
+
+	# Still holding the button and moving, for longer than the refill pause.
+	await _wait_for_samples(ceili((tuning.stamina_refill_pause + SECONDS_PAST_PAUSE) * Engine.physics_ticks_per_second))
+
+	# The sample that first shows no Stamina still follows the frame that spent the last of it.
+	for i in range(ran_out_at + 1, _samples.size()):
+		assert_false(_samples[i].sprinting, "he should not sprint again in sample %d, with the button still held" % i)
+	var last := _samples.size() - 1
+	assert_almost_eq(_average_velocity(last - MEASURED_FRAMES, MEASURED_FRAMES), Vector2(tuning.walk_speed, 0.0), Vector2.ONE * VELOCITY_TOLERANCE, "he should be walking")
+	var seconds_refilling := (last - ran_out_at + 1) * _frame_seconds() - tuning.stamina_refill_pause
+	assert_almost_eq(_samples[last].stamina, tuning.stamina_refill_rate * seconds_refilling, 2.0 * tuning.stamina_refill_rate * _frame_seconds(), "stamina should refill at the tuned rate while the button is still held")
+
+	# Letting go and holding again starts a new sprint.
+	var let_go_at := _samples.size()
+	_release_action(&"roll")
+	await wait_physics_frames(SETTLE_FRAMES)
+	_press_action(&"roll")
+	await _wait_for_sprinting(let_go_at)
+	await wait_physics_frames(SETTLE_FRAMES)
+
+	_release_action(&"roll")
+	await wait_physics_frames(SETTLE_FRAMES + 2)
+	assert_eq(_first_sample_where("rolling"), -1, "he should not roll when the button that made him sprint is let go")
+
+
 func test_tapping_the_space_key_rolls() -> void:
 	_spawn_almos()
 	await wait_physics_frames(SETTLE_FRAMES)
@@ -681,8 +717,9 @@ func _buffer_window_start() -> float:
 	return tuning.roll_duration - tuning.roll_buffer_window
 
 
-func _wait_for_sprinting() -> void:
-	var started: bool = await wait_until(func(): return _first_sample_where("sprinting") != -1, WAIT_LIMIT, "he should start sprinting")
+# Waits for a sample showing him sprinting, from this one on.
+func _wait_for_sprinting(from_index: int = 0) -> void:
+	var started: bool = await wait_until(func(): return _first_sample_where("sprinting", from_index) != -1, WAIT_LIMIT, "he should start sprinting")
 	assert_true(started, "he should have started sprinting")
 
 
@@ -693,10 +730,18 @@ func _wait_for_samples(count: int) -> void:
 	assert_true(reached, "%d more samples should have been taken" % count)
 
 
-# The index of the first sample in which this state was true, or -1.
-func _first_sample_where(state: String) -> int:
-	for i in _samples.size():
+# The index of the first sample, from this one on, in which this state was true, or -1.
+func _first_sample_where(state: String, from_index: int = 0) -> int:
+	for i in range(from_index, _samples.size()):
 		if _samples[i][state]:
+			return i
+	return -1
+
+
+# The index of the first sample in which he had no Stamina left, or -1.
+func _first_sample_without_stamina() -> int:
+	for i in _samples.size():
+		if _samples[i].stamina <= 0.0:
 			return i
 	return -1
 

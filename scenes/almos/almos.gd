@@ -41,6 +41,10 @@ var _roll_direction := Vector2.ZERO
 var _roll_time := 0.0
 var _roll_queued := false
 var _roll_button_held_for := 0.0
+# Set when a Sprint was tried and there was no Stamina to pay for it, until the Roll
+# button is let go. Without it, the sliver of Stamina that comes back when the refill
+# pause ends would pay for one frame of Sprint, which would start the pause again.
+var _out_of_breath := false
 
 
 func _physics_process(delta: float) -> void:
@@ -63,11 +67,14 @@ func _physics_process(delta: float) -> void:
 
 
 func _move_freely(direction: Vector2, delta: float) -> void:
-	# Stamina is only spent while he is trying to sprint, and spend() fails once it is gone,
-	# which is what drops him back to walking.
-	var sprint := direction != Vector2.ZERO \
+	# Stamina is only spent while he is trying to sprint. When spend() fails it is gone,
+	# which drops him back to walking until the button is let go and held again.
+	var sprint := false
+	if direction != Vector2.ZERO \
 			and _roll_button_held_for >= tuning.roll_hold_threshold \
-			and stamina.spend(tuning.sprint_stamina_per_second * delta)
+			and not _out_of_breath:
+		sprint = stamina.spend(tuning.sprint_stamina_per_second * delta)
+		_out_of_breath = not sprint
 	_state = State.SPRINTING if sprint else State.WALKING
 	if direction != Vector2.ZERO:
 		_face(direction)
@@ -89,6 +96,7 @@ func _roll_button_tapped(delta: float) -> bool:
 		return false
 	var tapped := _roll_button_held_for > 0.0 and _roll_button_held_for < tuning.roll_hold_threshold
 	_roll_button_held_for = 0.0
+	_out_of_breath = false
 	return tapped
 
 
