@@ -6,6 +6,9 @@ extends Area2D
 ##
 ## A Hitbox sits on no layer and looks for Hurtboxes through its mask: an attack on the
 ## player masks player_hurtbox, an attack on enemies masks enemy_hurtbox.
+##
+## It tells the Hurtbox where the hit comes from: the Hitbox's own position, so a Hitbox
+## belongs at the centre of whoever swings it, turning there to aim.
 
 ## How much Health a hit takes off.
 @export var damage: float
@@ -54,7 +57,7 @@ func _physics_process(_delta: float) -> void:
 	for area in get_overlapping_areas():
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
-			if hurtbox.hurt(damage):
+			if hurtbox.hurt(damage, global_position):
 				_hit.append(hurtbox)
 
 

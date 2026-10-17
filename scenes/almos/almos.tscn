@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="7_hitbox"]
 [ext_resource type="Script" path="res://scenes/almos/almos_attacks.gd" id="8_attacks"]
 [ext_resource type="Script" path="res://scenes/almos/almos_lock_on.gd" id="9_lock_on"]
+[ext_resource type="Script" path="res://scenes/almos/almos_block.gd" id="10_block"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -28,6 +29,11 @@ weapon = ExtResource("6_weapon")
 [node name="Placeholder" type="Polygon2D" parent="."]
 color = Color(0.45, 0.25, 0.7, 1)
 polygon = PackedVector2Array(14, 0, -10, -10, -4, 0, -10, 10)
+
+[node name="BlockPlaceholder" type="Polygon2D" parent="Placeholder"]
+visible = false
+color = Color(0.6, 0.75, 0.95, 1)
+polygon = PackedVector2Array(11, -19.05, 19.05, -11, 22, 0, 19.05, 11, 11, 19.05, 9.5, 16.45, 16.45, 9.5, 19, 0, 16.45, -9.5, 9.5, -16.45)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
@@ -80,3 +86,8 @@ polygon = PackedVector2Array(5.18, -19.32, 10, -17.32, 14.14, -14.14, 17.32, -10
 script = ExtResource("9_lock_on")
 almos = NodePath("..")
 marker = NodePath("../LockOnMarker")
+
+[node name="Block" type="Node" parent="." node_paths=PackedStringArray("stamina", "placeholder")]
+script = ExtResource("10_block")
+stamina = NodePath("../Stamina")
+placeholder = NodePath("../Placeholder/BlockPlaceholder")

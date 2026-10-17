@@ -62,3 +62,21 @@ extends Resource
 ## new direction is split against the line as it stands then. Letting go of the input clears
 ## the latch too.
 @export var lock_on_relatch_degrees: float
+
+## The fraction of a blocked hit's damage that Block takes off: a blocked hit deals the rest.
+## 1 would take all of it, and 0 none.
+@export var block_damage_reduction: float
+
+## How much Stamina each blocked hit spends, however hard it hits.
+@export var block_stamina_cost: float
+
+## How wide, in degrees, the front is that Block covers, centred on the way Almos faces:
+## half of it either side. A hit from outside it is not blocked.
+@export var block_arc_degrees: float
+
+## Walking speed while blocking, in pixels per second.
+@export var block_walk_speed: float
+
+## How much of the usual Stamina refill comes back while blocking: stamina_refill_rate
+## times this. Only the refill is slowed; the pause before it starts is the same.
+@export var block_stamina_refill_factor: float

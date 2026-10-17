@@ -55,6 +55,13 @@ var lock_on_target: Node2D:
 	get:
 		return _lock_on.target
 
+## Whether he is blocking: the Block button is held and he is free, which he is not in a
+## Roll, in an attack, charging a Heavy attack or sprinting. Holding the Roll button while
+## blocking does not start a Sprint.
+var blocking: bool:
+	get:
+		return _block.blocking
+
 ## Whether Almos cannot be hurt at this moment: during part of a Roll.
 var untouchable: bool:
 	get:
@@ -78,6 +85,7 @@ var untouchable: bool:
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn
+@onready var _block: AlmosBlock = $Block
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
@@ -104,10 +112,13 @@ func _enter_tree() -> void:
 	# Handing over the weapon or the tuning changes nothing else, so they need no check first.
 	($Attacks as AlmosAttacks).weapon = weapon
 	($LockOn as AlmosLockOn).tuning = tuning
+	($Block as AlmosBlock).tuning = tuning
 
 
 func _ready() -> void:
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
+	_hurtbox.damage_through = func(damage: float, from: Vector2) -> float:
+		return _block.receive_hit(damage, from, global_position, facing)
 
 
 func _physics_process(delta: float) -> void:
@@ -131,6 +142,11 @@ func _physics_process(delta: float) -> void:
 	# An attack commits him, so a tap in it is lost, not kept for after it.
 	if tapped and not _attacks.committed:
 		_on_roll_tapped(direction)
+	# He is free to block unless he is in a Roll or an attack, which have begun by now if they
+	# were going to this frame, or sprinting, which is as the last frame left it.
+	_block.advance(not rolling and not _attacks.committed and not sprinting)
+	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
+	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if rolling:
 		_roll(delta)
 	elif _attacks.committed:
@@ -152,7 +168,11 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 		sprint = stamina.spend(tuning.sprint_stamina_per_second * delta)
 		_out_of_breath = not sprint
 	_state = State.SPRINTING if sprint else State.WALKING
-	var speed := tuning.sprint_speed if sprint else tuning.walk_speed
+	var speed := tuning.walk_speed
+	if sprint:
+		speed = tuning.sprint_speed
+	elif blocking:
+		speed = tuning.block_walk_speed
 	if _lock_on.locked:
 		# He circles the target instead of walking where the stick points, and faces it
 		# whichever way he goes (see _face_the_target).
@@ -172,10 +192,11 @@ func _stand_still() -> void:
 
 
 # Whether he is trying to Sprint: pushing a direction with the Roll button held to the
-# threshold, and not already out of breath. It only asks; paying for the Sprint is up to
-# the caller.
+# threshold, and not already out of breath. While blocking he cannot Sprint, so the hold is
+# passed over. A Sprint he was in when he pressed Block is not ended by it: he does not block
+# while he sprints. It only asks; paying for the Sprint is up to the caller.
 func _wants_to_sprint(direction: Vector2) -> bool:
-	return direction != Vector2.ZERO and _held_to_the_threshold() and not _out_of_breath
+	return direction != Vector2.ZERO and _held_to_the_threshold() and not _out_of_breath and not blocking
 
 
 func _face(direction: Vector2) -> void:
