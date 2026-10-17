@@ -267,6 +267,26 @@ func test_holding_the_button_through_a_roll_neither_cuts_it_short_nor_makes_him_
 		assert_false(_samples[i].sprinting, "he should not be sprinting in sample %d, in the middle of the roll" % i)
 
 
+func test_letting_go_of_a_hold_begun_during_a_roll_neither_cuts_it_short_nor_queues_another() -> void:
+	# The whole hold fits inside the roll and ends within the buffer window, where a tap
+	# would queue another roll.
+	var tuning := _tuning_with({"roll_hold_threshold": 0.1, "roll_duration": 0.5, "roll_buffer_window": 0.4})
+	_spawn_almos(tuning)
+	_press_action(&"move_right")
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap_roll()
+	await _wait_for_the_roll_to_start()
+
+	await _hold_roll_for(_frames_to_reach(tuning.roll_hold_threshold) + SETTLE_FRAMES)
+	assert_true(_samples.back().rolling, "the button should be let go while he is still rolling")
+	assert_gte(_seconds_into_roll(_samples.size() - 1), tuning.roll_duration - tuning.roll_buffer_window, "the button should be let go within the buffer window")
+	await _wait_for_the_roll_to_finish()
+
+	var span := _roll_span()
+	assert_eq(span.y - span.x, _frames_to_reach(tuning.roll_duration), "the roll should last its tuned duration, neither cut short nor followed by another")
+	assert_almost_eq(_roll_displacement(), Vector2(tuning.roll_distance, 0.0), Vector2.ONE * POSITION_TOLERANCE)
+
+
 func test_a_tap_in_the_last_moments_of_a_roll_queues_another_that_starts_as_it_ends() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
