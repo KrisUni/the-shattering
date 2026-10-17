@@ -11,8 +11,12 @@ A Nar born to the Path of the Deep, required to wear a Seal. Almos is Marked.
 _Avoid_: Marked one, Deep mage
 
 **Seal**:
-The ring the Marked wear around the neck, which stops them channelling. Being an unsealed Marked is a crime among the Nar. At the end of the Base of the tree, Emrys breaks Almos's Seal while they are caught together.
+The ring the Marked wear around the neck, which stops them channelling. Being an unsealed Marked is a crime among the Nar. At the end of the Base of the tree, an Ilion latches onto Almos's Seal and drains it until it breaks.
 _Avoid_: Ring, neck ring, collar
+
+**Ilion**:
+A parasite that leeches magical energy from the arch tree, and from Nar mages when it can reach them. It grows as Small Ilion and Large Ilion. Touching any Ilion hurts, so striking one in melee hurts Almos too. Emrys drains Ilion to restore himself.
+_Avoid_: Ilion plant, mage-eater
 
 ### Areas
 
@@ -27,8 +31,12 @@ A single screen-sized space inside a building or the Dungeons. Leaving through a
 _Avoid_: Screen, chamber
 
 **Base of the tree**:
-The first area, at the foot of the arch tree, where the game begins. It opens with an errand: Emrys, already dying, sends Almos down through the lower tree for something he needs, and the errand teaches movement and combat. Its enemies are creatures that have crept in from the dark, until its last stretch: back from the errand, Almos finds Emrys draining a dying Nar and they are caught together, Emrys breaks Almos's Seal, and the Nar guards turn on Almos. The area ends with Almos thrown into the Dungeons while Emrys escapes.
+The first area, at the foot of the arch tree, where the game begins. It opens with an errand: Emrys, already dying, sends Almos down through the lower tree to fetch Ilion, which he says slows his sickness, and the errand teaches movement and combat. Its enemies are Ilion and other creatures that have crept in from the dark. The last stretch begins back in Emrys's room with Emrys and Massel: the Ilion from Almos's Ilion jar latches onto his Seal and drains it until it breaks, Massel calls the guards, and Emrys drains that Ilion to restore himself and escapes. The Nar guards turn on Almos, and the area ends with his Capture.
 _Avoid_: Tree base, roots
+
+**Ilion jar**:
+The sealed jar Emrys gives Almos at the start of the errand. It holds one Ilion, gathered without harm; any other Ilion on the way he must fight or avoid. Handing the filled jar back to Emrys completes the errand. When Emrys opens it, the Ilion inside latches onto Almos's Seal and breaks it.
+_Avoid_: Jar, specimen jar, container
 
 **Capture**:
 How the Base of the tree ends. If the Nar guards bring Almos's Health to zero, or he reaches the dead end of the last stretch, they take him to the Dungeons. It is not a death: no Remains are left and he keeps his Experience.
@@ -59,7 +67,7 @@ The ground beyond the arch tree that Almos reaches after his escape, where he me
 _Avoid_: Wilds, outlands, midlands
 
 **Tempest**:
-The storm-wracked band between the dayside and the Shadowlands; the last of the first areas. Its enemies are storm-hardened creatures and hostile mages, Necro mages among them. Its Wind pushes the player, and Lightning strikes the ground. Meeting Mani and Cersei here is a story moment, not an ending: the first areas have no closing scene and simply stop where their content runs out.
+The storm-wracked band between the dayside and the Shadowlands; the last of the first areas. Its enemies are storm-hardened creatures and hostile mages, Necro mages among them. Its Wind pushes the player, and Lightning strikes the ground. On Almos's first arrival a Storm peak builds as he goes deeper, and Storm exposure drives him to look for cover; searching for it leads him to an underground tunnel that ends at Mani and Cersei's Shelter. Meeting them there is a story moment, not an ending: the first areas have no closing scene and simply stop where their content runs out.
 _Avoid_: Twilight zone, storm belt
 
 **Vision**:
@@ -74,6 +82,22 @@ _Avoid_: Wanted, outlaw, exile
 The Tempest's gusts, which push the player in a visible direction. Rolls, Jumps and Sprints carry further with the Wind and fall short against it.
 _Avoid_: Gust, storm push
 
+**Storm cycle**:
+The Tempest's storm rising and falling over time. The ordinary cycle makes the Wind and Lightning stronger and weaker, so the Tempest is generally playable; only rarely does it reach a Storm peak.
+_Avoid_: Weather cycle, storm timer
+
+**Storm peak**:
+The height of the storm's intensity, during which it deals Storm exposure. The Storm cycle reaches one only rarely and always with a long warning, such as the sky darkening and the Wind howling. Almos's first arrival in the Tempest is a Storm peak, as are certain special events.
+_Avoid_: Storm surge, superstorm
+
+**Storm exposure**:
+The steady damage the storm deals during a Storm peak to anyone not behind real cover, such as an overhang, a ruin or a large rock, that blocks the Wind.
+_Avoid_: Storm damage, exposure, weather damage
+
+**Shelter**:
+Mani and Cersei's home beneath the Tempest, reached through a small underground tunnel of their own that Almos finds while looking for cover from Storm exposure. It is not connected to the great tunnel beneath the Tempest.
+_Avoid_: Hideout, home, refuge
+
 **Lightning**:
 A Tempest strike marked on the ground a moment before it lands. Parrying it lets the player catch it as a Storm draw.
 _Avoid_: Bolt, thunder strike
@@ -83,6 +107,10 @@ _Avoid_: Bolt, thunder strike
 **Health**, **Stamina**, **Mana**:
 The player's three bars. Only Stamina refills by itself; Health and Mana come back only at Checkpoints and from Flasks. Almos has no Mana bar at first: he gains it from the Time Keeper early in the Lands between.
 _Avoid_: HP, energy, FP, mana points
+
+**Shortcut**:
+A way the player opens that links a deeper part of an area back to a Checkpoint, such as a burnt door or a dropped ladder. Once opened, it stays open for good.
+_Avoid_: Unlock, back door
 
 **Health Flask**, **Mana Flask**:
 The two refillable vessels the player carries, each holding its own fixed number of charges that restore its bar. Every Checkpoint refills both, and upgrades found while exploring add charges. Almos carries the Mana Flask from the start, but it stays empty and useless until he gains his Mana bar.
@@ -121,7 +149,7 @@ The marker left where the player died, holding all the Experience not yet cashed
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. It is also where Experience is cashed in for Levels and where Armour is changed. Resting at one brings back every ordinary enemy; Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. Resting at one brings back every ordinary enemy; Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
 _Avoid_: Bonfire, save point, shrine
 
 ### Movement and combat
@@ -179,7 +207,7 @@ Catching a Parried Lightning strike and throwing it as a single bolt, in the man
 _Avoid_: Lightning catch, bolt throw, thunder parry
 
 **Fire**:
-Burning started by a fireball. Anything flammable, such as living roots, barrels, curtains, wooden doors or dry fungus, catches and spreads it to flammable things nearby. Fire hurts anyone standing in it, Almos included, and a burning Hiding spot forces him out. Burnt Hiding spots and fungus come back whenever enemies return; anything burnt that blocked a path stays open for good.
+Burning started by a fireball, or by touching a lit torch in hand to something flammable. Anything flammable, such as living roots, barrels, curtains, wooden doors or dry fungus, catches and spreads it to flammable things nearby. Fire hurts anyone standing in it, Almos included, and a burning Hiding spot forces him out. Burnt Hiding spots and fungus come back whenever enemies return; anything burnt that blocked a path stays open for good.
 _Avoid_: Flames, burning, blaze
 
 **Roll**:
@@ -237,11 +265,11 @@ A character the player can talk to, placed as an anchor for the story; some hand
 _Avoid_: Villager, quest giver, merchant
 
 **Emrys**:
-Almos's Guardian, dying, met in the Base of the tree. He escapes the arch tree separately and does not appear in the Dungeons or the Upper tree.
+Almos's Guardian, dying, met in the Base of the tree. When an Ilion breaks Almos's Seal, Emrys drains that Ilion to restore himself and escapes the arch tree alone. He does not appear in the Dungeons or the Upper tree.
 _Avoid_: The Guardian, mentor
 
 **Massel**:
-A young Marked child in the Base of the tree, on whom Emrys draws to stay alive.
+A young Marked child in the Base of the tree, on whom Emrys draws to stay alive. When Almos's Seal breaks, Massel calls the guards.
 _Avoid_: The child, the Marked child
 
 **Time Keeper**:
@@ -283,12 +311,56 @@ A unique enemy fought only at a story turning point. Once killed it stays dead. 
 _Avoid_: Miniboss, elite, guardian
 
 **Lesser god**:
-The minor deity Almos meets in the Vision in the Lands between; the first Boss. It offers him a truth in exchange for his ability to sleep, and will not let him leave the Vision without a bargain; refusing only brings the offer back. Once he agrees and the trade is made, it still refuses to let him leave. The Boss fight is his escape from the Vision. The trade happens once; on later attempts the god greets him briefly and the fight begins.
+The minor deity Almos meets in the Vision in the Lands between; the first Boss. It offers him a truth in exchange for his ability to sleep, and will not let him leave the Vision without a bargain; refusing only brings the offer back. Once he agrees and the trade is made, it still refuses to let him leave. The Boss fight is his escape from the Vision. The trade happens once; on later attempts the god greets him briefly and the fight begins. The fight is a melee duel that tests Parry, Low attacks and Unblockable attacks, bent by the dream with False strikes.
 _Avoid_: Dream god, the god
+
+**False strike**:
+A dream copy of one of the Lesser god's attacks that looks real but hits nothing. Only the real strike has the true wind-up. Parrying a False strike counts as a missed Parry.
+_Avoid_: Fake attack, illusion, feint
 
 **Undead**:
 A body still animated by the magical energy left in it after its mage overcast and died; the person is gone. Most stand motionless; now and then one wakes by pure chance, with no pattern, and fights. A waking Undead always gives a clear warning and takes a moment to rise before it can attack.
 _Avoid_: Zombie, hollow, revenant
+
+**Small Ilion**:
+An Ilion that does not attack but hurts anyone who touches it. It can be burnt.
+_Avoid_: Ilion sprout, minor Ilion
+
+**Large Ilion**:
+A rooted Ilion that cannot move but lashes out at anyone in reach with whip-like tendrils. It can be burnt or fought up close.
+_Avoid_: Ilion whip, greater Ilion
+
+**Crawler**:
+A small, fast creature of the dark that hunts in packs in the Base of the tree.
+_Avoid_: Bug, mite
+
+**Nar guard**:
+An armed Nar warrior with a spear who guards the arch tree; the enemy of the Capture, and of the Fugitive.
+_Avoid_: Soldier, sentry
+
+**Nar jailer**:
+A Nar guard of the Dungeons who Blocks and Parries the player's attacks.
+_Avoid_: Warden, prison guard
+
+**Root crawler**:
+A Sound hunter that swarms in the dark Rooms of the Dungeons.
+_Avoid_: Root bug, swarm
+
+**Branch thrower**:
+A Nar who throws spears in the Upper tree from branches the player cannot reach.
+_Avoid_: Archer, spearman
+
+**Canopy flier**:
+A creature of the Upper tree that swoops down on the player from above.
+_Avoid_: Bat, glider
+
+**Fungus beast**:
+A slow creature of the Lands between that leaves lingering spore clouds on the ground.
+_Avoid_: Mushroom monster, sporeling
+
+**Storm flier**:
+A creature of the Tempest that dives along the Wind, faster when it flies with it.
+_Avoid_: Storm bird, harpy
 
 **Necro mage**:
 A hostile mage met in the Tempest who channels against the player.
