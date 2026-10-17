@@ -33,5 +33,5 @@ Each area is an Open map: one continuous space that the camera follows the playe
 
 ## References
 
-- #FEATURE_AREAS — the first five areas, which this decides the structure for.
+- #1 — the first five areas, which this decides the structure for.
 - `CONTEXT.md`: Open map, Room, Pursuit.
