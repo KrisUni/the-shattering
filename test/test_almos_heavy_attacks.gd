@@ -37,6 +37,8 @@ const LONG_REFILL_PAUSE := 10.0
 const WAIT_LIMIT := 3.0
 # The most physics frames any wait for a number of them may take.
 const WAIT_FRAME_LIMIT := 240
+# How many physics frames a target is watched for when the sword is not to touch it.
+const UNTOUCHED_FRAMES := 30
 
 # Each way to press the Heavy attack button other than as the action itself.
 var heavy_binding_params = ParameterFactory.named_parameters(
@@ -234,6 +236,26 @@ func test_a_heavy_swing_lasts_its_startup_active_and_recovery_frames() -> void:
 		assert_almost_eq(_rig.samples[i].position, _rig.samples[span.x - 1].position, Vector2.ONE * POSITION_TOLERANCE, "sample %d: he should stand still in the swing" % i)
 
 
+func test_the_sword_is_off_and_hidden_once_a_heavy_swing_ends_even_when_it_has_no_recovery() -> void:
+	var weapon := _weapon_with_no_recovery()
+	var heavy := weapon.heavy_attack
+	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}), weapon)
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	await _tap_heavy()
+	await _wait_for_the_swing_to_end()
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	var span := _rig.attack_span()
+	assert_eq(span.y - span.x, heavy.startup_frames + heavy.active_frames, "a swing with no recovery should end with its active frames")
+	var sword := _rig.almos.get_node("Sword") as Hitbox
+	assert_false(sword.active, "the sword should be off once the swing has ended")
+	assert_false(sword.visible, "the sword should be hidden once the swing has ended")
+	var late := _rig.place_target(_rig.almos.global_position + Vector2.DOWN * AttackRig.TARGET_DISTANCE)
+	await _rig.wait_frames(UNTOUCHED_FRAMES)
+	assert_almost_eq(late.health.current, AttackRig.TARGET_HEALTH, HEALTH_TOLERANCE, "a target that comes into the sword after the swing should not be hurt")
+
+
 func test_a_swing_with_less_stamina_than_a_heavy_attack_costs_still_goes_ahead_and_empties_it() -> void:
 	var heavy := _weapon().heavy_attack
 	_rig.spawn_almos(_almos_input, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
@@ -421,6 +443,16 @@ func _weapon() -> WeaponData:
 # before any test runs.
 static func _heavy_data() -> HeavyAttackData:
 	return (load(WEAPON_PATH) as WeaponData).heavy_attack
+
+
+# The sword data file's attacks, with no recovery frames on any of them, for a test that needs
+# a swing that ends the moment its active frames do. Nothing is shared with the data file.
+func _weapon_with_no_recovery() -> WeaponData:
+	var weapon := _weapon().duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as WeaponData
+	for swing in weapon.light_attacks:
+		swing.recovery_frames = 0
+	weapon.heavy_attack.recovery_frames = 0
+	return weapon
 
 
 func _tuning() -> PlayerTuning:

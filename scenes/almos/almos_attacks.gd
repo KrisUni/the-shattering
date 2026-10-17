@@ -77,9 +77,7 @@ func advance(aim: Vector2, can_start: bool) -> void:
 	if _charging:
 		_charge(aim)
 	if attacking:
-		hitbox.active = _frame >= _swing.startup_frames and _frame < _swing.startup_frames + _swing.active_frames
-		# The sword's placeholder look shows while it can hurt.
-		hitbox.visible = hitbox.active
+		_set_sword(_frame >= _swing.startup_frames and _frame < _swing.startup_frames + _swing.active_frames)
 		if press != Press.NONE and _in_buffer_window():
 			_queued = press
 		_frame += 1
@@ -149,11 +147,21 @@ func _begin_swing(swing: AttackData, damage: float, aim: Vector2) -> void:
 	hitbox.rotation = aim.angle()
 
 
-# The swing's recovery is over. The combo is over with it, unless a press was kept to go on.
+# The swing's recovery is over, and the sword is switched off whatever frame it was on: a
+# swing with no recovery ends in its last active frame. The combo is over with the swing,
+# unless a press was kept to go on.
 func _end_swing() -> void:
 	_frame = -1
+	_set_sword(false)
 	if _queued != Press.LIGHT:
 		_light_swing = 0
+
+
+# Switches the sword's Hitbox on or off, and its placeholder look, which shows while it can
+# hurt.
+func _set_sword(on: bool) -> void:
+	hitbox.active = on
+	hitbox.visible = on
 
 
 # Whether a press now is kept for the end of the swing: it comes in the last frames of the
