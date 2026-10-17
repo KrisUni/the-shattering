@@ -4,6 +4,7 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
+const ENEMY_TUNING_PATH := "res://data/training_enemy.tres"
 const TOLERANCE := 0.0001
 # In pixels. How far from the edge of the floor Almos starts when he is sent at a wall.
 const DISTANCE_FROM_WALL := 150.0
@@ -166,6 +167,25 @@ func test_sprinting_at_a_wall_keeps_almos_on_the_floor(params = use_parameters(w
 
 	assert_true(floor_bounds.has_point(almos.global_position), "Almos should still be on the floor, but is at %s" % almos.global_position)
 	assert_gte((almos.global_position - start).dot(params.direction), LEAST_PROGRESS, "Almos should have got up to the wall")
+
+
+func test_the_test_room_has_a_training_enemy_going_after_almos_from_a_little_way_off() -> void:
+	var enemy_tuning := load(ENEMY_TUNING_PATH) as EnemyTuning
+	assert_not_null(enemy_tuning, "the training enemy tuning data file should load")
+	if enemy_tuning == null:
+		return
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	var enemy = room.find_child("TrainingEnemy", true, false)
+	assert_not_null(almos, "the test room should contain Almos")
+	assert_not_null(enemy, "the test room should contain a TrainingEnemy")
+	if almos == null or enemy == null:
+		return
+
+	assert_eq(enemy.target, almos, "the training enemy should go after Almos")
+	assert_gt(enemy.global_position.distance_to(almos.global_position), enemy_tuning.attack_range, "it should start out of reach of him")
 
 
 # The test room, in the test's scene tree, or null if its scene will not load. The test
