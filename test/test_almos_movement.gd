@@ -46,6 +46,9 @@ var _almos_input: AlmosInput
 
 
 func before_each() -> void:
+	# Start between two physics frames, as real input arrives, so what the test spawns is first processed after the first sample
+	# and what it presses is seen from the next frame. GUT alone would start it in the physics frame the last test ended in.
+	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
 
 
