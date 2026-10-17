@@ -15,7 +15,7 @@ radius = 12.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
 size = Vector2(28, 28)
 
-[node name="TrainingEnemy" type="CharacterBody2D"]
+[node name="TrainingEnemy" type="CharacterBody2D" groups=["enemies"]]
 motion_mode = 1
 script = ExtResource("1_script")
 tuning = ExtResource("2_tuning")

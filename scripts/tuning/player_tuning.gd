@@ -45,3 +45,11 @@ extends Resource
 ## A tap in the last this many seconds of a Roll queues another Roll, which starts the
 ## moment the current one ends.
 @export var roll_buffer_window: float
+
+## How far from Almos, in pixels, an enemy can be for Lock-on to pick it.
+@export var lock_on_range: float
+
+## How far from Almos, in pixels, the target of a Lock-on can get before the lock breaks.
+## At least lock_on_range, so that a target standing at the edge of the range does not
+## flicker between locked and not.
+@export var lock_on_break_range: float

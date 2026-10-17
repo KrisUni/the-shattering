@@ -8,6 +8,7 @@
 [ext_resource type="Resource" path="res://data/sword.tres" id="6_weapon"]
 [ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="7_hitbox"]
 [ext_resource type="Script" path="res://scenes/almos/almos_attacks.gd" id="8_attacks"]
+[ext_resource type="Script" path="res://scenes/almos/almos_lock_on.gd" id="9_lock_on"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -66,3 +67,14 @@ polygon = PackedVector2Array(14, -14, 42, -14, 42, 14, 14, 14)
 script = ExtResource("8_attacks")
 hitbox = NodePath("../Sword")
 stamina = NodePath("../Stamina")
+
+[node name="LockOnMarker" type="Polygon2D" parent="."]
+top_level = true
+visible = false
+color = Color(0.95, 0.85, 0.3, 1)
+polygon = PackedVector2Array(5.18, -19.32, 10, -17.32, 14.14, -14.14, 17.32, -10, 19.32, -5.18, 20, 0, 19.32, 5.18, 17.32, 10, 14.14, 14.14, 10, 17.32, 5.18, 19.32, 0, 20, -5.18, 19.32, -10, 17.32, -14.14, 14.14, -17.32, 10, -19.32, 5.18, -20, 0, -19.32, -5.18, -17.32, -10, -14.14, -14.14, -10, -17.32, -5.18, -19.32, -4.14, -15.45, -8, -13.86, -11.31, -11.31, -13.86, -8, -15.45, -4.14, -16, 0, -15.45, 4.14, -13.86, 8, -11.31, 11.31, -8, 13.86, -4.14, 15.45, 0, 16, 4.14, 15.45, 8, 13.86, 11.31, 11.31, 13.86, 8, 15.45, 4.14, 16, 0, 15.45, -4.14, 13.86, -8, 11.31, -11.31, 8, -13.86, 4.14, -15.45)
+
+[node name="LockOn" type="Node" parent="." node_paths=PackedStringArray("almos", "marker")]
+script = ExtResource("9_lock_on")
+almos = NodePath("..")
+marker = NodePath("../LockOnMarker")

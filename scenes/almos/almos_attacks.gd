@@ -53,10 +53,12 @@ var _charge_frames := 0
 var _queued := Press.NONE
 
 
-## Lets one physics frame go by. Called once per frame by Almos, who says which way he
-## faces and whether he is free to begin an attack, which he is not in the middle of a Roll.
+## Lets one physics frame go by. Called once per frame by Almos, who says which way a swing
+## that begins now is aimed (at the target under Lock-on, along his facing otherwise) and
+## whether he is free to begin an attack, which he is not in the middle of a Roll. The aim is
+## fixed when the swing begins: the swing commits, so it does not follow the target after.
 ## It reads the attack buttons itself.
-func advance(facing: Vector2, can_start: bool) -> void:
+func advance(aim: Vector2, can_start: bool) -> void:
 	var press := _pressed()
 	if attacking and _frame >= _swing_frames():
 		_end_swing()
@@ -65,10 +67,10 @@ func advance(facing: Vector2, can_start: bool) -> void:
 			press = _queued
 		_queued = Press.NONE
 	if not attacking and not _charging and can_start and press != Press.NONE:
-		_begin(press, facing)
+		_begin(press, aim)
 		press = Press.NONE
 	if _charging:
-		_charge(facing)
+		_charge(aim)
 	if attacking:
 		hitbox.active = _frame >= _swing.startup_frames and _frame < _swing.startup_frames + _swing.active_frames
 		# The sword's placeholder look shows while it can hurt.
@@ -87,14 +89,14 @@ func _pressed() -> Press:
 	return Press.NONE
 
 
-func _begin(press: Press, facing: Vector2) -> void:
+func _begin(press: Press, aim: Vector2) -> void:
 	if press == Press.LIGHT:
-		_begin_light(facing)
+		_begin_light(aim)
 	else:
 		_begin_charge()
 
 
-func _begin_light(facing: Vector2) -> void:
+func _begin_light(aim: Vector2) -> void:
 	# After the last swing the combo starts over at the first.
 	var index := _light_swing % weapon.light_attacks.size()
 	var next := weapon.light_attacks[index]
@@ -103,7 +105,7 @@ func _begin_light(facing: Vector2) -> void:
 		_light_swing = 0
 		return
 	_light_swing = index + 1
-	_begin_swing(next, next.damage, facing)
+	_begin_swing(next, next.damage, aim)
 
 
 func _begin_charge() -> void:
@@ -118,7 +120,7 @@ func _begin_charge() -> void:
 
 # Charging goes on for as long as the button is held, up to the full charge, and the swing
 # begins when it is let go or the charge is full.
-func _charge(facing: Vector2) -> void:
+func _charge(aim: Vector2) -> void:
 	var heavy := weapon.heavy_attack
 	if Input.is_action_pressed(&"attack_heavy") and _charge_frames < heavy.charge_frames_max:
 		_charge_frames += 1
@@ -127,14 +129,14 @@ func _charge(facing: Vector2) -> void:
 	# Damage and cost grow in a straight line from the uncharged to the fully charged ones.
 	var charge := float(_charge_frames) / heavy.charge_frames_max
 	if stamina.spend(lerpf(heavy.stamina_cost, heavy.charged_stamina_cost, charge)):
-		_begin_swing(heavy, lerpf(heavy.damage, heavy.charged_damage, charge), facing)
+		_begin_swing(heavy, lerpf(heavy.damage, heavy.charged_damage, charge), aim)
 
 
-func _begin_swing(swing: AttackData, damage: float, facing: Vector2) -> void:
+func _begin_swing(swing: AttackData, damage: float, aim: Vector2) -> void:
 	_swing = swing
 	_frame = 0
 	hitbox.damage = damage
-	hitbox.rotation = facing.angle()
+	hitbox.rotation = aim.angle()
 
 
 # The swing's recovery is over. The combo is over with it, unless a press was kept to go on.

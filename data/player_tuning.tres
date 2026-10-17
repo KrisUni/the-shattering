@@ -18,3 +18,5 @@ roll_stamina_cost = 30.0
 roll_untouchable_start = 0.05
 roll_untouchable_duration = 0.15
 roll_buffer_window = 0.15
+lock_on_range = 300.0
+lock_on_break_range = 360.0
