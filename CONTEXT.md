@@ -179,7 +179,7 @@ A quick swing that chains into a short combo; costs stamina and commits the play
 _Avoid_: Attack, slash, quick attack
 
 **Heavy attack**:
-A slower, harder swing that can be charged by holding and builds more Stagger than a Light attack.
+A slower, harder swing that can be charged by holding and builds more Stagger than a Light attack. A tap shorter than the charge start gives the plain Heavy attack; a fully charged one comes out by itself.
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
