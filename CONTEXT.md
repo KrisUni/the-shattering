@@ -215,7 +215,7 @@ The player's preferred defence: a quick evasive move in any direction that costs
 _Avoid_: Dodge, dash, evade
 
 **Sprint**:
-Fast running, done by holding the Roll button; drains Stamina continuously and stops it refilling while it lasts.
+Fast running, done by holding the Roll button while moving; drains Stamina continuously and stops it refilling while it lasts. Running out of Stamina ends a Sprint until the button is released and held again.
 _Avoid_: Run, dash
 
 **Jump**:

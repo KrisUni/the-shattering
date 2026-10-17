@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/almos/almos.gd" id="1_script"]
+[ext_resource type="Resource" path="res://data/player_tuning.tres" id="2_tuning"]
+[ext_resource type="Script" path="res://scripts/stamina.gd" id="3_stamina"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 12.0
+
+[node name="Almos" type="CharacterBody2D"]
+motion_mode = 1
+script = ExtResource("1_script")
+tuning = ExtResource("2_tuning")
+
+[node name="Placeholder" type="Polygon2D" parent="."]
+color = Color(0.45, 0.25, 0.7, 1)
+polygon = PackedVector2Array(14, 0, -10, -10, -4, 0, -10, 10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="Stamina" type="Node" parent="."]
+script = ExtResource("3_stamina")

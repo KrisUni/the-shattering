@@ -60,11 +60,11 @@ Agents never merge.
 
 ## Verification
 
-The Godot project does not exist yet. The first Task creates it and fills in this table.
+Tests use GUT and run headless through `scripts/test.sh`, which runs the headless import pass before every run (about 5 seconds, so a new `class_name` is always registered) and fails the run if GUT skipped a test script because it would not load. `GODOT` must point at a Godot 4.7 binary (it defaults to `godot` on PATH).
 
 | Area | Guide | Narrow test | Full suite |
 | --- | --- | --- | --- |
-| game (repository root) | — | set by the first Task | set by the first Task |
+| game (repository root) | — | `scripts/test.sh res://test/test_<name>.gd` | `scripts/test.sh` |
 
 **Commands that need the user's explicit approval before an agent runs them:** none yet.
 
