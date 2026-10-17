@@ -56,7 +56,10 @@ func _physics_process(delta: float) -> void:
 	# get_vector applies the deadzone to the stick as a whole, not axis by axis, and
 	# never returns more than length 1, so diagonals are no faster.
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var tapped := _roll_button_tapped(delta)
+	# The order matters: a tap has to be read before the timer is reset by the end of the
+	# press, and the timer has to be advanced before _move_freely reads it.
+	var tapped := _roll_button_was_tapped()
+	_advance_roll_button_timer(delta)
 	# A finished Roll is ended at the start of the next frame, so that a queued Roll can
 	# start in that same frame and follow it without a gap.
 	if rolling and _roll_time >= tuning.roll_duration - TIME_SLACK:
@@ -102,19 +105,30 @@ func _face(direction: Vector2) -> void:
 # moving), so letting go of it does not Roll. A press and release that both land before
 # the same frame never show the button down, so the just-pressed and just-released
 # checks catch them.
-func _roll_button_tapped(delta: float) -> bool:
-	var pressed := Input.is_action_pressed(&"roll")
-	var tapped := false
-	if _roll_button_held_for > 0.0 and (not pressed or Input.is_action_just_released(&"roll")):
-		# The press we were timing is over, even if the button went down again this frame.
-		tapped = not _held_to_the_threshold()
+#
+# Whether the press ended this frame as a tap. It only asks, and must be called before
+# _advance_roll_button_timer, which forgets the press once it has ended.
+func _roll_button_was_tapped() -> bool:
+	if _roll_press_ended():
+		return not _held_to_the_threshold()
+	# Pressed and let go again before this frame, so it was never seen down.
+	return Input.is_action_just_pressed(&"roll") and not Input.is_action_pressed(&"roll")
+
+
+# Times how long the button has been held, and forgets the press once it has ended.
+func _advance_roll_button_timer(delta: float) -> void:
+	if _roll_press_ended():
 		_roll_button_held_for = 0.0
 		_out_of_breath = false
-	elif Input.is_action_just_pressed(&"roll") and not pressed:
-		tapped = true
-	if pressed:
+	if Input.is_action_pressed(&"roll"):
 		_roll_button_held_for += delta
-	return tapped
+
+
+# Whether the press being timed is over: the button was let go, even if it went down
+# again in the same frame.
+func _roll_press_ended() -> bool:
+	return _roll_button_held_for > 0.0 \
+			and (not Input.is_action_pressed(&"roll") or Input.is_action_just_released(&"roll"))
 
 
 # Whether the press being timed has lasted as long as the hold threshold: from then on it
