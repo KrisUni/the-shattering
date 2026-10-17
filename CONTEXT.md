@@ -155,7 +155,7 @@ _Avoid_: Bonfire, save point, shrine
 ### Movement and combat
 
 **Lock-on**:
-The state in which the player targets a single enemy; while it holds, movement circles that enemy and every attack and roll is aimed relative to it.
+The state in which the player targets a single enemy; while it holds, movement circles that enemy and every attack and roll is aimed relative to it. Holding a direction unchanged keeps him circling the same way; a new direction is read afresh against the line to the target.
 _Avoid_: Target lock, Z-targeting, focus
 
 **Weapon**:
