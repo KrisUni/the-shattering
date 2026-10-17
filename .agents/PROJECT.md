@@ -60,7 +60,7 @@ Agents never merge.
 
 ## Verification
 
-Tests use GUT and run headless through `scripts/test.sh`, which does the first import pass on a fresh checkout. `GODOT` must point at a Godot 4.7 binary (it defaults to `godot` on PATH).
+Tests use GUT and run headless through `scripts/test.sh`, which runs the headless import pass before every run (about 5 seconds, so a new `class_name` is always registered) and fails the run if GUT skipped a test script because it would not load. `GODOT` must point at a Godot 4.7 binary (it defaults to `godot` on PATH).
 
 | Area | Guide | Narrow test | Full suite |
 | --- | --- | --- | --- |
