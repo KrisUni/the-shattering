@@ -60,6 +60,11 @@ var _frames_held := 0
 var _queued := Press.NONE
 
 
+func _ready() -> void:
+	# The sword sits as far out as the Weapon's data says it reaches.
+	hitbox.set_reach(weapon.reach)
+
+
 ## Lets one physics frame go by. Called once per frame by Almos, who says which way a swing
 ## that begins now is aimed (at the target under Lock-on, along his facing otherwise) and
 ## whether he is free to begin an attack, which he is not in the middle of a Roll. The aim is

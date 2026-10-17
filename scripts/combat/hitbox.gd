@@ -10,6 +10,13 @@ extends Area2D
 ## How much Health a hit takes off.
 @export var damage: float
 
+## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
+@export var strike_shape: CollisionShape2D
+
+## What is drawn of the strike while it is on, under this Hitbox. set_reach moves it with the
+## box, so that it keeps covering it. Optional.
+@export var strike_placeholder: Node2D
+
 ## Whether the swing is on. Switching it on starts a new swing, which may hit every
 ## Hurtbox again; switching it on when it is already on changes nothing.
 var active := false:
@@ -22,6 +29,21 @@ var active := false:
 # The Hurtboxes this swing has hit already. A hit that did not land, on someone untouchable,
 # does not count: a swing that is still on when they stop being untouchable catches them.
 var _hit: Array[Hurtbox] = []
+
+
+## Puts the strike this far out: the far edge of strike_shape lands reach pixels from this
+## Hitbox's origin along its local +x, and strike_placeholder moves the same distance. The box
+## keeps its width and height, and the Hitbox itself does not move, so a Hitbox that sits at
+## the attacker's centre and is turned to aim still turns about that centre. Done once the
+## scene is ready and again whenever the reach changes; doing it again for the same reach
+## changes nothing.
+func set_reach(reach: float) -> void:
+	assert(strike_shape != null and strike_shape.shape != null, "set_reach needs a strike_shape with a shape")
+	var far_edge := strike_shape.position.x + strike_shape.shape.get_rect().end.x
+	var shift := reach - far_edge
+	strike_shape.position.x += shift
+	if strike_placeholder != null:
+		strike_placeholder.position.x += shift
 
 
 func _physics_process(_delta: float) -> void:

@@ -13,6 +13,9 @@ const TOLERANCE := 0.0001
 # In pixels. How far below Almos the enemy stands: close enough for each to reach the other
 # with a swing, and clear of each other's bodies. Almos starts out facing down.
 const ENEMY_DISTANCE := 30.0
+# In pixels. How far beyond its attack range the enemy starts out from Almos in the test where
+# it walks up to him.
+const APPROACH_DISTANCE := 20.0
 # A tap: held this many physics frames, far shorter than a swing or a hold.
 const TAP_FRAMES := 3
 # How many physics frames after the enemy begins to wind up that a Roll must be tapped, at
@@ -47,6 +50,33 @@ func test_its_hit_takes_its_damage_off_almos_health() -> void:
 	var almos = _spawn_fight()
 
 	await _rig.wait_frames(attack.startup_frames + attack.active_frames + SETTLE_FRAMES)
+
+	assert_almost_eq(almos.health.current, almos.tuning.health_maximum - attack.damage, TOLERANCE)
+
+
+func test_it_swings_from_close_enough_for_its_strike_to_reach_almos() -> void:
+	var tuning := _rig.tuning_with()
+	var almos := autofree((load(AlmosInput.ALMOS_SCENE_PATH) as PackedScene).instantiate()) as Node
+	var hurtbox_shape := (almos.get_node("Hurtbox/CollisionShape2D") as CollisionShape2D).shape as CircleShape2D
+	assert_not_null(hurtbox_shape, "Almos's Hurtbox should be a circle")
+	if hurtbox_shape == null:
+		return
+
+	# It swings along the line to the middle of Almos once that is within attack_range, so the
+	# nearest edge of his Hurtbox is a radius short of that. The strike has to reach that edge.
+	assert_lte(tuning.attack_range - hurtbox_shape.radius, tuning.attack_reach, "how far the nearest edge of Almos's Hurtbox is when it swings, against how far its strike reaches")
+
+
+func test_it_walks_up_to_almos_and_its_first_strike_hits_him() -> void:
+	var attack := _rig.tuning_with().attack
+	var tuning := _rig.tuning_with()
+	var almos = _almos_input.spawn_almos()
+	_rig.spawn_enemy(null, almos.position + Vector2.DOWN * (tuning.attack_range + APPROACH_DISTANCE))
+	_rig.set_target(almos, almos.health)
+
+	# The frames it walks for, then its wind-up and strike.
+	var approach_frames := ceili(APPROACH_DISTANCE / (tuning.move_speed / Engine.physics_ticks_per_second))
+	await _rig.wait_frames(approach_frames + attack.startup_frames + attack.active_frames + SETTLE_FRAMES)
 
 	assert_almost_eq(almos.health.current, almos.tuning.health_maximum - attack.damage, TOLERANCE)
 

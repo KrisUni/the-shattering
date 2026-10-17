@@ -51,6 +51,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	health.depleted.connect(_on_depleted)
+	_hitbox.set_reach(tuning.attack_reach)
 
 
 func _physics_process(_delta: float) -> void:

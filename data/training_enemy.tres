@@ -16,4 +16,5 @@ health_maximum = 40.0
 move_speed = 70.0
 notice_range = 220.0
 attack_range = 40.0
+attack_reach = 42.0
 attack = SubResource("Resource_attack")

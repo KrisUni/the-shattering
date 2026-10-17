@@ -42,6 +42,7 @@ charged_stamina_cost = 70.0
 
 [resource]
 script = ExtResource("3_weapon")
+reach = 42.0
 light_attacks = Array[ExtResource("1_attack")]([SubResource("Resource_light_first"), SubResource("Resource_light_second"), SubResource("Resource_light_third")])
 heavy_attack = SubResource("Resource_heavy")
 attack_buffer_frames = 8

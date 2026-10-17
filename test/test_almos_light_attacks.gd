@@ -8,6 +8,7 @@ extends GutTest
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const AttackRig := preload("res://test/helpers/attack_rig.gd")
+const StrikeGeometry := preload("res://test/helpers/strike_geometry.gd")
 
 const TUNING_PATH := AlmosInput.TUNING_PATH
 const WEAPON_PATH := AlmosInput.WEAPON_PATH
@@ -28,6 +29,13 @@ const WAIT_LIMIT := 3.0
 const LONG_REFILL_PAUSE := 10.0
 # How many physics frames a target is watched for when the sword is not to touch it.
 const UNTOUCHED_FRAMES := 30
+# In pixels. How far a test moves the sword's reach from the one in the data file, to see the
+# sword follow it.
+const REACH_LONGER_BY := 20.0
+const REACH_SHORTER_BY := 10.0
+# In pixels. How far inside or beyond the sword's far edge a target's Hurtbox is put, when the
+# sword is to catch it or just miss it.
+const REACH_MARGIN := 1.0
 
 # How many physics frames after a swing's last active frame the target stops shrugging off
 # hits, and whether the swing then still hits it. The sword is on for the last active frame
@@ -35,6 +43,19 @@ const UNTOUCHED_FRAMES := 30
 var active_edge_params = ParameterFactory.named_parameters(
 	["frames_after_last_active", "hits"],
 	[[0, true], [1, false]],
+)
+
+# How the sword's reach is retuned from the one in the data file, how far beyond its far edge
+# the nearest edge of the target's Hurtbox is put (a negative number is inside it), and whether
+# the target is then hit.
+var reach_params = ParameterFactory.named_parameters(
+	["retune", "beyond_far_edge", "hits"],
+	[
+		[REACH_LONGER_BY, -REACH_MARGIN, true],
+		[REACH_LONGER_BY, REACH_MARGIN, false],
+		[-REACH_SHORTER_BY, -REACH_MARGIN, true],
+		[-REACH_SHORTER_BY, REACH_MARGIN, false],
+	],
 )
 
 # Where in the first swing a second press comes: in the last frame of its startup, in the
@@ -390,6 +411,40 @@ func test_the_sword_swings_the_way_he_faces() -> void:
 
 	assert_almost_eq(ahead.health.current, AttackRig.TARGET_HEALTH - swing.damage, HEALTH_TOLERANCE, "the target in front of him should be hit")
 	assert_almost_eq(_rig.target.health.current, AttackRig.TARGET_HEALTH, HEALTH_TOLERANCE, "the target he is not facing should not be")
+
+
+func test_the_sword_reaches_as_far_as_the_reach_in_its_weapon_data(params = use_parameters(reach_params)) -> void:
+	var swing := _weapon().light_attacks[0]
+	var weapon := _weapon().duplicate() as WeaponData
+	weapon.reach = _weapon().reach + params.retune
+	_rig.spawn_almos(_almos_input, null, weapon)
+	# He starts out facing down. The nearest edge of the Hurtbox is put this far beyond the
+	# sword's far edge.
+	var distance: float = weapon.reach + AttackRig.TARGET_RADIUS + params.beyond_far_edge
+	var probe := _rig.place_target(_rig.almos.global_position + Vector2.DOWN * distance)
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	await _tap_light()
+	await _rig.wait_frames(swing.startup_frames + swing.active_frames)
+
+	var hurt := probe.health.current < AttackRig.TARGET_HEALTH
+	assert_eq(hurt, params.hits, "whether the target was hit")
+
+
+func test_what_is_drawn_of_the_sword_covers_the_box_that_hurts_wherever_the_reach_is_tuned_to() -> void:
+	var weapon := _weapon().duplicate() as WeaponData
+	weapon.reach = _weapon().reach + REACH_LONGER_BY
+	_rig.spawn_almos(_almos_input, null, weapon)
+	var sword := _rig.almos.get_node("Sword") as Hitbox
+	var box_in_scene := StrikeGeometry.box_size_in_scene(AlmosInput.ALMOS_SCENE_PATH, "Sword")
+
+	var real := StrikeGeometry.real_box(sword)
+	var drawn := StrikeGeometry.drawn_box(sword)
+
+	assert_almost_eq(real.end.x, weapon.reach, POSITION_TOLERANCE, "how far out the box that hurts ends")
+	assert_almost_eq(real.size, box_in_scene, Vector2.ONE * POSITION_TOLERANCE, "the width and height of the box that hurts should be the scene's")
+	assert_almost_eq(drawn.position, real.position, Vector2.ONE * POSITION_TOLERANCE, "where the drawn sword starts, against the box that hurts")
+	assert_almost_eq(drawn.size, real.size, Vector2.ONE * POSITION_TOLERANCE, "the size of the drawn sword, against the box that hurts")
 
 
 func test_the_sword_is_off_and_hidden_once_a_swing_ends_even_when_it_has_no_recovery() -> void:

@@ -11,8 +11,8 @@ extends RefCounted
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
-# In pixels. How far in front of Almos the target stands: inside the reach of the sword as
-# the scene draws it.
+# In pixels. How far in front of Almos the target stands: inside the reach of the sword in its
+# data file.
 const TARGET_DISTANCE := 30.0
 # In pixels.
 const TARGET_RADIUS := 8.0

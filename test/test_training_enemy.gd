@@ -8,6 +8,7 @@ extends GutTest
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
+const StrikeGeometry := preload("res://test/helpers/strike_geometry.gd")
 
 # In Health points.
 const TOLERANCE := 0.0001
@@ -29,12 +30,32 @@ const OUT_OF_RANGE_MARGIN := 10.0
 # How different, as the sum of the differences in red, green and blue, its look must be while
 # it winds up for the player to see it. The same goes for its colour against Almos's.
 const VISIBLE_DIFFERENCE := 0.5
+# In pixels. How far a test moves the strike's reach from the one in the data file, to see the
+# strike follow it.
+const REACH_LONGER_BY := 20.0
+const REACH_SHORTER_BY := 10.0
+# In pixels. How far inside or beyond the strike's far edge a target's Hurtbox is put, when the
+# strike is to catch it or just miss it.
+const REACH_MARGIN := 1.0
 
 # Where the target stands from the enemy when it is to be hit: to either side, above and on
 # a slant.
 var direction_params = ParameterFactory.named_parameters(
 	["direction"],
 	[[Vector2.LEFT], [Vector2.UP], [Vector2(0.6, 0.8)]],
+)
+
+# How the strike's reach is retuned from the one in the data file, how far beyond its far edge
+# the nearest edge of the target's Hurtbox is put (a negative number is inside it), and whether
+# the target is then hit.
+var reach_params = ParameterFactory.named_parameters(
+	["retune", "beyond_far_edge", "hits"],
+	[
+		[REACH_LONGER_BY, -REACH_MARGIN, true],
+		[REACH_LONGER_BY, REACH_MARGIN, false],
+		[-REACH_SHORTER_BY, -REACH_MARGIN, true],
+		[-REACH_SHORTER_BY, REACH_MARGIN, false],
+	],
 )
 
 var _rig: EnemyRig
@@ -209,6 +230,35 @@ func test_its_strike_shows_for_as_long_as_its_hitbox_is_on() -> void:
 		if _rig.samples[i].strike_shown != _rig.samples[i].striking:
 			out_of_step.append(i)
 	assert_eq(out_of_step, [], "samples in which the strike is shown and its hitbox is on do not agree")
+
+
+func test_its_strike_reaches_as_far_as_the_attack_reach_in_the_tuning(params = use_parameters(reach_params)) -> void:
+	var reach: float = _rig.tuning_with().attack_reach + params.retune
+	# Where the target stands: the nearest edge of its Hurtbox is this far beyond the strike's
+	# far edge. It is in range to swing at, so that nothing but the reach decides the hit.
+	var distance: float = reach + EnemyRig.TARGET_RADIUS + params.beyond_far_edge
+	var tuning := _rig.tuning_with({"attack_reach": reach, "attack_range": distance})
+	_rig.spawn_enemy(tuning)
+	_rig.place_target(Vector2.RIGHT * distance)
+
+	await _rig.wait_frames(_attack_frames(tuning))
+
+	assert_eq(_rig.hits().size() == 1, params.hits, "whether the target was hit")
+
+
+func test_what_is_drawn_of_its_strike_covers_the_box_that_hurts_wherever_the_reach_is_tuned_to() -> void:
+	var reach := _rig.tuning_with().attack_reach + REACH_LONGER_BY
+	var enemy = _rig.spawn_enemy(_rig.tuning_with({"attack_reach": reach}))
+	var hitbox := enemy.get_node("Hitbox") as Hitbox
+	var box_in_scene := StrikeGeometry.box_size_in_scene(EnemyRig.ENEMY_SCENE_PATH, "Hitbox")
+
+	var real := StrikeGeometry.real_box(hitbox)
+	var drawn := StrikeGeometry.drawn_box(hitbox)
+
+	assert_almost_eq(real.end.x, reach, POSITION_TOLERANCE, "how far out the box that hurts ends")
+	assert_almost_eq(real.size, box_in_scene, Vector2.ONE * POSITION_TOLERANCE, "the width and height of the box that hurts should be the scene's")
+	assert_almost_eq(drawn.position, real.position, Vector2.ONE * POSITION_TOLERANCE, "where the drawn strike starts, against the box that hurts")
+	assert_almost_eq(drawn.size, real.size, Vector2.ONE * POSITION_TOLERANCE, "the size of the drawn strike, against the box that hurts")
 
 
 func test_its_hit_takes_its_damage_off_the_target_once_per_attack() -> void:
