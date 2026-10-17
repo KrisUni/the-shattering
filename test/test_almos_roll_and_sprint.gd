@@ -5,19 +5,17 @@ extends GutTest
 ## frame. Expected numbers come from the tuning data file the scene uses and plain
 ## arithmetic.
 
-const ALMOS_SCENE_PATH := "res://scenes/almos/almos.tscn"
-const TUNING_PATH := "res://data/player_tuning.tres"
+const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
-# Frames to let a pressed input reach Almos before we start measuring.
-const SETTLE_FRAMES := 2
+const TUNING_PATH := AlmosInput.TUNING_PATH
+const SETTLE_FRAMES := AlmosInput.SETTLE_FRAMES
 # A tap: held this many physics frames, far shorter than any sensible hold threshold.
 const TAP_FRAMES := 3
 # In pixels.
 const POSITION_TOLERANCE := 0.01
 # In pixels per second.
 const VELOCITY_TOLERANCE := 0.01
-# How many physics frames a speed is measured over.
-const MEASURED_FRAMES := 5
+const MEASURED_FRAMES := AlmosInput.MEASURED_FRAMES
 # Long enough for a drain of Stamina to show well above rounding error.
 const SPRINT_MEASURED_FRAMES := 10
 # How many frames of sprint a test leaves him the Stamina for.
@@ -33,8 +31,7 @@ const SECONDS_PAST_PAUSE := 0.3
 const REFILL_MARGIN := 0.05
 # In Stamina points.
 const STAMINA_TOLERANCE := 0.0001
-# Facing is a unit vector, so it needs a much tighter tolerance than pixels.
-const FACING_TOLERANCE := 0.0001
+const FACING_TOLERANCE := AlmosInput.FACING_TOLERANCE
 # In seconds. Added to one physics frame wherever a time can only be told to the nearest frame.
 const TIME_TOLERANCE := 0.0001
 # In frames. Keeps a time that is a whole number of frames from being counted as one more.
@@ -65,20 +62,23 @@ var threshold_edge_params = ParameterFactory.named_parameters(
 	[[-1, true], [0, false]],
 )
 
+var _almos_input: AlmosInput
 var _almos: Node2D
 var _samples: Array[Dictionary] = []
-var _held_actions: Array[StringName] = []
-var _held_events: Array[InputEvent] = []
+
+
+func before_each() -> void:
+	_almos_input = AlmosInput.new(self)
 
 
 func after_each() -> void:
 	_stop_sampling()
-	_release_everything()
+	_almos_input.release_everything()
 
 
 func test_tapping_roll_while_pushing_a_direction_rolls_the_tuned_distance_that_way() -> void:
 	_spawn_almos()
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 
 	await _tap_roll()
@@ -89,11 +89,11 @@ func test_tapping_roll_while_pushing_a_direction_rolls_the_tuned_distance_that_w
 
 func test_tapping_roll_with_nothing_pushed_rolls_the_way_he_faces() -> void:
 	_spawn_almos()
-	_press_action(&"move_up")
-	_press_action(&"move_left")
+	_almos_input.press_action(&"move_up")
+	_almos_input.press_action(&"move_left")
 	await wait_physics_frames(SETTLE_FRAMES)
-	_release_action(&"move_up")
-	_release_action(&"move_left")
+	_almos_input.release_action(&"move_up")
+	_almos_input.release_action(&"move_left")
 	await wait_physics_frames(SETTLE_FRAMES)
 
 	await _tap_roll()
@@ -119,7 +119,7 @@ func test_a_roll_costs_the_tuned_stamina_once_at_its_start() -> void:
 
 func test_tapping_roll_at_zero_stamina_does_nothing() -> void:
 	_spawn_almos(_tuning_with_long_refill_pause())
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	_almos.stamina.spend(_almos.stamina.maximum)
 	await wait_physics_frames(SETTLE_FRAMES)
 
@@ -188,7 +188,7 @@ func test_he_can_be_hurt_again_before_the_roll_ends() -> void:
 
 func test_he_is_not_untouchable_when_he_is_not_rolling() -> void:
 	_spawn_almos()
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
 	await _wait_for_the_roll_to_finish()
@@ -202,14 +202,14 @@ func test_he_is_not_untouchable_when_he_is_not_rolling() -> void:
 
 func test_pushing_another_way_during_a_roll_changes_neither_its_direction_nor_its_distance() -> void:
 	_spawn_almos()
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
 	await _wait_for_the_roll_to_start()
 
-	_release_action(&"move_right")
-	_press_action(&"move_left")
-	_press_action(&"move_up")
+	_almos_input.release_action(&"move_right")
+	_almos_input.press_action(&"move_left")
+	_almos_input.press_action(&"move_up")
 	await _wait_for_the_roll_to_finish()
 
 	assert_almost_eq(_roll_displacement(), Vector2(_tuning().roll_distance, 0.0), Vector2.ONE * POSITION_TOLERANCE)
@@ -217,14 +217,14 @@ func test_pushing_another_way_during_a_roll_changes_neither_its_direction_nor_it
 
 func test_he_faces_the_way_he_rolls_whatever_is_pushed_during_the_roll() -> void:
 	_spawn_almos()
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
 	await _wait_for_the_roll_to_start()
 
-	_release_action(&"move_right")
-	_press_action(&"move_up")
-	_press_action(&"move_left")
+	_almos_input.release_action(&"move_right")
+	_almos_input.press_action(&"move_up")
+	_almos_input.press_action(&"move_left")
 	await _wait_for_the_roll_to_finish()
 
 	var last_rolling_sample := _roll_span().y - 1
@@ -234,7 +234,7 @@ func test_he_faces_the_way_he_rolls_whatever_is_pushed_during_the_roll() -> void
 func test_a_tap_early_in_a_roll_is_ignored() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	var before: float = _almos.stamina.current
 	await _tap_roll()
@@ -252,12 +252,12 @@ func test_a_tap_early_in_a_roll_is_ignored() -> void:
 func test_holding_the_button_through_a_roll_neither_cuts_it_short_nor_makes_him_sprint_in_it() -> void:
 	var tuning := _tuning()
 	_spawn_almos()
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
 	await _wait_for_the_roll_to_start()
 
-	_press_action(&"roll")
+	_almos_input.press_action(&"roll")
 	await _wait_for_the_roll_to_finish()
 
 	var span := _roll_span()
@@ -272,7 +272,7 @@ func test_letting_go_of_a_hold_begun_during_a_roll_neither_cuts_it_short_nor_que
 	# would queue another roll.
 	var tuning := _tuning_with({"roll_hold_threshold": 0.1, "roll_duration": 0.5, "roll_buffer_window": 0.4})
 	_spawn_almos(tuning)
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
 	await _wait_for_the_roll_to_start()
@@ -290,7 +290,7 @@ func test_letting_go_of_a_hold_begun_during_a_roll_neither_cuts_it_short_nor_que
 func test_a_tap_in_the_last_moments_of_a_roll_queues_another_that_starts_as_it_ends() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	var before: float = _almos.stamina.current
 	await _tap_roll()
@@ -308,7 +308,7 @@ func test_a_tap_in_the_last_moments_of_a_roll_queues_another_that_starts_as_it_e
 func test_taps_in_the_last_moments_of_a_roll_queue_only_one_more_roll() -> void:
 	var tuning := _tuning_with({"roll_buffer_window": 0.25})
 	_spawn_almos(tuning)
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
 	await _wait_until_into_the_roll(tuning.roll_duration - tuning.roll_buffer_window + _frame_seconds())
@@ -325,7 +325,7 @@ func test_taps_in_the_last_moments_of_a_roll_queue_only_one_more_roll() -> void:
 func test_a_queued_roll_needs_stamina_of_its_own() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	_almos.stamina.spend(_almos.stamina.maximum - tuning.roll_stamina_cost)
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
@@ -342,12 +342,12 @@ func test_a_queued_roll_needs_stamina_of_its_own() -> void:
 func test_a_queued_roll_goes_the_way_he_is_pushing_when_it_starts() -> void:
 	var tuning := _tuning()
 	_spawn_almos()
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap_roll()
 	await _wait_for_the_roll_to_start()
-	_release_action(&"move_right")
-	_press_action(&"move_up")
+	_almos_input.release_action(&"move_right")
+	_almos_input.press_action(&"move_up")
 	await _wait_until_into_the_roll(_buffer_window_start() + _frame_seconds())
 
 	await _tap_roll()
@@ -359,7 +359,7 @@ func test_a_queued_roll_goes_the_way_he_is_pushing_when_it_starts() -> void:
 func test_a_roll_covers_the_tuned_distance_in_whole_frames_whatever_its_duration(params = use_parameters(duration_params)) -> void:
 	var tuning := _tuning_with({"roll_duration": params.duration})
 	_spawn_almos(tuning)
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 
 	await _tap_roll()
@@ -372,8 +372,8 @@ func test_a_roll_covers_the_tuned_distance_in_whole_frames_whatever_its_duration
 
 func test_holding_roll_while_pushing_a_direction_sprints_at_sprint_speed() -> void:
 	_spawn_almos()
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 
 	var first := _first_sample_where("sprinting")
@@ -387,10 +387,10 @@ func test_holding_roll_while_pushing_a_direction_sprints_at_sprint_speed() -> vo
 func test_sprint_starts_once_the_button_has_been_held_for_the_threshold() -> void:
 	var tuning := _tuning()
 	_spawn_almos()
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	var pressed_at := _samples.size()
-	_press_action(&"roll")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 
 	assert_eq(_first_sample_where("sprinting") - pressed_at, _frames_to_reach(tuning.roll_hold_threshold), "frames after the press that he starts sprinting")
@@ -399,14 +399,14 @@ func test_sprint_starts_once_the_button_has_been_held_for_the_threshold() -> voi
 func test_holding_roll_only_sprints_while_he_is_pushing_a_direction() -> void:
 	var hold_frames := _frames_to_reach(_tuning().roll_hold_threshold) + 2 * SETTLE_FRAMES
 	_spawn_almos()
-	_press_action(&"roll")
+	_almos_input.press_action(&"roll")
 	await wait_physics_frames(hold_frames)
 	assert_eq(_first_sample_where("sprinting"), -1, "he should not sprint standing still")
 
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	await _wait_for_sprinting()
 	await wait_physics_frames(SETTLE_FRAMES)
-	_release_action(&"move_right")
+	_almos_input.release_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 
 	assert_false(_samples.back().sprinting, "he should stop sprinting when he stops moving")
@@ -418,7 +418,7 @@ func test_holding_the_button_past_the_threshold_standing_still_spends_no_stamina
 	_almos.stamina.spend(tuning.stamina_maximum / 2.0)
 	var left: float = _almos.stamina.current
 
-	_press_action(&"roll")
+	_almos_input.press_action(&"roll")
 	await wait_physics_frames(_frames_to_reach(tuning.roll_hold_threshold) + 2 * SETTLE_FRAMES)
 
 	for i in _samples.size():
@@ -427,8 +427,8 @@ func test_holding_the_button_past_the_threshold_standing_still_spends_no_stamina
 
 func test_sprinting_spends_the_tuned_stamina_per_second() -> void:
 	_spawn_almos()
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 	var first := _first_sample_where("sprinting")
 	if first == -1:
@@ -443,12 +443,12 @@ func test_sprinting_spends_the_tuned_stamina_per_second() -> void:
 
 func test_letting_go_after_a_sprint_does_not_roll() -> void:
 	_spawn_almos()
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	_release_action(&"roll")
+	_almos_input.release_action(&"roll")
 	await wait_physics_frames(SETTLE_FRAMES + 2)
 
 	assert_eq(_first_sample_where("rolling"), -1, "he should not roll when the button that made him sprint is let go")
@@ -477,8 +477,8 @@ func test_a_press_shorter_than_the_hold_threshold_is_a_tap_and_a_longer_one_is_n
 func test_stamina_does_not_refill_however_long_he_sprints() -> void:
 	var tuning := _tuning_with({"stamina_refill_pause": SHORT_REFILL_PAUSE})
 	_spawn_almos(tuning)
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 	var first := _first_sample_where("sprinting")
 	if first == -1:
@@ -497,11 +497,11 @@ func test_stamina_refills_once_he_stops_sprinting_and_the_pause_has_passed() -> 
 	_spawn_almos(tuning)
 	# Far enough down that the refill does not reach the top within the test.
 	_almos.stamina.spend(tuning.stamina_maximum / 2.0)
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 	await _wait_for_samples(SPRINT_MEASURED_FRAMES)
-	_release_action(&"roll")
+	_almos_input.release_action(&"roll")
 	var stopped: bool = await wait_until(func(): return _samples.back().sprinting == false, WAIT_LIMIT)
 	assert_true(stopped, "he should have stopped sprinting")
 	var stopped_at := _samples.size() - 1
@@ -522,8 +522,8 @@ func test_he_cannot_start_a_sprint_at_zero_stamina() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
 	_almos.stamina.spend(_almos.stamina.maximum)
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await wait_physics_frames(_frames_to_reach(tuning.roll_hold_threshold) + SETTLE_FRAMES)
 	await _wait_for_samples(MEASURED_FRAMES)
 
@@ -537,8 +537,8 @@ func test_he_drops_to_walking_when_stamina_runs_out_mid_sprint_though_the_button
 	_spawn_almos()
 	# Just enough for a few frames of sprint.
 	_almos.stamina.spend(_almos.stamina.maximum - tuning.sprint_stamina_per_second * SPRINT_FRAMES_LEFT * _frame_seconds())
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 	var ran_out: bool = await wait_until(func(): return _samples.back().stamina <= 0.0, WAIT_LIMIT, "stamina should run out")
 	assert_true(ran_out, "his stamina should have run out")
@@ -555,8 +555,8 @@ func test_running_out_mid_sprint_ends_it_until_the_button_is_let_go_and_held_aga
 	_spawn_almos(tuning)
 	# Just enough for a few frames of sprint.
 	_almos.stamina.spend(tuning.stamina_maximum - tuning.sprint_stamina_per_second * SPRINT_FRAMES_LEFT * _frame_seconds())
-	_press_action(&"move_right")
-	_press_action(&"roll")
+	_almos_input.press_action(&"move_right")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting()
 	var ran_out: bool = await wait_until(func(): return _samples.back().stamina <= 0.0, WAIT_LIMIT, "stamina should run out")
 	assert_true(ran_out, "his stamina should have run out")
@@ -575,13 +575,13 @@ func test_running_out_mid_sprint_ends_it_until_the_button_is_let_go_and_held_aga
 
 	# Letting go and holding again starts a new sprint.
 	var let_go_at := _samples.size()
-	_release_action(&"roll")
+	_almos_input.release_action(&"roll")
 	await wait_physics_frames(SETTLE_FRAMES)
-	_press_action(&"roll")
+	_almos_input.press_action(&"roll")
 	await _wait_for_sprinting(let_go_at)
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	_release_action(&"roll")
+	_almos_input.release_action(&"roll")
 	await wait_physics_frames(SETTLE_FRAMES + 2)
 	assert_eq(_first_sample_where("rolling"), -1, "he should not roll when the button that made him sprint is let go")
 
@@ -590,9 +590,9 @@ func test_tapping_the_space_key_rolls() -> void:
 	_spawn_almos()
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	_press_key(KEY_SPACE)
+	_almos_input.press_key(KEY_SPACE)
 	await wait_physics_frames(TAP_FRAMES)
-	_release_everything()
+	_almos_input.release_everything()
 	await _wait_for_the_roll_to_finish()
 
 	assert_almost_eq(_roll_displacement(), Vector2.DOWN * _tuning().roll_distance, Vector2.ONE * POSITION_TOLERANCE)
@@ -603,8 +603,8 @@ func test_a_tap_pressed_and_let_go_within_one_physics_frame_still_rolls() -> voi
 	await wait_physics_frames(SETTLE_FRAMES)
 
 	# Both events are flushed together, so no physics frame ever sees the key down.
-	_press_key(KEY_SPACE)
-	_release_everything()
+	_almos_input.press_key(KEY_SPACE)
+	_almos_input.release_everything()
 	await _wait_for_the_roll_to_finish()
 
 	assert_almost_eq(_roll_displacement(), Vector2.DOWN * _tuning().roll_distance, Vector2.ONE * POSITION_TOLERANCE)
@@ -613,12 +613,12 @@ func test_a_tap_pressed_and_let_go_within_one_physics_frame_still_rolls() -> voi
 func test_letting_go_and_pressing_again_within_one_physics_frame_still_ends_the_first_press() -> void:
 	_spawn_almos()
 	await wait_physics_frames(SETTLE_FRAMES)
-	_press_key(KEY_SPACE)
+	_almos_input.press_key(KEY_SPACE)
 	await wait_physics_frames(TAP_FRAMES)
 
 	# The button is up and down again before the next physics frame, so it is never seen up.
-	_release_everything()
-	_press_key(KEY_SPACE)
+	_almos_input.release_everything()
+	_almos_input.press_key(KEY_SPACE)
 	Input.flush_buffered_events()
 	await _wait_for_the_roll_to_finish()
 
@@ -629,21 +629,16 @@ func test_tapping_the_bottom_right_face_button_of_a_pad_rolls() -> void:
 	_spawn_almos()
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	_press_joypad_button(JOY_BUTTON_B)
+	_almos_input.press_joypad_button(JOY_BUTTON_B)
 	await wait_physics_frames(TAP_FRAMES)
-	_release_everything()
+	_almos_input.release_everything()
 	await _wait_for_the_roll_to_finish()
 
 	assert_almost_eq(_roll_displacement(), Vector2.DOWN * _tuning().roll_distance, Vector2.ONE * POSITION_TOLERANCE)
 
 
 func _spawn_almos(tuning: PlayerTuning = null) -> Node2D:
-	var scene := load(ALMOS_SCENE_PATH) as PackedScene
-	assert_not_null(scene, "the Almos scene should load")
-	_almos = scene.instantiate()
-	if tuning != null:
-		_almos.tuning = tuning
-	add_child_autofree(_almos)
+	_almos = _almos_input.spawn_almos(tuning)
 	_samples.clear()
 	get_tree().physics_frame.connect(_take_sample)
 	return _almos
@@ -689,57 +684,11 @@ func _tuning_with(changes: Dictionary) -> PlayerTuning:
 	return tuning
 
 
-func _press_action(action: StringName) -> void:
-	Input.action_press(action)
-	_held_actions.append(action)
-
-
-# A key event as the keyboard delivers it: with the key's character and its position on
-# the keyboard both set, so bindings by either would match.
-func _press_key(keycode: Key) -> void:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.physical_keycode = keycode
-	event.pressed = true
-	Input.parse_input_event(event)
-	_held_events.append(event)
-
-
-# A button on a pad on the first device.
-func _press_joypad_button(button: JoyButton) -> void:
-	var event := InputEventJoypadButton.new()
-	event.device = 0
-	event.button_index = button
-	event.pressed = true
-	Input.parse_input_event(event)
-	_held_events.append(event)
-
-
-func _release_action(action: StringName) -> void:
-	Input.action_release(action)
-	_held_actions.erase(action)
-
-
-func _release_everything() -> void:
-	for action in _held_actions:
-		Input.action_release(action)
-	_held_actions.clear()
-	for event in _held_events:
-		var release := event.duplicate() as InputEvent
-		if release is InputEventJoypadMotion:
-			release.axis_value = 0.0
-		else:
-			release.pressed = false
-		Input.parse_input_event(release)
-	_held_events.clear()
-	Input.flush_buffered_events()
-
-
 # Presses the Roll button and lets go again after a few frames.
 func _tap_roll() -> void:
-	_press_action(&"roll")
+	_almos_input.press_action(&"roll")
 	await wait_physics_frames(TAP_FRAMES)
-	_release_action(&"roll")
+	_almos_input.release_action(&"roll")
 
 
 # Holds the Roll button for exactly this many physics frames: it is down for the first of
@@ -748,10 +697,10 @@ func _tap_roll() -> void:
 # one frame more than it is asked for.
 func _hold_roll_for(frames: int) -> void:
 	await get_tree().physics_frame
-	_press_action(&"roll")
+	_almos_input.press_action(&"roll")
 	for i in frames:
 		await get_tree().physics_frame
-	_release_action(&"roll")
+	_almos_input.release_action(&"roll")
 
 
 # The first stretch of samples in which Almos was rolling, as Vector2i(first, end): the

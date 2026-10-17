@@ -2,16 +2,14 @@ extends GutTest
 ## Almos walking, seen only through the scene: input goes in as actions or real
 ## input events, and we watch where he ends up.
 
-const ALMOS_SCENE_PATH := "res://scenes/almos/almos.tscn"
-const TUNING_PATH := "res://data/player_tuning.tres"
+const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
-# Frames to let a pressed input reach Almos before we start measuring.
-const SETTLE_FRAMES := 2
-const MEASURED_FRAMES := 5
+const TUNING_PATH := AlmosInput.TUNING_PATH
+const SETTLE_FRAMES := AlmosInput.SETTLE_FRAMES
+const MEASURED_FRAMES := AlmosInput.MEASURED_FRAMES
+const FACING_TOLERANCE := AlmosInput.FACING_TOLERANCE
 # In pixels per second.
 const TOLERANCE := 0.01
-# Facing is a unit vector, so it needs a much tighter tolerance than pixels per second.
-const FACING_TOLERANCE := 0.0001
 
 var key_params = ParameterFactory.named_parameters(
 	["key", "direction"],
@@ -44,65 +42,68 @@ var dpad_params = ParameterFactory.named_parameters(
 	],
 )
 
-var _held_actions: Array[StringName] = []
-var _held_events: Array[InputEvent] = []
+var _almos_input: AlmosInput
+
+
+func before_each() -> void:
+	_almos_input = AlmosInput.new(self)
 
 
 func after_each() -> void:
-	_release_everything()
+	_almos_input.release_everything()
 
 
 func test_pressing_move_right_walks_right_at_walk_speed() -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_press_action(&"move_right")
+	_almos_input.press_action(&"move_right")
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, Vector2(_walk_speed(), 0.0), Vector2.ONE * TOLERANCE)
 
 
 func test_wasd_and_arrow_keys_walk_in_their_direction(params = use_parameters(key_params)) -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_press_key(params.key)
+	_almos_input.press_key(params.key)
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, params.direction * _walk_speed(), Vector2.ONE * TOLERANCE)
 
 
 func test_left_stick_walks_in_the_direction_it_is_pushed(direction = use_parameters(stick_directions)) -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_push_left_stick(direction)
+	_almos_input.push_left_stick(direction)
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, direction * _walk_speed(), Vector2.ONE * TOLERANCE)
 
 
 func test_left_stick_pushed_between_axes_walks_that_way_at_full_speed(degrees = use_parameters(stick_angles)) -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 	var direction := Vector2.from_angle(deg_to_rad(degrees))
 
-	_push_left_stick(direction)
+	_almos_input.push_left_stick(direction)
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, direction * _walk_speed(), Vector2.ONE * TOLERANCE)
 
 
 func test_dpad_walks_in_its_direction(params = use_parameters(dpad_params)) -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_press_dpad(params.button)
+	_almos_input.press_joypad_button(params.button)
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, params.direction * _walk_speed(), Vector2.ONE * TOLERANCE)
 
 
 func test_walking_diagonally_is_no_faster_than_walking_straight() -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_press_key(KEY_W)
-	_press_key(KEY_D)
+	_almos_input.press_key(KEY_W)
+	_almos_input.press_key(KEY_D)
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity.length(), _walk_speed(), TOLERANCE, "diagonal speed should equal walk_speed")
@@ -110,12 +111,12 @@ func test_walking_diagonally_is_no_faster_than_walking_straight() -> void:
 
 
 func test_after_walking_down_left_and_stopping_almos_stands_still_facing_down_left() -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_press_key(KEY_S)
-	_press_key(KEY_A)
+	_almos_input.press_key(KEY_S)
+	_almos_input.press_key(KEY_A)
 	await wait_physics_frames(SETTLE_FRAMES)
-	_release_everything()
+	_almos_input.release_everything()
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, Vector2.ZERO, Vector2.ONE * TOLERANCE, "should stand still without input")
@@ -123,9 +124,9 @@ func test_after_walking_down_left_and_stopping_almos_stands_still_facing_down_le
 
 
 func test_facing_is_the_nearest_of_eight_directions_to_where_he_walks(params = use_parameters(facing_params)) -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_push_left_stick(Vector2.from_angle(deg_to_rad(params.stick_degrees)))
+	_almos_input.push_left_stick(Vector2.from_angle(deg_to_rad(params.stick_degrees)))
 	await wait_physics_frames(SETTLE_FRAMES)
 
 	var expected := Vector2.from_angle(deg_to_rad(params.facing_degrees))
@@ -133,71 +134,12 @@ func test_facing_is_the_nearest_of_eight_directions_to_where_he_walks(params = u
 
 
 func test_a_stick_resting_slightly_off_centre_does_not_move_him() -> void:
-	var almos = _spawn_almos()
+	var almos = _almos_input.spawn_almos()
 
-	_push_left_stick(Vector2(0.1, 0.05))
+	_almos_input.push_left_stick(Vector2(0.1, 0.05))
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, Vector2.ZERO, Vector2.ONE * TOLERANCE)
-
-
-func _spawn_almos():
-	var scene := load(ALMOS_SCENE_PATH) as PackedScene
-	assert_not_null(scene, "the Almos scene should load")
-	var almos = scene.instantiate()
-	add_child_autofree(almos)
-	return almos
-
-
-func _press_action(action: StringName) -> void:
-	Input.action_press(action)
-	_held_actions.append(action)
-
-
-# A key event as the keyboard delivers it: with the key's character and its position on
-# the keyboard both set, so bindings by either would match.
-func _press_key(keycode: Key) -> void:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.physical_keycode = keycode
-	event.pressed = true
-	Input.parse_input_event(event)
-	_held_events.append(event)
-
-
-# A pad on the first device, with the stick pushed to the given (x, y) in -1..1, down being +y.
-func _push_left_stick(pushed: Vector2) -> void:
-	for axis_and_value in [[JOY_AXIS_LEFT_X, pushed.x], [JOY_AXIS_LEFT_Y, pushed.y]]:
-		var event := InputEventJoypadMotion.new()
-		event.device = 0
-		event.axis = axis_and_value[0]
-		event.axis_value = axis_and_value[1]
-		Input.parse_input_event(event)
-		_held_events.append(event)
-
-
-func _press_dpad(button: JoyButton) -> void:
-	var event := InputEventJoypadButton.new()
-	event.device = 0
-	event.button_index = button
-	event.pressed = true
-	Input.parse_input_event(event)
-	_held_events.append(event)
-
-
-func _release_everything() -> void:
-	for action in _held_actions:
-		Input.action_release(action)
-	_held_actions.clear()
-	for event in _held_events:
-		var release := event.duplicate() as InputEvent
-		if release is InputEventJoypadMotion:
-			release.axis_value = 0.0
-		else:
-			release.pressed = false
-		Input.parse_input_event(release)
-	_held_events.clear()
-	Input.flush_buffered_events()
 
 
 # Almos's average velocity over a few physics frames, worked out from where he ends up

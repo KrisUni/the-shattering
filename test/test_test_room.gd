@@ -1,5 +1,7 @@
 extends GutTest
 
+const AlmosInput := preload("res://test/helpers/almos_input.gd")
+
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
 const TOLERANCE := 0.0001
@@ -20,13 +22,15 @@ var wall_params = ParameterFactory.named_parameters(
 	],
 )
 
-var _held_actions: Array[StringName] = []
+var _almos_input: AlmosInput
+
+
+func before_each() -> void:
+	_almos_input = AlmosInput.new(self)
 
 
 func after_each() -> void:
-	for action in _held_actions:
-		Input.action_release(action)
-	_held_actions.clear()
+	_almos_input.release_everything()
 
 
 func test_test_room_instantiates() -> void:
@@ -95,8 +99,8 @@ func test_sprinting_at_a_wall_keeps_almos_on_the_floor(params = use_parameters(w
 	var start: Vector2 = floor_bounds.get_center() + params.direction * (floor_bounds.size / 2.0 - Vector2.ONE * DISTANCE_FROM_WALL)
 	almos.global_position = start
 
-	_hold(params.action)
-	_hold(&"roll")
+	_almos_input.press_action(params.action)
+	_almos_input.press_action(&"roll")
 	await wait_seconds(SECONDS_AT_THE_WALL)
 
 	assert_true(floor_bounds.has_point(almos.global_position), "Almos should still be on the floor, but is at %s" % almos.global_position)
@@ -112,8 +116,3 @@ func _floor_bounds(room: Node) -> Rect2:
 	for point in floor_shape.polygon:
 		bounds = bounds.expand(floor_shape.to_global(point))
 	return bounds
-
-
-func _hold(action: StringName) -> void:
-	Input.action_press(action)
-	_held_actions.append(action)
