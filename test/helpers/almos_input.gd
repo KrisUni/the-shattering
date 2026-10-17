@@ -6,6 +6,7 @@ extends RefCounted
 
 const ALMOS_SCENE_PATH := "res://scenes/almos/almos.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
+const WEAPON_PATH := "res://data/sword.tres"
 
 # Frames to let a pressed input reach Almos before we start measuring.
 const SETTLE_FRAMES := 2
@@ -24,13 +25,16 @@ func _init(test: GutTest) -> void:
 	_test = test
 
 
-# Almos in the test's scene tree, given this tuning if there is one. The test frees him.
-func spawn_almos(tuning: PlayerTuning = null):
+# Almos in the test's scene tree, given this tuning and this weapon data if there are any.
+# The test frees him.
+func spawn_almos(tuning: PlayerTuning = null, weapon: WeaponData = null):
 	var scene := load(ALMOS_SCENE_PATH) as PackedScene
 	_test.assert_not_null(scene, "the Almos scene should load")
 	var almos = scene.instantiate()
 	if tuning != null:
 		almos.tuning = tuning
+	if weapon != null:
+		almos.weapon = weapon
 	_test.add_child_autofree(almos)
 	return almos
 
@@ -46,14 +50,34 @@ func release_action(action: StringName) -> void:
 
 
 # A key event as the keyboard delivers it: with the key's character and its position on
-# the keyboard both set, so bindings by either would match.
-func press_key(keycode: Key) -> void:
+# the keyboard both set, so bindings by either would match. An event left to itself is
+# taken in at the start of the next frame of the main loop, which can be after several
+# physics frames; at_once takes it in now, so that exactly the physics frames processed
+# from here on see it, as a real tap between two physics frames would be seen.
+func press_key(keycode: Key, at_once := false) -> void:
 	var event := InputEventKey.new()
 	event.keycode = keycode
 	event.physical_keycode = keycode
 	event.pressed = true
 	Input.parse_input_event(event)
+	if at_once:
+		Input.flush_buffered_events()
 	_held_events.append(event)
+
+
+# Lets go of a key pressed with press_key, as the keyboard does. at_once is as for
+# press_key.
+func release_key(keycode: Key, at_once := false) -> void:
+	for event in _held_events:
+		var pressed := event as InputEventKey
+		if pressed != null and pressed.keycode == keycode:
+			var release := pressed.duplicate() as InputEventKey
+			release.pressed = false
+			Input.parse_input_event(release)
+			if at_once:
+				Input.flush_buffered_events()
+			_held_events.erase(event)
+			return
 
 
 # A pad on the first device, with the stick pushed to the given (x, y) in -1..1, down being +y.
@@ -73,6 +97,27 @@ func press_joypad_button(button: JoyButton) -> void:
 	event.device = 0
 	event.button_index = button
 	event.pressed = true
+	Input.parse_input_event(event)
+	_held_events.append(event)
+
+
+# A mouse button, pressed with the pointer at the top left of the window.
+func press_mouse_button(button: MouseButton) -> void:
+	var event := InputEventMouseButton.new()
+	event.button_index = button
+	event.button_mask = 1 << (button - 1)
+	event.pressed = true
+	Input.parse_input_event(event)
+	_held_events.append(event)
+
+
+# A pad on the first device, with this axis pushed to this value, such as a trigger pulled
+# right in. Letting go puts it back to 0.
+func push_joypad_axis(axis: JoyAxis, value: float) -> void:
+	var event := InputEventJoypadMotion.new()
+	event.device = 0
+	event.axis = axis
+	event.axis_value = value
 	Input.parse_input_event(event)
 	_held_events.append(event)
 

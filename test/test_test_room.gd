@@ -4,6 +4,7 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
+const ENEMY_TUNING_PATH := "res://data/training_enemy.tres"
 const TOLERANCE := 0.0001
 # In pixels. How far from the edge of the floor Almos starts when he is sent at a wall.
 const DISTANCE_FROM_WALL := 150.0
@@ -83,6 +84,67 @@ func test_the_stamina_bar_follows_the_stamina_almos_has_left() -> void:
 	assert_almost_eq(bar.max_value, tuning.stamina_maximum, TOLERANCE)
 
 
+func test_the_health_bar_follows_the_health_almos_has_left() -> void:
+	var tuning := load(TUNING_PATH) as PlayerTuning
+	assert_not_null(tuning, "the player tuning data file should load")
+	if tuning == null:
+		return
+	assert_gt(tuning.health_maximum, 0.0, "health_maximum in the data file should be positive")
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	var bar = room.find_child("HealthBar", true, false)
+	assert_not_null(almos, "the test room should contain Almos")
+	assert_not_null(bar, "the test room should contain a HealthBar")
+	if almos == null or bar == null:
+		return
+	var damage := tuning.health_maximum / 4.0
+
+	almos.health.take_damage(damage)
+
+	assert_almost_eq(bar.value, tuning.health_maximum - damage, TOLERANCE)
+	assert_almost_eq(bar.max_value, tuning.health_maximum, TOLERANCE)
+
+
+func test_the_room_requests_a_restart_when_almos_health_reaches_zero() -> void:
+	var tuning := load(TUNING_PATH) as PlayerTuning
+	assert_not_null(tuning, "the player tuning data file should load")
+	if tuning == null:
+		return
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	assert_not_null(almos, "the test room should contain Almos")
+	if almos == null:
+		return
+	watch_signals(room)
+
+	almos.health.take_damage(tuning.health_maximum)
+
+	assert_signal_emit_count(room, "restart_requested", 1)
+
+
+func test_the_room_does_not_request_a_restart_while_almos_has_health_left() -> void:
+	var tuning := load(TUNING_PATH) as PlayerTuning
+	assert_not_null(tuning, "the player tuning data file should load")
+	if tuning == null:
+		return
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	assert_not_null(almos, "the test room should contain Almos")
+	if almos == null:
+		return
+	watch_signals(room)
+
+	almos.health.take_damage(tuning.health_maximum - 1.0)
+
+	assert_signal_not_emitted(room, "restart_requested")
+
+
 func test_sprinting_at_a_wall_keeps_almos_on_the_floor(params = use_parameters(wall_params)) -> void:
 	var scene := load(TEST_ROOM_PATH) as PackedScene
 	assert_not_null(scene, "the test room scene should load")
@@ -105,6 +167,37 @@ func test_sprinting_at_a_wall_keeps_almos_on_the_floor(params = use_parameters(w
 
 	assert_true(floor_bounds.has_point(almos.global_position), "Almos should still be on the floor, but is at %s" % almos.global_position)
 	assert_gte((almos.global_position - start).dot(params.direction), LEAST_PROGRESS, "Almos should have got up to the wall")
+
+
+func test_the_test_room_has_a_training_enemy_going_after_almos_from_a_little_way_off() -> void:
+	var enemy_tuning := load(ENEMY_TUNING_PATH) as EnemyTuning
+	assert_not_null(enemy_tuning, "the training enemy tuning data file should load")
+	if enemy_tuning == null:
+		return
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	var enemy = room.find_child("TrainingEnemy", true, false)
+	assert_not_null(almos, "the test room should contain Almos")
+	assert_not_null(enemy, "the test room should contain a TrainingEnemy")
+	if almos == null or enemy == null:
+		return
+
+	assert_eq(enemy.target, almos, "the training enemy should go after Almos")
+	assert_gt(enemy.global_position.distance_to(almos.global_position), enemy_tuning.attack_range, "it should start out of reach of him")
+
+
+# The test room, in the test's scene tree, or null if its scene will not load. The test
+# frees it.
+func _spawn_room() -> Node:
+	var scene := load(TEST_ROOM_PATH) as PackedScene
+	assert_not_null(scene, "the test room scene should load")
+	if scene == null:
+		return null
+	var room := scene.instantiate()
+	add_child_autofree(room)
+	return room
 
 
 # The floor's outline, as a rectangle in the room's own coordinates.

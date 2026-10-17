@@ -5,6 +5,9 @@ extends Resource
 ## Walking speed, in pixels per second.
 @export var walk_speed: float
 
+## The most Health Almos can have. A full bar is this much.
+@export var health_maximum: float
+
 ## The most Stamina Almos can have. A full bar is this much.
 @export var stamina_maximum: float
 
@@ -42,3 +45,20 @@ extends Resource
 ## A tap in the last this many seconds of a Roll queues another Roll, which starts the
 ## moment the current one ends.
 @export var roll_buffer_window: float
+
+## How far from Almos, in pixels, an enemy can be for Lock-on to pick it.
+@export var lock_on_range: float
+
+## How far from Almos, in pixels, the target of a Lock-on can get before the lock breaks.
+## At least lock_on_range, so that a target standing at the edge of the range does not
+## flicker between locked and not.
+@export var lock_on_break_range: float
+
+## How far, in degrees, the direction of the move input must turn from the direction Lock-on
+## latched before it latches afresh. Under Lock-on the move input is split against the line to
+## the target into a part along it and a part across it, and the split is latched when the input
+## starts. While the input stays within this much of the latched direction, Almos keeps the
+## same mix of closing in and circling however far round the target he has got. Past it, the
+## new direction is split against the line as it stands then. Letting go of the input clears
+## the latch too.
+@export var lock_on_relatch_degrees: float

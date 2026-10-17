@@ -2,6 +2,9 @@
 
 [ext_resource type="PackedScene" path="res://scenes/almos/almos.tscn" id="1_almos"]
 [ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="2_stamina_bar"]
+[ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="3_health_bar"]
+[ext_resource type="Script" path="res://scenes/test_room.gd" id="4_room"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="5_enemy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
 size = Vector2(1152, 16)
@@ -10,6 +13,7 @@ size = Vector2(1152, 16)
 size = Vector2(16, 648)
 
 [node name="TestRoom" type="Node2D"]
+script = ExtResource("4_room")
 
 [node name="Floor" type="Polygon2D" parent="."]
 color = Color(0.16, 0.16, 0.2, 1)
@@ -60,6 +64,10 @@ polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
 [node name="Almos" parent="." instance=ExtResource("1_almos")]
 position = Vector2(576, 324)
 
+[node name="TrainingEnemy" parent="." node_paths=PackedStringArray("target") instance=ExtResource("5_enemy")]
+position = Vector2(776, 324)
+target = NodePath("../Almos")
+
 [node name="Hud" type="CanvasLayer" parent="."]
 
 [node name="StaminaBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("stamina")]
@@ -70,3 +78,13 @@ offset_bottom = 32.0
 show_percentage = false
 script = ExtResource("2_stamina_bar")
 stamina = NodePath("../../Almos/Stamina")
+
+[node name="HealthBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("health")]
+modulate = Color(0.9, 0.35, 0.35, 1)
+offset_left = 16.0
+offset_top = 40.0
+offset_right = 216.0
+offset_bottom = 56.0
+show_percentage = false
+script = ExtResource("3_health_bar")
+health = NodePath("../../Almos/Health")

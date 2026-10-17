@@ -155,7 +155,7 @@ _Avoid_: Bonfire, save point, shrine
 ### Movement and combat
 
 **Lock-on**:
-The state in which the player targets a single enemy; while it holds, movement circles that enemy and every attack and roll is aimed relative to it.
+The state in which the player targets a single enemy; while it holds, movement circles that enemy and every attack and roll is aimed relative to it. Holding a direction unchanged keeps him circling the same way; a new direction is read afresh against the line to the target.
 _Avoid_: Target lock, Z-targeting, focus
 
 **Weapon**:
@@ -179,7 +179,7 @@ A quick swing that chains into a short combo; costs stamina and commits the play
 _Avoid_: Attack, slash, quick attack
 
 **Heavy attack**:
-A slower, harder swing that can be charged by holding and builds more Stagger than a Light attack.
+A slower, harder swing that can be charged by holding and builds more Stagger than a Light attack. A tap shorter than the charge start gives the plain Heavy attack; a fully charged one comes out by itself.
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
