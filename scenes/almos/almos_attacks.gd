@@ -46,8 +46,9 @@ var light_swing: int:
 	get:
 		return _light_swing
 
-# How many frames into the swing under way, which is 0 on its first frame. -1 when there is
-# no swing.
+# The frame of the swing under way that advance is processing, counted as AttackData counts
+# them, from 0 for its first frame; it moves on to the next frame as advance finishes. -1 when
+# there is no swing.
 var _frame := -1
 var _swing: AttackData
 var _light_swing := 0
@@ -66,7 +67,7 @@ var _queued := Press.NONE
 ## It reads the attack buttons itself.
 func advance(aim: Vector2, can_start: bool) -> void:
 	var press := _pressed()
-	if attacking and _frame >= _swing_frames():
+	if attacking and _frame >= _swing.total_frames():
 		# A press seen on this frame is later than one kept for it, so it takes its place:
 		# the latest press wins.
 		if press != Press.NONE and _queued != Press.NONE:
@@ -82,7 +83,7 @@ func advance(aim: Vector2, can_start: bool) -> void:
 	if _charging:
 		_charge(aim)
 	if attacking:
-		_set_sword(_frame >= _swing.startup_frames and _frame < _swing.startup_frames + _swing.active_frames)
+		_set_sword(_swing.is_active(_frame))
 		if press != Press.NONE and _in_buffer_window():
 			_queued = press
 		_frame += 1
@@ -172,9 +173,4 @@ func _set_sword(on: bool) -> void:
 # Whether a press now is kept for the end of the swing: it comes in the last frames of the
 # recovery, however long the buffer window is.
 func _in_buffer_window() -> bool:
-	var recovery_start := _swing.startup_frames + _swing.active_frames
-	return _frame >= recovery_start and _frame >= _swing_frames() - weapon.attack_buffer_frames
-
-
-func _swing_frames() -> int:
-	return _swing.startup_frames + _swing.active_frames + _swing.recovery_frames
+	return _swing.is_recovering(_frame) and _frame >= _swing.total_frames() - weapon.attack_buffer_frames

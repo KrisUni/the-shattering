@@ -15,7 +15,7 @@ signal died
 ## Whether it is winding up: the attack's startup frames, before its Hitbox is on.
 var winding_up: bool:
 	get:
-		return attacking and _frame < tuning.attack.startup_frames
+		return tuning.attack.is_winding_up(_frame)
 
 ## Whether its Hitbox is on: the attack's active frames.
 var striking: bool:
@@ -35,8 +35,8 @@ var dead: bool:
 @onready var health: Health = $Health
 @onready var _hitbox: Hitbox = $Hitbox
 
-# The attack frame it last processed, which is 0 for the first frame of the attack. -1 when
-# there is no attack.
+# The frame of the attack it is processing, counted as AttackData counts them, from 0 for its
+# first frame. -1 when there is no attack.
 var _frame := -1
 var _dead := false
 
@@ -58,14 +58,14 @@ func _physics_process(_delta: float) -> void:
 		return
 	if attacking:
 		_frame += 1
-		if _frame >= _attack_frames():
+		if _frame >= tuning.attack.total_frames():
 			_frame = -1
 	# One that has died in this frame starts nothing new, but the frame is played out all the
 	# same: whichever of Almos's blow and its own strike is processed first, the one that
 	# lands in the frame of its death still lands.
 	if not attacking and not _dead:
 		_act_freely()
-	_set_strike(_in_active_frames())
+	_set_strike(tuning.attack.is_active(_frame))
 	modulate = WIND_UP_TINT if winding_up else Color.WHITE
 
 
@@ -82,22 +82,11 @@ func _act_freely() -> void:
 		move_and_slide()
 
 
-# Whether the attack under way is in its active frames, when its Hitbox is to be on.
-func _in_active_frames() -> bool:
-	var attack := tuning.attack
-	return attacking and _frame >= attack.startup_frames and _frame < attack.startup_frames + attack.active_frames
-
-
 # Switches the strike on or off: its Hitbox, and its placeholder look, which shows while the
 # Hitbox can hurt.
 func _set_strike(on: bool) -> void:
 	_hitbox.active = on
 	_hitbox.visible = on
-
-
-func _attack_frames() -> int:
-	var attack := tuning.attack
-	return attack.startup_frames + attack.active_frames + attack.recovery_frames
 
 
 func _on_depleted() -> void:
