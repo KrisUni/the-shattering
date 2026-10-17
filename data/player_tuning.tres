@@ -20,3 +20,4 @@ roll_untouchable_duration = 0.15
 roll_buffer_window = 0.15
 lock_on_range = 300.0
 lock_on_break_range = 360.0
+lock_on_relatch_degrees = 15.0

@@ -111,12 +111,14 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# Lock-on goes first, because everything below aims or moves by it: a target that died or
-	# got away since the last frame is let go of here, and a press of its button is read.
-	_lock_on.advance()
 	# get_vector applies the deadzone to the stick as a whole, not axis by axis, and
 	# never returns more than length 1, so diagonals are no faster.
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	# Lock-on goes first, because everything below aims or moves by it: a target that died or
+	# got away since the last frame is let go of here, and a press of its button is read. It is
+	# told the direction every frame, even one spent in a Roll or a swing, so that it can tell
+	# a direction held from one let go of.
+	_lock_on.advance(direction)
 	# The order matters: a tap has to be read before the timer is reset by the end of the
 	# press, and the timer has to be advanced before _move_freely reads it.
 	var tapped := _roll_button_was_tapped()

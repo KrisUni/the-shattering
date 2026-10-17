@@ -8,8 +8,11 @@ extends GutTest
 ##
 ## Pushing "straight across the line" to the target is done the way a player holds him on the
 ## circle: the stick is turned a little every frame so that it stays across the line as he
-## goes round. A stick held in one fixed direction is only across the line for a moment, and
-## after that part of it is along the line, which is the point of the screen-relative split.
+## goes round. A stick held in one fixed direction is split against the line once, when it is
+## first held (it is latched), and keeps that mix of closing in and going round as he goes
+## round, so one fixed key circles him too. It latches afresh when it is turned past a
+## tolerance from the latched direction, or let go of and pressed again, or the lock is made
+## afresh.
 ##
 ## A sample is taken at the start of each physics frame, before anything has moved in it, so
 ## it shows how its predecessor left things: a sample's position and facing are the ones the
@@ -52,6 +55,27 @@ const CIRCLING_SECONDS := 1.0
 const WALL_DISTANCE := 40.0
 # In pixels. How far short of a wall he may be stopped by it.
 const WALL_SLACK := 3.0
+# In pixels. How far from the target he starts out in the test of going past halfway round it:
+# near, so that it takes little time.
+const NEAR_RADIUS := 60.0
+# In radians. How far round the target a test takes him to be past halfway (which is PI).
+const PAST_HALFWAY := 1.25 * PI
+# In degrees. How far inside or past the tolerance for latching afresh a test turns the stick,
+# to be clearly on one side of it.
+const RELATCH_MARGIN_DEGREES := 5.0
+# In degrees. How much each frame turns the stick in the test of a slow turn, and how far it
+# turns it in all. Each frame's turn is far within the tolerance, and the whole is far past it.
+const SLOW_TURN_DEGREES_PER_FRAME := 3.0
+const SLOW_TURN_DEGREES := 90.0
+# In degrees. How far the way he is going may be from the way the stick points, once it has
+# been turned slowly: the tolerance, plus the few degrees the line to the target turns
+# between one latching and the next. Going on round instead would be some 70 degrees off.
+const STEP_ANGLE_TOLERANCE_DEGREES := 30.0
+# How hard, as a share of full, a stick is pushed in the test of a lighter push.
+const HALF_STRENGTH := 0.5
+# As a share of a full walking step. For how a frame's step splits into the parts along the
+# line to the target and across it.
+const SPLIT_TOLERANCE := 0.005
 # The most physics frames any wait in these tests may take.
 const WAIT_FRAME_LIMIT := 240
 
@@ -81,6 +105,22 @@ var circling_params = ParameterFactory.named_parameters(
 var along_params = ParameterFactory.named_parameters(
 	["action", "closes"],
 	[[&"move_right", true], [&"move_left", false]],
+)
+
+# How far the stick is turned from the direction it was held in, as a margin inside or past
+# the tolerance for latching afresh, and whether it is then latched afresh.
+var turn_params = ParameterFactory.named_parameters(
+	["name", "margin_degrees", "afresh"],
+	[
+		["a wobble within the tolerance", -RELATCH_MARGIN_DEGREES, false],
+		["a turn past the tolerance", RELATCH_MARGIN_DEGREES, true],
+	],
+)
+
+# The ways the lock can be lost while a key is held.
+var lost_lock_params = ParameterFactory.named_parameters(
+	["how"],
+	[["the button"], ["the target's death"], ["the break range"]],
 )
 
 # Each way to press the Lock-on button other than as the action itself.
@@ -148,6 +188,13 @@ func test_the_lock_on_ranges_are_tuned_and_the_lock_does_not_break_before_it_cou
 
 	assert_gt(tuning.lock_on_range, 0.0, "lock_on_range in the data file should be positive")
 	assert_gte(tuning.lock_on_break_range, tuning.lock_on_range, "lock_on_break_range should be at least lock_on_range, so that a lock does not flicker at the edge")
+
+
+func test_the_tolerance_for_latching_afresh_is_tuned_between_nothing_and_a_half_turn() -> void:
+	var tuning := _tuning()
+
+	assert_gt(tuning.lock_on_relatch_degrees, 0.0, "lock_on_relatch_degrees in the data file should be positive, or a held direction would latch afresh every frame")
+	assert_lt(tuning.lock_on_relatch_degrees, 180.0, "lock_on_relatch_degrees in the data file should be less than a half turn, or no new direction would ever latch afresh")
 
 
 # --- Locking on and letting go ---
@@ -505,7 +552,58 @@ func test_pushing_towards_the_target_closes_the_distance_and_pushing_away_opens_
 		assert_almost_eq(_samples[j + 1].position.y, _samples[j].position.y, POSITION_TOLERANCE, "he should stay on the line to the target in frame %d" % j)
 
 
-func test_a_stick_held_across_and_towards_is_split_afresh_every_frame_into_the_two_parts() -> void:
+# --- Holding a direction keeps him circling ---
+
+func test_holding_one_key_keeps_him_going_round_the_target_at_a_constant_distance() -> void:
+	_spawn_almos()
+	var radius := _distance()
+	var enemy := _place_enemy(Vector2.UP, radius)
+	await _lock_on()
+	var begun := _this_frame()
+
+	_almos_input.press_action(&"move_right")
+	await _wait_frames(_frames_for(CIRCLING_SECONDS))
+
+	var center: Vector2 = enemy.global_position
+	var first_move := _first_moving_frame(begun)
+	assert_ne(first_move, -1, "he should have moved")
+	if first_move == -1:
+		return
+	for i in range(first_move, _samples.size()):
+		assert_almost_eq(_samples[i].position.distance_to(center), radius, DISTANCE_TOLERANCE, "his distance to the target in sample %d" % i)
+	# Input stays screen-relative: his first step is the way the key points, which is across the
+	# line from the target to him.
+	var first_step: Vector2 = _samples[first_move + 1].position - _samples[first_move].position
+	assert_gt(first_step.normalized().dot(Vector2.RIGHT), 0.99, "he should set off the way the key points")
+	var seconds := float(_samples.size() - 1 - first_move) * _frame_seconds()
+	assert_almost_eq(absf(_total_angle_round(center, first_move)), _tuning().walk_speed * seconds / radius, TOTAL_ANGLE_TOLERANCE, "the angle he went round the target by")
+
+
+func test_holding_one_key_past_halfway_round_the_target_keeps_him_circling_as_his_screen_motion_reverses() -> void:
+	_spawn_almos()
+	var radius := NEAR_RADIUS
+	var enemy := _place_enemy(Vector2.UP, radius)
+	await _lock_on()
+	var begun := _this_frame()
+
+	_almos_input.press_action(&"move_right")
+	await _wait_frames(_frames_for(PAST_HALFWAY * radius / _tuning().walk_speed))
+
+	var center: Vector2 = enemy.global_position
+	var first_move := _first_moving_frame(begun)
+	assert_ne(first_move, -1, "he should have moved")
+	if first_move == -1:
+		return
+	for i in range(first_move, _samples.size()):
+		assert_almost_eq(_samples[i].position.distance_to(center), radius, DISTANCE_TOLERANCE, "his distance to the target in sample %d" % i)
+	assert_gt(absf(_total_angle_round(center, first_move)), PI, "he should have gone past halfway round")
+	var first_step: Vector2 = _samples[first_move + 1].position - _samples[first_move].position
+	var last_step: Vector2 = _samples[-1].position - _samples[-2].position
+	assert_gt(first_step.dot(Vector2.RIGHT), 0.0, "he should set off the way the key points")
+	assert_lt(last_step.dot(Vector2.RIGHT), 0.0, "past halfway he should be going the other way on the screen, with the key still held")
+
+
+func test_a_stick_held_across_and_towards_keeps_the_mix_latched_in_every_frame() -> void:
 	_spawn_almos()
 	var enemy := _place_enemy(Vector2.RIGHT, _distance())
 	await _lock_on()
@@ -519,17 +617,171 @@ func test_a_stick_held_across_and_towards_is_split_afresh_every_frame_into_the_t
 	var center: Vector2 = enemy.global_position
 	var first_move := _first_moving_frame(begun)
 	assert_ne(first_move, -1, "he should have moved")
-	var step := _tuning().walk_speed * _frame_seconds()
-	for j in range(maxi(first_move, 0), _samples.size() - 1):
-		# The line to the target turns as he goes round, so the same stick has a different
-		# part along the line and across it in every frame. The part along moves him that
-		# far closer or farther, and the part across that far round the circle he is on.
-		var offset: Vector2 = _samples[j].position - center
-		var after: Vector2 = _samples[j + 1].position - center
-		var outward := offset.normalized()
-		var around := outward.rotated(PI / 2.0)
-		assert_almost_eq(after.length() - offset.length(), stick.dot(outward) * step, POSITION_TOLERANCE, "how much farther he got in frame %d" % j)
-		assert_almost_eq(offset.angle_to(after) * offset.length(), stick.dot(around) * step, POSITION_TOLERANCE, "how far round he went in frame %d" % j)
+	if first_move == -1:
+		return
+	# The part of the stick along the line to the target and the part across it, as the line
+	# stood when he set off. Every frame moves him that far closer or farther and that far
+	# round, though the line turns as he goes.
+	var latched := _split_at(first_move, center, stick)
+	assert_gt(absf(latched.x), 0.1, "the stick should have a part along the line")
+	assert_gt(absf(latched.y), 0.1, "the stick should have a part across the line")
+	_assert_split_kept(center, first_move, latched, "his move")
+	# By the end the line has turned far enough for a fresh split to be told from the latched one.
+	var fresh_at_the_end := _split_at(_samples.size() - 2, center, stick)
+	assert_gt((fresh_at_the_end - latched).length(), 0.1, "the line should have turned enough for the test to show anything")
+
+
+func test_pushing_the_held_direction_less_hard_goes_round_more_slowly_in_the_same_mix() -> void:
+	_spawn_almos()
+	var enemy := _place_enemy(Vector2.UP, _distance())
+	await _lock_on()
+	var begun := _this_frame()
+	_almos_input.press_action(&"move_right")
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+	var center: Vector2 = enemy.global_position
+	var first_move := _first_moving_frame(begun)
+	assert_ne(first_move, -1, "he should have moved")
+	if first_move == -1:
+		return
+	var latched := _moved_split(center, first_move)
+
+	# A push past the deadzone reads as the share of the way to full that it covers: this one
+	# reads as half. The direction is the same, so the mix is too.
+	var deadzone := InputMap.action_get_deadzone(&"move_right")
+	Input.action_press(&"move_right", deadzone + HALF_STRENGTH * (1.0 - deadzone))
+	var eased := _this_frame()
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+
+	_assert_split_kept(center, eased, latched * HALF_STRENGTH, "his move at half strength")
+
+
+func test_changing_to_another_key_re_latches_against_the_line_at_that_moment() -> void:
+	_spawn_almos()
+	var enemy := _place_enemy(Vector2.UP, _distance())
+	await _lock_on()
+	var begun := _this_frame()
+	_almos_input.press_action(&"move_right")
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+	var center: Vector2 = enemy.global_position
+	var first_move := _first_moving_frame(begun)
+	assert_ne(first_move, -1, "he should have moved")
+	if first_move == -1:
+		return
+	var latched := _moved_split(center, first_move)
+
+	# The new key goes down in the frame the old one comes up, so that no frame sees none held.
+	_almos_input.release_action(&"move_right")
+	_almos_input.press_action(&"move_down")
+	var changed := _this_frame()
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+
+	var afresh := _split_at(changed, center, Vector2.DOWN)
+	assert_gt((afresh - latched).length(), 0.5, "the new key should split differently from the old one against the line now")
+	_assert_split_kept(center, changed, afresh, "his move after the change")
+
+
+func test_turning_the_stick_re_latches_only_when_it_is_past_the_tolerance(params = use_parameters(turn_params)) -> void:
+	_spawn_almos()
+	var enemy := _place_enemy(Vector2.UP, _distance())
+	await _lock_on()
+	var begun := _this_frame()
+	_almos_input.press_action(&"move_right")
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+	var center: Vector2 = enemy.global_position
+	var first_move := _first_moving_frame(begun)
+	assert_ne(first_move, -1, "he should have moved")
+	if first_move == -1:
+		return
+	var latched := _moved_split(center, first_move)
+	var turned_by: float = _tuning().lock_on_relatch_degrees + params.margin_degrees
+	var stick := Vector2.RIGHT.rotated(deg_to_rad(turned_by))
+
+	_hold_stick(stick)
+	var turned := _this_frame()
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+
+	var afresh := _split_at(turned, center, stick)
+	assert_gt((afresh - latched).length(), 0.2, "a fresh split should differ from the latched one, or the test shows nothing")
+	_assert_split_kept(center, turned, afresh if params.afresh else latched, "his move after %s" % params.name)
+
+
+func test_a_stick_turned_slowly_re_latches_once_it_is_past_the_tolerance_from_the_latched_direction() -> void:
+	_spawn_almos()
+	_place_enemy(Vector2.RIGHT, _distance())
+	await _lock_on()
+	assert_lt(SLOW_TURN_DEGREES_PER_FRAME, _tuning().lock_on_relatch_degrees, "each frame's turn should be within the tolerance, or the test shows nothing")
+	assert_gt(SLOW_TURN_DEGREES, _tuning().lock_on_relatch_degrees, "the whole turn should be past the tolerance, or the test shows nothing")
+
+	# He starts out going round, with the stick across the line to a target on his right, and
+	# the stick is turned a little every frame until it points at the target.
+	var stick := Vector2.UP
+	_hold_stick(stick)
+	await _wait_frames(SETTLE_FRAMES)
+	for i in ceili(SLOW_TURN_DEGREES / SLOW_TURN_DEGREES_PER_FRAME):
+		stick = stick.rotated(deg_to_rad(SLOW_TURN_DEGREES_PER_FRAME))
+		_hold_stick(stick)
+		await _wait_frames(1)
+	await _wait_frames(SETTLE_FRAMES)
+
+	var last_step: Vector2 = _samples[-1].position - _samples[-2].position
+	assert_lt(rad_to_deg(absf(last_step.angle_to(stick))), STEP_ANGLE_TOLERANCE_DEGREES, "degrees between the way he went in the last frame and the way the stick points")
+
+
+func test_letting_go_of_the_key_and_pressing_it_again_re_latches() -> void:
+	_spawn_almos()
+	var enemy := _place_enemy(Vector2.UP, _distance())
+	await _lock_on()
+	var begun := _this_frame()
+	_almos_input.press_action(&"move_right")
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+	var center: Vector2 = enemy.global_position
+	var first_move := _first_moving_frame(begun)
+	assert_ne(first_move, -1, "he should have moved")
+	if first_move == -1:
+		return
+	var latched := _moved_split(center, first_move)
+
+	_almos_input.release_action(&"move_right")
+	await _wait_frames(SETTLE_FRAMES)
+	_almos_input.press_action(&"move_right")
+	var pressed_again := _this_frame()
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+
+	var afresh := _split_at(pressed_again, center, Vector2.RIGHT)
+	assert_gt((afresh - latched).length(), 0.2, "a fresh split should differ from the latched one, or the test shows nothing")
+	_assert_split_kept(center, pressed_again, afresh, "his move after the key is pressed again")
+
+
+func test_a_key_still_held_latches_afresh_when_the_lock_is_made_again_after_being_lost(params = use_parameters(lost_lock_params)) -> void:
+	_spawn_almos()
+	var enemy := _place_enemy(Vector2.UP, _distance())
+	var center := enemy.global_position
+	await _lock_on()
+	var begun := _this_frame()
+	_almos_input.press_action(&"move_right")
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+	var first_move := _first_moving_frame(begun)
+	assert_ne(first_move, -1, "he should have moved")
+	if first_move == -1:
+		return
+	var latched := _moved_split(center, first_move)
+
+	# He goes on holding the key, and walks on in a straight line for a while without the lock,
+	# so the line to the target is not what it was when he began to circle.
+	await _lose_the_lock(params.how, enemy)
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+	enemy.global_position = center
+	var relocking := _this_frame()
+	await _lock_on()
+
+	var made := _first_locked_frame(relocking)
+	assert_ne(made, -1, "the lock should have been made")
+	if made == -1:
+		return
+	await _wait_frames(_frames_for(MOVING_SECONDS))
+	var afresh := _split_at(made, center, Vector2.RIGHT)
+	assert_gt((afresh - latched).length(), 0.2, "a fresh split should differ from the latched one, or the test shows nothing")
+	_assert_split_kept(center, made, afresh, "his move after the lock is made again")
 
 
 func test_without_lock_on_the_same_push_moves_him_in_a_straight_line() -> void:
@@ -830,11 +1082,7 @@ func _steer_across_the_line() -> void:
 	if not is_instance_valid(_almos) or not is_instance_valid(_steering_round):
 		return
 	var outward := (_almos.position - _steering_round.global_position).normalized()
-	var stick := outward.rotated(_steering_turn * PI / 2.0)
-	_set_strength(&"move_left", -stick.x)
-	_set_strength(&"move_right", stick.x)
-	_set_strength(&"move_up", -stick.y)
-	_set_strength(&"move_down", stick.y)
+	_hold_stick(outward.rotated(_steering_turn * PI / 2.0))
 
 
 func _stop_steering() -> void:
@@ -843,6 +1091,17 @@ func _stop_steering() -> void:
 	for action in [&"move_left", &"move_right", &"move_up", &"move_down"]:
 		Input.action_release(action)
 	_steering_round = null
+
+
+# Pushes the stick this way, to this strength, until it is pushed another way: each of the
+# four move actions is pressed to the part of the vector that points its way, or let go if
+# none does. It is run on the physics_frame signal or from a test resumed by it, which comes
+# before Almos is processed in a frame, so the very next frame sees it.
+func _hold_stick(stick: Vector2) -> void:
+	_set_strength(&"move_left", -stick.x)
+	_set_strength(&"move_right", stick.x)
+	_set_strength(&"move_up", -stick.y)
+	_set_strength(&"move_down", stick.y)
 
 
 # Presses this action to this strength, or lets it go if there is none.
@@ -881,6 +1140,60 @@ func _first_moving_frame(from_index: int) -> int:
 		if _samples[j + 1].position.distance_to(_samples[j].position) > POSITION_TOLERANCE:
 			return j
 	return -1
+
+
+# The part of this unit direction along the line from the target to where he stood in this
+# sample (positive is away from the target) and the part across it (positive is a quarter
+# turn on from the way away), as Vector2(along, across).
+func _split_at(index: int, center: Vector2, direction: Vector2) -> Vector2:
+	var outward: Vector2 = (_samples[index].position - center).normalized()
+	return Vector2(direction.dot(outward), direction.dot(outward.rotated(PI / 2.0)))
+
+
+# What the frame that moved him from sample j to sample j + 1 did, as Vector2(along, across):
+# how much farther from the target it took him and how far round it took him, each as a share
+# of a full walking step.
+func _moved_split(center: Vector2, j: int) -> Vector2:
+	var from: Vector2 = _samples[j].position - center
+	var to: Vector2 = _samples[j + 1].position - center
+	var step := _tuning().walk_speed * _frame_seconds()
+	return Vector2(to.length() - from.length(), from.angle_to(to) * from.length()) / step
+
+
+# Checks that every frame from sample from_index on moved him by this split.
+func _assert_split_kept(center: Vector2, from_index: int, expected: Vector2, what: String) -> void:
+	for j in range(from_index, _samples.size() - 1):
+		assert_almost_eq(_moved_split(center, j), expected, Vector2.ONE * SPLIT_TOLERANCE, "%s in frame %d, as a share of a step along the line and across it" % [what, j])
+
+
+# The signed angle, in radians, that going round this centre sweeps in all, from this sample
+# to the last.
+func _total_angle_round(center: Vector2, from_index: int) -> float:
+	var total := 0.0
+	for j in range(from_index, _samples.size() - 1):
+		total += (_samples[j].position - center).angle_to(_samples[j + 1].position - center)
+	return total
+
+
+# The index of the first frame, from this one on, that the lock held in, or -1.
+func _first_locked_frame(from_index: int) -> int:
+	for j in range(from_index, _samples.size() - 1):
+		if _samples[j + 1].locked:
+			return j
+	return -1
+
+
+# Loses the lock in the way asked for, and lets it settle.
+func _lose_the_lock(how: String, enemy: Node2D) -> void:
+	match how:
+		"the button":
+			await _tap(&"lock_on")
+		"the target's death":
+			enemy.died.emit()
+		"the break range":
+			enemy.global_position = _almos.global_position + Vector2.UP * (_break_range() + RANGE_MARGIN)
+	await _wait_frames(SETTLE_FRAMES)
+	assert_false(_almos.locked_on, "the lock should have been lost")
 
 
 # The signed angle, in radians, that going from the first position to the second sweeps

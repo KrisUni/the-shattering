@@ -53,3 +53,12 @@ extends Resource
 ## At least lock_on_range, so that a target standing at the edge of the range does not
 ## flicker between locked and not.
 @export var lock_on_break_range: float
+
+## How far, in degrees, the direction of the move input must turn from the direction Lock-on
+## latched before it latches afresh. Under Lock-on the move input is split against the line to
+## the target into a part along it and a part across it, and the split is latched when the input
+## starts. While the input stays within this much of the latched direction, Almos keeps the
+## same mix of closing in and circling however far round the target he has got. Past it, the
+## new direction is split against the line as it stands then. Letting go of the input clears
+## the latch too.
+@export var lock_on_relatch_degrees: float
