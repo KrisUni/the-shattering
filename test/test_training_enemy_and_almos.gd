@@ -164,6 +164,58 @@ func test_almos_killing_it_in_the_frame_it_hits_him_does_not_save_him_from_the_h
 	assert_almost_eq(almos.health.current, almos.tuning.health_maximum - attack.damage, TOLERANCE)
 
 
+func test_it_attacks_into_a_guard_break_and_its_follow_up_deals_full_damage() -> void:
+	var attack := _rig.tuning_with().attack
+	var almos = _spawn_fight()
+	var player: PlayerTuning = almos.tuning
+	_rig.sample_also("guard_broken", func(): return almos.guard_broken)
+	# Just enough Stamina left for the first hit it lands on his Block to take the last of it.
+	almos.stamina.spend(player.stamina_maximum - player.block_stamina_cost / 3.0)
+	_almos_input.press_action(&"block")
+
+	# Its first strike, then the swing that comes round after it, and the strike of that.
+	await _rig.wait_frames(attack.startup_frames + attack.total_frames() + SETTLE_FRAMES)
+
+	var hits := _rig.hits()
+	assert_gte(hits.size(), 2, "hits Almos should have taken")
+	if hits.size() < 2:
+		return
+	assert_almost_eq(hits[0].damage, attack.damage * (1.0 - player.block_damage_reduction), TOLERANCE, "the first hit was blocked, so it deals the reduced damage")
+	assert_almost_eq(hits[1].damage, attack.damage, TOLERANCE, "the follow-up finds him open, so it deals all of its damage")
+	# The sample showing a hit shows how the frame it landed in left things, so the Guard break
+	# is still on when the follow-up lands only if it is on in that sample.
+	var not_broken := []
+	for i in range(hits[0].sample, hits[1].sample + 1):
+		if not _rig.samples[i].guard_broken:
+			not_broken.append(i)
+	assert_eq(not_broken, [], "samples, from the first hit (%d) to the follow-up (%d), in which he is not in the Guard break" % [hits[0].sample, hits[1].sample])
+
+
+# The follow-up is the swing the training enemy begins as soon as its recovery ends, so it comes
+# round every total_frames() frames, and its hit lands exactly that many frames after the hit
+# that broke his guard when both land on the first active frame. This is the bound on how long
+# the Guard break must last for the hit to land in it. It is not worked out from how the swing
+# lands, but from the two data files, so that a retune of either that breaks the follow-up
+# fails here.
+#
+# Number the frames from H, the one the breaking hit lands in. It lands after Almos has been
+# processed, so the Guard break is counted from H + 1 and lasts break_frames frames: H + 1 up to
+# H + break_frames. Almos is still spent open in the last of them, but he clears the Guard
+# break while he is processed, ahead of the enemy's Hitbox in that same frame, so a hit landing
+# in the last frame lands with guard_broken already false (it still deals full damage, as he is
+# not blocking in that frame). The follow-up lands in frame H + total_frames(), so it lands in
+# the Guard break only if that frame comes before the last: total_frames() < break_frames. With
+# the two equal it would land in the very frame the break runs out, where it is only the order
+# of the nodes within a frame that keeps the hit from finding the break over. So the bound is
+# strict: one frame to spare is the least that holds up.
+func test_the_guard_break_lasts_longer_than_it_takes_the_training_enemys_swing_to_come_round() -> void:
+	var attack := _rig.tuning_with().attack
+	var player := load(AlmosInput.TUNING_PATH) as PlayerTuning
+	var break_frames := ceili(player.guard_break_duration * Engine.physics_ticks_per_second - FRAME_SLACK)
+
+	assert_gt(break_frames, attack.total_frames(), "physics frames the Guard break lasts, against the physics frames the training enemy's swing takes to come round")
+
+
 # Almos in the test's scene tree with the enemy a little way below him, after him, and
 # sampled. The enemy is added after him, so he is processed first in a frame. Almos is
 # given this tuning if there is one.
