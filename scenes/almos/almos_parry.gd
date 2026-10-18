@@ -17,6 +17,11 @@ extends Node
 ## Block judges its front. A parried hit ends the Parry at once: he is free from the next frame.
 ## Almos decides what else he cannot do while it lasts. A shape is drawn in front of him while
 ## the window is open, and his placeholder is tinted during the recovery.
+##
+## Both frame guarantees, that the press frame is the first of the window and that a parried
+## hit frees him from the next frame, hold only if Almos is processed before the attacker's
+## Hitbox in each physics frame, as scenes/test_room.tscn orders them. With the Hitbox first, a
+## hit on the press frame arrives before the window opens and is not parried.
 
 ## What his placeholder is tinted during the recovery of a Parry, so that the player can see
 ## him left open. It is a look, not a tuning number, and differs from AlmosBlock.GUARD_BREAK_TINT.
