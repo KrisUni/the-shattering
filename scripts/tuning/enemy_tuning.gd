@@ -20,6 +20,9 @@ enum AttackKind {
 ## Must not be empty.
 @export var attack_pattern: Array[AttackKind]
 
+## How much Experience killing the enemy gives.
+@export var experience: int
+
 ## The most Health the enemy can have. A full bar is this much.
 @export var health_maximum: float
 

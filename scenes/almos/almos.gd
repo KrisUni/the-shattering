@@ -131,6 +131,10 @@ var untouchable: bool:
 ## What hits take off, and what the Health bar shows. It is given its maximum from Almos's
 ## tuning, so his tuning is the only one to set.
 @onready var health: Health = $Health
+
+## What killing enemies has given him and he has not yet cashed in, and what the Experience count
+## shows.
+@onready var experience: Experience = $Experience
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn

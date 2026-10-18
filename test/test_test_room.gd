@@ -191,6 +191,56 @@ func test_the_test_room_has_a_training_enemy_going_after_almos_from_a_little_way
 	assert_gt(enemy.global_position.distance_to(almos.global_position), enemy_tuning.attack_range, "it should start out of reach of him")
 
 
+func test_killing_the_training_enemy_gives_almos_its_tuned_experience_and_the_label_shows_it() -> void:
+	var enemy_tuning := load(ENEMY_TUNING_PATH) as EnemyTuning
+	assert_not_null(enemy_tuning, "the training enemy tuning data file should load")
+	if enemy_tuning == null:
+		return
+	assert_gt(enemy_tuning.experience, 0, "experience in the data file should be positive")
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	var enemy = room.find_child("TrainingEnemy", true, false)
+	var label = room.find_child("ExperienceLabel", true, false)
+	assert_not_null(almos, "the test room should contain Almos")
+	assert_not_null(enemy, "the test room should contain a TrainingEnemy")
+	assert_not_null(label, "the test room should contain an ExperienceLabel")
+	if almos == null or enemy == null or label == null:
+		return
+
+	enemy.health.take_damage(enemy_tuning.health_maximum)
+	await get_tree().process_frame
+
+	assert_eq(almos.experience.total, enemy_tuning.experience, "killing the enemy should give its Experience")
+	assert_string_contains(label.text, str(enemy_tuning.experience), "the label should show the new total")
+
+
+func test_hurting_the_training_enemy_without_killing_it_gives_no_experience() -> void:
+	var enemy_tuning := load(ENEMY_TUNING_PATH) as EnemyTuning
+	assert_not_null(enemy_tuning, "the training enemy tuning data file should load")
+	if enemy_tuning == null:
+		return
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	var enemy = room.find_child("TrainingEnemy", true, false)
+	var label = room.find_child("ExperienceLabel", true, false)
+	assert_not_null(almos, "the test room should contain Almos")
+	assert_not_null(enemy, "the test room should contain a TrainingEnemy")
+	assert_not_null(label, "the test room should contain an ExperienceLabel")
+	if almos == null or enemy == null or label == null:
+		return
+	var text_before: String = label.text
+
+	enemy.health.take_damage(enemy_tuning.health_maximum - 1.0)
+	await get_tree().process_frame
+
+	assert_eq(almos.experience.total, 0, "an enemy that is hurt but not killed should give none")
+	assert_eq(label.text, text_before, "the label should not change")
+
+
 # The test room, in the test's scene tree, or null if its scene will not load. The test
 # frees it.
 func _spawn_room() -> Node:

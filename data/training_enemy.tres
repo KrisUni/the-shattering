@@ -26,6 +26,7 @@ damage = 35.0
 
 [resource]
 script = ExtResource("1_tuning")
+experience = 50
 health_maximum = 120.0
 move_speed = 70.0
 notice_range = 220.0
