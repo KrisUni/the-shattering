@@ -640,6 +640,9 @@ func _spawn_room_with_a_named_enemy() -> Node:
 	named.name = "NamedEnemy"
 	named.named = true
 	named.position = Vector2(900.0, 500.0)
+	# It recovers no Health at its post, so that the Health a test hurts it to is what it is read at.
+	named.tuning = (load(ENEMY_TUNING_PATH) as EnemyTuning).duplicate(true)
+	named.tuning.health_recovery_rate = 0.0
 	named.target = room.find_child("Almos", true, false)
 	room.add_child(named)
 	add_child_autofree(room)

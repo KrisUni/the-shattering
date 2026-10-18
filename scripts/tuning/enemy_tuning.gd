@@ -39,6 +39,14 @@ enum AttackKind {
 ## is no longer than sight_length_full; in between, the length follows the light value.
 @export var sight_length_dark: float
 
+## For how many physics frames in a row Almos has to stay out of its Sight (a Sound hunter: out
+## of earshot) for its Pursuit to end. Seeing him again starts the count over.
+@export var lose_sight_frames: int
+
+## How much Health it recovers each second while it walks back to its post and stands at it. It
+## recovers none in Pursuit.
+@export var health_recovery_rate: float
+
 ## Whether it is a Sound hunter: it notices Almos by the Noise he makes, and never by Sight.
 ## Any other enemy ignores Noise.
 @export var sound_hunter := false

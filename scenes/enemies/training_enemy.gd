@@ -23,8 +23,14 @@ const BREAK_TINT := Color(0.4, 0.6, 1.0)
 # What a Sound hunter is tinted at rest, so that it can be told from the others. A look.
 const SOUND_HUNTER_TINT := Color(0.6, 1.0, 0.6)
 
+# How close, in pixels, to the place it walks to counts as being there. A look of the walk, not tuning.
+const ARRIVED_DISTANCE := 0.5
+
 # The collision mask of the walls, which block its Sight: the "walls" layer, the first.
 const WALL_MASK := 1
+
+# Where it is: standing at its post, in Pursuit of its target, or walking back to its post.
+enum State { POST, PURSUIT, RETURNING }
 
 ## Emitted once, at the end of the physics frame in which its Health reached zero.
 signal died
@@ -44,10 +50,11 @@ signal unblockable_cue_played
 @export var named := false
 
 ## The way it faces at its post, a unit vector, until it notices Almos. Its Sight points this way.
+## It faces this way again once it is back at its post.
 @export var post_facing := Vector2.DOWN:
 	set(value):
 		post_facing = value
-		if not _noticed:
+		if _state == State.POST:
 			_facing = value.normalized()
 			if is_node_ready():
 				_nose.rotation = _facing.angle()
@@ -59,11 +66,16 @@ var facing: Vector2:
 	get:
 		return _facing
 
-## Whether it has noticed its target: the target came into its Sight, or it was hit. Once it has,
-## it stays noticed, and goes after the target.
+## Whether it is in Pursuit: it noticed its target, which came into its Sight (a Sound hunter:
+## within the radius of his Noise) or hit it, and has not lost him yet. The same as noticed.
+var in_pursuit: bool:
+	get:
+		return _state == State.PURSUIT
+
+## Whether it has noticed its target and is going after him: the same as in_pursuit.
 var noticed: bool:
 	get:
-		return _noticed
+		return _state == State.PURSUIT
 
 ## The kind of attack under way, or of the last one it made. It makes the kinds in the order of
 ## the tuning's attack_pattern.
@@ -126,7 +138,15 @@ var _broken := false
 # first of its break_frames, whichever of Almos's blow and its own processing comes first in it.
 var _break_end_frame := 0
 var _facing := Vector2.DOWN
-var _noticed := false
+var _state := State.POST
+# Where it stands at its post: where it started. It returns here.
+var _post := Vector2.ZERO
+# The place its target was when it last had him in Sight, or was hit by him.
+var _last_seen := Vector2.ZERO
+# For how many physics frames in a row it has been in Pursuit without him in its Sight.
+var _unseen_frames := 0
+# Whether the target was in its Sight (a Sound hunter: earshot) when it looked this frame.
+var _sees_target := false
 
 
 func _enter_tree() -> void:
@@ -153,6 +173,7 @@ func _ready() -> void:
 	_hurtbox.landed.connect(_on_hit_landed)
 	stagger.changed.connect(_show_stagger)
 	_facing = post_facing.normalized()
+	_post = global_position
 	_show_stagger()
 	_nose.rotation = _facing.angle()
 
@@ -160,8 +181,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(target):
 		return
-	if not _noticed and not _dead and _target_noticed():
-		_noticed = true
+	if not _dead:
+		_update_pursuit()
 	# The Break runs for break_frames physics frames; it is free in the frame after the last.
 	if _broken and Engine.get_physics_frames() >= _break_end_frame:
 		_broken = false
@@ -185,6 +206,32 @@ func _to_target() -> Vector2:
 	return target.global_position - global_position
 
 
+# It notices the target, or loses him, or recovers: once a frame, before it acts. Seeing him
+# starts Pursuit (again) and resets the count of frames without him; Pursuit ends once the count
+# reaches the tuning's lose_sight_frames. Health comes back whenever it is not in Pursuit.
+func _update_pursuit() -> void:
+	_sees_target = _target_noticed()
+	if _sees_target:
+		_state = State.PURSUIT
+		_last_seen = target.global_position
+		_unseen_frames = 0
+	elif _state == State.PURSUIT:
+		_unseen_frames += 1
+		if _unseen_frames >= tuning.lose_sight_frames:
+			end_pursuit()
+	if _state != State.PURSUIT:
+		health.heal(tuning.health_recovery_rate * get_physics_process_delta_time())
+
+
+## Ends Pursuit at once, as losing the target for the lose-time does: it walks back to its post
+## and recovers Health there. An attack under way is finished first. Does nothing out of Pursuit.
+## It notices the target again if he is in its Sight or hits it.
+func end_pursuit() -> void:
+	if _state == State.PURSUIT:
+		_state = State.RETURNING
+		_unseen_frames = 0
+
+
 # Whether it notices the target now: a Sound hunter by the Noise he makes, any other enemy by Sight.
 func _target_noticed() -> bool:
 	if tuning.sound_hunter:
@@ -198,20 +245,31 @@ func _target_in_earshot() -> bool:
 	return radius != null and float(radius) > 0.0 and _to_target().length() <= float(radius)
 
 
-# Whether the target is in its Sight now: inside the cone, as long as the light at the target
+# Whether the target is in its Sight now: inside the cone, which points the way it faces, as long as the light at the target
 # lets it reach, and with no wall in between.
 func _target_in_sight() -> bool:
 	var light := LightZone.light_at(get_tree().get_nodes_in_group("light_zones"), target.global_position)
 	return Sight.sees(
-		get_world_2d().direct_space_state, global_position, post_facing.normalized(), target.global_position,
+		get_world_2d().direct_space_state, global_position, _facing, target.global_position,
 		tuning.sight_arc_degrees, tuning.sight_length_at(light), WALL_MASK,
 	)
 
 
-# Between attacks: attack if the target is close enough, walk towards it. Until the target is
-# noticed it stands at its post facing the way it was set.
+# Between attacks. At its post it stands facing the way it was set. Walking back it goes to its
+# post and then faces the way it was set. In Pursuit with the target in its Sight it attacks if
+# he is close enough and walks towards him if not; without him in its Sight it walks to the place
+# it last saw him and waits there.
 func _act_freely() -> void:
-	if not _noticed:
+	match _state:
+		State.RETURNING:
+			if _walk_to(_post):
+				_state = State.POST
+				_facing = post_facing.normalized()
+			return
+		State.POST:
+			return
+	if not _sees_target:
+		_walk_to(_last_seen)
 		return
 	var to_target := _to_target()
 	if not to_target.is_zero_approx():
@@ -232,6 +290,19 @@ func _act_freely() -> void:
 	else:
 		velocity = to_target.normalized() * tuning.move_speed
 		move_and_slide()
+
+
+# Walks towards this place, facing the way it goes and stopping on it. Returns whether it is there.
+func _walk_to(place: Vector2) -> bool:
+	var to_place := place - global_position
+	if to_place.length() <= ARRIVED_DISTANCE:
+		velocity = Vector2.ZERO
+		return true
+	_facing = to_place.normalized()
+	# Never faster than it takes to land on the place, so that it does not overshoot it.
+	velocity = _facing * minf(tuning.move_speed, to_place.length() / get_physics_process_delta_time())
+	move_and_slide()
+	return false
 
 
 # The Hitbox the attack of this kind hurts with.
@@ -278,7 +349,9 @@ func _wind_up_tint() -> Color:
 # A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
 # builds what the attack builds, and more if the hit came from behind, unless it is broken.
 func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
-	_noticed = true
+	_state = State.PURSUIT
+	_last_seen = target.global_position if is_instance_valid(target) else global_position
+	_unseen_frames = 0
 	if critical:
 		_broken = false
 		_show_look()

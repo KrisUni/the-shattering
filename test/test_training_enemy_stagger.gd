@@ -5,6 +5,9 @@ extends GutTest
 ## the helpers stands in for the attacker. Every expected number comes from the data files the
 ## scenes use and plain arithmetic, never from how the code works them out.
 
+# In degrees. A Sight arc wider than all round, so that a target straight behind is inside it
+# whatever rounding does to the angle.
+const ALL_ROUND_DEGREES := 720.0
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const EnemyFight := preload("res://test/helpers/enemy_fight.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
@@ -356,7 +359,9 @@ func test_while_free_and_not_having_noticed_it_keeps_facing_its_post_direction_w
 
 func test_while_free_it_turns_to_face_its_target_exactly_wherever_it_goes() -> void:
 	# It does not walk, so that the target is where the test puts it, and it has noticed it.
-	var enemy = _rig.spawn_enemy(_rig.tuning_with({"move_speed": 0.0}))
+	# Nor does it lose the target: its Sight is all round and reaches past wherever he goes.
+	var reach := (_tuning.sight_length_full + BEYOND_NOTICE) * 2.0
+	var enemy = _rig.spawn_enemy(_rig.tuning_with({"move_speed": 0.0, "sight_arc_degrees": ALL_ROUND_DEGREES, "sight_length_full": reach, "sight_length_dark": reach}))
 	var target := _rig.place_target(Vector2.DOWN * (_tuning.sight_length_full + BEYOND_NOTICE))
 	var hit := _rig.hitbox_over(enemy, NO_DAMAGE, "enemy_hurtbox")
 	await _rig.wait_frames(SETTLE_FRAMES)
@@ -369,7 +374,8 @@ func test_while_free_it_turns_to_face_its_target_exactly_wherever_it_goes() -> v
 
 
 func test_while_attacking_it_keeps_the_direction_it_committed_the_swing_to() -> void:
-	var enemy = _rig.spawn_enemy()
+	# Its Sight is all round, so that the target who moves behind it is still in it.
+	var enemy = _rig.spawn_enemy(_rig.tuning_with({"sight_arc_degrees": ALL_ROUND_DEGREES}))
 	var target := _rig.place_target(Vector2.RIGHT * _tuning.attack_range / 2.0)
 	await _rig.wait_frames(SETTLE_FRAMES)
 	assert_true(enemy.attacking, "it should have begun to attack")
