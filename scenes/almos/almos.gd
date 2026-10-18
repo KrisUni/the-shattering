@@ -47,6 +47,23 @@ var rolling: bool:
 	get:
 		return _state == State.ROLLING
 
+## How far from him, in pixels, a Sound hunter hears him in this physics frame: the largest of the
+## radii of what he is doing, 0 when he walks, stands, Blocks or Jumps with no attack. Sprinting,
+## a Roll and any attack under way (a swing, a Heavy attack charge, a Jump attack, a Critical hit)
+## each make Noise.
+var noise_radius: float:
+	get:
+		if _dead:
+			return 0.0
+		var radius := 0.0
+		if sprinting:
+			radius = maxf(radius, tuning.noise_sprint_radius)
+		if rolling:
+			radius = maxf(radius, tuning.noise_roll_radius)
+		if _attacks.committed:
+			radius = maxf(radius, tuning.noise_attack_radius)
+		return radius
+
 ## Whether Almos is sprinting.
 var sprinting: bool:
 	get:

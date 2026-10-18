@@ -39,6 +39,10 @@ enum AttackKind {
 ## is no longer than sight_length_full; in between, the length follows the light value.
 @export var sight_length_dark: float
 
+## Whether it is a Sound hunter: it notices Almos by the Noise he makes, and never by Sight.
+## Any other enemy ignores Noise.
+@export var sound_hunter := false
+
 ## How close to its target, in pixels, it stops walking and attacks.
 @export var attack_range: float
 

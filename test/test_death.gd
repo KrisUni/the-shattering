@@ -1199,11 +1199,20 @@ func _add_an_enemy_in_lock_on_range(almos: Almos) -> void:
 	add_child_autofree(enemy)
 
 
+# These tests count the enemies the room comes with, which they take to be the one Training
+# enemy, so the Sound hunter placed in the room is taken out before the room starts.
+func _drop_the_sound_hunter(room: Node) -> void:
+	var hunter := room.get_node("SoundHunter")
+	room.remove_child(hunter)
+	hunter.free()
+
+
 # The test room as shipped. The test frees it.
 func _spawn_room() -> Node:
 	var scene := load(TEST_ROOM_PATH) as PackedScene
 	assert_not_null(scene, "the test room scene should load")
 	var room := scene.instantiate()
+	_drop_the_sound_hunter(room)
 	add_child_autofree(room)
 	return room
 
@@ -1216,6 +1225,7 @@ func _spawn_room_with_a_named_enemy() -> Node:
 	assert_not_null(scene, "the test room scene should load")
 	assert_not_null(enemy_scene, "the training enemy scene should load")
 	var room := scene.instantiate()
+	_drop_the_sound_hunter(room)
 	var named := enemy_scene.instantiate()
 	named.name = "NamedEnemy"
 	named.named = true

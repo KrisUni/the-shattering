@@ -20,6 +20,9 @@ const UNBLOCKABLE_WIND_UP_TINT := Color(0.75, 0.3, 0.95)
 # What it is tinted while it is broken, so that the player can see it is open. Also a look.
 const BREAK_TINT := Color(0.4, 0.6, 1.0)
 
+# What a Sound hunter is tinted at rest, so that it can be told from the others. A look.
+const SOUND_HUNTER_TINT := Color(0.6, 1.0, 0.6)
+
 # The collision mask of the walls, which block its Sight: the "walls" layer, the first.
 const WALL_MASK := 1
 
@@ -157,7 +160,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(target):
 		return
-	if not _noticed and not _dead and _target_in_sight():
+	if not _noticed and not _dead and _target_noticed():
 		_noticed = true
 	# The Break runs for break_frames physics frames; it is free in the frame after the last.
 	if _broken and Engine.get_physics_frames() >= _break_end_frame:
@@ -180,6 +183,19 @@ func _physics_process(_delta: float) -> void:
 
 func _to_target() -> Vector2:
 	return target.global_position - global_position
+
+
+# Whether it notices the target now: a Sound hunter by the Noise he makes, any other enemy by Sight.
+func _target_noticed() -> bool:
+	if tuning.sound_hunter:
+		return _target_in_earshot()
+	return _target_in_sight()
+
+
+# Whether the target makes Noise that reaches it now, through walls.
+func _target_in_earshot() -> bool:
+	var radius: Variant = target.get(&"noise_radius")
+	return radius != null and float(radius) > 0.0 and _to_target().length() <= float(radius)
 
 
 # Whether the target is in its Sight now: inside the cone, as long as the light at the target
@@ -245,7 +261,7 @@ func _show_look() -> void:
 	elif winding_up:
 		modulate = _wind_up_tint()
 	else:
-		modulate = Color.WHITE
+		modulate = SOUND_HUNTER_TINT if tuning.sound_hunter else Color.WHITE
 
 
 # The tint of the wind-up of the attack it is making: an Unblockable attack's flashes white
