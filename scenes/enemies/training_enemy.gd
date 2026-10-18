@@ -147,6 +147,10 @@ var _last_seen := Vector2.ZERO
 var _unseen_frames := 0
 # Whether the target was in its Sight (a Sound hunter: earshot) when it looked this frame.
 var _sees_target := false
+# Whether it saw the target get into a Hiding spot and is going to drag him out of it, and where
+# that spot is. It lasts until he is out of the spot, however that comes about.
+var _dragging := false
+var _drag_spot := Vector2.ZERO
 
 
 func _enter_tree() -> void:
@@ -210,6 +214,14 @@ func _to_target() -> Vector2:
 # starts Pursuit (again) and resets the count of frames without him; Pursuit ends once the count
 # reaches the tuning's lose_sight_frames. Health comes back whenever it is not in Pursuit.
 func _update_pursuit() -> void:
+	if _dragging:
+		if _target_hidden():
+			# It has eyes on the spot, not on him: the lose-time does not run.
+			_sees_target = false
+			_state = State.PURSUIT
+			_unseen_frames = 0
+			return
+		_dragging = false
 	_sees_target = _target_noticed()
 	if _sees_target:
 		_state = State.PURSUIT
@@ -232,8 +244,34 @@ func end_pursuit() -> void:
 		_unseen_frames = 0
 
 
+## Almos gets into a Hiding spot at this place, having made this much Noise in the frame before.
+## An enemy that saw him get in (a Sound hunter: that he was within that Noise) goes to the spot
+## and drags him out with an Unblockable attack, out of its attack pattern. Any other enemy ends its
+## Pursuit at once, and does nothing if it is not in Pursuit.
+func react_to_hiding(spot: Vector2, noise_before: float) -> void:
+	if _dead:
+		return
+	var saw := _to_target().length() <= noise_before if tuning.sound_hunter else _target_in_sight()
+	if not saw:
+		end_pursuit()
+		return
+	_dragging = true
+	_drag_spot = spot
+	_state = State.PURSUIT
+	_last_seen = spot
+	_unseen_frames = 0
+
+
+# Whether the target is in a Hiding spot, where nothing can notice him.
+func _target_hidden() -> bool:
+	return target.get(&"hiding") == true
+
+
 # Whether it notices the target now: a Sound hunter by the Noise he makes, any other enemy by Sight.
+# Nobody notices him in a Hiding spot.
 func _target_noticed() -> bool:
+	if _target_hidden():
+		return false
 	if tuning.sound_hunter:
 		return _target_in_earshot()
 	return _target_in_sight()
@@ -268,16 +306,20 @@ func _act_freely() -> void:
 			return
 		State.POST:
 			return
-	if not _sees_target:
+	if not _sees_target and not _dragging:
 		_walk_to(_last_seen)
 		return
-	var to_target := _to_target()
+	# Dragging, it goes for the Hiding spot, not for where he is.
+	var to_target := _drag_spot - global_position if _dragging else _to_target()
 	if not to_target.is_zero_approx():
 		_facing = to_target.normalized()
 	if to_target.length() <= tuning.attack_range:
 		# It makes the next attack in its order, whatever came of the one before.
-		_kind = tuning.attack_pattern[_next_in_pattern % tuning.attack_pattern.size()]
-		_next_in_pattern += 1
+		if _dragging:
+			_kind = EnemyTuning.AttackKind.UNBLOCKABLE
+		else:
+			_kind = tuning.attack_pattern[_next_in_pattern % tuning.attack_pattern.size()]
+			_next_in_pattern += 1
 		_frame = 0
 		var box := _hitbox_of(_kind)
 		box.damage = current_attack.damage

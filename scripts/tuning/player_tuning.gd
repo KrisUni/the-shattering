@@ -129,6 +129,9 @@ extends Resource
 ## How close to the centre of a Weapon pickup, in pixels, Almos must be to pick it up.
 @export var pickup_reach: float
 
+## How close to the centre of a Hiding spot, in pixels, Almos must be to get into it.
+@export var hide_reach: float
+
 ## How long, in seconds, Almos lies limp after his Health reaches zero, before he returns to his
 ## last Checkpoint. He takes no input and cannot be hit all that time. A time that is not a
 ## whole number of physics frames lasts until the next whole frame.
