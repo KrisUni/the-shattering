@@ -21,5 +21,6 @@ attack = SubResource("Resource_attack")
 stagger_capacity = 100.0
 stagger_drain_rate = 20.0
 stagger_drain_pause = 2.0
+break_frames = 120
 front_arc_degrees = 180.0
 behind_stagger = 15.0

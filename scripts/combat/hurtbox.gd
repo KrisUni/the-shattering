@@ -19,10 +19,11 @@ var is_untouchable: Callable = func() -> bool: return false
 ## when it hears of the Parry. Left as it is, a Parry builds none.
 var parry_stagger := 0.0
 
-## Emitted once for each hit that lands, with how much Stagger it builds and the point in the
-## world it comes from. Not for a hit that misses or is parried. The owner hears of a landed
-## hit here, such as an enemy building its Stagger.
-signal landed(stagger: float, from: Vector2)
+## Emitted once for each hit that lands, with how much Stagger it builds, the point in the
+## world it comes from and whether it is a Critical hit. Not for a hit that misses or is
+## parried. The owner hears of a landed hit here, such as an enemy building its Stagger or
+## ending its Break.
+signal landed(stagger: float, from: Vector2, critical: bool)
 
 ## Asked on every hit on someone who is not untouchable, given the point in the world the hit
 ## comes from: whether the owner parries it, which negates it. Almos in the window of his
@@ -50,14 +51,14 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 
 
 ## A hit reaches this Hurtbox, for this much damage, building this much Stagger, coming from
-## this point in the world. Returns what became of it: it misses while the owner is untouchable and is parried when
-## the owner's Parry catches it. A hit that landed or was parried has been dealt with, even
-## if none of its damage got through.
-func hurt(damage: float, from: Vector2, stagger := 0.0) -> Outcome:
+## this point in the world, and a Critical hit if it says so. Returns what became of it: it
+## misses while the owner is untouchable and is parried when the owner's Parry catches it. A
+## hit that landed or was parried has been dealt with, even if none of its damage got through.
+func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false) -> Outcome:
 	if is_untouchable.call():
 		return Outcome.MISSED
 	if is_parried.call(from):
 		return Outcome.PARRIED
 	health.take_damage(damage_through.call(damage, from))
-	landed.emit(stagger, from)
+	landed.emit(stagger, from, critical)
 	return Outcome.LANDED

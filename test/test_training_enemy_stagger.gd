@@ -121,8 +121,8 @@ func test_three_parries_fill_the_meter_and_two_do_not() -> void:
 	assert_false(_rig.enemy.stagger.full, "two Parries should not fill the meter")
 	await _parry_the_swing()
 
-	assert_true(_rig.enemy.stagger.full, "three Parries should fill the meter")
-	assert_almost_eq(_rig.enemy.stagger.current, _tuning.stagger_capacity, TOLERANCE)
+	assert_true(_rig.enemy.broken, "three Parries should fill the meter, which breaks it")
+	assert_almost_eq(_rig.enemy.stagger.current, 0.0, TOLERANCE, "a Break empties the meter")
 
 
 func test_a_swing_that_lands_on_almos_builds_no_stagger() -> void:
@@ -215,17 +215,6 @@ func test_a_hit_builds_its_stagger_once_however_long_the_swing_overlaps_it() -> 
 	assert_almost_eq(enemy.stagger.current, 10.0, TOLERANCE)
 
 
-func test_the_meter_stays_at_the_capacity_however_much_more_is_built() -> void:
-	var enemy = _spawn_facing_down()
-	var hitbox := _hitbox_from(enemy, true, _tuning.stagger_capacity)
-	await _rig.wait_frames(SETTLE_FRAMES)
-
-	await _rig.swing(hitbox, 1)
-
-	assert_almost_eq(enemy.stagger.current, _tuning.stagger_capacity, TOLERANCE)
-	assert_true(enemy.stagger.full)
-
-
 func test_stagger_never_lowers_its_health_and_a_full_meter_leaves_it_alive() -> void:
 	var enemy = _spawn_facing_down()
 	var hitbox := _hitbox_from(enemy, true, _tuning.stagger_capacity)
@@ -312,10 +301,10 @@ func test_the_bar_is_hidden_while_the_meter_is_empty_and_shows_the_fraction_once
 func test_the_bar_follows_the_meter_down_and_hides_when_it_is_empty() -> void:
 	var enemy = _spawn_facing_down()
 	var bar := enemy.get_node("StaggerBar") as Node2D
-	var hitbox := _hitbox_from(enemy, false, _tuning.stagger_capacity)
+	var hitbox := _hitbox_from(enemy, false, _tuning.stagger_capacity * 0.9)
 	await _rig.wait_frames(SETTLE_FRAMES)
 	await _rig.swing(hitbox, 1)
-	assert_almost_eq(bar.scale.x, 1.0, TOLERANCE, "a full meter fills the bar")
+	assert_almost_eq(bar.scale.x, 0.9, TOLERANCE, "the bar shows the fraction the meter is filled to")
 
 	await _rig.wait_frames(_pause_frames() + _drain_frames_to_empty() / 2)
 	assert_true(bar.visible)

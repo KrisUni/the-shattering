@@ -4,6 +4,9 @@ extends CharacterBody2D
 # coming. It is a look, not a tuning number.
 const WIND_UP_TINT := Color(1.0, 0.35, 0.35)
 
+# What it is tinted while it is broken, so that the player can see it is open. Also a look.
+const BREAK_TINT := Color(0.4, 0.6, 1.0)
+
 ## Emitted once, at the end of the physics frame in which its Health reached zero.
 signal died
 
@@ -34,6 +37,12 @@ var attacking: bool:
 	get:
 		return _frame >= 0
 
+## Whether it is broken: its Stagger filled and the Break has neither run out nor been ended by
+## a Critical hit. It stands still and starts nothing, and no Stagger builds.
+var broken: bool:
+	get:
+		return _broken
+
 ## Whether its Health has reached zero. It is gone by the end of that physics frame.
 var dead: bool:
 	get:
@@ -50,6 +59,10 @@ var dead: bool:
 # first frame. -1 when there is no attack.
 var _frame := -1
 var _dead := false
+var _broken := false
+# The physics frame it is free again in, once broken. The frame the Break begins in counts as the
+# first of its break_frames, whichever of Almos's blow and its own processing comes first in it.
+var _break_end_frame := 0
 var _facing := Vector2.DOWN
 
 
@@ -81,17 +94,22 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(target):
 		return
+	# The Break runs for break_frames physics frames; it is free in the frame after the last.
+	if _broken and Engine.get_physics_frames() >= _break_end_frame:
+		_broken = false
 	if attacking:
 		_frame += 1
 		if _frame >= tuning.attack.total_frames():
 			_frame = -1
+	if _broken:
+		velocity = Vector2.ZERO
 	# One that has died in this frame starts nothing new, but the frame is played out all the
 	# same: whichever of Almos's blow and its own strike is processed first, the one that
 	# lands in the frame of its death still lands.
-	if not attacking and not _dead:
+	elif not attacking and not _dead:
 		_act_freely()
 	_set_strike(tuning.attack.is_active(_frame))
-	modulate = WIND_UP_TINT if winding_up else Color.WHITE
+	_show_look()
 	_nose.rotation = _facing.angle()
 
 
@@ -122,18 +140,52 @@ func _set_strike(on: bool) -> void:
 	_hitbox.visible = on
 
 
-# A hit of its own Hurtbox landed: its Stagger builds what the attack builds, and more if the
-# hit came from behind.
-func _on_hit_landed(hit_stagger: float, from: Vector2) -> void:
+# Its tint: the Break's, or the wind-up's, or none.
+func _show_look() -> void:
+	if _broken:
+		modulate = BREAK_TINT
+	elif winding_up:
+		modulate = WIND_UP_TINT
+	else:
+		modulate = Color.WHITE
+
+
+# A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
+# builds what the attack builds, and more if the hit came from behind, unless it is broken.
+func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
+	if critical:
+		_broken = false
+		_show_look()
+		return
 	var built := hit_stagger
 	if not FrontArc.covers(from, global_position, _facing, tuning.front_arc_degrees):
 		built += tuning.behind_stagger
-	stagger.add(built)
+	_build_stagger(built)
 
 
 # One of its attacks was parried: its Stagger builds what that Parry builds.
 func _on_parried(parrier: Hurtbox) -> void:
-	stagger.add(parrier.parry_stagger)
+	_build_stagger(parrier.parry_stagger)
+
+
+# Builds this much Stagger, which a Break does not allow, and breaks it if that fills the meter.
+func _build_stagger(amount: float) -> void:
+	if _broken:
+		return
+	stagger.add(amount)
+	if stagger.full:
+		_begin_break()
+
+
+# The Break begins at once: the attack under way is over with its Hitbox off, so that a strike
+# due later in this frame does not land, and the meter is emptied.
+func _begin_break() -> void:
+	_broken = true
+	_break_end_frame = Engine.get_physics_frames() + tuning.break_frames
+	_frame = -1
+	_set_strike(false)
+	stagger.reset()
+	_show_look()
 
 
 # The bar over it shows how full its Stagger is, and is hidden while it is empty.

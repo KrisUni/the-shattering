@@ -35,6 +35,10 @@ extends Resource
 ## How long, in seconds, nothing has to press the enemy before its Stagger starts to drain.
 @export var stagger_drain_pause: float
 
+## How long, in physics frames, a Break lasts, counting the frame its Stagger fills in. It is free
+## again on the frame after the last.
+@export var break_frames: int
+
 ## How wide, in degrees, its front is, centred on the way it faces: half of it either side. A
 ## hit from outside it is a hit from behind.
 @export var front_arc_degrees: float

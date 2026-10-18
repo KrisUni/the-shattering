@@ -20,6 +20,10 @@ signal parried(hurtbox: Hurtbox)
 ## How much Stagger a hit builds on whoever it lands on.
 @export var stagger: float
 
+## Whether a hit is a Critical hit, which the Hurtbox tells whoever owns it. Almos's Critical
+## swing is the one that sets it.
+@export var critical := false
+
 ## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
 @export var strike_shape: CollisionShape2D
 
@@ -36,8 +40,9 @@ var active := false:
 		active = value
 		_hit.clear()
 
-# The Hurtboxes this swing has hit already, parried hits included. A hit that did not land, on someone untouchable,
-# does not count: a swing that is still on when they stop being untouchable catches them.
+# The Hurtboxes this swing has hit already, parried hits included. A hit that did not land,
+# on someone untouchable, does not count: a swing that is still on when they stop being
+# untouchable catches them.
 var _hit: Array[Hurtbox] = []
 
 
@@ -64,7 +69,7 @@ func _physics_process(_delta: float) -> void:
 	for area in get_overlapping_areas():
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
-			var outcome := hurtbox.hurt(damage, global_position, stagger)
+			var outcome := hurtbox.hurt(damage, global_position, stagger, critical)
 			if outcome != Hurtbox.Outcome.MISSED:
 				_hit.append(hurtbox)
 			if outcome == Hurtbox.Outcome.PARRIED:

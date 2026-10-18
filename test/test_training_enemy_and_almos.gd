@@ -121,7 +121,10 @@ func test_almos_light_attacks_can_kill_it() -> void:
 	enduring.stamina_maximum = swings_needed * sword.light_attacks[0].stamina_cost
 	enduring.health_maximum *= swings_needed
 	var almos = _almos_input.spawn_almos(enduring)
-	var enemy = _rig.spawn_enemy(null, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
+	# It has nothing to face, so Almos hits it from behind, which builds Stagger. A Break would
+	# let him finish it with a Critical hit in fewer swings, so its meter is out of reach.
+	var out_of_reach := _rig.tuning_with({"stagger_capacity": swings_needed * _rig.tuning_with().behind_stagger * 2.0})
+	var enemy = _rig.spawn_enemy(out_of_reach, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
 	var deaths := _rig.record_deaths()
 	var health_maximum: float = enemy.health.maximum
 	await _rig.wait_frames(AlmosInput.SETTLE_FRAMES)

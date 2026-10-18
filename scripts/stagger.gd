@@ -42,6 +42,13 @@ func add(amount: float) -> void:
 		changed.emit()
 
 
+## Empties the meter, as a Break does when it begins. The pause is left as it is.
+func reset() -> void:
+	if _current != 0.0:
+		_current = 0.0
+		changed.emit()
+
+
 ## Lets this much time, in seconds, go by: the pause counts down, then it drains.
 func advance(delta: float) -> void:
 	var paused_for := minf(delta, _pause_left)

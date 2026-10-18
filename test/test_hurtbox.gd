@@ -176,7 +176,7 @@ func test_a_hitbox_does_not_emit_parried_for_a_hit_that_lands() -> void:
 
 func test_a_hit_that_lands_announces_its_stagger_and_where_it_comes_from_once() -> void:
 	var landed: Array[Dictionary] = []
-	_hurtbox.landed.connect(func(stagger: float, from: Vector2) -> void: landed.append({"stagger": stagger, "from": from}))
+	_hurtbox.landed.connect(func(stagger: float, from: Vector2, _critical: bool) -> void: landed.append({"stagger": stagger, "from": from}))
 	var from := Vector2(12.0, -7.0)
 
 	_hurtbox.hurt(HIT_DAMAGE, from, HIT_STAGGER)
@@ -189,7 +189,7 @@ func test_a_hit_that_lands_announces_its_stagger_and_where_it_comes_from_once() 
 
 func test_a_hit_with_no_stagger_given_builds_none() -> void:
 	var landed: Array[float] = []
-	_hurtbox.landed.connect(func(stagger: float, _from: Vector2) -> void: landed.append(stagger))
+	_hurtbox.landed.connect(func(stagger: float, _from: Vector2, _critical: bool) -> void: landed.append(stagger))
 
 	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
 
@@ -198,7 +198,7 @@ func test_a_hit_with_no_stagger_given_builds_none() -> void:
 
 func test_a_hit_the_hook_lets_none_of_the_damage_through_still_announces_landing() -> void:
 	var landed := [0]
-	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2) -> void: landed[0] += 1)
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2, _critical: bool) -> void: landed[0] += 1)
 	_hurtbox.damage_through = func(_damage: float, _from: Vector2) -> float: return 0.0
 
 	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, HIT_STAGGER)
@@ -208,7 +208,7 @@ func test_a_hit_the_hook_lets_none_of_the_damage_through_still_announces_landing
 
 func test_a_missed_or_parried_hit_does_not_announce_landing() -> void:
 	var landed := [0]
-	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2) -> void: landed[0] += 1)
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2, _critical: bool) -> void: landed[0] += 1)
 
 	_hurtbox.is_untouchable = func() -> bool: return true
 	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, HIT_STAGGER)
@@ -227,13 +227,65 @@ func test_a_hitbox_hands_its_stagger_to_the_hurtbox_with_the_hit_once_in_the_swi
 	var hitbox := await _hitbox_over_the_hurtbox()
 	hitbox.stagger = HIT_STAGGER
 	var landed: Array[float] = []
-	_hurtbox.landed.connect(func(stagger: float, _from: Vector2) -> void: landed.append(stagger))
+	_hurtbox.landed.connect(func(stagger: float, _from: Vector2, _critical: bool) -> void: landed.append(stagger))
 
 	hitbox.active = true
 	await wait_physics_frames(SETTLE_FRAMES * 2)
 	hitbox.active = false
 
 	assert_eq(landed, [HIT_STAGGER] as Array[float], "the stagger should arrive once with the hit")
+
+
+func test_a_hit_announces_that_it_is_not_a_critical_hit_unless_it_is_told_so() -> void:
+	var criticals: Array[bool] = []
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2, critical: bool) -> void: criticals.append(critical))
+
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, HIT_STAGGER)
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, HIT_STAGGER, true)
+
+	assert_eq(criticals, [false, true] as Array[bool], "whether each landed hit was a Critical hit")
+
+
+func test_a_critical_hit_that_misses_or_is_parried_does_not_announce_landing() -> void:
+	var landed := [0]
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2, _critical: bool) -> void: landed[0] += 1)
+
+	_hurtbox.is_untouchable = func() -> bool: return true
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, true)
+	_hurtbox.is_untouchable = func() -> bool: return false
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, true)
+
+	assert_eq(landed[0], 0)
+
+
+func test_a_hitbox_is_not_a_critical_hit_unless_it_is_set_to_be() -> void:
+	assert_false(Hitbox.new().critical)
+
+
+func test_a_hitbox_tells_the_hurtbox_its_hit_is_a_critical_hit_once_in_the_swing() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	hitbox.critical = true
+	var criticals: Array[bool] = []
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2, critical: bool) -> void: criticals.append(critical))
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES * 2)
+	hitbox.active = false
+
+	assert_eq(criticals, [true] as Array[bool])
+
+
+func test_a_hitbox_that_is_not_critical_tells_the_hurtbox_so() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	var criticals: Array[bool] = []
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2, critical: bool) -> void: criticals.append(critical))
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES * 2)
+	hitbox.active = false
+
+	assert_eq(criticals, [false] as Array[bool])
 
 
 # A Hitbox, switched off, covering the Hurtbox, which is in the tree.

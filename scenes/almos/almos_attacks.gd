@@ -1,7 +1,7 @@
 class_name AlmosAttacks
 extends Node
-## Almos's Light and Heavy attacks with his Weapon: the timeline of each swing, from the
-## button presses to the Hitbox being switched on and off. Every number comes from the
+## Almos's Light and Heavy attacks, and his Critical hit, with his Weapon: the timeline of each
+## swing, from the button presses to the Hitbox being switched on and off. Every number comes from the
 ## Weapon's data.
 ##
 ## A swing is startup, active and recovery frames one after the other. Holding the Heavy
@@ -12,6 +12,16 @@ extends Node
 ## the attack it asked for begins as the recovery ends. There is room for one kept press, and
 ## the latest press wins, the one made on the very frame the recovery ends included. A press
 ## at any other time during an attack is lost.
+##
+## The Critical hit is made in place of a Light swing: whenever a Light swing would begin, if
+## an enemy that is broken has its centre within the Weapon's critical_range of his centre, he
+## makes the Critical hit at the nearest such enemy instead. It is a swing like the others,
+## with its own timeline and recovery, but it is aimed at that enemy's true angle, restarts
+## the Light combo, spends no Stamina and builds no Stagger.
+
+## Emitted when the Critical hit begins, with the direction to the enemy it is aimed at, so
+## that Almos can turn to face it.
+signal critical_began(direction: Vector2)
 
 ## Which attack button a press was of.
 enum Press { NONE, LIGHT, HEAVY }
@@ -29,6 +39,11 @@ enum Press { NONE, LIGHT, HEAVY }
 var attacking: bool:
 	get:
 		return _frame >= 0
+
+## Whether the swing under way is the Critical hit.
+var critical: bool:
+	get:
+		return _critical
 
 ## Whether he is holding the Heavy attack button for a swing that has not begun. The charge
 ## itself only builds once the button has been held for the charge start.
@@ -52,6 +67,7 @@ var light_swing: int:
 var _frame := -1
 var _swing: AttackData
 var _light_swing := 0
+var _critical := false
 var _charging := false
 # How many physics frames the Heavy attack button has been held, the frame of the press
 # included.
@@ -111,6 +127,10 @@ func _begin(press: Press, aim: Vector2) -> void:
 
 
 func _begin_light(aim: Vector2) -> void:
+	var broken_enemy := _nearest_broken_enemy_in_range()
+	if broken_enemy != null:
+		_begin_critical(broken_enemy, aim)
+		return
 	# After the last swing the combo starts over at the first.
 	var index := _light_swing % weapon.light_attacks.size()
 	var next := weapon.light_attacks[index]
@@ -120,6 +140,37 @@ func _begin_light(aim: Vector2) -> void:
 		return
 	_light_swing = index + 1
 	_begin_swing(next, next.damage, next.stagger, aim)
+
+
+# The Critical hit at this enemy. It costs no Stamina, so it is made at zero Stamina too.
+func _begin_critical(enemy: Node2D, aim: Vector2) -> void:
+	var to_enemy := enemy.global_position - hitbox.global_position
+	# An enemy right on top of him has no direction to be aimed at.
+	var direction := to_enemy.normalized() if not to_enemy.is_zero_approx() else aim
+	_light_swing = 0
+	_critical = true
+	var swing := weapon.critical_attack
+	_begin_swing(swing, swing.damage, swing.stagger, direction)
+	hitbox.critical = true
+	critical_began.emit(direction)
+
+
+# The nearest enemy in the group that is broken and within the Critical hit's range, or null.
+# The Hitbox sits at his centre. Only nodes that can be broken are asked.
+func _nearest_broken_enemy_in_range() -> Node2D:
+	if weapon.critical_attack == null:
+		return null
+	var nearest: Node2D = null
+	var nearest_distance := INF
+	for node in get_tree().get_nodes_in_group(&"enemies"):
+		var enemy := node as Node2D
+		if enemy == null or not "broken" in enemy or not enemy.broken:
+			continue
+		var distance := hitbox.global_position.distance_to(enemy.global_position)
+		if distance <= weapon.critical_range and distance < nearest_distance:
+			nearest = enemy
+			nearest_distance = distance
+	return nearest
 
 
 func _begin_charge() -> void:
@@ -164,6 +215,8 @@ func _begin_swing(swing: AttackData, damage: float, stagger: float, aim: Vector2
 # unless a press was kept to go on.
 func _end_swing() -> void:
 	_frame = -1
+	_critical = false
+	hitbox.critical = false
 	_set_sword(false)
 	if _queued != Press.LIGHT:
 		_light_swing = 0

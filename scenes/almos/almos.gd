@@ -31,10 +31,17 @@ var sprinting: bool:
 	get:
 		return _state == State.SPRINTING
 
-## Whether a Light or Heavy attack is under way: its startup, active and recovery frames.
+## Whether a Light or Heavy attack or the Critical hit is under way: its startup, active and
+## recovery frames.
 var attacking: bool:
 	get:
 		return _attacks.attacking
+
+## Whether the Critical hit is under way: his swing at a broken enemy, made by a Light attack
+## press in its range in place of a Light swing. Alongside attacking, the Light swing is 0.
+var critical: bool:
+	get:
+		return _attacks.critical
 
 ## Whether a Heavy attack is being charged: he holds the button and has not swung yet.
 var charging: bool:
@@ -139,6 +146,8 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	# The Critical hit turns him to the enemy it is made at.
+	_attacks.critical_began.connect(_face)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
 	_hurtbox.is_parried = func(from: Vector2) -> bool:
 		return _parry.catches(from, global_position, facing)
@@ -245,6 +254,10 @@ func _face(direction: Vector2) -> void:
 # Without Lock-on, or standing on the target, there is nothing to turn to and he keeps his
 # facing.
 func _face_the_target() -> void:
+	# The Critical hit keeps him facing the broken enemy it was made at, to the end of its
+	# swing; the lock itself holds, and turns him back to its target after.
+	if _attacks.critical:
+		return
 	var to_target := _lock_on.direction_to_target()
 	if to_target != Vector2.ZERO:
 		_face(to_target)

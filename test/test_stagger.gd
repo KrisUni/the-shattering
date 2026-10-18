@@ -46,6 +46,34 @@ func test_it_announces_a_change_when_something_is_added_and_when_it_drains() -> 
 	assert_signal_emit_count(_stagger, "changed", 2)
 
 
+func test_resetting_empties_it_and_says_so() -> void:
+	_stagger.add(60.0)
+	watch_signals(_stagger)
+
+	_stagger.reset()
+
+	assert_almost_eq(_stagger.current, 0.0, TOLERANCE)
+	assert_false(_stagger.full)
+	assert_signal_emit_count(_stagger, "changed", 1)
+
+
+func test_resetting_an_empty_meter_announces_nothing() -> void:
+	watch_signals(_stagger)
+
+	_stagger.reset()
+
+	assert_signal_emit_count(_stagger, "changed", 0)
+
+
+func test_a_full_meter_that_is_reset_builds_up_again() -> void:
+	_stagger.add(_stagger.capacity)
+
+	_stagger.reset()
+	_stagger.add(30.0)
+
+	assert_almost_eq(_stagger.current, 30.0, TOLERANCE)
+
+
 func test_it_does_not_drain_during_the_pause() -> void:
 	_stagger.add(50.0)
 
