@@ -222,6 +222,46 @@ func test_a_light_press_with_empty_hands_beyond_unarmeds_critical_range_is_no_cr
 	assert_almost_eq(enemy.health.current, ENEMY_HEALTH, TOLERANCE, "nothing should have hit the enemy")
 
 
+# --- Jump attack ---
+
+func test_a_jump_attack_with_empty_hands_lands_with_unarmeds_jump_attack_damage_and_builds_its_stagger(params = use_parameters(empty_params)) -> void:
+	var jump_attack := _unarmed.jump_attack
+	var almos := await _spawn_fight(params.how, ENEMY_DISTANCE, false)
+	var enemy = _rig.enemy
+
+	await _tap(&"jump")
+	await _rig.wait_frames(SETTLE_FRAMES)
+	assert_true(almos.airborne, "he should be in the air")
+	await _tap(&"attack_heavy")
+	await _wait_for_the_jump_attack_to_end(almos)
+
+	var hits := _rig.drops("enemy_health")
+	assert_eq(hits.size(), 1, "the enemy should have been hit once")
+	if hits.is_empty():
+		return
+	assert_almost_eq(hits[0].damage, jump_attack.damage, TOLERANCE, "damage of the hit")
+	assert_almost_eq(enemy.stagger.current, jump_attack.stagger, TOLERANCE, "Stagger of the Jump attack")
+
+
+# --- Switch ---
+
+func test_a_switch_with_empty_hands_keeps_him_unarmed(params = use_parameters(empty_params)) -> void:
+	var swing := _unarmed.light_attacks[0]
+	var almos := await _spawn_fight(params.how, ENEMY_DISTANCE, false)
+
+	await _tap(&"switch_weapon")
+	await _rig.wait_frames(SETTLE_FRAMES)
+	await _tap(&"attack_light")
+	await _wait_for_the_swing_to_end(almos)
+
+	assert_null(almos.weapons.in_hand, "nothing should have come to hand")
+	var hits := _rig.drops("enemy_health")
+	assert_eq(hits.size(), 1, "the enemy should have been hit once")
+	if hits.is_empty():
+		return
+	assert_almost_eq(hits[0].damage, swing.damage, TOLERANCE, "damage of the hit, which is still Unarmed's")
+
+
 # --- A Weapon picked up with empty hands ---
 
 func test_a_weapon_picked_up_with_empty_hands_replaces_unarmed_and_dropping_it_brings_unarmed_back() -> void:
@@ -322,6 +362,16 @@ func _hold_interact_to_drop() -> void:
 	await _rig.wait_frames(ceili(player.drop_hold_time * Engine.physics_ticks_per_second) + HOLD_MARGIN)
 	_almos_input.release_action(&"interact")
 	await _rig.wait_frames(TAP_FRAMES)
+
+
+# Waits for the Jump attack to begin, and for the Jump and the strike on landing to be over.
+func _wait_for_the_jump_attack_to_end(almos: Almos) -> void:
+	await _rig.wait_frames(SETTLE_FRAMES)
+	for i in WAIT_FRAME_LIMIT:
+		if not almos.airborne and not almos.attacking and not almos.jump_attacking:
+			return
+		await get_tree().physics_frame
+	fail_test("the Jump attack should be over")
 
 
 # Waits for a swing to begin, if one has not, and be over.

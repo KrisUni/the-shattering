@@ -83,6 +83,17 @@ func test_it_follows_a_weapon_picked_up_with_empty_hands_to_the_one_now_in_hand(
 	assert_eq(_label(room).text, _name_of(SPEAR_PATH))
 
 
+func test_it_still_says_unarmed_after_a_switch_with_empty_hands() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	almos.global_position = Vector2(600.0, 420.0)
+	await _hold_to_drop()
+
+	await _tap(&"switch_weapon")
+
+	assert_eq(_label(room).text, UNARMED)
+
+
 func _spawn_room() -> Node:
 	var scene := load(TEST_ROOM_PATH) as PackedScene
 	assert_not_null(scene, "the test room scene should load")
