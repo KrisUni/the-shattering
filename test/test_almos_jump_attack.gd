@@ -248,6 +248,33 @@ func test_a_heavy_press_in_the_last_frames_of_the_recovery_is_kept_as_for_any_at
 	assert_eq(attacking.y - attacking.x, swing.total_frames() + _sword().heavy_attack.total_frames(), "frames of the Jump attack and the Heavy attack after it")
 
 
+func test_a_light_press_in_the_last_frames_of_the_recovery_starts_the_next_swing() -> void:
+	_spawn_almos(Vector2.ZERO)
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _jump_attack_until_the_strike_begins()
+	var swing := _sword().jump_attack
+	await wait_physics_frames(swing.total_frames() - _sword().attack_buffer_frames - 1)
+
+	await _tap(&"attack_light")
+	await _wait_until_the_jump_attack_is_over()
+	await wait_physics_frames(1)
+
+	assert_eq(_almos.light_swing, 1, "the kept press should come out as the first swing of the Light combo")
+
+
+func test_a_jump_attack_starts_the_light_combo_over() -> void:
+	_spawn_almos(Vector2.ZERO)
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap(&"attack_light")
+	await wait_while(func() -> bool: return _almos.attacking, WAIT_LIMIT)
+	await _jump_attack_in_place()
+	await wait_physics_frames(PAST_THE_END_FRAMES)
+
+	await _tap(&"attack_light")
+
+	assert_eq(_almos.light_swing, 1, "the next Light press should be the first swing")
+
+
 # --- Stamina ---
 
 func test_the_jump_attack_spends_its_stamina_once_at_the_press() -> void:
@@ -296,6 +323,22 @@ func test_the_strike_is_aimed_along_his_facing_without_lock_on() -> void:
 	await _jump_attack_in_place()
 
 	assert_almost_eq(_samples[_span("striking").x].aim, 0.0, ANGLE_TOLERANCE, "the strike should be aimed right")
+
+
+func test_the_strike_keeps_the_facing_he_had_at_the_press() -> void:
+	_spawn_almos(Vector2.ZERO)
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(SETTLE_FRAMES)
+	_almos_input.release_action(&"move_right")
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap(&"jump")
+	await wait_physics_frames(SETTLE_FRAMES)
+
+	await _tap(&"attack_heavy")
+	_almos_input.press_action(&"move_up")
+	await _wait_until_the_jump_attack_is_over()
+
+	assert_almost_eq(_samples[_span("striking").x].aim, 0.0, ANGLE_TOLERANCE, "the strike should still be aimed right")
 
 
 func test_the_strike_is_aimed_at_the_target_at_the_press_under_lock_on() -> void:
@@ -384,6 +427,23 @@ func test_a_jump_attack_is_not_a_critical_hit() -> void:
 
 	assert_true(_enemy.broken, "a Critical hit would have ended the Break")
 	assert_almost_eq(health_before - _enemy.health.current, _sword().jump_attack.damage, TOLERANCE, "it takes its own damage, not a Critical hit's")
+
+
+func test_a_jump_attack_builds_no_stagger_on_a_broken_enemy() -> void:
+	_almos = _fight.spawn_almos_above_the_enemy(false)
+	_enemy = _rig.enemy
+	_sample_almos(_almos)
+	await wait_physics_frames(SETTLE_FRAMES)
+	var breaker := _rig.hitbox_over(_enemy, 0.0, "enemy_hurtbox")
+	breaker.stagger = _enemy.tuning.stagger_capacity
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _rig.swing(breaker, 1)
+	assert_true(_enemy.broken, "the enemy should be broken")
+	var stagger_before: float = _enemy.stagger.current
+
+	await _jump_attack_in_place()
+
+	assert_almost_eq(_enemy.stagger.current, stagger_before, TOLERANCE, "no Stagger built on a broken enemy")
 
 
 # Helpers
