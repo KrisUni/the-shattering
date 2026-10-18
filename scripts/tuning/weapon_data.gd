@@ -18,9 +18,10 @@ extends Resource
 @export var heavy_attack: HeavyAttackData
 
 ## The Jump attack: the Heavy attack press made in mid-air, which strikes as he lands. Its
-## startup is the rest of the Jump, so its startup_frames is not used and is 0: the active
-## frames begin on the frame he lands, then the recovery. It builds more Stagger than any
-## Heavy attack, and is paid for with its stamina_cost when it begins.
+## startup is the rest of the Jump, so its startup_frames stays 0: they count from the landing,
+## so a number above 0 would delay the strike past the frame he lands in. The active frames
+## begin on that frame, then the recovery. It builds more Stagger than any Heavy attack, and is
+## paid for with its stamina_cost when it begins.
 @export var jump_attack: AttackData
 
 ## How close to Almos's centre, in pixels, the centre of a broken enemy must be for a Light

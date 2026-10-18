@@ -62,6 +62,10 @@ enum AttackKind {
 ## wind-up.
 @export var unblockable_attack: AttackData
 
+## How many physics frames the white flash at the start of its Unblockable attack's wind-up
+## lasts. It must be shorter than the wind-up, whose rest keeps the tint of its own.
+@export var unblockable_flash_frames: int
+
 ## The most Stagger the enemy can have. A full meter is this much.
 @export var stagger_capacity: float
 

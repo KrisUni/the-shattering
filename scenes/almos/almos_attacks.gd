@@ -135,9 +135,8 @@ func advance(aim: Vector2, can_start: bool, in_the_air := false) -> void:
 
 
 ## He has come down from a Jump: a Jump attack pressed in it strikes now, in this very frame. It
-## is called once per frame by Almos, after the Jump has advanced, with whether the Jump ended
-## in a gap, which puts him back where it began and cancels the Jump attack with no strike and no
-## recovery.
+## is called once per landing, as the Jump ends, with whether it ended in a gap, which puts him
+## back where it began and cancels the Jump attack with no strike and no recovery.
 func jump_ended(in_a_gap: bool) -> void:
 	if not _jump_pending:
 		return

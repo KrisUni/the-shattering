@@ -8,13 +8,10 @@ const WIND_UP_TINT := Color(1.0, 0.35, 0.35)
 # Strike's and knows to Jump. Also a look.
 const LOW_WIND_UP_TINT := Color(1.0, 0.9, 0.2)
 
-# What it is tinted for the first UNBLOCKABLE_FLASH_FRAMES of the wind-up of an Unblockable
+# What it is tinted for the first unblockable_flash_frames of the wind-up of an Unblockable
 # attack: a white brighter than the placeholder's own colours, which a plain white tint would
 # not be. No other attack flashes. Also a look.
 const UNBLOCKABLE_FLASH_TINT := Color(3.0, 3.0, 3.0)
-
-# How many physics frames the flash at the start of an Unblockable wind-up lasts. Also a look.
-const UNBLOCKABLE_FLASH_FRAMES := 8
 
 # What it is tinted for the rest of the wind-up of an Unblockable attack, so that the player can
 # tell it from every other and knows to Roll or Jump. Also a look.
@@ -220,7 +217,7 @@ func _wind_up_tint() -> Color:
 		EnemyTuning.AttackKind.LOW:
 			return LOW_WIND_UP_TINT
 		EnemyTuning.AttackKind.UNBLOCKABLE:
-			return UNBLOCKABLE_FLASH_TINT if _frame < UNBLOCKABLE_FLASH_FRAMES else UNBLOCKABLE_WIND_UP_TINT
+			return UNBLOCKABLE_FLASH_TINT if _frame < tuning.unblockable_flash_frames else UNBLOCKABLE_WIND_UP_TINT
 	return WIND_UP_TINT
 
 

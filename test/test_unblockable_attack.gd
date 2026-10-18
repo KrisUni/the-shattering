@@ -216,14 +216,14 @@ func test_its_wind_up_flashes_white_at_its_start_and_then_keeps_a_look_of_its_ow
 			unblockable_winding += 1
 		else:
 			in_wind_up = 0
-		var flashing: bool = unblockable_wind_up and in_wind_up <= enemy.UNBLOCKABLE_FLASH_FRAMES
+		var flashing: bool = unblockable_wind_up and in_wind_up <= _tuning.unblockable_flash_frames
 		flash_samples += 1 if flashing else 0
 		assert_eq(sample.look == enemy.UNBLOCKABLE_FLASH_TINT, flashing, "whether it flashes in sample %d" % i)
 		assert_eq(sample.look == enemy.UNBLOCKABLE_WIND_UP_TINT, unblockable_wind_up and not flashing, "whether it shows the Unblockable wind-up tint in sample %d" % i)
 	assert_eq(unblockable_winding, _tuning.unblockable_attack.startup_frames * _tuning.attack_pattern.count(UNBLOCKABLE), "samples of the Unblockable wind-up in a round")
-	assert_eq(flash_samples, enemy.UNBLOCKABLE_FLASH_FRAMES * _tuning.attack_pattern.count(UNBLOCKABLE), "samples of the flash in a round")
-	assert_gt(enemy.UNBLOCKABLE_FLASH_FRAMES, 0, "the flash should last at least a frame")
-	assert_lt(enemy.UNBLOCKABLE_FLASH_FRAMES, _tuning.unblockable_attack.startup_frames, "the flash is the start of the wind-up, not all of it")
+	assert_eq(flash_samples, _tuning.unblockable_flash_frames * _tuning.attack_pattern.count(UNBLOCKABLE), "samples of the flash in a round")
+	assert_gt(_tuning.unblockable_flash_frames, 0, "the flash should last at least a frame")
+	assert_lt(_tuning.unblockable_flash_frames, _tuning.unblockable_attack.startup_frames, "the flash is the start of the wind-up, not all of it")
 
 
 func test_the_flash_is_brighter_than_white_and_clearly_different_from_every_other_look() -> void:
