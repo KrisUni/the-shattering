@@ -1,11 +1,24 @@
 extends GutTest
-## The Weapons' data files, read as a player's Weapons: each of the five loads as a WeaponData that
-## has a name, a Weight, a reach and every kind of attack, and owns its attacks outright, so that the
-## owner can retune one Weapon without touching another. No number in a file is pinned here: the
+## The Weapons' data files, read as a player's Weapons: each of the five, and Unarmed, loads as a
+## WeaponData that has a name, a reach and every kind of attack, and owns its attacks outright, so
+## that the owner can retune one Weapon without touching another. Each of the five carried Weapons
+## has a Weight; Unarmed is not carried, so it has none. No number in a file is pinned here: the
 ## Weapons' numbers are the owner's to change, and only what must hold of any sensible retune is
 ## asserted.
 
-# Each Weapon's data file.
+# Each carried Weapon's data file.
+var carried_weapon_params = ParameterFactory.named_parameters(
+	["path"],
+	[
+		["res://data/sword.tres"],
+		["res://data/spear.tres"],
+		["res://data/greatsword.tres"],
+		["res://data/torch.tres"],
+		["res://data/metal_bar.tres"],
+	],
+)
+
+# Each Weapon's data file, Unarmed included.
 var weapon_params = ParameterFactory.named_parameters(
 	["path"],
 	[
@@ -14,6 +27,7 @@ var weapon_params = ParameterFactory.named_parameters(
 		["res://data/greatsword.tres"],
 		["res://data/torch.tres"],
 		["res://data/metal_bar.tres"],
+		["res://data/unarmed.tres"],
 	],
 )
 
@@ -26,12 +40,20 @@ func test_each_weapon_data_file_loads_as_a_weapon_with_a_name(params = use_param
 	assert_ne(weapon.display_name.strip_edges(), "", "display name")
 
 
-func test_each_weapon_has_a_weight_above_zero(params = use_parameters(weapon_params)) -> void:
+func test_each_carried_weapon_has_a_weight_above_zero(params = use_parameters(carried_weapon_params)) -> void:
 	var weapon := _weapon(params.path)
 	if weapon == null:
 		return
 
 	assert_gt(weapon.weight, 0.0, "Weight")
+
+
+func test_unarmed_has_no_weight_as_it_is_not_carried() -> void:
+	var weapon := _weapon("res://data/unarmed.tres")
+	if weapon == null:
+		return
+
+	assert_almost_eq(weapon.weight, 0.0, 0.0001, "Weight")
 
 
 func test_each_weapon_has_a_reach_above_zero(params = use_parameters(weapon_params)) -> void:

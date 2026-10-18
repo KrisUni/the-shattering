@@ -154,6 +154,10 @@ var untouchable: bool:
 ## after that is up to his Weapons, so this is the only one to set.
 @export var weapon: WeaponData
 
+## What he fights with when his hands are empty: Unarmed. It is given to his attacks whenever no
+## Weapon is in hand, and it is not carried, so it is never in his Weapons.
+@export var unarmed: WeaponData
+
 ## What Roll and Sprint spend, and what the Stamina bar shows. It is given Almos's tuning,
 ## so his tuning is the only one to set.
 @onready var stamina: Stamina = $Stamina
@@ -224,7 +228,7 @@ func _enter_tree() -> void:
 		own_weapons.pick_up(weapon)
 	# Handing over the weapon in hand or the tuning changes nothing else, so they need no check
 	# first.
-	($Attacks as AlmosAttacks).weapon = own_weapons.in_hand
+	($Attacks as AlmosAttacks).weapon = own_weapons.in_hand if own_weapons.in_hand != null else unarmed
 	($LockOn as AlmosLockOn).tuning = tuning
 	($Block as AlmosBlock).tuning = tuning
 	($Parry as AlmosParry).tuning = tuning
@@ -526,9 +530,9 @@ func _drop_the_weapon_in_hand() -> void:
 	get_parent().add_child(pickup)
 
 
-# Hands his attacks the Weapon in hand, or nothing when his hands are empty.
+# Hands his attacks the Weapon in hand, or Unarmed when his hands are empty.
 func _hand_over_the_weapon_in_hand() -> void:
-	_attacks.weapon = weapons.in_hand
+	_attacks.weapon = weapons.in_hand if weapons.in_hand != null else unarmed
 
 
 # Reads the Switch button. A press puts the next carried Weapon in hand, at once, unless he is in

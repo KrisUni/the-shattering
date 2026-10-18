@@ -41,8 +41,8 @@ enum Press { NONE, LIGHT, HEAVY }
 ## The attacks of the Weapon in his hand. It can be changed at any time, and the sword is
 ## placed at the new Weapon's reach at once. A different Weapon starts the Light combo over. It is
 ## never changed in the middle of an attack: whoever hands over a Weapon waits until he is not
-## committed, or for swing_ended. Null is empty hands: every attack press is lost and the sword
-## is off. (Unarmed attacks come later.)
+## committed, or for swing_ended. Almos hands over Unarmed when his hands are empty. Null is
+## only a guard: every attack press is lost and the sword is off.
 @export var weapon: WeaponData:
 	set(value):
 		var different := value != weapon
@@ -130,7 +130,7 @@ func _ready() -> void:
 ## is lost. The aim is fixed when the swing begins: the swing commits, so it does not follow the
 ## target after. It reads the attack buttons itself.
 func advance(aim: Vector2, can_start: bool, in_the_air := false) -> void:
-	# With empty hands there is nothing to swing, so a press of an attack button is lost.
+	# With no Weapon handed over there is nothing to swing, so a press of an attack button is lost.
 	var press := _pressed() if weapon != null else Press.NONE
 	if attacking and _frame >= _swing.total_frames():
 		# A press seen on this frame is later than one kept for it, so it takes its place:

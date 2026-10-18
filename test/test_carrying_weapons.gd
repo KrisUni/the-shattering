@@ -17,6 +17,7 @@ const SWORD_PATH := "res://data/sword.tres"
 const SPEAR_PATH := "res://data/spear.tres"
 const GREATSWORD_PATH := "res://data/greatsword.tres"
 const TORCH_PATH := "res://data/torch.tres"
+const UNARMED_PATH := "res://data/unarmed.tres"
 const WEAPON_PICKUP_SCENE_PATH := "res://scenes/world/weapon_pickup.tscn"
 
 const PICKUPS_GROUP := &"weapon_pickups"
@@ -799,25 +800,27 @@ func test_dropping_the_last_weapon_leaves_his_hands_empty() -> void:
 	assert_eq(almos.weapons.carried.size(), 0)
 
 
-func test_an_attack_press_with_empty_hands_is_lost() -> void:
+func test_an_attack_press_with_empty_hands_is_an_unarmed_attack() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
 	await _hold_interact_to_drop()
+	var unarmed := load(UNARMED_PATH) as WeaponData
 	var sword := almos.get_node("Sword") as Hitbox
 
 	_almos_input.press_action(&"attack_light")
 	await wait_physics_frames(TAP_FRAMES)
-	assert_false(almos.attacking, "no swing")
-	assert_false(sword.active, "the sword should be off")
+	assert_true(almos.attacking, "a Light swing")
+	await _wait_until(func() -> bool: return sword.active)
+	assert_almost_eq(sword.damage, unarmed.light_attacks[0].damage, TOLERANCE, "Unarmed's damage")
 	_almos_input.release_action(&"attack_light")
+	await _wait_until(func() -> bool: return not almos.attacking)
 	_almos_input.press_action(&"attack_heavy")
 	await wait_physics_frames(TAP_FRAMES)
 
-	assert_false(almos.charging, "no charge")
-	assert_false(sword.active, "the sword should be off")
+	assert_true(almos.charging, "a Heavy attack charge")
 
 
-func test_a_jump_attack_press_with_empty_hands_is_lost() -> void:
+func test_a_jump_attack_press_with_empty_hands_is_the_unarmed_jump_attack() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
 	await _hold_interact_to_drop()
@@ -826,9 +829,9 @@ func test_a_jump_attack_press_with_empty_hands_is_lost() -> void:
 
 	await _press(&"attack_heavy", 2)
 
-	assert_false(almos.jump_attacking, "no Jump attack")
+	assert_true(almos.jump_attacking, "a Jump attack")
 	await _wait_until(func() -> bool: return not almos.airborne)
-	assert_false(almos.attacking, "no strike on landing")
+	assert_true(almos.attacking, "a strike on landing")
 
 
 func test_a_switch_with_empty_hands_changes_nothing() -> void:

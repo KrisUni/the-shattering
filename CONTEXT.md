@@ -149,7 +149,7 @@ The marker left where the player died, holding all the Experience not yet cashed
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with Interact, within reach of it and while free to act; resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Weapon and a Checkpoint are both in reach, the tap rests. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
 _Avoid_: Bonfire, save point, shrine
 
 **Death**:
@@ -163,7 +163,7 @@ The state in which the player targets a single enemy; while it holds, movement c
 _Avoid_: Target lock, Z-targeting, focus
 
 **Weapon**:
-Anything the player can sensibly fight with, each with its own Light attack and Heavy attack: a sword, spear or greatsword, but also an improvised object such as a torch or a metal bar. Weapons can be picked up and swapped anywhere, and every carried Weapon counts toward the player's Load. They never break and are never upgraded; those found deeper in the world are stronger.
+Anything the player can sensibly fight with, each with its own Light attack and Heavy attack: a sword, spear or greatsword, but also an improvised object such as a torch or a metal bar. Almos carries his Weapons in the order he picked them up. One button switches to the next at once, and a switch pressed during an attack waits for it to end. A tap of Interact picks one up, and a hold drops the one in hand where he stands, with the next carried Weapon coming to hand. Every carried Weapon counts toward the player's Load. They never break and are never upgraded; those found deeper in the world are stronger.
 _Avoid_: Blade, arm, gear
 
 **Armour**:
@@ -175,7 +175,7 @@ The total Weight of everything the player wears and carries: Armour and every We
 _Avoid_: Equip load, burden, encumbrance
 
 **Unarmed**:
-Fighting with fists when no Weapon is held: weak Light and Heavy attacks, with Stagger and Parry still working.
+What Almos fights with when his hands are empty: weak Light and Heavy attacks, with Stagger and Parry still working. It is not a stop when switching between Weapons. Dropping the last Weapon leaves him Unarmed.
 _Avoid_: Fists, bare hands, brawling
 
 **Light attack**:
