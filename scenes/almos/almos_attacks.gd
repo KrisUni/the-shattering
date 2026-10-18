@@ -150,6 +150,22 @@ func jump_ended(in_a_gap: bool) -> void:
 	_frame += 1
 
 
+## Whatever attack he was in is over, at once: a swing or a charge, a Jump attack waiting for
+## the landing, a press kept for the end of a swing, and the Light combo. The sword is off.
+## Called when Almos falls or is returned.
+func reset() -> void:
+	_frame = -1
+	_critical = false
+	_charging = false
+	_jump_pending = false
+	_jump_swing = false
+	_frames_held = 0
+	_queued = Press.NONE
+	_light_swing = 0
+	hitbox.critical = false
+	_set_sword(false)
+
+
 # Which attack button was pressed this frame. If both were, it is the Light attack.
 func _pressed() -> Press:
 	if Input.is_action_just_pressed(&"attack_light"):

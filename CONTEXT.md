@@ -125,7 +125,7 @@ A collectible found while exploring that adds one charge to both the Health Flas
 _Avoid_: Estus shard, flask shard, charge upgrade
 
 **Experience**:
-What the player gains by killing enemies. It only turns into Levels when cashed in at a Checkpoint; Experience not yet cashed in is at risk when the player dies. It is not a currency and cannot be spent anywhere else.
+What the player gains by killing enemies; each kind of enemy gives its own amount. It only turns into Levels when cashed in at a Checkpoint; Experience not yet cashed in is at risk when the player dies. It is not a currency and cannot be spent anywhere else.
 _Avoid_: Souls, XP, currency, runes
 
 **Level**:
@@ -145,12 +145,16 @@ The stat that raises Spell damage.
 _Avoid_: Intelligence, magic, arcane, faith
 
 **Remains**:
-The marker left where the player died, holding all the Experience not yet cashed in; after a Deadly fall it is left on the last solid ground the player stood on, and after a death in the Vision it is left at the Vision's entrance. Reaching it recovers that Experience; dying again before reaching it destroys it.
+The marker left where the player died, holding all the Experience not yet cashed in; after a Deadly fall it is left on the last solid ground the player stood on, and after a death in the Vision it is left at the Vision's entrance. The player recovers that Experience by touching it, with no button. Dying again before reaching it destroys it and leaves new Remains, or none if the player had no Experience then; there is only ever one set. Resting leaves it where it is.
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. Resting at one brings back every ordinary enemy; Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with Interact, within reach of it and while free to act; resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
 _Avoid_: Bonfire, save point, shrine
+
+**Death**:
+What happens when the player's Health reaches zero. Almos goes limp where he fell, taking no input and unable to be hit, and every action he was in ends. After a pause he returns to his last Checkpoint with full bars and every ordinary enemy back, as after a rest, while Bosses and named enemies stay dead. The Experience he carried is left as Remains where he fell.
+_Avoid_: Game over, respawn
 
 ### Movement and combat
 
@@ -310,6 +314,10 @@ _Avoid_: Cover, stealth spot, hidey-hole
 **Boss**:
 A unique enemy fought only at a story turning point. Once killed it stays dead. The only Boss in the first areas is the Lesser god, in the Lands between.
 _Avoid_: Miniboss, elite, guardian
+
+**Named enemy**:
+An enemy placed in the world as one of a kind. Once killed it stays dead, like a Boss. Every other enemy is ordinary and comes back at a rest or a Death.
+_Avoid_: Elite, unique, champion
 
 **Lesser god**:
 The minor deity Almos meets in the Vision in the Lands between; the first Boss. It offers him a truth in exchange for his ability to sleep, and will not let him leave the Vision without a bargain; refusing only brings the offer back. Once he agrees and the trade is made, it still refuses to let him leave. The Boss fight is his escape from the Vision. The trade happens once; on later attempts the god greets him briefly and the fight begins. The fight is a melee duel that tests Parry, Low attacks and Unblockable attacks, bent by the dream with False strikes.

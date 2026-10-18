@@ -66,6 +66,17 @@ func advance(free: bool, delta: float) -> void:
 			_end_guard_break()
 
 
+## He is not blocking and no Guard break is on him, at once, and what each showed is gone.
+## Called when Almos falls or is returned.
+func reset() -> void:
+	_blocking = false
+	_broken = false
+	_broken_for = 0.0
+	if placeholder != null:
+		placeholder.visible = false
+	_tint(false)
+
+
 ## A hit lands on Almos, for this much damage, coming from this point in the world, while he
 ## stands at centre and faces this way (a unit vector). Returns how much of the damage gets
 ## through. Called by his Hurtbox for every hit that lands, and spends the Stamina of a hit

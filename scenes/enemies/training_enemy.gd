@@ -33,8 +33,8 @@ signal unblockable_cue_played
 @export var target: Node2D
 
 ## Whether it is a named enemy. An enemy is ordinary unless the instance placed in a room is
-## marked named. Resting at a Checkpoint brings back every ordinary enemy as new, and a named
-## enemy stays dead.
+## marked named. Resting at a Checkpoint, and Almos's Death, bring back every ordinary enemy as
+## new, and a named enemy stays dead.
 @export var named := false
 
 ## The way it faces, a unit vector. While it is free it turns to face its target exactly; in an

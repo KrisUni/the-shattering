@@ -120,3 +120,8 @@ extends Resource
 
 ## How long, in seconds, a Checkpoint flashes when Almos rests at it.
 @export var rest_flash_duration: float
+
+## How long, in seconds, Almos lies limp after his Health reaches zero, before he returns to his
+## last Checkpoint. He takes no input and cannot be hit all that time. A time that is not a
+## whole number of physics frames lasts until the next whole frame.
+@export var death_pause: float

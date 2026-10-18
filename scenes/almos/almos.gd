@@ -9,14 +9,29 @@ const FACING_STEP := TAU / 8.0
 # compared with a tuned time through this slack, so that a tuned time which is a whole
 # number of frames counts as reached on that frame, not the next. Without it a Roll would
 # run one more frame with nothing left to move, the untouchable window would be a frame
-# too long and the hold threshold a frame too late. The Guard break in AlmosBlock is timed
-# with it as well.
+# too long and the hold threshold a frame too late. The buffer window of the Roll, the Guard
+# break in AlmosBlock and the pause of a Death are timed with it as well.
 const TIME_SLACK := 0.000001
+
+# What his placeholder is tinted while he lies limp after a Death. It is a look, not a tuning
+# number.
+const DEATH_TINT := Color(0.35, 0.35, 0.4)
 
 enum State { WALKING, SPRINTING, ROLLING }
 
 ## Emitted when he rests at a Checkpoint, after his Health and Stamina are refilled.
 signal rested(checkpoint: Checkpoint)
+
+## Emitted once, in the frame his Health reaches zero, with the place he fell. He is limp from
+## then, every action he was in is over, and the pause begins.
+signal died(place: Vector2)
+
+## Emitted once, in the frame the pause of his Death runs out. He is still limp: whoever handles
+## the Death, such as the room, sends him back with return_to.
+signal death_pause_over
+
+## Emitted when he is returned, after return_to has put him back on his feet.
+signal returned
 
 ## Where Almos last moved, snapped to the nearest of eight directions, as a unit
 ## vector. A Roll with no input goes this way, and so does an attack. Under Lock-on it is
@@ -114,9 +129,18 @@ var height_level: int:
 	get:
 		return _jump.height_level
 
-## Whether Almos cannot be hurt at this moment: during part of a Roll.
+## Whether his Health has reached zero and he has not been returned: he lies limp. He takes no
+## input, cannot be hit, and every action he was in has ended. After death_pause he is waiting
+## to be sent back with return_to.
+var dead: bool:
+	get:
+		return _dead
+
+## Whether Almos cannot be hurt at this moment: while he is limp, and during part of a Roll.
 var untouchable: bool:
 	get:
+		if _dead:
+			return true
 		var window_start := tuning.roll_untouchable_start - TIME_SLACK
 		var window_end := tuning.roll_untouchable_start + tuning.roll_untouchable_duration - TIME_SLACK
 		return rolling and _roll_time >= window_start and _roll_time < window_end
@@ -147,6 +171,9 @@ var untouchable: bool:
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
+var _dead := false
+var _dead_for := 0.0
+var _pause_announced := false
 var _roll_direction := Vector2.ZERO
 var _roll_time := 0.0
 var _roll_queued := false
@@ -176,6 +203,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	health.depleted.connect(_fall)
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
 	# A Jump attack pressed in the air strikes as he comes down, or is cancelled by a gap.
@@ -191,6 +219,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _dead:
+		_lie_limp(delta)
+		return
 	# A Guard break that runs out in this frame is still spent open, though the block clears it
 	# before the frame is over. So it is read once, here, for everything below.
 	var left_open := _block.guard_broken
@@ -256,6 +287,61 @@ func _physics_process(delta: float) -> void:
 	_face_the_target()
 	# Turning the placeholder shape stands in for the eight facing sprites.
 	_placeholder.rotation = facing.angle()
+
+
+# His Health has reached zero: he goes limp where he is. Every action he was in ends at once, and
+# whatever he had locked on to is let go of. A press of any button made from here is lost.
+func _fall() -> void:
+	if _dead:
+		return
+	_dead = true
+	_dead_for = 0.0
+	_pause_announced = false
+	_end_every_action()
+	_placeholder.modulate = DEATH_TINT
+	died.emit(global_position)
+
+
+# One frame of lying limp: the pause is counted in summed frame lengths compared with death_pause
+# through TIME_SLACK, as the Roll is, and its end is announced once. He neither reads input nor
+# moves.
+func _lie_limp(delta: float) -> void:
+	_dead_for += delta
+	if not _pause_announced and _dead_for >= tuning.death_pause - TIME_SLACK:
+		_pause_announced = true
+		death_pause_over.emit()
+
+
+## He is back on his feet at this point, in global coordinates: on the ground level, with full
+## Health and Stamina, still, and in none of the actions. His Experience, his facing and
+## everything outside him are left as they are; whoever sends him back sees to those.
+func return_to(point: Vector2) -> void:
+	_end_every_action()
+	_dead = false
+	_dead_for = 0.0
+	_placeholder.modulate = Color.WHITE
+	global_position = point
+	health.refill()
+	stamina.refill()
+	returned.emit()
+
+
+# Ends whatever he is in, at once, and leaves him still: a Roll and the Roll kept for its end,
+# a Sprint, a swing, a charge, a Jump, a Block, a Guard break, a Parry and the Lock-on, along with
+# what each of them showed. The Roll button is forgotten, so that a hold begun before does not
+# count after.
+func _end_every_action() -> void:
+	_state = State.WALKING
+	_roll_time = 0.0
+	_roll_queued = false
+	_roll_button_held_for = 0.0
+	_out_of_breath = false
+	velocity = Vector2.ZERO
+	_attacks.reset()
+	_block.reset()
+	_parry.reset()
+	_jump.reset()
+	_lock_on.release()
 
 
 func _move_freely(direction: Vector2, delta: float) -> void:
@@ -445,7 +531,7 @@ func _neutral_roll_direction() -> Vector2:
 func _on_roll_tapped(direction: Vector2) -> void:
 	if not rolling:
 		_start_roll(direction)
-	elif tuning.roll_duration - _roll_time <= tuning.roll_buffer_window:
+	elif tuning.roll_duration - _roll_time <= tuning.roll_buffer_window + TIME_SLACK:
 		_roll_queued = true
 
 

@@ -116,7 +116,7 @@ func test_the_health_bar_follows_the_health_almos_has_left() -> void:
 	assert_almost_eq(bar.max_value, tuning.health_maximum, TOLERANCE)
 
 
-func test_the_room_requests_a_restart_when_almos_health_reaches_zero() -> void:
+func test_almos_goes_limp_in_the_room_when_his_health_reaches_zero() -> void:
 	var tuning := load(TUNING_PATH) as PlayerTuning
 	assert_not_null(tuning, "the player tuning data file should load")
 	if tuning == null:
@@ -128,14 +128,14 @@ func test_the_room_requests_a_restart_when_almos_health_reaches_zero() -> void:
 	assert_not_null(almos, "the test room should contain Almos")
 	if almos == null:
 		return
-	watch_signals(room)
 
 	almos.health.take_damage(tuning.health_maximum)
 
-	assert_signal_emit_count(room, "restart_requested", 1)
+	assert_true(almos.dead, "he should lie limp where he fell")
+	assert_true(almos.is_inside_tree(), "the room should carry on with the same Almos")
 
 
-func test_the_room_does_not_request_a_restart_while_almos_has_health_left() -> void:
+func test_almos_does_not_go_limp_while_he_has_health_left() -> void:
 	var tuning := load(TUNING_PATH) as PlayerTuning
 	assert_not_null(tuning, "the player tuning data file should load")
 	if tuning == null:
@@ -147,11 +147,15 @@ func test_the_room_does_not_request_a_restart_while_almos_has_health_left() -> v
 	assert_not_null(almos, "the test room should contain Almos")
 	if almos == null:
 		return
-	watch_signals(room)
+	var start: Vector2 = almos.global_position
+	watch_signals(almos)
 
-	almos.health.take_damage(tuning.health_maximum - 1.0)
+	almos.health.take_damage(tuning.health_maximum / 2.0)
+	await wait_seconds(tuning.death_pause + 0.5)
 
-	assert_signal_not_emitted(room, "restart_requested")
+	assert_false(almos.dead, "he should be on his feet")
+	assert_signal_not_emitted(almos, "died")
+	assert_eq(almos.global_position, start, "he should not have been sent anywhere")
 
 
 func test_sprinting_at_a_wall_keeps_almos_on_the_floor(params = use_parameters(wall_params)) -> void:
