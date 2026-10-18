@@ -396,7 +396,7 @@ func test_a_jump_attack_landing_on_an_enemy_pushes_him_off_it_and_keeps_him_apar
 	if params.after_almos:
 		_rig.set_target(_almos, _almos.health)
 	else:
-		_rig.place_target(Vector2(0.0, 5.0 * _enemy.tuning.notice_range))
+		_rig.place_target(Vector2(0.0, 5.0 * _enemy.tuning.sight_length_full))
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap(&"attack_heavy")
 

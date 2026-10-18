@@ -66,6 +66,10 @@ func set_target(node: Node2D, health: Health) -> void:
 	target = node
 	target_health = health
 	enemy.target = node
+	# Faces it, so that it is in the enemy's Sight when it is near enough and it notices it.
+	var towards: Vector2 = node.global_position - enemy.global_position
+	if not towards.is_zero_approx():
+		enemy.post_facing = towards.normalized()
 
 
 ## A target standing here, which the enemy goes after. It stands in for Almos: it is hurt

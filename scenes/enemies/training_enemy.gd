@@ -20,6 +20,9 @@ const UNBLOCKABLE_WIND_UP_TINT := Color(0.75, 0.3, 0.95)
 # What it is tinted while it is broken, so that the player can see it is open. Also a look.
 const BREAK_TINT := Color(0.4, 0.6, 1.0)
 
+# The collision mask of the walls, which block its Sight: the "walls" layer, the first.
+const WALL_MASK := 1
+
 ## Emitted once, at the end of the physics frame in which its Health reached zero.
 signal died
 
@@ -37,12 +40,27 @@ signal unblockable_cue_played
 ## new, and a named enemy stays dead.
 @export var named := false
 
+## The way it faces at its post, a unit vector, until it notices Almos. Its Sight points this way.
+@export var post_facing := Vector2.DOWN:
+	set(value):
+		post_facing = value
+		if not _noticed:
+			_facing = value.normalized()
+			if is_node_ready():
+				_nose.rotation = _facing.angle()
+
 ## The way it faces, a unit vector. While it is free it turns to face its target exactly; in an
 ## attack it keeps the direction it committed the swing to. Its front is centred on it, and a
 ## hit from outside the front builds extra Stagger.
 var facing: Vector2:
 	get:
 		return _facing
+
+## Whether it has noticed its target: the target came into its Sight, or it was hit. Once it has,
+## it stays noticed, and goes after the target.
+var noticed: bool:
+	get:
+		return _noticed
 
 ## The kind of attack under way, or of the last one it made. It makes the kinds in the order of
 ## the tuning's attack_pattern.
@@ -105,6 +123,7 @@ var _broken := false
 # first of its break_frames, whichever of Almos's blow and its own processing comes first in it.
 var _break_end_frame := 0
 var _facing := Vector2.DOWN
+var _noticed := false
 
 
 func _enter_tree() -> void:
@@ -130,8 +149,7 @@ func _ready() -> void:
 	_unblockable_hitbox.parried.connect(_on_parried)
 	_hurtbox.landed.connect(_on_hit_landed)
 	stagger.changed.connect(_show_stagger)
-	if is_instance_valid(target) and not _to_target().is_zero_approx():
-		_facing = _to_target().normalized()
+	_facing = post_facing.normalized()
 	_show_stagger()
 	_nose.rotation = _facing.angle()
 
@@ -139,6 +157,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(target):
 		return
+	if not _noticed and not _dead and _target_in_sight():
+		_noticed = true
 	# The Break runs for break_frames physics frames; it is free in the frame after the last.
 	if _broken and Engine.get_physics_frames() >= _break_end_frame:
 		_broken = false
@@ -162,8 +182,21 @@ func _to_target() -> Vector2:
 	return target.global_position - global_position
 
 
-# Between attacks: attack if the target is close enough, walk towards it if it is noticed.
+# Whether the target is in its Sight now: inside the cone, as long as the light at the target
+# lets it reach, and with no wall in between.
+func _target_in_sight() -> bool:
+	var light := LightZone.light_at(get_tree().get_nodes_in_group("light_zones"), target.global_position)
+	return Sight.sees(
+		get_world_2d().direct_space_state, global_position, post_facing.normalized(), target.global_position,
+		tuning.sight_arc_degrees, tuning.sight_length_at(light), WALL_MASK,
+	)
+
+
+# Between attacks: attack if the target is close enough, walk towards it. Until the target is
+# noticed it stands at its post facing the way it was set.
 func _act_freely() -> void:
+	if not _noticed:
+		return
 	var to_target := _to_target()
 	if not to_target.is_zero_approx():
 		_facing = to_target.normalized()
@@ -180,7 +213,7 @@ func _act_freely() -> void:
 		if _kind == EnemyTuning.AttackKind.UNBLOCKABLE:
 			_unblockable_cue.play()
 			unblockable_cue_played.emit()
-	elif to_target.length() <= tuning.notice_range:
+	else:
 		velocity = to_target.normalized() * tuning.move_speed
 		move_and_slide()
 
@@ -229,6 +262,7 @@ func _wind_up_tint() -> Color:
 # A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
 # builds what the attack builds, and more if the hit came from behind, unless it is broken.
 func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
+	_noticed = true
 	if critical:
 		_broken = false
 		_show_look()

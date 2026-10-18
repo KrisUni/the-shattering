@@ -322,7 +322,7 @@ func _spawn_fight(how: String, distance: float, from_behind: bool) -> Almos:
 	var almos := await _empty_handed_almos(how)
 	var enemy = _rig.spawn_enemy(_rig.tuning_with({"health_maximum": ENEMY_HEALTH}), almos.position + Vector2.DOWN * distance)
 	var away := Vector2.DOWN if from_behind else Vector2.UP
-	_rig.place_target(enemy.position + away * (_tuning.notice_range + BEYOND_NOTICE))
+	_rig.place_target(enemy.position + away * (_tuning.sight_length_full + BEYOND_NOTICE))
 	await _rig.wait_frames(SETTLE_FRAMES)
 	return almos
 

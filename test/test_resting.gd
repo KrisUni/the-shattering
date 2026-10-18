@@ -564,6 +564,7 @@ func test_a_swing_under_way_when_he_rests_does_not_land_afterwards() -> void:
 	var swing: AttackData = old.tuning.attack
 	_stand_beside_the_checkpoint(room, almos)
 	old.global_position = almos.global_position + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
+	old.post_facing = Vector2.UP
 	for i in WAIT_FRAME_LIMIT:
 		if old.attacking:
 			break

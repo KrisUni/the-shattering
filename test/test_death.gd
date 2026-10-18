@@ -944,6 +944,7 @@ func test_an_enemys_blow_can_kill_him_and_he_comes_back_with_the_remains_where_i
 	almos.experience.gain(CARRIED)
 	almos.health.take_damage(almos.health.maximum - 1.0)
 	enemy.global_position = DEATH_SPOT + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
+	enemy.post_facing = Vector2.UP
 	for i in WAIT_FRAME_LIMIT:
 		if almos.dead:
 			break
@@ -1138,6 +1139,7 @@ func test_an_enemy_swinging_at_the_return_point_when_he_falls_cannot_hurt_him_af
 	var old: Node = _enemy(room)
 	var swing: AttackData = old.tuning.attack
 	old.global_position = almos.global_position + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
+	old.post_facing = Vector2.UP
 	for i in WAIT_FRAME_LIMIT:
 		if old.attacking:
 			break
