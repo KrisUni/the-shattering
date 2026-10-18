@@ -137,7 +137,7 @@ func test_end_pursuit_ends_it_at_once_and_it_goes_back_to_its_post() -> void:
 	c.enemy.end_pursuit()
 
 	assert_false(c.enemy.in_pursuit, "at once")
-	assert_false(c.enemy.noticed)
+	assert_false(c.enemy.in_pursuit)
 	await _until(func() -> bool: return c.enemy.global_position.distance_to(POST) < 1.0)
 	assert_lt(Engine.get_physics_frames() - c.start_frame, _tuning.lose_sight_frames, "it did not wait for the lose-time to go back")
 	assert_false(c.enemy.in_pursuit)

@@ -67,13 +67,8 @@ var facing: Vector2:
 		return _facing
 
 ## Whether it is in Pursuit: it noticed its target, which came into its Sight (a Sound hunter:
-## within the radius of his Noise) or hit it, and has not lost him yet. The same as noticed.
+## within the radius of his Noise) or hit it, and has not lost him yet.
 var in_pursuit: bool:
-	get:
-		return _state == State.PURSUIT
-
-## Whether it has noticed its target and is going after him: the same as in_pursuit.
-var noticed: bool:
 	get:
 		return _state == State.PURSUIT
 
@@ -249,7 +244,7 @@ func end_pursuit() -> void:
 ## and drags him out with an Unblockable attack, out of its attack pattern. Any other enemy ends its
 ## Pursuit at once, and does nothing if it is not in Pursuit.
 func react_to_hiding(spot: Vector2, noise_before: float) -> void:
-	if _dead:
+	if _dead or not is_instance_valid(target):
 		return
 	var saw := _to_target().length() <= noise_before if tuning.sound_hunter else _target_in_sight()
 	if not saw:
@@ -326,6 +321,7 @@ func _act_freely() -> void:
 		# It commits to the swing: it goes where the target was now, wherever it moves to, and
 		# keeps facing that way until the swing is over.
 		box.rotation = _facing.angle()
+		_unblockable_hitbox.grab = _dragging
 		if _kind == EnemyTuning.AttackKind.UNBLOCKABLE:
 			_unblockable_cue.play()
 			unblockable_cue_played.emit()

@@ -283,6 +283,8 @@ func _ready() -> void:
 	# A hit that lands on him in a Hiding spot pulls him out of it.
 	_hurtbox.landed.connect(_on_hurt_landed)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
+	# In a Hiding spot only a grab hurts him.
+	_hurtbox.is_hidden = func() -> bool: return _hiding
 	# A Low attack passes under him while he is in the air.
 	_hurtbox.is_airborne = func() -> bool: return airborne
 	_hurtbox.is_parried = func(from: Vector2) -> bool:

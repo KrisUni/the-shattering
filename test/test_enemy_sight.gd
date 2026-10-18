@@ -44,7 +44,7 @@ func test_an_enemy_with_almos_behind_it_stays_at_its_post_facing_the_set_way() -
 
 	await _watch(WATCH_FRAMES)
 
-	assert_false(room.enemy.noticed)
+	assert_false(room.enemy.in_pursuit)
 	assert_eq(room.enemy.facing, Vector2.RIGHT, "it keeps facing the set way")
 	assert_eq(room.enemy.position, enemy_at, "it stays where it is")
 
@@ -54,13 +54,13 @@ func test_almos_walking_into_the_cone_is_noticed_once_he_is_within_its_length() 
 	var enemy_at := Vector2(700.0, 324.0)
 	var room := _room(enemy_at + Vector2.LEFT * (length + WALK_START_MARGIN), enemy_at, Vector2.LEFT)
 	await _watch(WATCH_FRAMES)
-	assert_false(room.enemy.noticed, "outside the length he is not noticed")
+	assert_false(room.enemy.in_pursuit, "outside the length he is not noticed")
 
 	_almos_input.press_action(&"move_right")
 	var distance_when_noticed := await _walk_until_noticed(room)
 	_almos_input.release_action(&"move_right")
 
-	assert_true(room.enemy.noticed, "he should be noticed on the way")
+	assert_true(room.enemy.in_pursuit, "he should be noticed on the way")
 	assert_lte(distance_when_noticed, length, "noticed no farther than the length")
 
 
@@ -70,12 +70,12 @@ func test_almos_standing_at_a_distance_is_noticed_in_the_light_but_not_in_the_da
 
 	var dark := _dark_zone_case(distance, false)
 	await _watch(WATCH_FRAMES)
-	assert_false(dark.enemy.noticed, "in the dark zone he is beyond the shortened Sight")
+	assert_false(dark.enemy.in_pursuit, "in the dark zone he is beyond the shortened Sight")
 	await _retire(dark)
 
 	var lit := _dark_zone_case(distance, true)
 	await _watch(WATCH_FRAMES)
-	assert_true(lit.enemy.noticed, "the same distance in the light is within the Sight")
+	assert_true(lit.enemy.in_pursuit, "the same distance in the light is within the Sight")
 
 
 func test_almos_close_enough_is_noticed_even_in_the_dark_zone() -> void:
@@ -83,7 +83,7 @@ func test_almos_close_enough_is_noticed_even_in_the_dark_zone() -> void:
 
 	await _watch(WATCH_FRAMES)
 
-	assert_true(room.enemy.noticed)
+	assert_true(room.enemy.in_pursuit)
 
 
 func test_almos_in_front_of_the_enemy_is_noticed_but_behind_it_he_is_not() -> void:
@@ -91,12 +91,12 @@ func test_almos_in_front_of_the_enemy_is_noticed_but_behind_it_he_is_not() -> vo
 	var enemy_at := Vector2(700.0, 324.0)
 	var in_front := _room(enemy_at + Vector2.LEFT * distance, enemy_at, Vector2.LEFT)
 	await _watch(WATCH_FRAMES)
-	assert_true(in_front.enemy.noticed, "in front of it he is noticed")
+	assert_true(in_front.enemy.in_pursuit, "in front of it he is noticed")
 	await _retire(in_front)
 
 	var behind := _room(enemy_at + Vector2.LEFT * distance, enemy_at, Vector2.RIGHT)
 	await _watch(WATCH_FRAMES)
-	assert_false(behind.enemy.noticed, "behind it he is not")
+	assert_false(behind.enemy.in_pursuit, "behind it he is not")
 
 
 func test_almos_behind_a_wall_is_not_noticed_but_without_the_wall_he_is() -> void:
@@ -105,19 +105,19 @@ func test_almos_behind_a_wall_is_not_noticed_but_without_the_wall_he_is() -> voi
 	var walled := _room(enemy_at + Vector2.LEFT * distance, enemy_at, Vector2.LEFT)
 	_wall_in(walled.room, enemy_at + Vector2.LEFT * distance / 2.0)
 	await _watch(WATCH_FRAMES)
-	assert_false(walled.enemy.noticed, "the wall blocks the Sight")
+	assert_false(walled.enemy.in_pursuit, "the wall blocks the Sight")
 	await _retire(walled)
 
 	var open := _room(enemy_at + Vector2.LEFT * distance, enemy_at, Vector2.LEFT)
 	await _watch(WATCH_FRAMES)
-	assert_true(open.enemy.noticed, "without the wall he is seen")
+	assert_true(open.enemy.in_pursuit, "without the wall he is seen")
 
 
 func test_a_hit_from_behind_is_noticed() -> void:
 	var enemy_at := OPEN_SPOT + Vector2.DOWN * SWORD_DISTANCE
 	var room := _room(OPEN_SPOT, enemy_at, Vector2.DOWN)
 	await _watch(WATCH_FRAMES)
-	assert_false(room.enemy.noticed, "control: Almos behind it is not noticed before the hit")
+	assert_false(room.enemy.in_pursuit, "control: Almos behind it is not noticed before the hit")
 	var swing := (load("res://data/sword.tres") as WeaponData).light_attacks[0]
 
 	_almos_input.press_action(&"attack_light")
@@ -126,7 +126,7 @@ func test_a_hit_from_behind_is_noticed() -> void:
 	await _watch(swing.startup_frames + swing.active_frames)
 
 	assert_lt(room.enemy.health.current, room.enemy.health.maximum, "the blow should have landed")
-	assert_true(room.enemy.noticed)
+	assert_true(room.enemy.in_pursuit)
 
 
 # --- Helpers ---
@@ -191,6 +191,6 @@ func _watch(frames: int) -> void:
 func _walk_until_noticed(room: Dictionary) -> float:
 	for i in WALK_FRAME_LIMIT:
 		await get_tree().physics_frame
-		if room.enemy.noticed:
+		if room.enemy.in_pursuit:
 			return room.almos.global_position.distance_to(room.enemy.global_position)
 	return INF

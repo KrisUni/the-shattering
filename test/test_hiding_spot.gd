@@ -331,6 +331,48 @@ func test_a_sound_hunter_close_by_drags_him_out_when_he_hides_right_after_a_roll
 
 # --- Helpers ---
 
+# In pixels. How far from the enemy Almos stands for the swing tests: well inside every reach.
+const SWING_DISTANCE := 30.0
+# In pixels. How far from the enemy the wall that hides Almos from it stands, between them.
+const SWING_WALL_DISTANCE := 12.0
+const SWING_WALL_THICKNESS := 2.0
+
+
+func test_an_unseen_pursuers_strike_under_way_does_not_hit_or_pull_him_out() -> void:
+	await _unseen_swing_does_not_hit(EnemyTuning.AttackKind.STRIKE)
+
+
+func test_an_unseen_pursuers_low_attack_under_way_does_not_hit_or_pull_him_out() -> void:
+	await _unseen_swing_does_not_hit(EnemyTuning.AttackKind.LOW)
+
+
+func test_a_seers_strike_under_way_does_not_pull_him_out_but_its_later_grab_does() -> void:
+	await _seers_swing_does_not_pull_out_but_the_grab_does(EnemyTuning.AttackKind.STRIKE)
+
+
+func test_a_seers_low_attack_under_way_does_not_pull_him_out_but_its_later_grab_does() -> void:
+	await _seers_swing_does_not_pull_out_but_the_grab_does(EnemyTuning.AttackKind.LOW)
+
+
+func test_a_seers_unblockable_pattern_attack_under_way_does_not_pull_him_out_but_its_later_grab_does() -> void:
+	await _seers_swing_does_not_pull_out_but_the_grab_does(EnemyTuning.AttackKind.UNBLOCKABLE)
+
+
+func test_an_enemy_with_no_target_ignores_him_hiding() -> void:
+	var c := _case()
+	var stray := (load(ENEMY_SCENE_PATH) as PackedScene).instantiate()
+	stray.position = FAR_AWAY
+	stray.tuning = _enemy_tuning
+	stray.target = null
+	c.room.add_child(stray)
+	await _frames(SETTLE_FRAMES)
+
+	await _tap_interact(1)
+
+	assert_true(c.almos.hiding, "he is in")
+	assert_false(stray.in_pursuit, "it is unmoved")
+
+
 # The test room with Almos where the training enemy sees him, a spot just behind him, and the
 # enemy at its post facing left. The Sound hunter is far away. Returns {"room", "almos", "enemy",
 # "spot"}. The test frees it.
@@ -413,3 +455,71 @@ func _until(condition: Callable) -> void:
 		if condition.call():
 			return
 		await get_tree().physics_frame
+
+
+# Almos gets into the spot while an enemy that cannot see him get in is making this attack: its
+# Pursuit ends, and the swing, which reaches the spot, does not hit him or pull him out.
+func _unseen_swing_does_not_hit(kind: EnemyTuning.AttackKind) -> void:
+	var c := _swing_case()
+	await _until(func() -> bool: return c.enemy.attacking and c.enemy.winding_up and c.enemy.attack_kind == kind)
+	assert_eq(c.enemy.attack_kind, kind, "control: the swing is under way")
+	assert_lt(SWING_DISTANCE, _enemy_tuning.reach_of(kind), "control: Almos is within its reach")
+	var health_before: float = c.almos.health.current
+	# A wall between them, so that it does not see him get in; the swing goes through it.
+	_wall_across(c.room, c.enemy.position + Vector2.LEFT * SWING_WALL_DISTANCE)
+
+	await _tap_interact(1)
+	assert_true(c.almos.hiding, "control: he is in")
+	assert_false(c.enemy.in_pursuit, "it did not see him get in, so its Pursuit ends")
+	await _until(func() -> bool: return c.enemy.striking)
+	assert_true(c.enemy.striking, "control: the swing strikes")
+	await _until(func() -> bool: return not c.enemy.striking)
+
+	assert_true(c.almos.hiding, "the swing did not pull him out")
+	assert_eq(c.almos.health.current, health_before, "and did no damage")
+
+
+# Almos gets into the spot while an enemy that sees him get in is making this attack of its
+# pattern: that swing does not pull him out, the grab it makes after it does.
+func _seers_swing_does_not_pull_out_but_the_grab_does(kind: EnemyTuning.AttackKind) -> void:
+	var c := _swing_case()
+	await _until(func() -> bool: return c.enemy.attacking and c.enemy.winding_up and c.enemy.attack_kind == kind)
+	assert_eq(c.enemy.attack_kind, kind, "control: the swing is under way")
+	var health_before: float = c.almos.health.current
+
+	await _tap_interact(1)
+	assert_true(c.almos.hiding, "control: he is in")
+	assert_true(c.enemy.in_pursuit, "control: it saw him get in")
+	await _until(func() -> bool: return c.enemy.striking)
+	assert_true(c.enemy.striking, "control: the swing strikes")
+	await _until(func() -> bool: return not c.enemy.striking)
+
+	assert_true(c.almos.hiding, "its pattern's swing did not pull him out")
+	assert_eq(c.almos.health.current, health_before, "and did no damage")
+
+	await _until(func() -> bool: return not c.almos.hiding)
+	assert_false(c.almos.hiding, "the grab pulls him out")
+	assert_almost_eq(c.almos.health.current, health_before - _enemy_tuning.unblockable_attack.damage, TOLERANCE, "for the grab's damage")
+
+
+# The room with the enemy in Pursuit and Almos, with Health enough for several swings, close in
+# front of it and a spot just behind him.
+func _swing_case() -> Dictionary:
+	var c := _case()
+	c.almos.position = POST + Vector2.LEFT * SWING_DISTANCE
+	c.spot.position = c.almos.position + Vector2.LEFT * SPOT_BEHIND_ALMOS
+	c.almos.health.maximum = 100000.0
+	return c
+
+
+# A thin wall across the line between the enemy and Almos, at this place.
+func _wall_across(room: Node, at: Vector2) -> void:
+	var wall := StaticBody2D.new()
+	wall.collision_layer = 1
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(SWING_WALL_THICKNESS, WALL_WIDTH)
+	shape.shape = rectangle
+	wall.add_child(shape)
+	wall.position = at
+	room.add_child(wall)

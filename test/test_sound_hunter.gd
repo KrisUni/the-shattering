@@ -66,38 +66,38 @@ func test_sprinting_within_the_radius_is_noticed_but_beyond_it_is_not() -> void:
 	_almos_input.press_action(&"move_left")
 	_almos_input.press_action(&"roll")
 	await _watch(WATCH_FRAMES)
-	assert_true(near.hunter.noticed, "within the radius it hears the Sprint")
+	assert_true(near.hunter.in_pursuit, "within the radius it hears the Sprint")
 	await _retire(near)
 
 	var far := _case(HUNTER_AT + Vector2.RIGHT * (radius + BEYOND_MARGIN))
 	_almos_input.press_action(&"move_right")
 	_almos_input.press_action(&"roll")
 	await _watch(WATCH_FRAMES)
-	assert_false(far.hunter.noticed, "beyond the radius it does not")
+	assert_false(far.hunter.in_pursuit, "beyond the radius it does not")
 
 
 func test_rolling_within_the_radius_is_noticed_but_beyond_it_is_not() -> void:
 	var radius := _player.noise_roll_radius
 	var near := _case(HUNTER_AT + Vector2.RIGHT * radius * 0.5)
 	await _tap_roll_away()
-	assert_true(near.hunter.noticed, "within the radius it hears the Roll")
+	assert_true(near.hunter.in_pursuit, "within the radius it hears the Roll")
 	await _retire(near)
 
 	var far := _case(HUNTER_AT + Vector2.RIGHT * (radius + BEYOND_MARGIN))
 	await _tap_roll_away()
-	assert_false(far.hunter.noticed, "beyond the radius it does not")
+	assert_false(far.hunter.in_pursuit, "beyond the radius it does not")
 
 
 func test_fighting_within_the_radius_is_noticed_but_beyond_it_is_not() -> void:
 	var radius := _player.noise_attack_radius
 	var near := _case(HUNTER_AT + Vector2.RIGHT * radius * 0.5)
 	await _swing()
-	assert_true(near.hunter.noticed, "within the radius it hears the fight")
+	assert_true(near.hunter.in_pursuit, "within the radius it hears the fight")
 	await _retire(near)
 
 	var far := _case(HUNTER_AT + Vector2.RIGHT * (radius + BEYOND_MARGIN))
 	await _swing()
-	assert_false(far.hunter.noticed, "beyond the radius it does not")
+	assert_false(far.hunter.in_pursuit, "beyond the radius it does not")
 
 
 func test_noise_is_heard_through_a_wall() -> void:
@@ -107,17 +107,17 @@ func test_noise_is_heard_through_a_wall() -> void:
 
 	await _swing()
 
-	assert_true(walled.hunter.noticed, "a wall does not stop Noise")
+	assert_true(walled.hunter.in_pursuit, "a wall does not stop Noise")
 
 
 func test_almos_walking_or_standing_right_behind_it_is_not_noticed() -> void:
 	var behind := _case(HUNTER_AT + Vector2.RIGHT * 30.0)
 	await _watch(WATCH_FRAMES)
-	assert_false(behind.hunter.noticed, "standing")
+	assert_false(behind.hunter.in_pursuit, "standing")
 
 	_almos_input.press_action(&"move_right")
 	await _watch(WATCH_FRAMES)
-	assert_false(behind.hunter.noticed, "walking")
+	assert_false(behind.hunter.in_pursuit, "walking")
 
 
 func test_almos_walking_or_standing_in_front_of_it_in_the_light_is_not_noticed() -> void:
@@ -125,11 +125,11 @@ func test_almos_walking_or_standing_in_front_of_it_in_the_light_is_not_noticed()
 	var front := _case(HUNTER_AT + Vector2.LEFT * sight * 0.25)
 	front.hunter.post_facing = Vector2.LEFT
 	await _watch(WATCH_FRAMES)
-	assert_false(front.hunter.noticed, "standing")
+	assert_false(front.hunter.in_pursuit, "standing")
 
 	_almos_input.press_action(&"move_left")
 	await _watch(WATCH_FRAMES)
-	assert_false(front.hunter.noticed, "walking")
+	assert_false(front.hunter.in_pursuit, "walking")
 
 
 func test_a_sight_enemy_facing_away_ignores_the_noise_behind_it() -> void:
@@ -141,7 +141,7 @@ func test_a_sight_enemy_facing_away_ignores_the_noise_behind_it() -> void:
 
 	await _swing()
 
-	assert_false(enemy.noticed, "Noise means nothing to Sight")
+	assert_false(enemy.in_pursuit, "Noise means nothing to Sight")
 
 
 # A test room with Almos here, the Sound hunter at its post facing left and the Sight enemy far

@@ -49,6 +49,10 @@ enum Outcome {
 	PARRIED,
 }
 
+## Asked on every hit: whether the owner is in a Hiding spot, where every hit misses him except
+## a grab. Almos hiding is the case. Left as it is, the owner is never hidden.
+var is_hidden: Callable = func() -> bool: return false
+
 ## Asked on every hit that does not miss, after is_parried has let it by: how much of
 ## the hit's damage gets through, given the damage and the point in the world the hit comes
 ## from. Almos blocking is the case: a hit from the front deals less. The Health takes what it
@@ -59,7 +63,8 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 
 ## A hit reaches this Hurtbox, for this much damage, building this much Stagger, coming from
 ## this point in the world, and a Critical hit if it says so, and a low hit if it is one, and an
-## unblockable hit if it is one.
+## unblockable hit if it is one, and a grab if it is one. It also misses while the owner is
+## hidden, unless it is a grab.
 ## Returns what became of it: it misses while the owner is untouchable, or in the air if the hit
 ## is low, and is parried when the owner's Parry catches it. A hit that landed or was parried
 ## has been dealt with, even if none of its damage got through.
@@ -68,8 +73,10 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 ## all of its damage, and neither is_parried nor damage_through is asked, so the owner's Parry
 ## is not spent nor ended by it and nothing is spent on blocking it. It misses while the owner
 ## is untouchable, and is not low, so being in the air does not avoid it.
-func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false, unblockable := false) -> Outcome:
+func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false, unblockable := false, grab := false) -> Outcome:
 	if is_untouchable.call():
+		return Outcome.MISSED
+	if not grab and is_hidden.call():
 		return Outcome.MISSED
 	if low and is_airborne.call():
 		return Outcome.MISSED
