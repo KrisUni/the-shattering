@@ -235,11 +235,11 @@ A Drop past the safe height or into empty space, which kills the player. Nothing
 _Avoid_: Pit, fall damage, void-out
 
 **Block**:
-A held guard that reduces incoming damage without negating it; each blocked hit also costs stamina. The fallback when a roll isn't possible.
+A held guard that reduces incoming damage without negating it; each blocked hit also costs Stamina. It covers only the front, and with no Stamina left it protects nothing. While blocking, the player walks slowly, cannot Sprint, and refills Stamina more slowly. A Roll or an attack can be started from it, and a Block pressed during either waits for it to end. The fallback when a Roll isn't possible.
 _Avoid_: Guard, shield
 
 **Guard break**:
-The stagger that follows when a blocked hit takes the player's last stamina, leaving them open to a follow-up.
+The helpless moment that follows when a blocked hit takes the player's last Stamina, leaving them open to a follow-up. The hit that causes it is still reduced. For a set time the player stands still and cannot Roll, attack or Block; presses are lost, and every hit lands in full. Lock-on keeps working. It lasts long enough for an enemy already in range to swing again into it; one that must first close in may come too late.
 _Avoid_: Shield break, block break
 
 **Parry**:
