@@ -178,6 +178,9 @@ var _roll_direction := Vector2.ZERO
 var _roll_time := 0.0
 var _roll_queued := false
 var _roll_button_held_for := 0.0
+# Set when he is returned with the Roll button down: a press made before or during his Death. It
+# counts for nothing, neither as a tap nor toward a Sprint, until the button is let go.
+var _roll_press_lost := false
 # Set when a Sprint was tried and there was no Stamina to pay for it, until the Roll
 # button is let go. Without it, the sliver of Stamina that comes back when the refill
 # pause ends would pay for one frame of Sprint, which would start the pause again.
@@ -319,6 +322,7 @@ func return_to(point: Vector2) -> void:
 	_end_every_action()
 	_dead = false
 	_dead_for = 0.0
+	_roll_press_lost = Input.is_action_pressed(&"roll")
 	_placeholder.modulate = Color.WHITE
 	global_position = point
 	health.refill()
@@ -490,6 +494,9 @@ func _roll_button_was_tapped() -> bool:
 
 # Times how long the button has been held, and forgets the press once it has ended.
 func _advance_roll_button_timer(delta: float) -> void:
+	if _roll_press_lost:
+		_roll_press_lost = Input.is_action_pressed(&"roll")
+		return
 	if _roll_press_ended():
 		_roll_button_held_for = 0.0
 		_out_of_breath = false

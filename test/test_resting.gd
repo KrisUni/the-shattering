@@ -349,15 +349,22 @@ func test_a_press_out_of_reach_brings_nobody_back() -> void:
 
 
 func test_a_press_is_lost_in_a_roll() -> void:
+	var tuning := _player_tuning()
 	var room := _spawn_room()
 	var almos: Almos = room.find_child("Almos", true, false)
-	_stand_beside_the_checkpoint(room, almos)
+	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
+	# He rolls along the Checkpoint, from half a Roll before it, so that he is by it at the press.
+	_stand_from_the_checkpoint(room, almos, -tuning.roll_distance / 2.0)
 	var hurt := _hurt(almos)
+	_almos_input.press_action(&"move_right")
 	_almos_input.press_action(&"roll")
 	await wait_physics_frames(2)
 	_almos_input.release_action(&"roll")
 	await wait_physics_frames(2)
 	assert_true(almos.rolling, "he should be in a Roll")
+	# Where he is when the press is read, which is the frame after this one, before he moves in it.
+	assert_lte(almos.global_position.distance_to(checkpoint.global_position), tuning.rest_reach,
+			"he should be within reach of the Checkpoint when the press is read")
 
 	await _press_interact()
 

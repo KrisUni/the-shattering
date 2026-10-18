@@ -526,8 +526,68 @@ func test_a_roll_button_held_through_the_death_sprints_him_only_after_a_new_hold
 	await wait_physics_frames(PRESS_FRAMES)
 	assert_false(almos.sprinting, "the hold before the death should not count")
 	await wait_seconds(tuning.roll_hold_threshold + 0.1)
+	assert_false(almos.sprinting, "the button held over the return should not sprint him later either")
+	_almos_input.release_action(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.press_action(&"roll")
+	await wait_seconds(tuning.roll_hold_threshold + 0.1)
 
 	assert_true(almos.sprinting, "a hold begun after the return should sprint him")
+
+
+func test_a_roll_button_held_through_the_death_and_let_go_soon_after_the_return_does_not_roll_him() -> void:
+	var tuning := _tuning()
+	var almos := _spawn_almos()
+	_almos_input.press_action(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+	_kill(almos)
+	await wait_physics_frames(_frames_to_reach(tuning.death_pause) + PRESS_FRAMES)
+	almos.return_to(RETURN_POINT)
+
+	# Let go well inside the hold threshold after the return, where a press made then would be a tap.
+	assert_lt(float(PRESS_FRAMES) / Engine.physics_ticks_per_second, tuning.roll_hold_threshold)
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.release_action(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_false(almos.rolling, "a press made before the death should not roll him after it")
+	assert_almost_eq(almos.stamina.current, tuning.stamina_maximum, TOLERANCE)
+
+
+func test_a_roll_button_pressed_in_the_pause_and_let_go_soon_after_the_return_does_not_roll_him() -> void:
+	var tuning := _tuning()
+	var almos := _spawn_almos()
+	_kill(almos)
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.press_action(&"roll")
+	await wait_physics_frames(_frames_to_reach(tuning.death_pause))
+	almos.return_to(RETURN_POINT)
+
+	assert_lt(float(PRESS_FRAMES) / Engine.physics_ticks_per_second, tuning.roll_hold_threshold)
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.release_action(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_false(almos.rolling, "a press made while he was limp should not roll him after the return")
+	assert_almost_eq(almos.stamina.current, tuning.stamina_maximum, TOLERANCE)
+
+
+func test_a_roll_button_let_go_and_pressed_again_after_the_return_rolls_him() -> void:
+	var tuning := _tuning()
+	var almos := _spawn_almos()
+	_almos_input.press_action(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+	_kill(almos)
+	await wait_physics_frames(_frames_to_reach(tuning.death_pause) + PRESS_FRAMES)
+	almos.return_to(RETURN_POINT)
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.release_action(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+
+	await _tap(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_true(almos.rolling, "a new tap after the return should roll him")
 
 
 func test_being_out_of_breath_when_he_dies_does_not_stop_a_new_hold_sprinting_him_on_his_return() -> void:
@@ -540,6 +600,10 @@ func test_being_out_of_breath_when_he_dies_does_not_stop_a_new_hold_sprinting_hi
 	assert_false(almos.sprinting, "he should be out of breath")
 	_kill(almos)
 	almos.return_to(RETURN_POINT)
+	# The hold over the return counts for nothing, so it is let go of and made again.
+	_almos_input.release_action(&"roll")
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.press_action(&"roll")
 
 	await wait_seconds(tuning.roll_hold_threshold + 0.1)
 

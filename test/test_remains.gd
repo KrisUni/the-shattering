@@ -136,7 +136,7 @@ func test_almos_out_of_reach_leaves_the_remains_where_they_are() -> void:
 	assert_true(remains.is_inside_tree(), "they should still be there")
 
 
-func test_an_enemy_walking_over_the_remains_does_not_recover_them() -> void:
+func test_an_enemy_standing_on_the_remains_does_not_recover_them() -> void:
 	var remains := _spawn_remains(Vector2(500.0, 300.0), AMOUNT)
 	var enemy_scene := load("res://scenes/enemies/training_enemy.tscn") as PackedScene
 	var enemy = enemy_scene.instantiate()
