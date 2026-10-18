@@ -100,7 +100,7 @@ var parry_window_open: bool:
 ## Whether he is in the air, in a Jump: from the frame of the press to the frame he comes
 ## down in. He can neither Roll, Block nor Parry in it, and a press of any of those buttons is
 ## lost, as is a Light attack press. A Heavy attack press makes a Jump attack. He can be hurt in
-## it as usual.
+## it as usual, except by a Low attack, which passes under him.
 var airborne: bool:
 	get:
 		return _jump.airborne
@@ -174,6 +174,8 @@ func _ready() -> void:
 	# A Jump attack pressed in the air strikes as he comes down, or is cancelled by a gap.
 	_jump.landed.connect(_attacks.jump_ended)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
+	# A Low attack passes under him while he is in the air.
+	_hurtbox.is_airborne = func() -> bool: return airborne
 	_hurtbox.is_parried = func(from: Vector2) -> bool:
 		return _parry.catches(from, global_position, facing)
 	_hurtbox.parry_stagger = tuning.parry_stagger

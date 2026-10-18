@@ -288,6 +288,114 @@ func test_a_hitbox_that_is_not_critical_tells_the_hurtbox_so() -> void:
 	assert_eq(criticals, [false] as Array[bool])
 
 
+func test_a_low_hit_on_an_airborne_owner_does_not_land_and_neither_other_hook_is_asked() -> void:
+	var asked := [0]
+	_hurtbox.is_airborne = func() -> bool: return true
+	_hurtbox.is_parried = func(_from: Vector2) -> bool:
+		asked[0] += 1
+		return true
+	_hurtbox.damage_through = func(damage: float, _from: Vector2) -> float:
+		asked[0] += 1
+		return damage
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.MISSED, "a low hit should pass under someone in the air")
+	assert_eq(asked[0], 0, "the parry and damage hooks are for hits that do not miss")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
+
+
+func test_a_low_hit_on_an_owner_on_the_ground_lands() -> void:
+	_hurtbox.is_airborne = func() -> bool: return false
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.LANDED)
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
+
+
+func test_a_hit_that_is_not_low_lands_on_an_airborne_owner_and_does_not_ask_whether_he_is_airborne() -> void:
+	var asked := [0]
+	_hurtbox.is_airborne = func() -> bool:
+		asked[0] += 1
+		return true
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+
+	assert_eq(outcome, Hurtbox.Outcome.LANDED, "only low hits pass under someone in the air")
+	assert_eq(asked[0], 0, "airborne is asked only for low hits")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
+
+
+func test_by_default_the_owner_is_not_airborne_so_a_low_hit_lands() -> void:
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.LANDED)
+
+
+func test_a_low_hit_on_an_untouchable_owner_does_not_ask_whether_he_is_airborne() -> void:
+	var asked := [0]
+	_hurtbox.is_untouchable = func() -> bool: return true
+	_hurtbox.is_airborne = func() -> bool:
+		asked[0] += 1
+		return true
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.MISSED)
+	assert_eq(asked[0], 0, "untouchable is settled first")
+
+
+func test_a_low_hit_the_owner_parries_while_on_the_ground_is_negated() -> void:
+	_hurtbox.is_airborne = func() -> bool: return false
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.PARRIED, "a low hit can be parried like any other")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
+
+
+func test_a_low_hit_on_the_ground_is_reduced_by_the_damage_hook() -> void:
+	_hurtbox.damage_through = func(damage: float, _from: Vector2) -> float: return damage / 2.0
+
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, true)
+
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE / 2.0, TOLERANCE, "a low hit can be blocked like any other")
+
+
+func test_a_hitbox_is_not_low_unless_it_is_set_to_be() -> void:
+	assert_false(Hitbox.new().low)
+
+
+func test_a_low_hitbox_does_not_hit_an_airborne_owner_and_hits_him_once_he_is_on_the_ground_in_the_same_swing() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	hitbox.low = true
+	var airborne := [true]
+	_hurtbox.is_airborne = func() -> bool: return airborne[0]
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES)
+	var health_in_the_air := _health.current
+	airborne[0] = false
+	await wait_physics_frames(SETTLE_FRAMES)
+	hitbox.active = false
+
+	assert_almost_eq(health_in_the_air, HEALTH_MAXIMUM, TOLERANCE, "nothing should land while he is in the air")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE, "the swing that is still on should catch him once he lands")
+
+
+func test_a_hitbox_that_is_not_low_hits_an_airborne_owner() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	_hurtbox.is_airborne = func() -> bool: return true
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES)
+	hitbox.active = false
+
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
+
+
 # A Hitbox, switched off, covering the Hurtbox, which is in the tree.
 func _hitbox_over_the_hurtbox() -> Hitbox:
 	_hurtbox.collision_layer = 1

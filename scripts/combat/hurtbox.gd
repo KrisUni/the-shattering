@@ -19,6 +19,12 @@ var is_untouchable: Callable = func() -> bool: return false
 ## when it hears of the Parry. Left as it is, a Parry builds none.
 var parry_stagger := 0.0
 
+## Asked on every low hit on someone who is not untouchable: whether the owner is in the air,
+## which a low hit passes under. Almos in a Jump is the case. Only low hits ask it. Like
+## untouchable, it is asked, not told, and a hit it makes miss may land later in the same swing.
+## Left as it is, the owner is always on the ground.
+var is_airborne: Callable = func() -> bool: return false
+
 ## Emitted once for each hit that lands, with how much Stagger it builds, the point in the
 ## world it comes from and whether it is a Critical hit. Not for a hit that misses or is
 ## parried. The owner hears of a landed hit here, such as an enemy building its Stagger or
@@ -34,7 +40,8 @@ var is_parried: Callable = func(_from: Vector2) -> bool: return false
 
 ## What became of a hit that reached a Hurtbox.
 enum Outcome {
-	## The owner was untouchable, so the hit did not land and may land later.
+	## The owner was untouchable, or in the air under a low hit, so the hit did not land and may
+	## land later.
 	MISSED,
 	## The hit landed, and whatever damage got through was taken off the Health.
 	LANDED,
@@ -51,11 +58,14 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 
 
 ## A hit reaches this Hurtbox, for this much damage, building this much Stagger, coming from
-## this point in the world, and a Critical hit if it says so. Returns what became of it: it
-## misses while the owner is untouchable and is parried when the owner's Parry catches it. A
-## hit that landed or was parried has been dealt with, even if none of its damage got through.
-func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false) -> Outcome:
+## this point in the world, and a Critical hit if it says so, and a low hit if it is one.
+## Returns what became of it: it misses while the owner is untouchable, or in the air if the hit
+## is low, and is parried when the owner's Parry catches it. A hit that landed or was parried
+## has been dealt with, even if none of its damage got through.
+func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false) -> Outcome:
 	if is_untouchable.call():
+		return Outcome.MISSED
+	if low and is_airborne.call():
 		return Outcome.MISSED
 	if is_parried.call(from):
 		return Outcome.PARRIED

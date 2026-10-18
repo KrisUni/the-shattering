@@ -313,12 +313,16 @@ func test_it_attacks_again_after_recovery_while_its_target_is_still_in_range() -
 	_rig.spawn_enemy()
 	_rig.place_target(Vector2.RIGHT * tuning.attack_range)
 
-	await _rig.wait_frames(2 * _attack_frames(tuning))
+	# The second attack of its order, whichever it is, follows the first as soon as its recovery
+	# ends, and its hit comes after its own wind-up.
+	var first := tuning.attack_of(tuning.attack_pattern[0])
+	var second := tuning.attack_of(tuning.attack_pattern[1 % tuning.attack_pattern.size()])
+	await _rig.wait_frames(first.total_frames() + second.total_frames())
 
 	var hits := _rig.hits()
 	assert_eq(hits.size(), 2, "the target should have been hit twice")
 	if hits.size() == 2:
-		assert_eq(hits[1].sample - hits[0].sample, _attack_frames(tuning), "frames between its hits")
+		assert_eq(hits[1].sample - hits[0].sample, first.active_frames + first.recovery_frames + second.startup_frames, "frames between its hits")
 
 
 func test_a_hit_on_it_takes_its_damage_off_its_health() -> void:

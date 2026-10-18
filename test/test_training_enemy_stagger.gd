@@ -82,8 +82,9 @@ func test_the_stagger_numbers_make_parries_fill_the_meter_and_a_pause_longer_tha
 	assert_gt(_tuning.stagger_drain_rate, 0.0, "stagger_drain_rate in the data file should be positive")
 	assert_gt(_player.parry_stagger, 0.0, "parry_stagger in the data file should be positive")
 	assert_gt(_parries_to_fill_the_meter(), 1, "one Parry should not fill the meter")
-	var swing_seconds := float(_tuning.attack.total_frames()) / Engine.physics_ticks_per_second
-	assert_gt(_tuning.stagger_drain_pause, swing_seconds, "the pause should be longer than the enemy's swing, so that Parries alone can fill the meter")
+	for kind in _tuning.attack_pattern:
+		var swing_seconds := float(_tuning.attack_of(kind).total_frames()) / Engine.physics_ticks_per_second
+		assert_gt(_tuning.stagger_drain_pause, swing_seconds, "the pause should be longer than each of the enemy's swings (kind %d), so that Parries alone can fill the meter" % kind)
 
 
 func test_light_attacks_build_no_stagger_and_a_charged_heavy_builds_more_than_a_plain_one() -> void:

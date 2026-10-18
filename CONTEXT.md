@@ -372,5 +372,5 @@ An enemy attack, such as a grab or the heaviest slam, that can be neither Blocke
 _Avoid_: Perilous attack, guard breaker
 
 **Low attack**:
-An enemy attack that travels along the ground, such as a tail swipe or a shockwave, and can be cleared with a Jump.
+An enemy attack that travels along the ground, such as a tail swipe or a shockwave, and can be cleared with a Jump. It hits only a target on the ground: one in the air as it passes is missed, like one who is untouchable, so the same swing still catches him if he comes down while it is on. Against a target on the ground it is like any attack: it can be Blocked and Parried, and a Parry builds Stagger as usual. It has a wind-up of its own with a tint of its own, and a wider strike than the enemy's plain attack so that it reads as a sweep. The training enemy makes one after its plain attack, the two in turn over and over; a Break does not reset that order or skip a place in it.
 _Avoid_: Sweep, ground attack

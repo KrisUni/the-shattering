@@ -82,7 +82,7 @@ func test_an_attack_with_no_startup_is_active_from_its_first_frame() -> void:
 
 
 # Every attack in the data files: the sword's Light swings and Heavy attack, and the training
-# enemy's attack.
+# enemy's Strike and Low attack.
 func _attacks() -> Array[AttackData]:
 	var weapon := load(WEAPON_PATH) as WeaponData
 	assert_not_null(weapon, "the sword data file should load")
@@ -92,4 +92,5 @@ func _attacks() -> Array[AttackData]:
 	attacks.append_array(weapon.light_attacks)
 	attacks.append(weapon.heavy_attack)
 	attacks.append(tuning.attack)
+	attacks.append(tuning.low_attack)
 	return attacks

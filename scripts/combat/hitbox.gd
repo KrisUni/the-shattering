@@ -24,6 +24,10 @@ signal parried(hurtbox: Hurtbox)
 ## swing is the one that sets it.
 @export var critical := false
 
+## Whether a hit is low, which travels along the ground: the Hurtbox tells whether its owner is
+## in the air, and a hit on someone in the air misses. A Low attack sets it.
+@export var low := false
+
 ## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
 @export var strike_shape: CollisionShape2D
 
@@ -69,7 +73,7 @@ func _physics_process(_delta: float) -> void:
 	for area in get_overlapping_areas():
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
-			var outcome := hurtbox.hurt(damage, global_position, stagger, critical)
+			var outcome := hurtbox.hurt(damage, global_position, stagger, critical, low)
 			if outcome != Hurtbox.Outcome.MISSED:
 				_hit.append(hurtbox)
 			if outcome == Hurtbox.Outcome.PARRIED:

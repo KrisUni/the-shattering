@@ -10,6 +10,13 @@ active_frames = 6
 recovery_frames = 40
 damage = 15.0
 
+[sub_resource type="Resource" id="Resource_low_attack"]
+script = ExtResource("2_attack")
+startup_frames = 24
+active_frames = 8
+recovery_frames = 36
+damage = 12.0
+
 [resource]
 script = ExtResource("1_tuning")
 health_maximum = 120.0
@@ -17,7 +24,10 @@ move_speed = 70.0
 notice_range = 220.0
 attack_range = 40.0
 attack_reach = 42.0
+attack_pattern = Array[int]([0, 1])
 attack = SubResource("Resource_attack")
+low_attack_reach = 50.0
+low_attack = SubResource("Resource_low_attack")
 stagger_capacity = 100.0
 stagger_drain_rate = 20.0
 stagger_drain_pause = 2.0

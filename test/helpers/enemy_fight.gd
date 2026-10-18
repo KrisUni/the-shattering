@@ -41,7 +41,6 @@ func spawn_almos_above_the_enemy(enemy_has_its_back_to_him: bool, tuning: Player
 ## The press is timed so that the window is open over the middle of the enemy's active
 ## frames. Returns once the hit has been parried and Almos is free.
 func parry_the_swing(player: PlayerTuning) -> void:
-	var swing: AttackData = _rig.enemy.tuning.attack
 	# The wind-up has been seen to begin: the enemy's first frame has been processed. The
 	# window opens in the frame the press is seen in, and is open for parry_window_frames.
 	for i in WAIT_FRAME_LIMIT:
@@ -49,6 +48,8 @@ func parry_the_swing(player: PlayerTuning) -> void:
 			break
 		await _test.get_tree().physics_frame
 	_test.assert_true(_rig.enemy.winding_up, "the enemy should begin a swing")
+	# Whichever attack of its order it is making.
+	var swing: AttackData = _rig.enemy.current_attack
 	await _rig.wait_frames(swing.startup_frames - player.parry_window_frames / 2 - 1)
 	var health_before: float = _rig.target_health.current
 	_almos_input.press_action(&"parry")
