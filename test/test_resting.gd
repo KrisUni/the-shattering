@@ -77,6 +77,38 @@ func test_resting_announces_the_checkpoint_rested_at() -> void:
 	assert_signal_emitted_with_parameters(almos, "rested", [room.find_child("Checkpoint", true, false)])
 
 
+func test_a_press_of_interact_rests_only_as_it_is_let_go_of() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	_stand_beside_the_checkpoint(room, almos)
+	var hurt := _hurt(almos)
+
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_almost_eq(almos.health.current, hurt, TOLERANCE, "no rest while the button is down")
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_almost_eq(almos.health.current, almos.health.maximum, TOLERANCE, "rested as it was let go of")
+
+
+func test_a_press_held_to_the_drop_does_not_rest_when_it_is_let_go_of() -> void:
+	var tuning := _player_tuning()
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	_stand_beside_the_checkpoint(room, almos)
+	var hurt := _hurt(almos)
+	watch_signals(almos)
+
+	_almos_input.press_action(&"interact")
+	await wait_seconds(tuning.drop_hold_time + 0.2)
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_signal_not_emitted(almos, "rested")
+	assert_almost_eq(almos.health.current, hurt, TOLERANCE)
+
+
 func test_resting_makes_the_checkpoint_the_return_point() -> void:
 	var room := _spawn_room()
 	var almos: Almos = room.find_child("Almos", true, false)
@@ -564,6 +596,7 @@ func _player_tuning() -> PlayerTuning:
 	var tuning := load(TUNING_PATH) as PlayerTuning
 	assert_not_null(tuning, "the player tuning data file should load")
 	assert_gt(tuning.rest_reach, 0.0, "rest_reach in the data file should be positive")
+	assert_gt(tuning.drop_hold_time, 0.0, "drop_hold_time in the data file should be positive")
 	assert_gt(tuning.health_maximum, 0.0, "health_maximum in the data file should be positive")
 	return tuning
 
@@ -624,8 +657,10 @@ func _hurt(almos: Almos) -> float:
 	return almos.health.current
 
 
-# Presses Interact for a moment, as a tap, and lets the press take effect.
+# Taps Interact, a press let go of well before the hold that drops a Weapon, and lets the tap take
+# effect: a tap does its work as it is let go of.
 func _press_interact() -> void:
 	_almos_input.press_action(&"interact")
 	await wait_physics_frames(PRESS_FRAMES)
 	_almos_input.release_action(&"interact")
+	await wait_physics_frames(PRESS_FRAMES)

@@ -17,6 +17,9 @@ const TIME_SLACK := 0.000001
 # number.
 const DEATH_TINT := Color(0.35, 0.35, 0.4)
 
+# What he leaves on the ground when he drops the Weapon in hand.
+const WEAPON_PICKUP_SCENE := preload("res://scenes/world/weapon_pickup.tscn")
+
 enum State { WALKING, SPRINTING, ROLLING }
 
 ## Emitted when he rests at a Checkpoint, after his Health and Stamina are refilled.
@@ -147,8 +150,8 @@ var untouchable: bool:
 
 @export var tuning: PlayerTuning
 
-## The Weapon he carries: the attacks he can make. It is given to his attacks, so this is
-## the only one to set.
+## The Weapon he starts out carrying, in hand: the first of those he carries. What he carries
+## after that is up to his Weapons, so this is the only one to set.
 @export var weapon: WeaponData
 
 ## What Roll and Sprint spend, and what the Stamina bar shows. It is given Almos's tuning,
@@ -162,6 +165,10 @@ var untouchable: bool:
 ## What killing enemies has given him and he has not yet cashed in, and what the Experience count
 ## shows.
 @onready var experience: Experience = $Experience
+
+## The Weapons he carries and the one in hand. The one in hand is given to his attacks, and
+## what he carries survives a Death.
+@onready var weapons: AlmosWeapons = $Weapons
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn
@@ -181,6 +188,19 @@ var _roll_button_held_for := 0.0
 # Set when he is returned with the Roll button down: a press made before or during his Death. It
 # counts for nothing, neither as a tap nor toward a Sprint, until the button is let go.
 var _roll_press_lost := false
+# Set once the Weapon he starts with has been put in his hands, so that going into the tree again
+# does not arm him again.
+var _weapons_started := false
+# Whether an Interact press that began while he was free is being timed. It ends in a tap or a
+# drop, or is lost if he stops being free.
+var _interact_counted := false
+var _interact_held_for := 0.0
+# Set once the press has been held to drop_hold_time: it is a hold now, and letting go of it is not
+# a tap.
+var _interact_hold_spent := false
+# Set when a press of the Switch button was made in an attack, until the attack is over and the
+# switch is made. There is room for one.
+var _switch_waiting := false
 # Set when a Sprint was tried and there was no Stamina to pay for it, until the Roll
 # button is let go. Without it, the sliver of Stamina that comes back when the refill
 # pause ends would pay for one frame of Sprint, which would start the pause again.
@@ -197,8 +217,14 @@ func _enter_tree() -> void:
 	var own_health := $Health as Health
 	if own_health.maximum != tuning.health_maximum:
 		own_health.maximum = tuning.health_maximum
-	# Handing over the weapon or the tuning changes nothing else, so they need no check first.
-	($Attacks as AlmosAttacks).weapon = weapon
+	# He starts with his exported Weapon in hand, once.
+	var own_weapons := $Weapons as AlmosWeapons
+	if not _weapons_started:
+		_weapons_started = true
+		own_weapons.pick_up(weapon)
+	# Handing over the weapon in hand or the tuning changes nothing else, so they need no check
+	# first.
+	($Attacks as AlmosAttacks).weapon = own_weapons.in_hand
 	($LockOn as AlmosLockOn).tuning = tuning
 	($Block as AlmosBlock).tuning = tuning
 	($Parry as AlmosParry).tuning = tuning
@@ -207,8 +233,14 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	health.depleted.connect(_fall)
+	# Whichever Weapon is in hand is the one his attacks make. A switch is only made when he is not
+	# in an attack, and a drop only when he is free, so nothing is handed over in the middle of one.
+	weapons.changed.connect(_hand_over_the_weapon_in_hand)
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
+	# A switch that waited for a swing is made in the frame its recovery ends, before an attack
+	# kept for that frame begins, which is then made with the new Weapon.
+	_attacks.swing_ended.connect(_make_the_waiting_switch)
 	# A Jump attack pressed in the air strikes as he comes down, or is cancelled by a gap.
 	_jump.landed.connect(_attacks.jump_ended)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
@@ -266,11 +298,16 @@ func _physics_process(delta: float) -> void:
 	# read before Block is, so that blocking ends as he leaves the ground.
 	if _jump_pressed_and_free(left_open, parry_on, in_the_air):
 		_take_off(direction, delta)
-	# He rests at a Checkpoint in reach when free, and not while blocking as the last frame left
-	# it, since this comes before Block is advanced. A Jump taken off in this frame wins against
-	# a rest press made in the same frame, since he is in the air by now.
-	if _interact_pressed_and_free(left_open, parry_on):
-		_rest_at_a_checkpoint_in_reach()
+	# A switch is made in a Roll, a Block or a Jump, but not in a Guard break or a Parry, where the
+	# press is lost. A press in an attack waits for it to end. It comes after the attacks have
+	# been advanced, so that a swing that ends in this frame lets it through at once, and after
+	# a Parry has begun, which wins against a switch press made in the same frame.
+	_advance_switch(left_open, parry_on)
+	# Interact is a tap or a hold, read as he is free and not blocking as the last frame left it,
+	# since this comes before Block is advanced. A tap rests at a Checkpoint in reach, or else picks
+	# up a Weapon in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
+	# against a press made in the same frame, since he is in the air by now.
+	_advance_interact(_free_to_act(left_open, parry_on, airborne) and not blocking, delta)
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
@@ -333,13 +370,16 @@ func return_to(point: Vector2) -> void:
 # Ends whatever he is in, at once, and leaves him still: a Roll and the Roll kept for its end,
 # a Sprint, a swing, a charge, a Jump, a Block, a Guard break, a Parry and the Lock-on, along with
 # what each of them showed. The Roll button is forgotten, so that a hold begun before does not
-# count after.
+# count after, and so are an Interact press being timed and a switch kept for the end of a swing.
+# What he carries is left as it is.
 func _end_every_action() -> void:
 	_state = State.WALKING
 	_roll_time = 0.0
 	_roll_queued = false
 	_roll_button_held_for = 0.0
 	_out_of_breath = false
+	_interact_counted = false
+	_switch_waiting = false
 	velocity = Vector2.ZERO
 	_attacks.reset()
 	_block.reset()
@@ -390,18 +430,52 @@ func _free_to_act(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
 	return not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air
 
 
-# Whether the Interact button was pressed this frame by someone free to rest, who is not
-# blocking. The press is read only then, so that one made when he is not free is lost, not kept
-# for after. The air is read as it is now, after any take-off of this frame.
-func _interact_pressed_and_free(left_open: bool, parry_on: bool) -> bool:
-	return _free_to_act(left_open, parry_on, airborne) and not blocking \
-			and Input.is_action_just_pressed(&"interact")
+# Times a press of the Interact button and acts on it. A press counts only if it begins while he
+# is free, which is the same as for resting: not in a Roll, an attack, a Guard break, a Parry or
+# the air, and not blocking. One made when he is not free is lost, not kept for after, and so is
+# one he stops being free in the middle of. Let go of before drop_hold_time it is a tap, which
+# rests at a Checkpoint in reach, or picks up a Weapon in reach if there is no Checkpoint. Held
+# to drop_hold_time it drops the Weapon in hand, once, on the frame it gets there, and neither
+# picks up nor rests when it is let go of. The time is counted in summed frame lengths compared
+# through TIME_SLACK, as the Roll's hold is. The button is polled, as the Roll button is: a press
+# and release that both land before the same frame never show it down, so the just-pressed check
+# catches them.
+func _advance_interact(free: bool, delta: float) -> void:
+	var down := Input.is_action_pressed(&"interact")
+	if _interact_counted and not free:
+		_interact_counted = false
+		return
+	if _interact_counted and (not down or Input.is_action_just_released(&"interact")):
+		_interact_counted = false
+		if not _interact_hold_spent:
+			_on_interact_tapped()
+	if not _interact_counted:
+		if not free or not Input.is_action_just_pressed(&"interact"):
+			return
+		_interact_counted = true
+		_interact_held_for = 0.0
+		_interact_hold_spent = false
+		if not down:
+			_interact_counted = false
+			_on_interact_tapped()
+			return
+	_interact_held_for += delta
+	if not _interact_hold_spent and _interact_held_for >= tuning.drop_hold_time - TIME_SLACK:
+		_interact_hold_spent = true
+		_drop_the_weapon_in_hand()
+
+
+# A tap of Interact: he rests if a Checkpoint is in reach, and picks up a Weapon only if there is
+# none, so a Weapon lying beside a Checkpoint stays where it is.
+func _on_interact_tapped() -> void:
+	if not _rest_at_a_checkpoint_in_reach():
+		_pick_up_a_weapon_in_reach()
 
 
 # Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health and Stamina
-# are refilled, the Checkpoint flashes and the rest is announced. A press with none in reach
-# does nothing.
-func _rest_at_a_checkpoint_in_reach() -> void:
+# are refilled, the Checkpoint flashes and the rest is announced. Says whether he rested; a tap
+# with none in reach does nothing.
+func _rest_at_a_checkpoint_in_reach() -> bool:
 	var nearest: Checkpoint = null
 	var nearest_distance := tuning.rest_reach
 	for node in get_tree().get_nodes_in_group(&"checkpoints"):
@@ -413,11 +487,68 @@ func _rest_at_a_checkpoint_in_reach() -> void:
 			nearest = checkpoint
 			nearest_distance = distance
 	if nearest == null:
-		return
+		return false
 	health.refill()
 	stamina.refill()
 	nearest.rest(tuning.rest_flash_duration)
 	rested.emit(nearest)
+	return true
+
+
+# Picks up the nearest Weapon lying within pickup_reach of him, if there is one: it is carried
+# from then on, after the others, and the pickup is gone from the ground.
+func _pick_up_a_weapon_in_reach() -> void:
+	var nearest: WeaponPickup = null
+	var nearest_distance := tuning.pickup_reach
+	for node in get_tree().get_nodes_in_group(&"weapon_pickups"):
+		var pickup := node as WeaponPickup
+		if pickup == null or pickup.weapon == null or pickup.is_queued_for_deletion():
+			continue
+		var distance := global_position.distance_to(pickup.global_position)
+		if distance <= nearest_distance:
+			nearest = pickup
+			nearest_distance = distance
+	if nearest == null:
+		return
+	weapons.pick_up(nearest.weapon)
+	nearest.queue_free()
+
+
+# Leaves the Weapon in hand on the ground where he stands, as a pickup in his own parent, and the
+# next one he carries comes to hand. With empty hands there is nothing to drop.
+func _drop_the_weapon_in_hand() -> void:
+	var dropped := weapons.drop()
+	if dropped == null:
+		return
+	var pickup := WEAPON_PICKUP_SCENE.instantiate() as WeaponPickup
+	pickup.weapon = dropped
+	pickup.position = position
+	get_parent().add_child(pickup)
+
+
+# Hands his attacks the Weapon in hand, or nothing when his hands are empty.
+func _hand_over_the_weapon_in_hand() -> void:
+	_attacks.weapon = weapons.in_hand
+
+
+# Reads the Switch button. A press puts the next carried Weapon in hand, at once, unless he is in
+# an attack (a swing, a Heavy attack charge or a Jump attack): then it waits and is made in the
+# frame the attack is over, which for a swing is as its recovery ends (see
+# _make_the_waiting_switch), ahead of any attack kept for that frame. A press in a Guard break or a
+# Parry is lost. Only one press waits, and a press made while one is waiting does not add another.
+func _advance_switch(left_open: bool, parry_on: bool) -> void:
+	if Input.is_action_just_pressed(&"switch_weapon") and not left_open and not parry_on:
+		_switch_waiting = true
+	if _switch_waiting and not _attacks.committed:
+		_make_the_waiting_switch()
+
+
+# Puts the next carried Weapon in hand, if a switch is waiting.
+func _make_the_waiting_switch() -> void:
+	if not _switch_waiting:
+		return
+	_switch_waiting = false
+	weapons.switch_to_next()
 
 
 # He takes off with the velocity he has this frame: walking, sprinting (which the Jump ends, so

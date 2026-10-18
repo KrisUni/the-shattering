@@ -30,18 +30,32 @@ extends Node
 ## that Almos can turn to face it.
 signal critical_began(direction: Vector2)
 
+## Emitted when a swing's recovery is over, in the frame it ends and before any press kept for
+## that frame begins its attack. Almos makes a switch that waited for the swing here, so that the
+## kept attack is made with the Weapon switched to.
+signal swing_ended
+
 ## Which attack button a press was of.
 enum Press { NONE, LIGHT, HEAVY }
 
-## The attacks of the Weapon he carries. It can be changed at any time, and the sword is
-## placed at the new Weapon's reach at once. It is never changed in the middle of an attack:
-## whoever hands over a Weapon waits until he is not committed.
+## The attacks of the Weapon in his hand. It can be changed at any time, and the sword is
+## placed at the new Weapon's reach at once. A different Weapon starts the Light combo over. It is
+## never changed in the middle of an attack: whoever hands over a Weapon waits until he is not
+## committed, or for swing_ended. Null is empty hands: every attack press is lost and the sword
+## is off. (Unarmed attacks come later.)
 @export var weapon: WeaponData:
 	set(value):
+		var different := value != weapon
 		weapon = value
 		# Before the node is ready the Hitbox is not set up yet, and _ready places the sword.
-		if is_node_ready() and weapon != null:
+		if not is_node_ready():
+			return
+		if different:
+			_light_swing = 0
+		if weapon != null:
 			hitbox.set_reach(weapon.reach)
+		else:
+			reset()
 
 ## The sword's Hitbox, switched on for a swing's active frames.
 @export var hitbox: Hitbox
@@ -104,8 +118,9 @@ var _queued := Press.NONE
 
 
 func _ready() -> void:
-	# The sword sits as far out as the Weapon's data says it reaches.
-	hitbox.set_reach(weapon.reach)
+	# The sword sits as far out as the Weapon's data says it reaches, if he has one in hand.
+	if weapon != null:
+		hitbox.set_reach(weapon.reach)
 
 
 ## Lets one physics frame go by. Called once per frame by Almos, who says which way a swing
@@ -115,13 +130,17 @@ func _ready() -> void:
 ## is lost. The aim is fixed when the swing begins: the swing commits, so it does not follow the
 ## target after. It reads the attack buttons itself.
 func advance(aim: Vector2, can_start: bool, in_the_air := false) -> void:
-	var press := _pressed()
+	# With empty hands there is nothing to swing, so a press of an attack button is lost.
+	var press := _pressed() if weapon != null else Press.NONE
 	if attacking and _frame >= _swing.total_frames():
 		# A press seen on this frame is later than one kept for it, so it takes its place:
 		# the latest press wins.
 		if press != Press.NONE and _queued != Press.NONE:
 			_queued = press
 		_end_swing()
+		# A switch that waited for the swing is made now, so that a press kept for its end is made
+		# with the new Weapon.
+		swing_ended.emit()
 		# A press that was kept for the end of the swing is made as it ends.
 		if _queued != Press.NONE:
 			press = _queued

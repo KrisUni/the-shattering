@@ -36,4 +36,6 @@ jump_height = 24.0
 jump_stamina_cost = 10.0
 rest_reach = 40.0
 rest_flash_duration = 0.4
+drop_hold_time = 0.5
+pickup_reach = 32.0
 death_pause = 2.0

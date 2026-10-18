@@ -15,6 +15,7 @@
 [ext_resource type="Resource" path="res://data/greatsword.tres" id="13_greatsword"]
 [ext_resource type="Resource" path="res://data/torch.tres" id="14_torch"]
 [ext_resource type="Resource" path="res://data/metal_bar.tres" id="15_metal_bar"]
+[ext_resource type="Script" path="res://scenes/hud/weapon_label.gd" id="16_weapon_label"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
 size = Vector2(1152, 16)
@@ -133,6 +134,14 @@ offset_right = 216.0
 offset_bottom = 87.0
 script = ExtResource("8_experience_label")
 experience = NodePath("../../Almos/Experience")
+
+[node name="WeaponLabel" type="Label" parent="Hud" node_paths=PackedStringArray("weapons")]
+offset_left = 16.0
+offset_top = 91.0
+offset_right = 216.0
+offset_bottom = 114.0
+script = ExtResource("16_weapon_label")
+weapons = NodePath("../../Almos/Weapons")
 
 [node name="FallenLabel" type="Label" parent="Hud" node_paths=PackedStringArray("almos")]
 visible = false

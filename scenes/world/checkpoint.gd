@@ -1,7 +1,7 @@
 class_name Checkpoint
 extends Node2D
 ## A Checkpoint: an arch-tree shoot, drawn as a placeholder glowing sapling. Almos rests at it
-## by pressing Interact within reach, and it flashes when he does. It is in the group
+## by tapping Interact within reach, and it flashes when he does. It is in the group
 ## "checkpoints", which is where Almos looks for one, and has no body, so he walks through it.
 
 ## What it is tinted while it flashes: a white brighter than the placeholder's own colours,

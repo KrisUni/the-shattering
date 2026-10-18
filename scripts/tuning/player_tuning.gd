@@ -121,6 +121,14 @@ extends Resource
 ## How long, in seconds, a Checkpoint flashes when Almos rests at it.
 @export var rest_flash_duration: float
 
+## How long, in seconds, Interact must be held for Almos to drop the Weapon in hand. A press let
+## go sooner is a tap, which picks a Weapon up or rests. A time that is not a whole number of
+## physics frames is reached on the next whole frame.
+@export var drop_hold_time: float
+
+## How close to the centre of a Weapon pickup, in pixels, Almos must be to pick it up.
+@export var pickup_reach: float
+
 ## How long, in seconds, Almos lies limp after his Health reaches zero, before he returns to his
 ## last Checkpoint. He takes no input and cannot be hit all that time. A time that is not a
 ## whole number of physics frames lasts until the next whole frame.
