@@ -37,6 +37,15 @@ damage = 90.0
 stamina_cost = 0.0
 stagger = 0.0
 
+[sub_resource type="Resource" id="Resource_jump_attack"]
+script = ExtResource("1_attack")
+startup_frames = 0
+active_frames = 6
+recovery_frames = 30
+damage = 40.0
+stamina_cost = 25.0
+stagger = 55.0
+
 [sub_resource type="Resource" id="Resource_heavy"]
 script = ExtResource("2_heavy")
 startup_frames = 20
@@ -56,6 +65,7 @@ script = ExtResource("3_weapon")
 reach = 42.0
 light_attacks = Array[ExtResource("1_attack")]([SubResource("Resource_light_first"), SubResource("Resource_light_second"), SubResource("Resource_light_third")])
 heavy_attack = SubResource("Resource_heavy")
+jump_attack = SubResource("Resource_jump_attack")
 critical_range = 48.0
 critical_attack = SubResource("Resource_critical")
 attack_buffer_frames = 8

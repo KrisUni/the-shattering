@@ -1,7 +1,24 @@
 class_name EnemyTuning
 extends Resource
-## Tuning numbers for one kind of enemy and its one attack. The values live in the enemy's
-## data file, such as data/training_enemy.tres, not here.
+## Tuning numbers for one kind of enemy and its attacks. The values live in the enemy's data
+## file, such as data/training_enemy.tres, not here.
+
+## The kinds of attack an enemy can make. Each has its own AttackData and reach in the tuning,
+## which attack_of and reach_of give.
+enum AttackKind {
+	## Its plain attack: attack and attack_reach.
+	STRIKE,
+	## A Low attack, which travels along the ground: low_attack and low_attack_reach.
+	LOW,
+	## An Unblockable attack, which neither Block nor Parry deals with: unblockable_attack and
+	## unblockable_attack_reach.
+	UNBLOCKABLE,
+}
+
+## The order it makes its attacks in, over and over. Each time it starts an attack it makes the
+## next kind in the list and moves on; a Break neither resets the order nor skips a place in it.
+## Must not be empty.
+@export var attack_pattern: Array[AttackKind]
 
 ## The most Health the enemy can have. A full bar is this much.
 @export var health_maximum: float
@@ -15,16 +32,39 @@ extends Resource
 ## How close to its target, in pixels, it stops walking and attacks.
 @export var attack_range: float
 
-## How far from its centre, in pixels, its strike reaches: the far edge of the box its Hitbox
+## How far from its centre, in pixels, its Strike reaches: the far edge of the box its Hitbox
 ## hurts with, along the direction it strikes. The box keeps its width and height from the
 ## scene and is placed so that its far edge is this far out. It hurts what its box overlaps, so
 ## the nearest edge of whatever it swings at, which is a Hurtbox radius short of attack_range
 ## from its centre, must not be farther than this, or it swings from where it cannot hit.
 @export var attack_reach: float
 
-## Its one attack. The startup frames are its wind-up. Enemies have no Stamina, so the
-## attack's stamina_cost is not used, and nor is its stagger: Almos has no Stagger to build.
+## Its Strike, the attack it makes first. The startup frames are its wind-up. Enemies have no
+## Stamina, so the attack's stamina_cost is not used, and nor is its stagger: Almos has no Stagger
+## to build. The same goes for every attack below.
 @export var attack: AttackData
+
+## How far from its centre, in pixels, its Low attack reaches: the far edge of the box its Low
+## Hitbox hurts with, as attack_reach is for the Strike. The box keeps its width and height from
+## the scene.
+@export var low_attack_reach: float
+
+## Its Low attack, which travels along the ground and misses a target that is in the air.
+@export var low_attack: AttackData
+
+## How far from its centre, in pixels, its Unblockable attack reaches: the far edge of the box its
+## Unblockable Hitbox hurts with, as attack_reach is for the Strike. The box keeps its width and
+## height from the scene.
+@export var unblockable_attack_reach: float
+
+## Its Unblockable attack, which goes through Block and Parry in full. Only a Roll, or a Jump
+## that carries the target out of its reach, avoids it. Its startup frames are a long, warned
+## wind-up.
+@export var unblockable_attack: AttackData
+
+## How many physics frames the white flash at the start of its Unblockable attack's wind-up
+## lasts. It must be shorter than the wind-up, whose rest keeps the tint of its own.
+@export var unblockable_flash_frames: int
 
 ## The most Stagger the enemy can have. A full meter is this much.
 @export var stagger_capacity: float
@@ -45,3 +85,23 @@ extends Resource
 
 ## How much Stagger a hit from behind builds on top of what the attack builds itself.
 @export var behind_stagger: float
+
+
+## The attack of this kind.
+func attack_of(kind: AttackKind) -> AttackData:
+	match kind:
+		AttackKind.LOW:
+			return low_attack
+		AttackKind.UNBLOCKABLE:
+			return unblockable_attack
+	return attack
+
+
+## How far from its centre the attack of this kind reaches.
+func reach_of(kind: AttackKind) -> float:
+	match kind:
+		AttackKind.LOW:
+			return low_attack_reach
+		AttackKind.UNBLOCKABLE:
+			return unblockable_attack_reach
+	return attack_reach

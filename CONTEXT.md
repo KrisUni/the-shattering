@@ -219,11 +219,12 @@ Fast running, done by holding the Roll button while moving; drains Stamina conti
 _Avoid_: Run, dash
 
 **Jump**:
-A hop with its own button that carries the player across gaps, up onto low ledges, and over Low attacks. It gives no invulnerability: anything else still hits.
+A hop with its own button that carries the player across gaps, up onto low ledges, and over Low attacks. It gives no invulnerability: anything else still hits, and a shadow under the player shows his height. An Unblockable attack is avoided only by carrying him out of its reach. It costs Stamina, which may be none; with too little to pay for it there is no Jump. The player keeps the speed and direction he had as he took off, to the end, with no steering: walking, Sprinting or blocking carry him as far as that speed goes, and standing still jumps in place. It can be started from a walk, a Sprint (which it ends) or a Block, but not in a Roll, an attack, a Parry or a Guard break, where the press is lost. In the air the player can neither Roll, Block nor Parry, and those presses are lost too, as is a Light attack press; a Heavy attack press makes a Jump attack.
+There are two height levels, the ground and the low ledge. On the ground, gaps and the sides of low ledges block the player like walls, and enemies as well; in the air only real walls do, and enemies are passed over. Where the player comes down sets his level: inside a ledge puts him on it, where its own edges keep him in, and anywhere else is the ground. Coming down on an enemy does not stand him on it: he is pushed out sideways. Coming down inside a gap is a Deadly fall; until that is built it puts the player back where the Jump began.
 _Avoid_: Leap, hop, vault
 
 **Jump attack**:
-A Heavy attack started in mid-air that comes down hard and builds extra Stagger.
+A Heavy attack started in mid-air that comes down hard and builds extra Stagger, more than any Heavy attack. The press can come on any frame of the Jump after take-off and begins it at once: nothing is charged, it costs Stamina when it begins, and with none left the press is lost and the Jump goes on. The player keeps flying the rest of the Jump unchanged, and the strike lands on the frame he comes down, in the direction he was aiming at the press: at the Lock-on target under Lock-on, the way he faces otherwise. He is committed from the press to the end of the recovery, so he cannot Roll, Jump, Block or Parry; a Jump attack that hits nothing still takes its full recovery. It reaches the enemy like any swing, so an attack from behind adds its flat Stagger as usual. It is not a Critical hit and restarts the Light combo. A Jump that comes down in a gap puts him back where it began and cancels the Jump attack with it, with no strike and no recovery.
 _Avoid_: Plunge, aerial, dive attack
 
 **Drop**:
@@ -239,7 +240,7 @@ A held guard that reduces incoming damage without negating it; each blocked hit 
 _Avoid_: Guard, shield
 
 **Guard break**:
-The helpless moment that follows when a blocked hit takes the player's last Stamina, leaving them open to a follow-up. The hit that causes it is still reduced. For a set time the player stands still and cannot Roll, attack or Block; presses are lost, and every hit lands in full. Lock-on keeps working. It lasts long enough for an enemy already in range to swing again into it; one that must first close in may come too late.
+The helpless moment that follows when a blocked hit takes the player's last Stamina, leaving them open to a follow-up. The hit that causes it is still reduced. For a set time the player stands still and cannot Roll, attack or Block; presses are lost, and every hit lands in full. Lock-on keeps working. It lasts long enough for an enemy already in range to swing again into it; one that must first close in may come too late. That holds for attacks Block could have stopped; it does not cover an Unblockable attack, whose long wind-up is meant to be escaped by a Roll, so a Guard break may be over before it strikes.
 _Avoid_: Shield break, block break
 
 **Parry**:
@@ -367,9 +368,9 @@ A hostile mage met in the Tempest who channels against the player.
 _Avoid_: Necromancer, dark mage
 
 **Unblockable attack**:
-An enemy attack, such as a grab or the heaviest slam, that can be neither Blocked nor Parried; only a Roll or a Jump avoids it. It always has a distinct wind-up that warns the player.
+An enemy attack, such as a grab or the heaviest slam, that can be neither Blocked nor Parried; only a Roll avoids it, or a Jump that carries the player out of its reach (a Jump gives no invulnerability, so one that stays within reach is hit like any other). It always has a distinct wind-up that warns the player: a long one with a white flash at its start, a tint and a sound that no other attack uses. It goes through Block in full, spending no Stamina and never beginning a Guard break, and goes through a Parry in full: the Parry is not asked, so it is not spent and its window stays open, and the enemy is not staggered. It hits a target in the air like any attack, and is not a Low attack. The training enemy takes its attacks in a fixed repeating order set in its tuning.
 _Avoid_: Perilous attack, guard breaker
 
 **Low attack**:
-An enemy attack that travels along the ground, such as a tail swipe or a shockwave, and can be cleared with a Jump.
+An enemy attack that travels along the ground, such as a tail swipe or a shockwave, and can be cleared with a Jump. It hits only a target on the ground: one in the air as it passes is missed, like one who is untouchable, so the same swing still catches him if he comes down while it is on. Against a target on the ground it is like any attack: it can be Blocked and Parried, and a Parry builds Stagger as usual. It has a wind-up of its own with a tint of its own, and a wider strike than the enemy's plain attack so that it reads as a sweep. The training enemy takes its attacks in a fixed repeating order set in its tuning; a Break does not reset that order or skip a place in it.
 _Avoid_: Sweep, ground attack

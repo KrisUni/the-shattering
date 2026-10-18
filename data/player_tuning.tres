@@ -31,3 +31,6 @@ parry_window_frames = 8
 parry_recovery_frames = 24
 parry_arc_degrees = 180.0
 parry_stagger = 40.0
+jump_duration = 0.45
+jump_height = 24.0
+jump_stamina_cost = 10.0

@@ -4,11 +4,28 @@ extends CharacterBody2D
 # coming. It is a look, not a tuning number.
 const WIND_UP_TINT := Color(1.0, 0.35, 0.35)
 
+# What it is tinted while it winds up a Low attack, so that the player can tell it from the
+# Strike's and knows to Jump. Also a look.
+const LOW_WIND_UP_TINT := Color(1.0, 0.9, 0.2)
+
+# What it is tinted for the first unblockable_flash_frames of the wind-up of an Unblockable
+# attack: a white brighter than the placeholder's own colours, which a plain white tint would
+# not be. No other attack flashes. Also a look.
+const UNBLOCKABLE_FLASH_TINT := Color(3.0, 3.0, 3.0)
+
+# What it is tinted for the rest of the wind-up of an Unblockable attack, so that the player can
+# tell it from every other and knows to Roll or Jump. Also a look.
+const UNBLOCKABLE_WIND_UP_TINT := Color(0.75, 0.3, 0.95)
+
 # What it is tinted while it is broken, so that the player can see it is open. Also a look.
 const BREAK_TINT := Color(0.4, 0.6, 1.0)
 
 ## Emitted once, at the end of the physics frame in which its Health reached zero.
 signal died
+
+## Emitted once each time the sound that warns of an Unblockable attack is played, as its wind-up
+## begins. No other attack plays it.
+signal unblockable_cue_played
 
 @export var tuning: EnemyTuning
 
@@ -22,15 +39,26 @@ var facing: Vector2:
 	get:
 		return _facing
 
+## The kind of attack under way, or of the last one it made. It makes the kinds in the order of
+## the tuning's attack_pattern.
+var attack_kind: EnemyTuning.AttackKind:
+	get:
+		return _kind
+
+## The attack under way, or the last one it made: the tuning's AttackData for its attack_kind.
+var current_attack: AttackData:
+	get:
+		return tuning.attack_of(_kind)
+
 ## Whether it is winding up: the attack's startup frames, before its Hitbox is on.
 var winding_up: bool:
 	get:
-		return tuning.attack.is_winding_up(_frame)
+		return current_attack.is_winding_up(_frame)
 
 ## Whether its Hitbox is on: the attack's active frames.
 var striking: bool:
 	get:
-		return _hitbox.active
+		return _hitbox.active or _low_hitbox.active or _unblockable_hitbox.active
 
 ## Whether an attack is under way: its startup, active and recovery frames.
 var attacking: bool:
@@ -51,10 +79,18 @@ var dead: bool:
 @onready var health: Health = $Health
 @onready var stagger: Stagger = $Stagger
 @onready var _hitbox: Hitbox = $Hitbox
+@onready var _low_hitbox: Hitbox = $LowHitbox
+@onready var _unblockable_hitbox: Hitbox = $UnblockableHitbox
+@onready var _unblockable_cue: AudioStreamPlayer2D = $UnblockableCue
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _nose: Node2D = $Nose
 @onready var _stagger_bar: Node2D = $StaggerBar
 
+# The kind of the attack under way, or of the last one made.
+var _kind := EnemyTuning.AttackKind.STRIKE
+# Where in the tuning's attack_pattern the next attack it makes is. It runs on past the end of
+# the pattern, which is read round and round.
+var _next_in_pattern := 0
 # The frame of the attack it is processing, counted as AttackData counts them, from 0 for its
 # first frame. -1 when there is no attack.
 var _frame := -1
@@ -80,8 +116,13 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	health.depleted.connect(_on_depleted)
-	_hitbox.set_reach(tuning.attack_reach)
+	assert(not tuning.attack_pattern.is_empty(), "attack_pattern in the tuning needs at least one attack")
+	_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.STRIKE))
+	_low_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.LOW))
+	_unblockable_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.UNBLOCKABLE))
 	_hitbox.parried.connect(_on_parried)
+	_low_hitbox.parried.connect(_on_parried)
+	_unblockable_hitbox.parried.connect(_on_parried)
 	_hurtbox.landed.connect(_on_hit_landed)
 	stagger.changed.connect(_show_stagger)
 	if is_instance_valid(target) and not _to_target().is_zero_approx():
@@ -98,7 +139,7 @@ func _physics_process(_delta: float) -> void:
 		_broken = false
 	if attacking:
 		_frame += 1
-		if _frame >= tuning.attack.total_frames():
+		if _frame >= current_attack.total_frames():
 			_frame = -1
 	if _broken:
 		velocity = Vector2.ZERO
@@ -107,7 +148,7 @@ func _physics_process(_delta: float) -> void:
 	# lands in the frame of its death still lands.
 	elif not attacking and not _dead:
 		_act_freely()
-	_set_strike(tuning.attack.is_active(_frame))
+	_set_strike(current_attack.is_active(_frame))
 	_show_look()
 	_nose.rotation = _facing.angle()
 
@@ -122,31 +163,62 @@ func _act_freely() -> void:
 	if not to_target.is_zero_approx():
 		_facing = to_target.normalized()
 	if to_target.length() <= tuning.attack_range:
+		# It makes the next attack in its order, whatever came of the one before.
+		_kind = tuning.attack_pattern[_next_in_pattern % tuning.attack_pattern.size()]
+		_next_in_pattern += 1
 		_frame = 0
-		_hitbox.damage = tuning.attack.damage
+		var box := _hitbox_of(_kind)
+		box.damage = current_attack.damage
 		# It commits to the swing: it goes where the target was now, wherever it moves to, and
 		# keeps facing that way until the swing is over.
-		_hitbox.rotation = _facing.angle()
+		box.rotation = _facing.angle()
+		if _kind == EnemyTuning.AttackKind.UNBLOCKABLE:
+			_unblockable_cue.play()
+			unblockable_cue_played.emit()
 	elif to_target.length() <= tuning.notice_range:
 		velocity = to_target.normalized() * tuning.move_speed
 		move_and_slide()
 
 
-# Switches the strike on or off: its Hitbox, and its placeholder look, which shows while the
-# Hitbox can hurt.
+# The Hitbox the attack of this kind hurts with.
+func _hitbox_of(kind: EnemyTuning.AttackKind) -> Hitbox:
+	match kind:
+		EnemyTuning.AttackKind.LOW:
+			return _low_hitbox
+		EnemyTuning.AttackKind.UNBLOCKABLE:
+			return _unblockable_hitbox
+	return _hitbox
+
+
+# Switches the strike of the attack under way on or off: its Hitbox, and its placeholder look,
+# which shows while the Hitbox can hurt. The Hitbox of any other kind of attack is off.
 func _set_strike(on: bool) -> void:
-	_hitbox.active = on
-	_hitbox.visible = on
+	var current := _hitbox_of(_kind)
+	for box in [_hitbox, _low_hitbox, _unblockable_hitbox]:
+		var lit: bool = on and box == current
+		box.active = lit
+		box.visible = lit
 
 
-# Its tint: the Break's, or the wind-up's, or none.
+# Its tint: the Break's, or the wind-up's of the attack it is making, or none.
 func _show_look() -> void:
 	if _broken:
 		modulate = BREAK_TINT
 	elif winding_up:
-		modulate = WIND_UP_TINT
+		modulate = _wind_up_tint()
 	else:
 		modulate = Color.WHITE
+
+
+# The tint of the wind-up of the attack it is making: an Unblockable attack's flashes white
+# first and then keeps a tint of its own, a Low attack's and the Strike's have one each.
+func _wind_up_tint() -> Color:
+	match _kind:
+		EnemyTuning.AttackKind.LOW:
+			return LOW_WIND_UP_TINT
+		EnemyTuning.AttackKind.UNBLOCKABLE:
+			return UNBLOCKABLE_FLASH_TINT if _frame < tuning.unblockable_flash_frames else UNBLOCKABLE_WIND_UP_TINT
+	return WIND_UP_TINT
 
 
 # A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other

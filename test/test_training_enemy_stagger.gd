@@ -82,8 +82,17 @@ func test_the_stagger_numbers_make_parries_fill_the_meter_and_a_pause_longer_tha
 	assert_gt(_tuning.stagger_drain_rate, 0.0, "stagger_drain_rate in the data file should be positive")
 	assert_gt(_player.parry_stagger, 0.0, "parry_stagger in the data file should be positive")
 	assert_gt(_parries_to_fill_the_meter(), 1, "one Parry should not fill the meter")
-	var swing_seconds := float(_tuning.attack.total_frames()) / Engine.physics_ticks_per_second
-	assert_gt(_tuning.stagger_drain_pause, swing_seconds, "the pause should be longer than the enemy's swing, so that Parries alone can fill the meter")
+	# An Unblockable attack cannot be Parried, so the gap it opens between two Parries is the
+	# player's to cover with a Roll, not the pause's: only an attack that is followed by another
+	# the player can Parry has its gap checked.
+	var order := _tuning.attack_pattern
+	for i in order.size():
+		var kind := order[i]
+		var next := order[(i + 1) % order.size()]
+		if kind == EnemyTuning.AttackKind.UNBLOCKABLE or next == EnemyTuning.AttackKind.UNBLOCKABLE:
+			continue
+		var gap_seconds := float(_tuning.attack_of(kind).total_frames()) / Engine.physics_ticks_per_second
+		assert_gt(_tuning.stagger_drain_pause, gap_seconds, "the pause should be longer than the gap from each Parryable attack in the order (place %d, kind %d) to the next one, so that Parries alone can fill the meter" % [i, kind])
 
 
 func test_light_attacks_build_no_stagger_and_a_charged_heavy_builds_more_than_a_plain_one() -> void:
