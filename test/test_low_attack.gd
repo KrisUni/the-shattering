@@ -26,6 +26,8 @@ const ENEMY_DISTANCE := 30.0
 const TAP_FRAMES := 2
 # In physics frames. How long the test runs after the exchange it is about, to let it play out.
 const SETTLE_FRAMES := 10
+# In seconds. Slack for the float sums that decide which frame a time falls in.
+const FRAME_SLACK := 0.001
 # The most physics frames any wait in these tests may take.
 const WAIT_FRAME_LIMIT := 400
 # How different, as the sum of the differences in red, green and blue, one look of the enemy
@@ -53,11 +55,11 @@ var reach_params = ParameterFactory.named_parameters(
 	],
 )
 
-# Which attack of the shipped order a Break comes in the wind-up of, and which the enemy makes
-# next when it is free again.
+# Which place in the shipped order a Break comes in the wind-up of: the first attack or the
+# second. Which attack the enemy makes next is read from the order.
 var break_params = ParameterFactory.named_parameters(
-	["broken_in", "next"],
-	[["the Strike", LOW], ["the Low attack", STRIKE]],
+	["place"],
+	[[0], [1]],
 )
 
 var _almos_input: AlmosInput
@@ -89,7 +91,12 @@ func test_it_makes_a_strike_and_a_low_attack_in_turn_over_and_over() -> void:
 	var enemy = _rig.spawn_enemy()
 	_rig.place_target(Vector2.RIGHT * _tuning.attack_range)
 	_rig.sample_also("kind", func(): return enemy.attack_kind)
-	var order := [STRIKE, LOW, STRIKE, LOW, STRIKE]
+	# Two rounds of the shipped order and the start of a third, whatever the order is.
+	var pattern := _tuning.attack_pattern
+	assert_gt(pattern.size(), 0, "the shipped order should not be empty")
+	var order: Array[EnemyTuning.AttackKind] = []
+	for i in pattern.size() * 2 + 1:
+		order.append(pattern[i % pattern.size()])
 	var length := 0
 	for kind in order:
 		length += _tuning.attack_of(kind).total_frames()
@@ -112,8 +119,9 @@ func test_it_makes_a_strike_and_a_low_attack_in_turn_over_and_over() -> void:
 	assert_eq(taken, damages, "the hits the target took, one for each attack")
 
 
-func test_the_shipped_order_has_a_strike_then_a_low_attack_and_they_differ_in_damage() -> void:
-	assert_eq(_tuning.attack_pattern, _pattern([STRIKE, LOW]))
+func test_the_shipped_order_has_a_low_attack_in_it_and_the_two_attacks_differ_in_damage() -> void:
+	assert_true(_tuning.attack_pattern.has(LOW), "the shipped order should have the Low attack in it")
+	assert_true(_tuning.attack_pattern.has(STRIKE), "the shipped order should have the Strike in it")
 	assert_ne(_tuning.attack.damage, _tuning.low_attack.damage, "the two attacks should be told apart by their damage")
 
 
@@ -126,19 +134,23 @@ func test_a_break_leaves_the_order_where_it_was(params = use_parameters(break_pa
 	# enemy in a frame.
 	var breaker := _rig.hitbox_over(enemy, 0.0, "enemy_hurtbox")
 	breaker.stagger = _tuning.stagger_capacity
+	var pattern := _tuning.attack_pattern
+	assert_gt(pattern.size(), 1, "the shipped order should have more than one attack for a Break to leave it in the middle of")
 	await _wait_until_the_enemy_is(enemy, "winding_up")
-	if params.broken_in == "the Low attack":
-		await _rig.wait_frames(_tuning.attack.total_frames())
+	for i in params.place:
+		await _rig.wait_frames(_tuning.attack_of(pattern[i]).total_frames())
+	var next_kind := pattern[(params.place + 1) % pattern.size()]
+	assert_eq(enemy.attack_kind, pattern[params.place], "the attack it is winding up")
 	assert_true(enemy.winding_up, "it should be winding up the attack the Break is to come in")
 	await _rig.wait_frames(1)
 
 	await _rig.swing(breaker, 1)
-	await _rig.wait_frames(_tuning.break_frames + _tuning.attack.total_frames())
+	await _rig.wait_frames(_tuning.break_frames + _tuning.attack_of(next_kind).total_frames())
 
 	var broken := _rig.span("broken")
 	assert_ne(broken.x, -1, "it should have been broken")
 	assert_true(_rig.samples[broken.y].attacking, "it attacks again once the Break is over")
-	assert_eq(_rig.samples[broken.y].kind, params.next, "the kind of attack it makes once the Break is over")
+	assert_eq(_rig.samples[broken.y].kind, next_kind, "the kind of attack it makes once the Break is over")
 
 
 func test_its_low_attack_has_its_own_timeline_and_its_own_damage() -> void:
@@ -345,6 +357,27 @@ func test_the_strike_still_hits_almos_in_the_air() -> void:
 	assert_almost_eq(almos.health.current, almos.tuning.health_maximum - strike.damage, TOLERANCE, "a Jump is no defence against anything but a Low attack")
 
 
+func test_a_low_attack_misses_almos_who_is_untouchable_in_a_roll_through_all_of_its_active_frames() -> void:
+	var low := _tuning.low_attack
+	# A Roll that carries him nowhere, so that he stays under the swing for all of it.
+	var rolling_on_the_spot := _player.duplicate() as PlayerTuning
+	rolling_on_the_spot.roll_distance = 0.0
+	var almos = _almos_input.spawn_almos(rolling_on_the_spot)
+	_rig.spawn_enemy(_rig.tuning_with({"attack_pattern": _pattern([LOW])}), almos.position + Vector2.DOWN * ENEMY_DISTANCE)
+	_rig.set_target(almos, almos.health)
+	_rig.sample_also("untouchable", func() -> bool: return almos.untouchable)
+	await _rig.wait_frames(_frames_to_wait_before_tapping_roll(low, rolling_on_the_spot))
+
+	await _tap(&"roll")
+	await _play_out_the_first_attack(low)
+
+	var striking := _rig.span("striking")
+	assert_ne(striking.x, -1, "its Hitbox should have gone on")
+	for i in range(striking.x, striking.y):
+		assert_true(_rig.samples[i].untouchable, "he should be untouchable in sample %d, in which its Hitbox is on" % i)
+	assert_eq(_rig.hits().size(), 0, "hits Almos took")
+
+
 func test_a_blocked_low_attack_deals_the_reduced_damage() -> void:
 	var low := _tuning.low_attack
 	var almos = _spawn_fight_with_low_attacks()
@@ -383,6 +416,25 @@ func _spawn_fight_with_low_attacks():
 func _play_out_the_first_attack(attack: AttackData) -> void:
 	while _rig.samples.size() < attack.total_frames() + SETTLE_FRAMES:
 		await get_tree().physics_frame
+
+
+# How many physics frames to wait before tapping Roll so that his untouchable window covers all
+# the frames the attack's Hitbox is on. A tap is TAP_FRAMES of the button held; after n waits the
+# test is at the start of frame n - 1, so the Roll starts in frame R = n - 1 + TAP_FRAMES, and
+# he is untouchable in frames R - 1 + k_open .. R - 1 + k_close - 1, where k_open and k_close
+# are the Roll steps (a frame each) the window opens and closes after. The Hitbox is on in
+# frames startup .. startup + active - 1. R is taken in the middle of what covers them.
+func _frames_to_wait_before_tapping_roll(attack: AttackData, player: PlayerTuning) -> int:
+	var frames_a_second := float(Engine.physics_ticks_per_second)
+	var k_open := ceili(player.roll_untouchable_start * frames_a_second - FRAME_SLACK)
+	var k_close := ceili((player.roll_untouchable_start + player.roll_untouchable_duration) * frames_a_second - FRAME_SLACK)
+	var first_active := attack.startup_frames
+	var last_active := attack.startup_frames + attack.active_frames - 1
+	var latest_roll_start := first_active + 1 - k_open
+	var earliest_roll_start := last_active + 2 - k_close
+	assert_lte(earliest_roll_start, latest_roll_start, "his untouchable window should be at least as long as the Low attack's active frames, or no Roll can cover them")
+	var roll_start := floori((earliest_roll_start + latest_roll_start) / 2.0)
+	return roll_start - TAP_FRAMES + 1
 
 
 # How many physics frames a Jump keeps him in the air, from the tuning.
