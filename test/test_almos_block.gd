@@ -41,6 +41,8 @@ const SHORT_REFILL_PAUSE := 0.3
 const REFILL_MARGIN := 0.05
 # The most game time, in seconds, any wait in these tests may take.
 const WAIT_LIMIT := 3.0
+# In frames. Keeps a time that is a whole number of frames from being counted as one more.
+const FRAME_COUNT_ALLOWANCE := 0.0001
 # How many physics frames a test holds the Heavy attack button for when the amount does not
 # matter, short of a full charge.
 const SOME_CHARGE_FRAMES := 20
@@ -690,7 +692,7 @@ func _measured_velocity() -> Vector2:
 
 # How many physics frames it takes to reach this many seconds.
 func _frames_to_reach(seconds: float) -> int:
-	return ceili(seconds * Engine.physics_ticks_per_second)
+	return ceili(seconds * Engine.physics_ticks_per_second - FRAME_COUNT_ALLOWANCE)
 
 
 # How much Stamina comes back over a few physics frames from now, as {"refilled": the amount,
