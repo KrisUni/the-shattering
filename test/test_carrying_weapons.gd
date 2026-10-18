@@ -930,6 +930,10 @@ func test_a_hold_drops_on_the_frame_it_reaches_a_drop_time_of_a_whole_number_of_
 	var tuning := _tuning().duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as PlayerTuning
 	tuning.drop_hold_time = 0.2
 	var almos = _almos_input.spawn_almos(tuning)
+	# He drops a Weapon into his parent, so he is given one that is freed with the test.
+	var holder := Node2D.new()
+	add_child_autofree(holder)
+	almos.reparent(holder)
 	var frames := 12
 
 	_almos_input.press_action(&"interact")
