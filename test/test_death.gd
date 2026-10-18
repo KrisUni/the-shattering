@@ -38,6 +38,12 @@ const ENEMY_STRIKE_DISTANCE := 30.0
 const WAIT_FRAME_LIMIT := 400
 # In physics frames. How long Almos is walked to reach Remains 150 pixels away, with room to spare.
 const WALK_FRAMES := 150
+# In pixels. How far along the ledge Almos is set down at his second climb, short of where he fell.
+const LEDGE_WALK := 60.0
+# In physics frames. The most a Jump onto the ledge is waited for to end.
+const JUMP_FRAME_LIMIT := 120
+# In physics frames. How far before the end of the pause a late press is made.
+const LATE_PRESS_BEFORE_END := 8
 
 # What he does when each of these buttons is pressed on a free Almos, and which of his states
 # shows it.
@@ -51,6 +57,24 @@ var action_params = ParameterFactory.named_parameters(
 		[&"block", "blocking"],
 		[&"parry", "parrying"],
 	],
+)
+
+# A press made early or late in the pause, as the frames to wait after he falls: late is a few
+# frames before the pause is over. The first four are a button that starts something on a free Almos,
+# with which of his states shows it.
+var press_in_pause_params = ParameterFactory.named_parameters(
+	["action", "state", "late"],
+	[
+		[&"attack_light", "attacking", false],
+		[&"attack_light", "attacking", true],
+		[&"roll", "rolling", false],
+		[&"roll", "rolling", true],
+	],
+)
+
+var interact_time_params = ParameterFactory.named_parameters(
+	["late"],
+	[[false], [true]],
 )
 
 var _almos_input: AlmosInput
@@ -106,7 +130,9 @@ func test_he_cannot_be_hit_while_limp() -> void:
 
 func test_a_blow_that_arrives_while_he_is_limp_spends_none_of_his_stamina() -> void:
 	var almos := _spawn_almos()
-	almos.stamina.refill()
+	_almos_input.press_action(&"block")
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_true(almos.blocking, "he should be blocking as he falls, with the button still held")
 	_kill(almos)
 	var before: float = almos.stamina.current
 	var hits := AlmosHits.new(self)
@@ -189,8 +215,9 @@ func test_the_pause_does_not_end_a_frame_early() -> void:
 	watch_signals(almos)
 
 	_kill(almos)
-	# The frame the pause ends in is the last of these, so one less must not have ended it.
-	for i in _frames_to_reach(tuning.death_pause) - 1:
+	# Each wait ends before the next frame is processed, so the frame the pause ends in has not been
+	# processed after this many: a pause that ended a frame early would have ended by now.
+	for i in _frames_to_reach(tuning.death_pause):
 		await get_tree().physics_frame
 
 	assert_signal_not_emitted(almos, "death_pause_over")
@@ -295,18 +322,6 @@ func test_he_moves_again_once_returned() -> void:
 	await wait_physics_frames(WATCH_FRAMES)
 
 	assert_gt(almos.global_position.x, RETURN_POINT.x)
-
-
-func test_a_button_held_through_the_death_does_not_act_for_him_on_his_return() -> void:
-	var almos := _spawn_almos()
-	_almos_input.press_action(&"attack_light")
-	_kill(almos)
-	await wait_physics_frames(PRESS_FRAMES)
-
-	almos.return_to(RETURN_POINT)
-	await wait_physics_frames(PRESS_FRAMES)
-
-	assert_false(almos.attacking, "a press made while limp should be lost, not kept for his return")
 
 
 func test_a_death_in_a_roll_comes_back_clean() -> void:
@@ -854,27 +869,6 @@ func test_the_enemy_a_death_replaces_is_out_of_the_enemies_in_the_frame_he_retur
 	assert_eq(still_in_group, [false], "the old enemy should have left the group by then")
 
 
-func test_a_swing_under_way_when_he_dies_does_not_land_after_he_returns() -> void:
-	var tuning := _tuning()
-	var room := _spawn_room()
-	var almos: Almos = room.find_child("Almos", true, false)
-	var old: Node = _enemy(room)
-	var swing: AttackData = old.tuning.attack
-	almos.global_position = DEATH_SPOT
-	old.global_position = DEATH_SPOT + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
-	for i in WAIT_FRAME_LIMIT:
-		if old.attacking:
-			break
-		await get_tree().physics_frame
-	assert_true(old.attacking, "the enemy should begin a swing")
-
-	_kill(almos)
-	await _wait_out_the_pause(almos)
-	await wait_physics_frames(swing.total_frames())
-
-	assert_almost_eq(almos.health.current, tuning.health_maximum, TOLERANCE)
-
-
 func test_an_enemys_blow_can_kill_him_and_he_comes_back_with_the_remains_where_it_landed() -> void:
 	var tuning := _tuning()
 	var room := _spawn_room()
@@ -898,6 +892,197 @@ func test_an_enemys_blow_can_kill_him_and_he_comes_back_with_the_remains_where_i
 	if remains.size() == 1:
 		assert_eq(remains[0].amount, CARRIED)
 		assert_almost_eq(remains[0].global_position.x, DEATH_SPOT.x, 1.0)
+
+
+func test_a_death_on_the_low_ledge_leaves_the_remains_on_it() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	almos.experience.gain(CARRIED)
+	await _jump_onto_the_ledge(room, almos, 0.0)
+	assert_eq(almos.height_level, 1, "he should be on the ledge")
+	var fall_place := almos.global_position
+
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+
+	var remains := _all_remains()
+	assert_eq(remains.size(), 1, "there should be one set of Remains")
+	if remains.size() == 1:
+		assert_eq(remains[0].global_position, fall_place)
+		assert_true(_ledge_rect(room).has_point(remains[0].global_position), "they should lie on the ledge")
+
+
+func test_he_recovers_the_remains_on_the_ledge_by_walking_up_to_them_there() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	almos.experience.gain(CARRIED)
+	await _jump_onto_the_ledge(room, almos, 0.0)
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+	assert_eq(almos.height_level, 0, "he should be back on the ground")
+	await _jump_onto_the_ledge(room, almos, -LEDGE_WALK)
+	assert_eq(_all_remains().size(), 1, "they should be out of reach still")
+
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(WALK_FRAMES)
+
+	assert_eq(almos.experience.total, CARRIED)
+	assert_eq(_all_remains().size(), 0, "the Remains should be gone")
+
+
+func test_experience_gained_after_a_death_is_added_to_what_the_remains_give_back() -> void:
+	var enemy_experience := _enemy_tuning().experience
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	almos.global_position = DEATH_SPOT
+	almos.experience.gain(CARRIED)
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+	_enemy(room).health.take_damage(_enemy_tuning().health_maximum)
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_eq(almos.experience.total, enemy_experience, "the enemy's Experience should be his")
+
+	_almos_input.press_action(&"move_down")
+	await wait_physics_frames(WALK_FRAMES)
+
+	assert_eq(almos.experience.total, CARRIED + enemy_experience)
+
+
+func test_the_first_remains_are_freed_when_a_second_death_destroys_them() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	almos.global_position = DEATH_SPOT
+	almos.experience.gain(CARRIED)
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+	var old := _all_remains()[0]
+	almos.experience.gain(CARRIED_LATER)
+	almos.global_position = OTHER_DEATH_SPOT
+
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_false(is_instance_valid(old), "the first Remains should be freed, not left about")
+
+
+func test_the_first_remains_are_out_of_the_remains_group_in_the_frame_of_the_second_set() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	almos.global_position = DEATH_SPOT
+	almos.experience.gain(CARRIED)
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+	var old_id := _all_remains()[0].get_instance_id()
+	almos.experience.gain(CARRIED_LATER)
+	almos.global_position = OTHER_DEATH_SPOT
+	# Read once the frame's work for the return is done, while a node only queued to be freed is
+	# still in the scene.
+	var seen: Array[Array] = []
+	almos.returned.connect(func() -> void:
+		seen.append(_all_remains().map(func(node: Node) -> int: return node.get_instance_id())),
+		CONNECT_DEFERRED)
+
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+
+	assert_eq(seen.size(), 1, "the return should be seen once")
+	if seen.size() == 1:
+		assert_eq(seen[0].size(), 1, "only the new Remains should be among them")
+		assert_false(seen[0].has(old_id), "the first Remains should not be among them")
+
+
+func test_a_death_after_a_rest_brings_back_the_ordinary_enemy_killed_since() -> void:
+	var enemy_tuning := _enemy_tuning()
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
+	var start: Vector2 = _enemy(room).global_position
+	almos.global_position = checkpoint.global_position
+	await _tap(&"interact")
+	_enemy(room).health.take_damage(enemy_tuning.health_maximum)
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_eq(get_tree().get_nodes_in_group("enemies").size(), 0, "the enemy should be dead and gone")
+
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+
+	assert_eq(get_tree().get_nodes_in_group("enemies").size(), 1, "one enemy should be back")
+	assert_eq(_enemy(room).global_position, start)
+
+
+func test_a_death_after_a_rest_returns_him_to_the_checkpoint_with_full_bars() -> void:
+	var tuning := _tuning()
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
+	almos.global_position = checkpoint.global_position
+	await _tap(&"interact")
+	almos.global_position = DEATH_SPOT
+	almos.stamina.spend(tuning.stamina_maximum)
+
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+
+	assert_eq(almos.global_position, checkpoint.global_position)
+	assert_almost_eq(almos.health.current, tuning.health_maximum, TOLERANCE)
+	assert_almost_eq(almos.stamina.current, tuning.stamina_maximum, TOLERANCE)
+
+
+func test_a_press_made_while_limp_does_nothing_then_or_after_his_return(
+		params = use_parameters(press_in_pause_params)) -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	_kill(almos)
+	await _wait_into_the_pause(params.late)
+
+	_almos_input.press_action(params.action)
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.release_action(params.action)
+
+	assert_false(almos.get(params.state), "no %s while limp" % params.state)
+	await _wait_out_the_pause(almos)
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_false(almos.get(params.state), "no %s should follow his return" % params.state)
+
+
+func test_an_interact_press_made_while_limp_next_to_the_checkpoint_does_not_rest_him_then_or_after_his_return(
+		params = use_parameters(interact_time_params)) -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
+	almos.global_position = checkpoint.global_position
+	await _tap(&"interact")
+	_kill(almos)
+	watch_signals(almos)
+	await _wait_into_the_pause(params.late)
+
+	await _tap(&"interact")
+	await _wait_out_the_pause(almos)
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_eq(almos.global_position, checkpoint.global_position, "he comes back beside it")
+	assert_signal_not_emitted(almos, "rested")
+
+
+func test_an_enemy_swinging_at_the_return_point_when_he_falls_cannot_hurt_him_after_he_returns() -> void:
+	var tuning := _tuning()
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	var old: Node = _enemy(room)
+	var swing: AttackData = old.tuning.attack
+	old.global_position = almos.global_position + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
+	for i in WAIT_FRAME_LIMIT:
+		if old.attacking:
+			break
+		await get_tree().physics_frame
+	assert_true(old.attacking, "the enemy should begin a swing")
+	_kill(almos)
+	await _wait_out_the_pause(almos)
+
+	await wait_physics_frames(swing.total_frames())
+
+	assert_almost_eq(almos.health.current, tuning.health_maximum, TOLERANCE)
 
 
 # Almos in the scene, with the shipped tuning.
@@ -983,6 +1168,15 @@ func _all_remains() -> Array[Node]:
 	return get_tree().get_nodes_in_group("remains")
 
 
+# Waits to a time in the pause of a Death, as frames after he falls: a little after it begins, or
+# a few frames before it is over. Press nothing before this.
+func _wait_into_the_pause(late: bool) -> void:
+	var frames := PRESS_FRAMES
+	if late:
+		frames = _frames_to_reach(_tuning().death_pause) - LATE_PRESS_BEFORE_END
+	await wait_physics_frames(frames)
+
+
 # Lets the pause of a Death run out, up to the very start of the frame after he is sent back, before
 # anything else in that frame has moved. He must be limp when this is called.
 func _wait_out_the_pause(almos: Almos) -> void:
@@ -1022,3 +1216,31 @@ func _assert_free_and_clean(almos: Almos) -> void:
 	assert_false((almos.find_child("BlockPlaceholder", true, false) as CanvasItem).visible, "no Block shape")
 	assert_false((almos.find_child("ParryPlaceholder", true, false) as CanvasItem).visible, "no Parry shape")
 	assert_false((almos.find_child("Sword", true, false) as CanvasItem).visible, "no sword")
+
+
+# He is set down in front of the ledge, out of its reach by the half of a Jump, at this distance
+# along it from the middle, and jumps onto it from there, walking down. He is left standing where
+# he came down. The press that began it is let go of.
+func _jump_onto_the_ledge(room: Node, almos: Almos, along: float) -> void:
+	var tuning := _tuning()
+	var ledge := room.find_child("Ledge", true, false) as Footprint
+	var jump_length := tuning.walk_speed * tuning.jump_duration
+	var top := ledge.global_position.y - ledge.size.y / 2.0
+	almos.global_position = Vector2(ledge.global_position.x + along, top - jump_length / 2.0)
+	_almos_input.press_action(&"move_down")
+	_almos_input.press_action(&"jump")
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.release_action(&"jump")
+	for i in JUMP_FRAME_LIMIT:
+		if not almos.airborne:
+			break
+		await get_tree().physics_frame
+	_almos_input.release_action(&"move_down")
+	assert_false(almos.airborne, "the Jump should be over")
+	assert_eq(almos.height_level, 1, "he should have come down on the ledge")
+
+
+# The ledge's footprint in the room, in global coordinates.
+func _ledge_rect(room: Node) -> Rect2:
+	var ledge := room.find_child("Ledge", true, false) as Footprint
+	return Rect2(ledge.global_position - ledge.size / 2.0, ledge.size)
