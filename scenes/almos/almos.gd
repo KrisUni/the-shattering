@@ -1,3 +1,4 @@
+class_name Almos
 extends CharacterBody2D
 
 # Almos's sprites show eight facings, so his facing is always one of eight directions.
@@ -8,7 +9,8 @@ const FACING_STEP := TAU / 8.0
 # compared with a tuned time through this slack, so that a tuned time which is a whole
 # number of frames counts as reached on that frame, not the next. Without it a Roll would
 # run one more frame with nothing left to move, the untouchable window would be a frame
-# too long and the hold threshold a frame too late.
+# too long and the hold threshold a frame too late. The Guard break in AlmosBlock is timed
+# with it as well.
 const TIME_SLACK := 0.000001
 
 enum State { WALKING, SPRINTING, ROLLING }
@@ -56,11 +58,18 @@ var lock_on_target: Node2D:
 		return _lock_on.target
 
 ## Whether he is blocking: the Block button is held and he is free, which he is not in a
-## Roll, in an attack, charging a Heavy attack or sprinting. Holding the Roll button while
-## blocking does not start a Sprint.
+## Roll, in an attack, charging a Heavy attack, sprinting or in a Guard break. Holding the
+## Roll button while blocking does not start a Sprint.
 var blocking: bool:
 	get:
 		return _block.blocking
+
+## Whether a Guard break is on him: a blocked hit took the last of his Stamina, and for
+## guard_break_duration he is left open. He stands still, and can neither Sprint, Roll, attack
+## nor block; his Lock-on works as usual. He is free again from the frame after the last of it.
+var guard_broken: bool:
+	get:
+		return _block.guard_broken
 
 ## Whether Almos cannot be hurt at this moment: during part of a Roll.
 var untouchable: bool:
@@ -122,6 +131,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# A Guard break that runs out in this frame is still spent open, though the block clears it
+	# before the frame is over. So it is read once, here, for everything below.
+	var left_open := _block.guard_broken
 	# get_vector applies the deadzone to the stick as a whole, not axis by axis, and
 	# never returns more than length 1, so diagonals are no faster.
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -138,18 +150,19 @@ func _physics_process(delta: float) -> void:
 	# start in that same frame and follow it without a gap.
 	if rolling and _roll_time >= tuning.roll_duration - TIME_SLACK:
 		_end_roll(direction)
-	_attacks.advance(_aim(), not rolling)
-	# An attack commits him, so a tap in it is lost, not kept for after it.
-	if tapped and not _attacks.committed:
+	_attacks.advance(_aim(), not rolling and not left_open)
+	# An attack commits him and a Guard break leaves him open, so a tap in either is lost, not
+	# kept for after it.
+	if tapped and not _attacks.committed and not left_open:
 		_on_roll_tapped(direction)
 	# He is free to block unless he is in a Roll or an attack, which have begun by now if they
 	# were going to this frame, or sprinting, which is as the last frame left it.
-	_block.advance(not rolling and not _attacks.committed and not sprinting)
+	_block.advance(not rolling and not _attacks.committed and not sprinting, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if rolling:
 		_roll(delta)
-	elif _attacks.committed:
+	elif _attacks.committed or left_open:
 		_stand_still()
 	else:
 		_move_freely(direction, delta)
@@ -185,7 +198,8 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 
 
 # An attack commits him: he neither walks nor sprints from the moment he begins charging a
-# Heavy attack or swinging until the recovery is over.
+# Heavy attack or swinging until the recovery is over. A Guard break leaves him standing
+# the same way.
 func _stand_still() -> void:
 	_state = State.WALKING
 	velocity = Vector2.ZERO

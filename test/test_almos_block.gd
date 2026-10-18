@@ -12,6 +12,7 @@ extends GutTest
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
+const AlmosHits := preload("res://test/helpers/almos_hits.gd")
 
 const TUNING_PATH := AlmosInput.TUNING_PATH
 const SETTLE_FRAMES := AlmosInput.SETTLE_FRAMES
@@ -19,10 +20,8 @@ const SETTLE_FRAMES := AlmosInput.SETTLE_FRAMES
 const HEALTH_TOLERANCE := 0.0001
 # In Stamina points.
 const STAMINA_TOLERANCE := 0.0001
-# In Health points. A hit small enough that several of them fit in his Health.
-const HIT_DAMAGE := 20.0
-# In pixels. How far from Almos a hit's origin is placed, in front of him or behind him.
-const HIT_DISTANCE := 50.0
+const HIT_DAMAGE := AlmosHits.HIT_DAMAGE
+const HIT_DISTANCE := AlmosHits.HIT_DISTANCE
 # In degrees. How far inside or beyond the edge of the front a hit is put, to be clearly on one
 # side of it.
 const EDGE_MARGIN_DEGREES := 10.0
@@ -56,8 +55,6 @@ const STRIKE_SETTLE_FRAMES := 10
 const HOLD_THRESHOLD_MULTIPLE := 1.5
 # In radians. For the angle the Block placeholder is turned by.
 const BLOCK_PLACEHOLDER_ANGLE_TOLERANCE := 0.0001
-# In pixels. A strike this wide covers all of Almos from wherever the origin is placed.
-const HITBOX_RADIUS := 200.0
 # A refill pause longer than any wait in these tests, for tests that need Stamina to stay
 # where it was left.
 const LONG_REFILL_PAUSE := 10.0
@@ -131,6 +128,7 @@ class StandInEnemy:
 
 var _almos_input: AlmosInput
 var _enemy_rig: EnemyRig
+var _hits: AlmosHits
 var _almos: Node2D
 var _samples: Array[Dictionary] = []
 
@@ -141,6 +139,7 @@ func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
 	_enemy_rig = EnemyRig.new(self)
+	_hits = AlmosHits.new(self)
 
 
 func after_each() -> void:
@@ -194,11 +193,11 @@ func test_the_block_button_can_be_either_shift_key_the_l_key_or_a_pad_shoulder_b
 func test_a_hit_from_the_front_while_blocking_deals_the_rest_of_its_damage_and_costs_stamina() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	var hitbox := _hitbox_from(_almos.facing * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, _almos.facing * HIT_DISTANCE)
 	_almos_input.press_action(&"block")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	var expected_damage := HIT_DAMAGE * (1.0 - tuning.block_damage_reduction)
 	assert_almost_eq(_almos.health.current, tuning.health_maximum - expected_damage, HEALTH_TOLERANCE, "the damage that got through")
@@ -208,11 +207,11 @@ func test_a_hit_from_the_front_while_blocking_deals_the_rest_of_its_damage_and_c
 func test_a_hit_from_behind_while_blocking_deals_full_damage_and_costs_no_stamina() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	var hitbox := _hitbox_from(-_almos.facing * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, -_almos.facing * HIT_DISTANCE)
 	_almos_input.press_action(&"block")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	assert_almost_eq(_almos.health.current, tuning.health_maximum - HIT_DAMAGE, HEALTH_TOLERANCE, "all the damage should get through")
 	assert_almost_eq(_almos.stamina.current, tuning.stamina_maximum, STAMINA_TOLERANCE, "nothing should be spent")
@@ -221,10 +220,10 @@ func test_a_hit_from_behind_while_blocking_deals_full_damage_and_costs_no_stamin
 func test_a_hit_from_the_front_without_the_block_button_held_deals_full_damage_and_costs_no_stamina() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	var hitbox := _hitbox_from(_almos.facing * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, _almos.facing * HIT_DISTANCE)
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	assert_almost_eq(_almos.health.current, tuning.health_maximum - HIT_DAMAGE, HEALTH_TOLERANCE, "all the damage should get through")
 	assert_almost_eq(_almos.stamina.current, tuning.stamina_maximum, STAMINA_TOLERANCE, "nothing should be spent")
@@ -234,11 +233,11 @@ func test_blocking_with_no_stamina_left_gives_no_protection() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
 	_almos.stamina.spend(tuning.stamina_maximum)
-	var hitbox := _hitbox_from(_almos.facing * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, _almos.facing * HIT_DISTANCE)
 	_almos_input.press_action(&"block")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	assert_true(_almos.blocking, "he is still blocking, it just gives no protection")
 	assert_almost_eq(_almos.health.current, tuning.health_maximum - HIT_DAMAGE, HEALTH_TOLERANCE, "all the damage should get through")
@@ -249,11 +248,11 @@ func test_a_blocked_hit_with_less_stamina_left_than_it_costs_is_still_blocked_an
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
 	_almos.stamina.spend(tuning.stamina_maximum - tuning.block_stamina_cost / 3.0)
-	var hitbox := _hitbox_from(_almos.facing * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, _almos.facing * HIT_DISTANCE)
 	_almos_input.press_action(&"block")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	assert_almost_eq(_almos.health.current, tuning.health_maximum - HIT_DAMAGE * (1.0 - tuning.block_damage_reduction), HEALTH_TOLERANCE, "the hit should still be blocked")
 	assert_almost_eq(_almos.stamina.current, 0.0, STAMINA_TOLERANCE)
@@ -263,11 +262,11 @@ func test_the_front_that_block_covers_is_as_wide_as_the_tuned_arc_centred_on_his
 	var tuning := _tuning_with({"block_arc_degrees": params.arc, "stamina_refill_pause": LONG_REFILL_PAUSE})
 	_spawn_almos(tuning)
 	var degrees_round: float = params.side * (params.arc / 2.0 + params.from_the_edge)
-	var hitbox := _hitbox_from(_almos.facing.rotated(deg_to_rad(degrees_round)) * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, _almos.facing.rotated(deg_to_rad(degrees_round)) * HIT_DISTANCE)
 	_almos_input.press_action(&"block")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	var expected_damage := HIT_DAMAGE * (1.0 - tuning.block_damage_reduction) if params.blocked else HIT_DAMAGE
 	var expected_spent := tuning.block_stamina_cost if params.blocked else 0.0
@@ -286,11 +285,11 @@ func test_the_front_follows_the_way_he_faces_not_the_way_he_started(params = use
 	_almos_input.release_action(&"move_left")
 	await wait_physics_frames(SETTLE_FRAMES)
 	assert_almost_eq(_almos.facing, Vector2(-1.0, -1.0).normalized(), Vector2.ONE * AlmosInput.FACING_TOLERANCE, "he should be facing up and to the left")
-	var hitbox := _hitbox_from((params.from as Vector2).normalized() * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, (params.from as Vector2).normalized() * HIT_DISTANCE)
 	await wait_physics_frames(SETTLE_FRAMES)
 	var before: float = _almos.stamina.current
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	var expected_damage := HIT_DAMAGE * (1.0 - tuning.block_damage_reduction) if params.blocked else HIT_DAMAGE
 	var expected_spent := tuning.block_stamina_cost if params.blocked else 0.0
@@ -301,11 +300,11 @@ func test_the_front_follows_the_way_he_faces_not_the_way_he_started(params = use
 func test_a_hit_from_exactly_his_own_centre_counts_as_from_the_front() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	var hitbox := _hitbox_from(Vector2.ZERO)
+	var hitbox := _hits.hitbox_from(_almos, Vector2.ZERO)
 	_almos_input.press_action(&"block")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, 1)
+	await _hits.swing(hitbox, 1)
 
 	assert_almost_eq(_almos.health.current, tuning.health_maximum - HIT_DAMAGE * (1.0 - tuning.block_damage_reduction), HEALTH_TOLERANCE, "the hit should be blocked")
 	assert_almost_eq(_almos.stamina.current, tuning.stamina_maximum - tuning.block_stamina_cost, STAMINA_TOLERANCE)
@@ -314,11 +313,11 @@ func test_a_hit_from_exactly_his_own_centre_counts_as_from_the_front() -> void:
 func test_one_swing_over_him_is_blocked_once_however_many_frames_it_overlaps_him() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)
-	var hitbox := _hitbox_from(_almos.facing * HIT_DISTANCE)
+	var hitbox := _hits.hitbox_from(_almos, _almos.facing * HIT_DISTANCE)
 	_almos_input.press_action(&"block")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	await _swing(hitbox, LONG_SWING_FRAMES)
+	await _hits.swing(hitbox, LONG_SWING_FRAMES)
 
 	assert_almost_eq(_almos.health.current, tuning.health_maximum - HIT_DAMAGE * (1.0 - tuning.block_damage_reduction), HEALTH_TOLERANCE, "the damage should get through once")
 	assert_almost_eq(_almos.stamina.current, tuning.stamina_maximum - tuning.block_stamina_cost, STAMINA_TOLERANCE, "the Stamina should be spent once")
@@ -675,42 +674,6 @@ func _tuning_with(changes: Dictionary) -> PlayerTuning:
 # The tuning data file's numbers, but with a refill pause no test waits out.
 func _tuning_with_long_refill_pause() -> PlayerTuning:
 	return _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE})
-
-
-# A Hitbox, switched off, standing with its origin this far from Almos, which is where its
-# hit comes from, and wide enough to cover him from there, aimed at the player's Hurtboxes as
-# an enemy's would be. The test frees it.
-func _hitbox_from(offset: Vector2, damage := HIT_DAMAGE) -> Hitbox:
-	var hitbox := Hitbox.new()
-	hitbox.damage = damage
-	hitbox.collision_mask = _layer_bit("player_hurtbox")
-	var shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = HITBOX_RADIUS
-	shape.shape = circle
-	hitbox.add_child(shape)
-	hitbox.global_position = _almos.global_position + offset
-	add_child_autofree(hitbox)
-	return hitbox
-
-
-# Switches the hitbox on for this many physics frames, then off again. It waits on the
-# physics_frame signal, which comes before the hitbox is processed in a frame, so the
-# hitbox is processed on exactly this many frames while it is on.
-func _swing(hitbox: Hitbox, frames: int) -> void:
-	hitbox.active = true
-	for i in frames:
-		await get_tree().physics_frame
-	hitbox.active = false
-
-
-# The collision layer the project calls this, as the bit that sets it in a collision mask.
-func _layer_bit(layer_name: String) -> int:
-	for layer in range(1, 33):
-		if ProjectSettings.get_setting("layer_names/2d_physics/layer_%d" % layer, "") == layer_name:
-			return 1 << (layer - 1)
-	fail_test("the project should name a 2D physics layer %s" % layer_name)
-	return 0
 
 
 # Almos's average velocity over a few physics frames, worked out from where he ends up

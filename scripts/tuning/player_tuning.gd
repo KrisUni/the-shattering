@@ -80,3 +80,8 @@ extends Resource
 ## How much of the usual Stamina refill comes back while blocking: stamina_refill_rate
 ## times this. Only the refill is slowed; the pause before it starts is the same.
 @export var block_stamina_refill_factor: float
+
+## How long, in seconds, a Guard break lasts: the time Almos is left open after a blocked hit
+## takes the last of his Stamina, standing still and unable to Roll, attack or block. A time
+## that is not a whole number of physics frames lasts until the next whole frame.
+@export var guard_break_duration: float

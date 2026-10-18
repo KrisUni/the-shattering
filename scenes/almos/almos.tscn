@@ -87,7 +87,8 @@ script = ExtResource("9_lock_on")
 almos = NodePath("..")
 marker = NodePath("../LockOnMarker")
 
-[node name="Block" type="Node" parent="." node_paths=PackedStringArray("stamina", "placeholder")]
+[node name="Block" type="Node" parent="." node_paths=PackedStringArray("stamina", "placeholder", "tinted_placeholder")]
 script = ExtResource("10_block")
 stamina = NodePath("../Stamina")
 placeholder = NodePath("../Placeholder/BlockPlaceholder")
+tinted_placeholder = NodePath("../Placeholder")
