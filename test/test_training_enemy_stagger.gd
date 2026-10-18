@@ -74,12 +74,11 @@ func after_each() -> void:
 
 # --- The numbers ---
 
-func test_the_stagger_numbers_make_three_parries_a_break_and_a_pause_longer_than_its_swing() -> void:
+func test_the_stagger_numbers_make_parries_fill_the_meter_and_a_pause_longer_than_its_swing() -> void:
 	assert_gt(_tuning.stagger_capacity, 0.0, "stagger_capacity in the data file should be positive")
 	assert_gt(_tuning.stagger_drain_rate, 0.0, "stagger_drain_rate in the data file should be positive")
 	assert_gt(_player.parry_stagger, 0.0, "parry_stagger in the data file should be positive")
-	assert_lt(2.0 * _player.parry_stagger, _tuning.stagger_capacity, "two Parries should not fill the meter")
-	assert_gte(3.0 * _player.parry_stagger, _tuning.stagger_capacity, "three Parries should fill the meter")
+	assert_gt(_parries_to_fill_the_meter(), 1, "one Parry should not fill the meter")
 	var swing_seconds := float(_tuning.attack.total_frames()) / Engine.physics_ticks_per_second
 	assert_gt(_tuning.stagger_drain_pause, swing_seconds, "the pause should be longer than the enemy's swing, so that Parries alone can fill the meter")
 
@@ -112,16 +111,18 @@ func test_a_parry_of_its_swing_by_almos_builds_the_parry_stagger_and_costs_him_n
 	assert_almost_eq(_rig.enemy.health.current, _tuning.health_maximum, TOLERANCE, "Stagger should not touch its Health")
 
 
-func test_three_parries_fill_the_meter_and_two_do_not() -> void:
+func test_the_parries_that_fill_the_meter_break_the_enemy_and_one_fewer_does_not() -> void:
+	var needed := _parries_to_fill_the_meter()
 	_spawn_fight()
 
-	await _parry_the_swing()
-	await _parry_the_swing()
-	assert_almost_eq(_rig.enemy.stagger.current, 2.0 * _player.parry_stagger, TOLERANCE, "after two Parries")
-	assert_false(_rig.enemy.stagger.full, "two Parries should not fill the meter")
+	for i in needed - 1:
+		await _parry_the_swing()
+	assert_almost_eq(_rig.enemy.stagger.current, (needed - 1) * _player.parry_stagger, TOLERANCE, "after one Parry fewer")
+	assert_false(_rig.enemy.stagger.full, "one Parry fewer should not fill the meter")
+	assert_false(_rig.enemy.broken, "one Parry fewer should not break it")
 	await _parry_the_swing()
 
-	assert_true(_rig.enemy.broken, "three Parries should fill the meter, which breaks it")
+	assert_true(_rig.enemy.broken, "the Parries that fill the meter should break it")
 	assert_almost_eq(_rig.enemy.stagger.current, 0.0, TOLERANCE, "a Break empties the meter")
 
 
@@ -399,6 +400,11 @@ func _hitbox_at(enemy: Node2D, offset: Vector2, stagger: float) -> Hitbox:
 	hitbox.global_position = enemy.global_position + offset
 	hitbox.stagger = stagger
 	return hitbox
+
+
+# How many Parries it takes to fill the meter.
+func _parries_to_fill_the_meter() -> int:
+	return ceili(_tuning.stagger_capacity / _player.parry_stagger)
 
 
 # Parries the swing the enemy is about to make or has begun. The press is timed so that the

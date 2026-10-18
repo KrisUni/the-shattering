@@ -135,16 +135,18 @@ func test_a_hit_that_leaves_the_meter_short_of_full_does_not_break_it() -> void:
 	assert_almost_eq(enemy.stagger.current, _tuning.stagger_capacity * 0.9, TOLERANCE)
 
 
-func test_three_parries_of_its_swing_by_almos_break_it_with_the_swing_over() -> void:
+func test_the_parries_that_fill_the_meter_break_it_with_the_swing_over() -> void:
 	var almos = _almos_input.spawn_almos()
 	var enemy = _rig.spawn_enemy(null, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
 	_rig.set_target(almos, almos.health)
 
-	for i in 3:
-		assert_false(enemy.broken, "it should not be broken before the third Parry (Parry %d)" % (i + 1))
+	var needed := ceili(_tuning.stagger_capacity / _player.parry_stagger)
+
+	for i in needed:
+		assert_false(enemy.broken, "it should not be broken before the last Parry (Parry %d)" % (i + 1))
 		await _parry_the_swing()
 
-	assert_true(enemy.broken, "the third Parry should fill the meter and break it")
+	assert_true(enemy.broken, "the last Parry should fill the meter and break it")
 	assert_almost_eq(enemy.stagger.current, 0.0, TOLERANCE)
 	assert_false(enemy.attacking, "the swing that was parried is over")
 	assert_false(enemy.striking, "its Hitbox is off")
