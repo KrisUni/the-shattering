@@ -53,11 +53,13 @@ func release_action(action: StringName) -> void:
 # the keyboard both set, so bindings by either would match. An event left to itself is
 # taken in at the start of the next frame of the main loop, which can be after several
 # physics frames; at_once takes it in now, so that exactly the physics frames processed
-# from here on see it, as a real tap between two physics frames would be seen.
-func press_key(keycode: Key, at_once := false) -> void:
+# from here on see it, as a real tap between two physics frames would be seen. Keys that
+# come in a pair, such as the two Shift keys, can be told apart by location.
+func press_key(keycode: Key, at_once := false, location := KEY_LOCATION_UNSPECIFIED) -> void:
 	var event := InputEventKey.new()
 	event.keycode = keycode
 	event.physical_keycode = keycode
+	event.location = location
 	event.pressed = true
 	Input.parse_input_event(event)
 	if at_once:

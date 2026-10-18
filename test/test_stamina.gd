@@ -5,6 +5,9 @@ extends GutTest
 
 const TOLERANCE := 0.0001
 
+# How much the usual refill is scaled by: none of it, some of it and more of it.
+var refill_factors = [0.0, 0.5, 2.0]
+
 var _tuning: PlayerTuning
 
 
@@ -110,6 +113,52 @@ func test_a_failed_spend_does_not_restart_the_pause() -> void:
 	stamina.advance(0.5 + 1.0)
 
 	assert_almost_eq(stamina.current, _tuning.stamina_refill_rate * 1.0, TOLERANCE, "the pause should end when it was going to")
+
+
+func test_the_refill_factor_scales_the_tuned_rate_it_refills_at(factor = use_parameters(refill_factors)) -> void:
+	var stamina := _new_stamina()
+	stamina.spend(50.0)
+	stamina.advance(_tuning.stamina_refill_pause)
+	stamina.refill_factor = factor
+
+	stamina.advance(1.0)
+
+	assert_almost_eq(stamina.current, _tuning.stamina_maximum - 50.0 + _tuning.stamina_refill_rate * factor, TOLERANCE)
+
+
+func test_the_refill_factor_does_not_change_how_long_the_pause_lasts(factor = use_parameters(refill_factors)) -> void:
+	var stamina := _new_stamina()
+	stamina.spend(50.0)
+	stamina.refill_factor = factor
+
+	stamina.advance(_tuning.stamina_refill_pause - 0.1)
+	assert_almost_eq(stamina.current, _tuning.stamina_maximum - 50.0, TOLERANCE, "nothing should come back during the pause")
+	stamina.advance(0.1 + 1.0)
+
+	assert_almost_eq(stamina.current, _tuning.stamina_maximum - 50.0 + _tuning.stamina_refill_rate * factor, TOLERANCE, "the refill should start when the pause ends")
+
+
+func test_time_beyond_the_pause_within_a_single_advance_is_scaled_by_the_refill_factor() -> void:
+	var stamina := _new_stamina()
+	stamina.spend(50.0)
+	stamina.refill_factor = 0.5
+
+	stamina.advance(_tuning.stamina_refill_pause + 0.5)
+
+	assert_almost_eq(stamina.current, _tuning.stamina_maximum - 50.0 + _tuning.stamina_refill_rate * 0.5 * 0.5, TOLERANCE)
+
+
+func test_the_refill_factor_applies_to_the_time_that_goes_by_after_it_is_set() -> void:
+	var stamina := _new_stamina()
+	stamina.spend(60.0)
+	stamina.advance(_tuning.stamina_refill_pause)
+	stamina.refill_factor = 0.5
+	stamina.advance(1.0)
+	stamina.refill_factor = 1.0
+
+	stamina.advance(1.0)
+
+	assert_almost_eq(stamina.current, _tuning.stamina_maximum - 60.0 + _tuning.stamina_refill_rate * 0.5 + _tuning.stamina_refill_rate, TOLERANCE)
 
 
 func test_changed_is_emitted_when_spending() -> void:

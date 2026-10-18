@@ -14,11 +14,19 @@ extends Area2D
 ## it is, the owner can always be hurt.
 var is_untouchable: Callable = func() -> bool: return false
 
+## Asked on every hit that lands, which a hit on someone untouchable does not: how much of
+## the hit's damage gets through, given the damage and the point in the world the hit comes
+## from. Almos blocking is the case: a hit from the front deals less. The Health takes what it
+## returns. It is asked once for each hit, so it may do more than answer, such as spend
+## something on the hit. Left as it is, all of the damage gets through.
+var damage_through: Callable = func(damage: float, _from: Vector2) -> float: return damage
 
-## A hit reaches this Hurtbox, for this much damage. Returns whether it landed: it does
-## not while the owner is untouchable.
-func hurt(damage: float) -> bool:
+
+## A hit reaches this Hurtbox, for this much damage, coming from this point in the world.
+## Returns whether it landed: it does not while the owner is untouchable. A hit that landed
+## has been dealt with even if none of its damage got through.
+func hurt(damage: float, from: Vector2) -> bool:
 	if is_untouchable.call():
 		return false
-	health.take_damage(damage)
+	health.take_damage(damage_through.call(damage, from))
 	return true
