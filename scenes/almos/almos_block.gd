@@ -72,11 +72,19 @@ func advance(free: bool, delta: float) -> void:
 ## it blocks, and begins a Guard break if that was the last of it, so it is to be called once
 ## for each.
 func receive_hit(damage: float, from: Vector2, centre: Vector2, facing: Vector2) -> float:
-	if not _blocking or not _covers(from, centre, facing) or not stamina.spend(tuning.block_stamina_cost):
+	if not _blocks(from, centre, facing):
 		return damage
+	stamina.spend(tuning.block_stamina_cost)
 	if stamina.current <= 0.0:
 		_begin_guard_break()
 	return damage * (1.0 - tuning.block_damage_reduction)
+
+
+# Whether a hit that comes from this point is blocked: he is blocking, he has any Stamina left
+# (which is exactly when Stamina.spend can spend), and the hit is in the front that Block
+# covers. It only decides; spending the Stamina is for the caller.
+func _blocks(from: Vector2, centre: Vector2, facing: Vector2) -> bool:
+	return _blocking and stamina.current > 0.0 and _covers(from, centre, facing)
 
 
 # Whether a hit that comes from this point is in the front that Block covers, for someone
