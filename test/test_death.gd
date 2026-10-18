@@ -178,6 +178,8 @@ func test_he_cannot_rest_while_limp() -> void:
 
 	_almos_input.press_action(&"interact")
 	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(PRESS_FRAMES)
 
 	assert_signal_not_emitted(almos, "rested")
 
@@ -632,7 +634,7 @@ func test_death_sends_him_back_to_the_checkpoint_he_last_rested_at() -> void:
 	var almos: Almos = room.find_child("Almos", true, false)
 	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
 	almos.global_position = checkpoint.global_position
-	await _tap(&"interact")
+	await _tap_interact()
 	almos.global_position = DEATH_SPOT
 
 	_kill(almos)
@@ -837,7 +839,7 @@ func test_resting_leaves_the_remains_where_they_are() -> void:
 	var before := _all_remains()[0]
 	almos.global_position = checkpoint.global_position
 
-	await _tap(&"interact")
+	await _tap_interact()
 
 	var remains := _all_remains()
 	assert_eq(remains.size(), 1)
@@ -1063,7 +1065,7 @@ func test_a_death_after_a_rest_brings_back_the_ordinary_enemy_killed_since() -> 
 	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
 	var start: Vector2 = _enemy(room).global_position
 	almos.global_position = checkpoint.global_position
-	await _tap(&"interact")
+	await _tap_interact()
 	_enemy(room).health.take_damage(enemy_tuning.health_maximum)
 	await wait_physics_frames(PRESS_FRAMES)
 	assert_eq(get_tree().get_nodes_in_group("enemies").size(), 0, "the enemy should be dead and gone")
@@ -1081,7 +1083,7 @@ func test_a_death_after_a_rest_returns_him_to_the_checkpoint_with_full_bars() ->
 	var almos: Almos = room.find_child("Almos", true, false)
 	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
 	almos.global_position = checkpoint.global_position
-	await _tap(&"interact")
+	await _tap_interact()
 	almos.global_position = DEATH_SPOT
 	almos.stamina.spend(tuning.stamina_maximum)
 
@@ -1116,7 +1118,7 @@ func test_an_interact_press_made_while_limp_next_to_the_checkpoint_does_not_rest
 	var almos: Almos = room.find_child("Almos", true, false)
 	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
 	almos.global_position = checkpoint.global_position
-	await _tap(&"interact")
+	await _tap_interact()
 	_kill(almos)
 	watch_signals(almos)
 	await _wait_into_the_pause(params.late)
@@ -1171,6 +1173,13 @@ func _tap(action: StringName) -> void:
 	_almos_input.press_action(action)
 	await wait_physics_frames(PRESS_FRAMES)
 	_almos_input.release_action(action)
+
+
+# A tap of Interact, which does its work as it is let go of, so the frames after the release are
+# waited out.
+func _tap_interact() -> void:
+	await _tap(&"interact")
+	await wait_physics_frames(PRESS_FRAMES)
 
 
 # How many physics frames it takes to reach this many seconds: the first whole number of

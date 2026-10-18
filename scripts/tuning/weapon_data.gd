@@ -1,7 +1,14 @@
 class_name WeaponData
 extends Resource
-## The attacks of one Weapon and the one number they share. The values live in the Weapon's
-## data file, such as data/sword.tres, not here.
+## One Weapon: its name, its Weight and its attacks, and the numbers they share. The values live in
+## the Weapon's data file, such as data/sword.tres, not here.
+
+## The Weapon's name, as the HUD will show it, such as "Sword".
+@export var display_name: String
+
+## The Weapon's Weight, which counts toward the player's Load while it is carried. Nothing reads
+## it yet.
+@export var weight: float
 
 ## How far from Almos's centre, in pixels, the Weapon's strike reaches: the far edge of the box
 ## his sword Hitbox hurts with, along the direction he swings. The box keeps its width and
