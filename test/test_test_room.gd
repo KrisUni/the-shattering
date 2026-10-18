@@ -6,6 +6,12 @@ const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
 const ENEMY_TUNING_PATH := "res://data/training_enemy.tres"
 const TOLERANCE := 0.0001
+# In pixels. How far in front of Almos the enemy is put for a Light attack to reach it.
+const LIGHT_ATTACK_DISTANCE := 30.0
+# How many taps of the Light attack button are tried before giving up on a kill.
+const LIGHT_ATTACK_PRESS_LIMIT := 6
+# In physics frames. How long the Light attack button is held for a tap, and left alone after.
+const TAP_FRAMES := 3
 # In pixels. How far from the edge of the floor Almos starts when he is sent at a wall.
 const DISTANCE_FROM_WALL := 150.0
 # The least, in pixels, he must get towards the wall, so that a test where he never moved
@@ -241,6 +247,72 @@ func test_hurting_the_training_enemy_without_killing_it_gives_no_experience() ->
 	assert_eq(label.text, text_before, "the label should not change")
 
 
+func test_the_experience_label_shows_none_before_any_kill() -> void:
+	var room := _spawn_room()
+	if room == null:
+		return
+	var label = room.find_child("ExperienceLabel", true, false)
+	if label == null:
+		fail_test("the test room should contain an ExperienceLabel")
+		return
+
+	assert_true(label.text.ends_with("0"), "the label should show a total of none")
+
+
+func test_two_kills_add_up_in_almos_experience_and_the_label() -> void:
+	var enemy_tuning := load(ENEMY_TUNING_PATH) as EnemyTuning
+	assert_not_null(enemy_tuning, "the training enemy tuning data file should load")
+	if enemy_tuning == null:
+		return
+	var room := _spawn_room_with_a_second_enemy()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	var enemy = room.find_child("TrainingEnemy", true, false)
+	var second = room.find_child("SecondEnemy", true, false)
+	var label = room.find_child("ExperienceLabel", true, false)
+	if almos == null or enemy == null or second == null or label == null:
+		fail_test("the test room should contain Almos, both enemies and an ExperienceLabel")
+		return
+
+	enemy.health.take_damage(enemy_tuning.health_maximum)
+	await get_tree().process_frame
+	second.health.take_damage(enemy_tuning.health_maximum)
+	await get_tree().process_frame
+
+	assert_eq(almos.experience.total, 2 * enemy_tuning.experience, "two kills should give twice the Experience")
+	assert_true(label.text.ends_with(str(2 * enemy_tuning.experience)), "the label should show the summed total")
+
+
+func test_killing_the_training_enemy_with_a_light_attack_gives_almos_its_tuned_experience() -> void:
+	var enemy_tuning := load(ENEMY_TUNING_PATH) as EnemyTuning
+	assert_not_null(enemy_tuning, "the training enemy tuning data file should load")
+	if enemy_tuning == null:
+		return
+	var room := _spawn_room()
+	if room == null:
+		return
+	var almos = room.find_child("Almos", true, false)
+	var enemy = room.find_child("TrainingEnemy", true, false)
+	if almos == null or enemy == null:
+		fail_test("the test room should contain Almos and a TrainingEnemy")
+		return
+	# Left with a sliver of Health and put right in front of him, so that one Light attack
+	# finishes it.
+	enemy.health.take_damage(enemy_tuning.health_maximum - 1.0)
+	enemy.global_position = almos.global_position + almos.facing * LIGHT_ATTACK_DISTANCE
+
+	for i in LIGHT_ATTACK_PRESS_LIMIT:
+		if almos.experience.total > 0:
+			break
+		_almos_input.press_action(&"attack_light")
+		await wait_physics_frames(TAP_FRAMES)
+		_almos_input.release_action(&"attack_light")
+		await wait_physics_frames(TAP_FRAMES)
+
+	assert_eq(almos.experience.total, enemy_tuning.experience, "a kill made with a Light attack should give the Experience")
+
+
 # The test room, in the test's scene tree, or null if its scene will not load. The test
 # frees it.
 func _spawn_room() -> Node:
@@ -262,3 +334,20 @@ func _floor_bounds(room: Node) -> Rect2:
 	for point in floor_shape.polygon:
 		bounds = bounds.expand(floor_shape.to_global(point))
 	return bounds
+
+
+# The test room with a second training enemy added before it starts, so that it watches it
+# as it does the enemy it comes with. The test frees it.
+func _spawn_room_with_a_second_enemy() -> Node:
+	var scene := load(TEST_ROOM_PATH) as PackedScene
+	var enemy_scene := load("res://scenes/enemies/training_enemy.tscn") as PackedScene
+	assert_not_null(scene, "the test room scene should load")
+	assert_not_null(enemy_scene, "the training enemy scene should load")
+	if scene == null or enemy_scene == null:
+		return null
+	var room := scene.instantiate()
+	var second := enemy_scene.instantiate()
+	second.name = "SecondEnemy"
+	room.add_child(second)
+	add_child_autofree(room)
+	return room
