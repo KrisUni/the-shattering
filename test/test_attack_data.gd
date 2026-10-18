@@ -41,8 +41,10 @@ func test_the_parts_follow_one_another_in_order_with_their_edges_where_the_data_
 		var first_active: int = attack.startup_frames
 		var first_recovery: int = attack.startup_frames + attack.active_frames
 		var last: int = attack.total_frames() - 1
-		assert_true(attack.is_winding_up(0), "frame 0 should be the first frame of startup")
-		assert_true(attack.is_winding_up(first_active - 1), "the frame before the first active one should be the last of startup")
+		# The Jump attack has no startup at all: its first frame is an active one.
+		if attack.startup_frames > 0:
+			assert_true(attack.is_winding_up(0), "frame 0 should be the first frame of startup")
+			assert_true(attack.is_winding_up(first_active - 1), "the frame before the first active one should be the last of startup")
 		assert_false(attack.is_winding_up(first_active), "the first active frame should not be startup")
 		assert_true(attack.is_active(first_active), "the first active frame")
 		assert_false(attack.is_active(first_active - 1), "the last frame of startup should not be active")
@@ -81,8 +83,15 @@ func test_an_attack_with_no_startup_is_active_from_its_first_frame() -> void:
 		assert_false(attack.is_winding_up(frame), "frame %d should not be startup" % frame)
 
 
-# Every attack in the data files: the sword's Light swings and Heavy attack, and the training
-# enemy's Strike and Low attack.
+func test_the_jump_attack_has_no_startup_so_that_it_strikes_on_the_frame_he_lands() -> void:
+	var weapon := load(WEAPON_PATH) as WeaponData
+	assert_not_null(weapon, "the sword data file should load")
+
+	assert_eq(weapon.jump_attack.startup_frames, 0, "its startup frames count from the landing, so a number above 0 would delay the strike")
+
+
+# Every attack in the data files: the sword's Light swings, Heavy attack, Jump attack and
+# Critical hit, and the training enemy's Strike, Low attack and Unblockable attack.
 func _attacks() -> Array[AttackData]:
 	var weapon := load(WEAPON_PATH) as WeaponData
 	assert_not_null(weapon, "the sword data file should load")
@@ -91,6 +100,9 @@ func _attacks() -> Array[AttackData]:
 	var attacks: Array[AttackData] = []
 	attacks.append_array(weapon.light_attacks)
 	attacks.append(weapon.heavy_attack)
+	attacks.append(weapon.jump_attack)
+	attacks.append(weapon.critical_attack)
 	attacks.append(tuning.attack)
 	attacks.append(tuning.low_attack)
+	attacks.append(tuning.unblockable_attack)
 	return attacks

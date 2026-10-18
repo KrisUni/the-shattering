@@ -48,9 +48,12 @@ const BEYOND_NOTICE := 50.0
 # In pixels. A Hitbox this wide covers the enemy it is put over, and no other.
 const NARROW_HITBOX_RADIUS := 12.0
 const ANGLE_TOLERANCE := 0.0001
-# How many samples show him in the air by the time a press is made that is seen in the very last
-# frame of the flight, the one he comes down in. One more and it would be seen on the ground.
-const LATE_PRESS_SAMPLES := 25
+# In frames. Keeps a time that is a whole number of frames from being counted as one more.
+const FRAME_COUNT_ALLOWANCE := 0.0001
+# How many fewer than the frames of the whole flight the samples that show him in the air number
+# by the time a press is made that is seen in the very last frame of the flight, the one he comes
+# down in. One more sample and the press would be seen on the ground.
+const LATE_PRESS_FRAMES_SHORT := 2
 # In pixels. How far from the middle of an enemy Almos comes down, to land half on it.
 const LANDING_OFFSET := 6.0
 # In pixels. How much closer than touching two bodies may be and still count as apart.
@@ -170,13 +173,14 @@ func test_he_flies_the_rest_of_the_jump_unchanged_and_stands_still_to_the_end_of
 
 
 func test_a_press_made_in_the_air_is_the_jump_attack_on_any_frame_of_the_flight(params = use_parameters(ParameterFactory.named_parameters(
-	["name", "airborne_samples"],
-	[["just after take-off", 1], ["on the last frame of the flight", LATE_PRESS_SAMPLES]],
+	["name", "late"],
+	[["just after take-off", false], ["on the last frame of the flight", true]],
 ))) -> void:
 	_spawn_almos(Vector2.ZERO)
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap(&"jump")
-	await wait_until(func() -> bool: return _samples.filter(func(sample: Dictionary) -> bool: return sample.airborne).size() >= params.airborne_samples, WAIT_LIMIT)
+	var airborne_samples := _flight_frames() - LATE_PRESS_FRAMES_SHORT if params.late else 1
+	await wait_until(func() -> bool: return _samples.filter(func(sample: Dictionary) -> bool: return sample.airborne).size() >= airborne_samples, WAIT_LIMIT)
 	assert_true(_almos.airborne, "he should still be in the air")
 
 	await _tap(&"attack_heavy")
@@ -487,6 +491,11 @@ func _tuning_with(changes: Dictionary) -> PlayerTuning:
 	for property in changes:
 		tuning.set(property, changes[property])
 	return tuning
+
+
+# How many physics frames a Jump lasts, the one he comes down in included.
+func _flight_frames() -> int:
+	return ceili(_tuning().jump_duration * Engine.physics_ticks_per_second - FRAME_COUNT_ALLOWANCE)
 
 
 func _body_radius() -> float:

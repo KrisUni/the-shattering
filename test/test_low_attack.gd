@@ -225,12 +225,14 @@ func test_its_low_wind_up_has_a_tint_of_its_own_that_shows_only_in_a_low_wind_up
 	var enemy = _rig.spawn_enemy()
 	_rig.place_target(Vector2.RIGHT * _tuning.attack_range)
 	_rig.sample_also("kind", func(): return enemy.attack_kind)
-	var cycle := _tuning.attack.total_frames() + _tuning.low_attack.total_frames()
+	var cycle := 0
+	for kind in _tuning.attack_pattern:
+		cycle += _tuning.attack_of(kind).total_frames()
 	await _rig.wait_frames(cycle + SETTLE_FRAMES)
 
 	var low_winding := 0
 	var strike_winding := 0
-	# One round of the order: from the first frame of the first attack to the last of the second.
+	# One round of the order: from the first frame of the first attack to the last of the last.
 	var first := _rig.first_sample_where("attacking")
 	for i in range(first, first + cycle):
 		var sample: Dictionary = _rig.samples[i]
@@ -240,8 +242,8 @@ func test_its_low_wind_up_has_a_tint_of_its_own_that_shows_only_in_a_low_wind_up
 		strike_winding += 1 if in_strike_wind_up else 0
 		assert_eq(sample.look == enemy.LOW_WIND_UP_TINT, in_low_wind_up, "whether it shows the Low wind-up tint in sample %d" % i)
 		assert_eq(sample.look == enemy.WIND_UP_TINT, in_strike_wind_up, "whether it shows the Strike wind-up tint in sample %d" % i)
-	assert_eq(low_winding, _tuning.low_attack.startup_frames, "samples of the Low wind-up")
-	assert_eq(strike_winding, _tuning.attack.startup_frames, "samples of the Strike wind-up")
+	assert_eq(low_winding, _tuning.low_attack.startup_frames * _tuning.attack_pattern.count(LOW), "samples of the Low wind-up in a round")
+	assert_eq(strike_winding, _tuning.attack.startup_frames * _tuning.attack_pattern.count(STRIKE), "samples of the Strike wind-up in a round")
 	assert_eq(_rig.samples[first - 1].look, Color.WHITE, "it looks as at rest before it attacks")
 	assert_gte(_difference(enemy.LOW_WIND_UP_TINT, enemy.WIND_UP_TINT), VISIBLE_DIFFERENCE, "the Low tint should look clearly different from the Strike's")
 	assert_gte(_difference(enemy.LOW_WIND_UP_TINT, enemy.BREAK_TINT), VISIBLE_DIFFERENCE, "the Low tint should look clearly different from the Break's")

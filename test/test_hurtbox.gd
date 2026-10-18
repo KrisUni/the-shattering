@@ -260,7 +260,7 @@ func test_a_critical_hit_that_misses_or_is_parried_does_not_announce_landing() -
 
 
 func test_a_hitbox_is_not_a_critical_hit_unless_it_is_set_to_be() -> void:
-	assert_false(Hitbox.new().critical)
+	assert_false(autofree(Hitbox.new()).critical)
 
 
 func test_a_hitbox_tells_the_hurtbox_its_hit_is_a_critical_hit_once_in_the_swing() -> void:
@@ -365,7 +365,7 @@ func test_a_low_hit_on_the_ground_is_reduced_by_the_damage_hook() -> void:
 
 
 func test_a_hitbox_is_not_low_unless_it_is_set_to_be() -> void:
-	assert_false(Hitbox.new().low)
+	assert_false(autofree(Hitbox.new()).low)
 
 
 func test_a_low_hitbox_does_not_hit_an_airborne_owner_and_hits_him_once_he_is_on_the_ground_in_the_same_swing() -> void:

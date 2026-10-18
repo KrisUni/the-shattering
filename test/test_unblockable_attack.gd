@@ -94,13 +94,13 @@ func after_each() -> void:
 
 # --- The enemy alone ---
 
-func test_the_shipped_order_has_an_unblockable_attack_in_it_after_the_other_two() -> void:
+func test_the_shipped_order_has_an_unblockable_attack_in_it_and_does_not_open_with_it() -> void:
 	var pattern := _tuning.attack_pattern
 
 	assert_true(pattern.has(UNBLOCKABLE), "the shipped order should have the Unblockable attack in it")
 	assert_true(pattern.has(STRIKE), "the shipped order should still have the Strike in it")
 	assert_true(pattern.has(LOW), "the shipped order should still have the Low attack in it")
-	assert_ne(pattern[0], UNBLOCKABLE, "the Unblockable attack should not come first, before the other two have been seen")
+	assert_ne(pattern[0], UNBLOCKABLE, "the Unblockable attack should not come first, before the player has seen any other")
 
 
 func test_its_unblockable_attack_has_its_own_timeline_and_its_own_damage() -> void:
