@@ -4,6 +4,7 @@ extends GutTest
 ## The room is the shipped scene with its shipped tuning.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
+const AlmosHits := preload("res://test/helpers/almos_hits.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
@@ -18,6 +19,14 @@ const REACH_MARGIN := 1.0
 const HURT_FRACTION := 0.6
 # In physics frames. How long to let a press reach Almos and take effect.
 const PRESS_FRAMES := 3
+# In pixels. How far below Almos an enemy is put to be within reach of its strike.
+const ENEMY_STRIKE_DISTANCE := 30.0
+# In pixels. How far from Almos an enemy is put to be within the range of his Lock-on.
+const ENEMY_LOCK_ON_DISTANCE := 100.0
+# In physics frames. The most a test waits for an enemy to begin a swing.
+const WAIT_FRAME_LIMIT := 400
+# In physics frames. How long to carry on past the end of a swing to see whether it lands.
+const PAST_THE_SWING_FRAMES := 10
 
 var _almos_input: AlmosInput
 
@@ -456,6 +465,91 @@ func test_a_press_rests_again_each_time_he_is_free() -> void:
 	await _press_interact()
 
 	assert_almost_eq(almos.health.current, tuning.health_maximum, TOLERANCE)
+
+
+func test_a_press_is_lost_in_a_guard_break() -> void:
+	var tuning := _player_tuning()
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	_stand_beside_the_checkpoint(room, almos)
+	# Less Stamina than a blocked hit costs, so that the hit takes the last of it.
+	almos.stamina.spend(tuning.stamina_maximum - tuning.block_stamina_cost / 3.0)
+	# The Hitbox is made before the settling, so that the physics has it by the time it is on.
+	var hits := AlmosHits.new(self)
+	var hitbox := hits.hitbox_from(almos, almos.facing * AlmosHits.HIT_DISTANCE)
+	_almos_input.press_action(&"block")
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_true(almos.blocking, "he should be blocking")
+	await hits.swing(hitbox, 1)
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_true(almos.guard_broken, "the blocked hit should have broken his guard")
+	var hurt := almos.health.current
+
+	await _press_interact()
+
+	assert_almost_eq(almos.health.current, hurt, TOLERANCE)
+
+
+func test_resting_twice_in_a_row_leaves_one_enemy_in_its_place() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	_stand_beside_the_checkpoint(room, almos)
+	await _press_interact()
+
+	await _press_interact()
+	await wait_physics_frames(PRESS_FRAMES)
+
+	assert_eq(get_tree().get_nodes_in_group("enemies").size(), 1)
+
+
+func test_resting_again_brings_back_the_enemy_killed_since_the_first_rest() -> void:
+	var enemy_tuning := _enemy_tuning()
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	_stand_beside_the_checkpoint(room, almos)
+	await _press_interact()
+	_enemy(room).health.take_damage(enemy_tuning.health_maximum)
+	await wait_physics_frames(PRESS_FRAMES)
+	assert_eq(get_tree().get_nodes_in_group("enemies").size(), 0, "the enemy should be dead and gone")
+
+	await _press_interact()
+
+	assert_eq(get_tree().get_nodes_in_group("enemies").size(), 1)
+
+
+func test_a_swing_under_way_when_he_rests_does_not_land_afterwards() -> void:
+	var tuning := _player_tuning()
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	var old: Node = _enemy(room)
+	var swing: AttackData = old.tuning.attack
+	_stand_beside_the_checkpoint(room, almos)
+	old.global_position = almos.global_position + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
+	for i in WAIT_FRAME_LIMIT:
+		if old.attacking:
+			break
+		await get_tree().physics_frame
+	assert_true(old.attacking, "the enemy should begin a swing")
+
+	await _press_interact()
+	await wait_physics_frames(swing.total_frames() + PAST_THE_SWING_FRAMES)
+
+	assert_almost_eq(almos.health.current, tuning.health_maximum, TOLERANCE)
+
+
+func test_the_lock_on_to_an_enemy_a_rest_replaces_is_let_go_of() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	_stand_beside_the_checkpoint(room, almos)
+	_enemy(room).global_position = almos.global_position + Vector2.RIGHT * ENEMY_LOCK_ON_DISTANCE
+	_almos_input.press_action(&"lock_on")
+	await wait_physics_frames(PRESS_FRAMES)
+	_almos_input.release_action(&"lock_on")
+	assert_true(almos.locked_on, "he should have locked on to the enemy")
+
+	await _press_interact()
+
+	assert_false(almos.locked_on, "he should have let go of the enemy that is gone")
 
 
 # The player tuning of the shipped data file, checked to have what the test needs.
