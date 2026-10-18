@@ -68,6 +68,13 @@ func advance(free: bool) -> void:
 	_show()
 
 
+## No Parry is under way, window or recovery, at once, and what it showed is gone. Called when
+## Almos falls or is returned.
+func reset() -> void:
+	_end()
+	_show()
+
+
 ## A hit comes from this point in the world, on Almos standing at centre and facing this way
 ## (a unit vector). Returns whether the Parry parries it, and if it does the Parry ends. Called
 ## by his Hurtbox for every hit that is not on someone untouchable, so it is to be called once

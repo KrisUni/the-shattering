@@ -84,6 +84,17 @@ func begin(at_velocity: Vector2) -> void:
 	_show()
 
 
+## He is on the ground level, not in the air, at once, where he stands, and his body, his shadow
+## and his placeholder are as on the ground. No landing is announced. Called when Almos falls or
+## is returned.
+func reset() -> void:
+	_airborne = false
+	_level = 0
+	_time = 0.0
+	_apply_height()
+	_show()
+
+
 ## Lets one physics frame of this length, in seconds, go by in the air: he moves, and comes
 ## down if the Jump is over.
 func advance(delta: float) -> void:

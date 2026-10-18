@@ -221,6 +221,34 @@ func test_in_the_scene_tree_it_advances_by_itself_as_physics_time_passes() -> vo
 	assert_gt(stamina.current, _tuning.stamina_maximum - 50.0, "it should have started to refill")
 
 
+func test_refill_fills_it_back_up_to_the_maximum() -> void:
+	var stamina := _new_stamina()
+	stamina.spend(50.0)
+
+	stamina.refill()
+
+	assert_almost_eq(stamina.current, _tuning.stamina_maximum, TOLERANCE)
+
+
+func test_changed_is_emitted_when_a_refill_fills_it() -> void:
+	var stamina := _new_stamina()
+	stamina.spend(50.0)
+	watch_signals(stamina)
+
+	stamina.refill()
+
+	assert_signal_emit_count(stamina, "changed", 1)
+
+
+func test_refill_brings_it_back_from_zero_so_that_it_can_be_spent_again() -> void:
+	var stamina := _new_stamina()
+	stamina.spend(_tuning.stamina_maximum)
+
+	stamina.refill()
+
+	assert_true(stamina.spend(10.0), "spending after a refill should succeed")
+
+
 func _new_stamina() -> Stamina:
 	var stamina := Stamina.new()
 	stamina.tuning = _tuning

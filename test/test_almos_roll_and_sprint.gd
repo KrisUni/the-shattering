@@ -325,6 +325,36 @@ func test_taps_in_the_last_moments_of_a_roll_queue_only_one_more_roll() -> void:
 	assert_almost_eq((span.y - span.x) * _frame_seconds(), 2.0 * tuning.roll_duration, _frame_seconds() + TIME_TOLERANCE, "there should be the first roll and one queued roll, no more")
 
 
+func test_a_tap_let_go_in_the_first_frame_of_the_buffer_window_queues_another_roll_whatever_the_frame_lengths_add_up_to() -> void:
+	# Six frame lengths added up one by one fall a hair short of six frames' worth of seconds, so
+	# in the frame the window opens in, a window of two frames reads as not quite open without the
+	# slack the other Roll timers have.
+	var frames_in_roll := 6
+	var frames_in_window := 2
+	var tuning := _tuning_with({
+		"roll_duration": frames_in_roll * _frame_seconds(),
+		"roll_buffer_window": frames_in_window * _frame_seconds(),
+		"stamina_refill_pause": LONG_REFILL_PAUSE,
+	})
+	_spawn_almos(tuning)
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap_roll()
+	await _wait_for_the_roll_to_start()
+	var first_rolling_sample := _roll_span().x
+	# The sample of a frame is taken before it is processed, and the tap is read in the frame the
+	# button is let go in, which has gone this many frames into the Roll when the window opens.
+	var release_sample := first_rolling_sample + (frames_in_roll - frames_in_window) - 1
+	var pressed: bool = await wait_until(func(): return _samples.size() == release_sample, WAIT_LIMIT, "the frame before the window opens")
+	assert_true(pressed, "the Roll should get to the frame before the window opens")
+	_almos_input.press_action(&"roll")
+	await get_tree().physics_frame
+	_almos_input.release_action(&"roll")
+	await _wait_for_the_roll_to_finish()
+
+	var span := _roll_span()
+	assert_eq(span.y - span.x, 2 * frames_in_roll, "the tap should have queued a second roll that follows the first")
+
+
 func test_a_queued_roll_needs_stamina_of_its_own() -> void:
 	var tuning := _tuning_with_long_refill_pause()
 	_spawn_almos(tuning)

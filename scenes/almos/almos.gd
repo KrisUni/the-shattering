@@ -9,11 +9,29 @@ const FACING_STEP := TAU / 8.0
 # compared with a tuned time through this slack, so that a tuned time which is a whole
 # number of frames counts as reached on that frame, not the next. Without it a Roll would
 # run one more frame with nothing left to move, the untouchable window would be a frame
-# too long and the hold threshold a frame too late. The Guard break in AlmosBlock is timed
-# with it as well.
+# too long and the hold threshold a frame too late. The buffer window of the Roll, the Guard
+# break in AlmosBlock and the pause of a Death are timed with it as well.
 const TIME_SLACK := 0.000001
 
+# What his placeholder is tinted while he lies limp after a Death. It is a look, not a tuning
+# number.
+const DEATH_TINT := Color(0.35, 0.35, 0.4)
+
 enum State { WALKING, SPRINTING, ROLLING }
+
+## Emitted when he rests at a Checkpoint, after his Health and Stamina are refilled.
+signal rested(checkpoint: Checkpoint)
+
+## Emitted once, in the frame his Health reaches zero, with the place he fell. He is limp from
+## then, every action he was in is over, and the pause begins.
+signal died(place: Vector2)
+
+## Emitted once, in the frame the pause of his Death runs out. He is still limp: whoever handles
+## the Death, such as the room, sends him back with return_to.
+signal death_pause_over
+
+## Emitted when he is returned, after return_to has put him back on his feet.
+signal returned
 
 ## Where Almos last moved, snapped to the nearest of eight directions, as a unit
 ## vector. A Roll with no input goes this way, and so does an attack. Under Lock-on it is
@@ -111,9 +129,18 @@ var height_level: int:
 	get:
 		return _jump.height_level
 
-## Whether Almos cannot be hurt at this moment: during part of a Roll.
+## Whether his Health has reached zero and he has not been returned: he lies limp. He takes no
+## input, cannot be hit, and every action he was in has ended. After death_pause he is waiting
+## to be sent back with return_to.
+var dead: bool:
+	get:
+		return _dead
+
+## Whether Almos cannot be hurt at this moment: while he is limp, and during part of a Roll.
 var untouchable: bool:
 	get:
+		if _dead:
+			return true
 		var window_start := tuning.roll_untouchable_start - TIME_SLACK
 		var window_end := tuning.roll_untouchable_start + tuning.roll_untouchable_duration - TIME_SLACK
 		return rolling and _roll_time >= window_start and _roll_time < window_end
@@ -131,6 +158,10 @@ var untouchable: bool:
 ## What hits take off, and what the Health bar shows. It is given its maximum from Almos's
 ## tuning, so his tuning is the only one to set.
 @onready var health: Health = $Health
+
+## What killing enemies has given him and he has not yet cashed in, and what the Experience count
+## shows.
+@onready var experience: Experience = $Experience
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn
@@ -140,10 +171,16 @@ var untouchable: bool:
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
+var _dead := false
+var _dead_for := 0.0
+var _pause_announced := false
 var _roll_direction := Vector2.ZERO
 var _roll_time := 0.0
 var _roll_queued := false
 var _roll_button_held_for := 0.0
+# Set when he is returned with the Roll button down: a press made before or during his Death. It
+# counts for nothing, neither as a tap nor toward a Sprint, until the button is let go.
+var _roll_press_lost := false
 # Set when a Sprint was tried and there was no Stamina to pay for it, until the Roll
 # button is let go. Without it, the sliver of Stamina that comes back when the refill
 # pause ends would pay for one frame of Sprint, which would start the pause again.
@@ -169,6 +206,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	health.depleted.connect(_fall)
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
 	# A Jump attack pressed in the air strikes as he comes down, or is cancelled by a gap.
@@ -184,6 +222,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _dead:
+		_lie_limp(delta)
+		return
 	# A Guard break that runs out in this frame is still spent open, though the block clears it
 	# before the frame is over. So it is read once, here, for everything below.
 	var left_open := _block.guard_broken
@@ -217,7 +258,7 @@ func _physics_process(delta: float) -> void:
 	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
 	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
 	# to this frame, and so win against a Parry press made in the same frame.
-	_parry.advance(not rolling and not _attacks.committed and not left_open and not left_parrying and not in_the_air)
+	_parry.advance(_free_to_act(left_open, left_parrying, in_the_air))
 	var parry_on := left_parrying or parrying
 	# A Jump can be begun from a walk, a Sprint or while blocking, in the same places: not in a
 	# Roll, an attack, a Guard break or a Parry, which have begun by now if they were going to
@@ -225,6 +266,11 @@ func _physics_process(delta: float) -> void:
 	# read before Block is, so that blocking ends as he leaves the ground.
 	if _jump_pressed_and_free(left_open, parry_on, in_the_air):
 		_take_off(direction, delta)
+	# He rests at a Checkpoint in reach when free, and not while blocking as the last frame left
+	# it, since this comes before Block is advanced. A Jump taken off in this frame wins against
+	# a rest press made in the same frame, since he is in the air by now.
+	if _interact_pressed_and_free(left_open, parry_on):
+		_rest_at_a_checkpoint_in_reach()
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
@@ -244,6 +290,62 @@ func _physics_process(delta: float) -> void:
 	_face_the_target()
 	# Turning the placeholder shape stands in for the eight facing sprites.
 	_placeholder.rotation = facing.angle()
+
+
+# His Health has reached zero: he goes limp where he is. Every action he was in ends at once, and
+# whatever he had locked on to is let go of. A press of any button made from here is lost.
+func _fall() -> void:
+	if _dead:
+		return
+	_dead = true
+	_dead_for = 0.0
+	_pause_announced = false
+	_end_every_action()
+	_placeholder.modulate = DEATH_TINT
+	died.emit(global_position)
+
+
+# One frame of lying limp: the pause is counted in summed frame lengths compared with death_pause
+# through TIME_SLACK, as the Roll is, and its end is announced once. He neither reads input nor
+# moves.
+func _lie_limp(delta: float) -> void:
+	_dead_for += delta
+	if not _pause_announced and _dead_for >= tuning.death_pause - TIME_SLACK:
+		_pause_announced = true
+		death_pause_over.emit()
+
+
+## He is back on his feet at this point, in global coordinates: on the ground level, with full
+## Health and Stamina, still, and in none of the actions. His Experience, his facing and
+## everything outside him are left as they are; whoever sends him back sees to those.
+func return_to(point: Vector2) -> void:
+	_end_every_action()
+	_dead = false
+	_dead_for = 0.0
+	_roll_press_lost = Input.is_action_pressed(&"roll")
+	_placeholder.modulate = Color.WHITE
+	global_position = point
+	health.refill()
+	stamina.refill()
+	returned.emit()
+
+
+# Ends whatever he is in, at once, and leaves him still: a Roll and the Roll kept for its end,
+# a Sprint, a swing, a charge, a Jump, a Block, a Guard break, a Parry and the Lock-on, along with
+# what each of them showed. The Roll button is forgotten, so that a hold begun before does not
+# count after.
+func _end_every_action() -> void:
+	_state = State.WALKING
+	_roll_time = 0.0
+	_roll_queued = false
+	_roll_button_held_for = 0.0
+	_out_of_breath = false
+	velocity = Vector2.ZERO
+	_attacks.reset()
+	_block.reset()
+	_parry.reset()
+	_jump.reset()
+	_lock_on.release()
 
 
 func _move_freely(direction: Vector2, delta: float) -> void:
@@ -278,8 +380,44 @@ func _walking_velocity(direction: Vector2, delta: float, sprint: bool) -> Vector
 # Whether the Jump button was pressed this frame by someone free to Jump. The press is read
 # only then, so that one made when he is not free is lost, not kept for after.
 func _jump_pressed_and_free(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
-	var free := not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air
-	return free and Input.is_action_just_pressed(&"jump")
+	return _free_to_act(left_open, parry_on, in_the_air) and Input.is_action_just_pressed(&"jump")
+
+
+# Whether he is free to begin something new: not in a Roll, an attack (charging a Heavy attack
+# and a Jump attack included), a Guard break, a Parry or the air. A Guard break or a Parry whose
+# last frame this is is still spent open, so the caller says whether one is on him.
+func _free_to_act(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
+	return not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air
+
+
+# Whether the Interact button was pressed this frame by someone free to rest, who is not
+# blocking. The press is read only then, so that one made when he is not free is lost, not kept
+# for after. The air is read as it is now, after any take-off of this frame.
+func _interact_pressed_and_free(left_open: bool, parry_on: bool) -> bool:
+	return _free_to_act(left_open, parry_on, airborne) and not blocking \
+			and Input.is_action_just_pressed(&"interact")
+
+
+# Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health and Stamina
+# are refilled, the Checkpoint flashes and the rest is announced. A press with none in reach
+# does nothing.
+func _rest_at_a_checkpoint_in_reach() -> void:
+	var nearest: Checkpoint = null
+	var nearest_distance := tuning.rest_reach
+	for node in get_tree().get_nodes_in_group(&"checkpoints"):
+		var checkpoint := node as Checkpoint
+		if checkpoint == null:
+			continue
+		var distance := global_position.distance_to(checkpoint.global_position)
+		if distance <= nearest_distance:
+			nearest = checkpoint
+			nearest_distance = distance
+	if nearest == null:
+		return
+	health.refill()
+	stamina.refill()
+	nearest.rest(tuning.rest_flash_duration)
+	rested.emit(nearest)
 
 
 # He takes off with the velocity he has this frame: walking, sprinting (which the Jump ends, so
@@ -356,6 +494,9 @@ func _roll_button_was_tapped() -> bool:
 
 # Times how long the button has been held, and forgets the press once it has ended.
 func _advance_roll_button_timer(delta: float) -> void:
+	if _roll_press_lost:
+		_roll_press_lost = Input.is_action_pressed(&"roll")
+		return
 	if _roll_press_ended():
 		_roll_button_held_for = 0.0
 		_out_of_breath = false
@@ -397,7 +538,7 @@ func _neutral_roll_direction() -> Vector2:
 func _on_roll_tapped(direction: Vector2) -> void:
 	if not rolling:
 		_start_roll(direction)
-	elif tuning.roll_duration - _roll_time <= tuning.roll_buffer_window:
+	elif tuning.roll_duration - _roll_time <= tuning.roll_buffer_window + TIME_SLACK:
 		_roll_queued = true
 
 

@@ -42,6 +42,12 @@ func spend(amount: float) -> bool:
 	return true
 
 
+## Fills it back up to the maximum, from wherever it was. Resting at a Checkpoint does this.
+func refill() -> void:
+	_current = maximum
+	changed.emit()
+
+
 ## Lets this much time, in seconds, go by: the pause counts down, then it refills.
 func advance(delta: float) -> void:
 	var paused_for := minf(delta, _pause_left)

@@ -77,7 +77,7 @@ func advance(push: Vector2) -> void:
 
 ## Lets go of the target, if there is one.
 func release() -> void:
-	if is_instance_valid(_target) and _target.is_connected(&"died", release):
+	if is_instance_valid(_target) and _target.has_signal(&"died") and _target.is_connected(&"died", release):
 		_target.disconnect(&"died", release)
 	_target = null
 	_clear_the_latch()

@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="5_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/world/gap.tscn" id="6_gap"]
 [ext_resource type="PackedScene" path="res://scenes/world/ledge.tscn" id="7_ledge"]
+[ext_resource type="Script" path="res://scenes/hud/experience_label.gd" id="8_experience_label"]
+[ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="9_checkpoint"]
+[ext_resource type="Script" path="res://scenes/hud/fallen_label.gd" id="10_fallen_label"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
 size = Vector2(1152, 16)
@@ -71,6 +74,9 @@ size = Vector2(70, 280)
 position = Vector2(400, 540)
 size = Vector2(200, 100)
 
+[node name="Checkpoint" parent="." instance=ExtResource("9_checkpoint")]
+position = Vector2(400, 180)
+
 [node name="Almos" parent="." instance=ExtResource("1_almos")]
 position = Vector2(576, 324)
 
@@ -98,3 +104,23 @@ offset_bottom = 56.0
 show_percentage = false
 script = ExtResource("3_health_bar")
 health = NodePath("../../Almos/Health")
+
+[node name="ExperienceLabel" type="Label" parent="Hud" node_paths=PackedStringArray("experience")]
+offset_left = 16.0
+offset_top = 64.0
+offset_right = 216.0
+offset_bottom = 87.0
+script = ExtResource("8_experience_label")
+experience = NodePath("../../Almos/Experience")
+
+[node name="FallenLabel" type="Label" parent="Hud" node_paths=PackedStringArray("almos")]
+visible = false
+offset_left = 476.0
+offset_top = 296.0
+offset_right = 676.0
+offset_bottom = 352.0
+theme_override_font_sizes/font_size = 40
+text = "Fallen"
+horizontal_alignment = 1
+script = ExtResource("10_fallen_label")
+almos = NodePath("../../Almos")

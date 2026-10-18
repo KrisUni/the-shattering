@@ -32,6 +32,11 @@ signal unblockable_cue_played
 ## What it goes after.
 @export var target: Node2D
 
+## Whether it is a named enemy. An enemy is ordinary unless the instance placed in a room is
+## marked named. Resting at a Checkpoint, and Almos's Death, bring back every ordinary enemy as
+## new, and a named enemy stays dead.
+@export var named := false
+
 ## The way it faces, a unit vector. While it is free it turns to face its target exactly; in an
 ## attack it keeps the direction it committed the swing to. Its front is centred on it, and a
 ## hit from outside the front builds extra Stagger.
