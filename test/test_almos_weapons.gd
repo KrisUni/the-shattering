@@ -71,14 +71,15 @@ func test_handing_his_attacks_another_weapon_moves_the_sword_to_its_reach(params
 	assert_almost_eq(drawn.end.x, real.end.x, POSITION_TOLERANCE, "how far out the drawn sword ends, against the box that hurts")
 
 
-func test_handing_his_attacks_the_first_weapon_back_puts_the_sword_at_its_reach_again() -> void:
-	var first := _attacks_weapon_of_a_fresh_almos()
+func test_handing_his_attacks_the_sword_back_puts_the_sword_at_its_reach_again() -> void:
+	var started_with := _weapon("res://data/spear.tres")
+	var handed_back := _weapon("res://data/sword.tres")
+	_rig.spawn_almos(_almos_input, null, started_with)
 	var sword := _rig.almos.get_node("Sword") as Hitbox
 
-	_attacks().weapon = _weapon("res://data/spear.tres")
-	_attacks().weapon = first
+	_attacks().weapon = handed_back
 
-	assert_almost_eq(StrikeGeometry.real_box(sword).end.x, first.reach, POSITION_TOLERANCE, "how far out the box that hurts ends")
+	assert_almost_eq(StrikeGeometry.real_box(sword).end.x, handed_back.reach, POSITION_TOLERANCE, "how far out the box that hurts ends")
 
 
 func test_a_light_swing_with_another_weapon_hurts_for_that_weapons_damage(params = use_parameters(other_weapon_params)) -> void:
@@ -86,6 +87,7 @@ func test_a_light_swing_with_another_weapon_hurts_for_that_weapons_damage(params
 	var swing := weapon.light_attacks[0]
 	_rig.spawn_almos(_almos_input)
 	_attacks().weapon = weapon
+	_stand_target_in_reach_of(weapon)
 	await _rig.wait_frames(SETTLE_FRAMES)
 
 	await _tap_light()
@@ -122,6 +124,7 @@ func test_a_light_swing_with_another_weapon_follows_that_weapons_frames() -> voi
 	swing.startup_frames += STARTUP_LONGER_BY
 	_rig.spawn_almos(_almos_input)
 	_attacks().weapon = weapon
+	_stand_target_in_reach_of(weapon)
 	await _rig.wait_frames(SETTLE_FRAMES)
 
 	await _tap_light()
@@ -138,12 +141,14 @@ func test_a_weapon_handed_over_between_swings_is_used_by_the_next_swing() -> voi
 	var weapon := _weapon("res://data/greatsword.tres")
 	_rig.spawn_almos(_almos_input)
 	var first := _attacks_weapon().light_attacks[0]
+	_stand_target_in_reach_of(_attacks_weapon())
 	await _rig.wait_frames(SETTLE_FRAMES)
 	await _tap_light()
 	await _rig.wait_frames(first.startup_frames + first.active_frames + first.recovery_frames)
 	assert_false(_rig.almos.attacking, "the first swing should be over")
 
 	_attacks().weapon = weapon
+	_stand_target_in_reach_of(weapon)
 	await _tap_light()
 	await _rig.wait_frames(weapon.light_attacks[0].startup_frames + weapon.light_attacks[0].active_frames)
 
@@ -170,10 +175,12 @@ func _attacks_weapon() -> WeaponData:
 	return _attacks().weapon
 
 
-# Spawns Almos with the Weapon he starts with, and returns it.
-func _attacks_weapon_of_a_fresh_almos() -> WeaponData:
-	_rig.spawn_almos(_almos_input)
-	return _attacks_weapon()
+# Stands the target where this Weapon's strike covers it, whatever the Weapon's reach: the strike
+# is a box ending at the reach, so the target goes to the middle of it.
+func _stand_target_in_reach_of(weapon: WeaponData) -> void:
+	var box_width := StrikeGeometry.box_size_in_scene(AlmosInput.ALMOS_SCENE_PATH, ^"Sword").x
+	var distance := weapon.reach - box_width / 2.0
+	(_rig.target.hurtbox.get_parent() as Node2D).global_position = _rig.almos.global_position + Vector2.DOWN * distance
 
 
 # Presses the Light attack button and lets go again after a few frames.
