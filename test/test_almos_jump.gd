@@ -76,12 +76,6 @@ var blocking_sides_params = ParameterFactory.named_parameters(
 	[["a gap", GAP_SCENE_PATH], ["a low ledge", LEDGE_SCENE_PATH]],
 )
 
-# The attack buttons, whose presses are lost in the air.
-var attack_button_params = ParameterFactory.named_parameters(
-	["action"],
-	[[&"attack_light"], [&"attack_heavy"]],
-)
-
 # Which side of the enemy he comes down on, as the sign of how far from its middle he lands.
 var landing_side_params = ParameterFactory.named_parameters(
 	["name", "side"],
@@ -467,18 +461,20 @@ func test_a_roll_tap_in_the_air_is_lost() -> void:
 	assert_almost_eq(_almos.stamina.current, _tuning().stamina_maximum - _tuning().jump_stamina_cost, STAMINA_TOLERANCE, "only the Jump should have been paid for")
 
 
-func test_attack_presses_in_the_air_are_lost(params = use_parameters(attack_button_params)) -> void:
+# A Heavy attack press in the air is not lost: it is the Jump attack, tested in
+# test_almos_jump_attack.gd.
+func test_a_light_attack_press_in_the_air_is_lost() -> void:
 	_spawn_almos(Vector2.ZERO)
 	await wait_physics_frames(SETTLE_FRAMES)
 	await _tap(&"jump")
 	await wait_physics_frames(SETTLE_FRAMES)
 	assert_true(_almos.airborne, "he should be in the air")
 
-	await _tap(params.action)
+	await _tap(&"attack_light")
 	await _wait_until_down()
 	await wait_physics_frames(PAST_THE_END_FRAMES)
 
-	assert_false(_any_sample("attacking") or _any_sample("charging"), "%s should do nothing in the air or after" % params.action)
+	assert_false(_any_sample("attacking") or _any_sample("charging"), "a Light attack press should do nothing in the air or after")
 
 
 func test_a_parry_press_in_the_air_is_lost() -> void:

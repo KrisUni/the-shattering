@@ -34,6 +34,10 @@ const GROUND_MASK := WALLS | GAP_EDGE | LEDGE_EDGE | ENEMY_BODY
 const LEDGE_MASK := WALLS | LEDGE_EDGE | ENEMY_BODY
 const AIR_MASK := WALLS
 
+## Emitted in the frame he comes down, once he has been put where he lands: back where the Jump
+## began if he came down in a gap, with in_a_gap set.
+signal landed(in_a_gap: bool)
+
 ## What the numbers of Jump come from. Almos gives his own tuning.
 @export var tuning: PlayerTuning
 
@@ -98,13 +102,16 @@ func advance(delta: float) -> void:
 func _land() -> void:
 	_airborne = false
 	var terrain := _terrain_at(body.global_position)
+	var in_a_gap := false
 	if terrain & LEDGE_AREA:
 		_level = 1
 	elif terrain & GAP_AREA:
 		body.global_position = _takeoff_position
+		in_a_gap = true
 	else:
 		_level = 0
 	_apply_height()
+	landed.emit(in_a_gap)
 
 
 # Which of the ledge and gap areas this point is in, as their layer bits.

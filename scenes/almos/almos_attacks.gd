@@ -18,6 +18,13 @@ extends Node
 ## makes the Critical hit at the nearest such enemy instead. It is a swing like the others,
 ## with its own timeline and recovery, but it is aimed at that enemy's true angle, restarts
 ## the Light combo, spends no Stamina and builds no Stagger.
+##
+## The Jump attack is a Heavy attack press made in the air: at once, with no charging, it spends
+## the Jump attack's Stamina (and is lost if that cannot be paid), is aimed as a swing begun at
+## the press would be, and commits him. It waits for the Jump to end, which is its startup, and
+## strikes on the frame he lands: Almos tells it when. A Jump that ends in a gap cancels it, with
+## no strike and no recovery. Once it strikes it is a swing like the others, with its own
+## timeline and recovery, and the Weapon's buffer window applies at the end of its recovery.
 
 ## Emitted when the Critical hit begins, with the direction to the enemy it is aimed at, so
 ## that Almos can turn to face it.
@@ -35,10 +42,16 @@ enum Press { NONE, LIGHT, HEAVY }
 ## What each swing spends when it begins.
 @export var stamina: Stamina
 
-## Whether a swing is under way: from its first frame to the end of its recovery.
+## Whether a swing is under way: from its first frame to the end of its recovery. A Jump attack
+## is under way from the frame he lands.
 var attacking: bool:
 	get:
 		return _frame >= 0
+
+## Whether a Jump attack is under way: from the press in the air to the end of its recovery.
+var jump_attacking: bool:
+	get:
+		return _jump_pending or (attacking and _jump_swing)
 
 ## Whether the swing under way is the Critical hit.
 var critical: bool:
@@ -51,10 +64,11 @@ var charging: bool:
 	get:
 		return _charging
 
-## Whether he is tied up in an attack, charging it or swinging it, and so can do nothing else.
+## Whether he is tied up in an attack, charging it or swinging it, or flying to a Jump attack,
+## and so can do nothing else.
 var committed: bool:
 	get:
-		return attacking or _charging
+		return attacking or _charging or _jump_pending
 
 ## Which swing of the Light combo is under way, from 1, or 0 when none is.
 var light_swing: int:
@@ -69,6 +83,12 @@ var _swing: AttackData
 var _light_swing := 0
 var _critical := false
 var _charging := false
+# Whether a Jump attack has been pressed in the air and has not struck yet, and the way it is
+# aimed, fixed at the press.
+var _jump_pending := false
+var _jump_aim := Vector2.ZERO
+# Whether the swing under way is the Jump attack.
+var _jump_swing := false
 # How many physics frames the Heavy attack button has been held, the frame of the press
 # included.
 var _frames_held := 0
@@ -83,10 +103,11 @@ func _ready() -> void:
 
 ## Lets one physics frame go by. Called once per frame by Almos, who says which way a swing
 ## that begins now is aimed (at the target under Lock-on, along his facing otherwise) and
-## whether he is free to begin an attack, which he is not in the middle of a Roll. The aim is
-## fixed when the swing begins: the swing commits, so it does not follow the target after.
-## It reads the attack buttons itself.
-func advance(aim: Vector2, can_start: bool) -> void:
+## whether he is free to begin an attack, which he is not in the middle of a Roll, and whether
+## he is in the air, where a Heavy attack press begins the Jump attack and a Light attack press
+## is lost. The aim is fixed when the swing begins: the swing commits, so it does not follow the
+## target after. It reads the attack buttons itself.
+func advance(aim: Vector2, can_start: bool, in_the_air := false) -> void:
 	var press := _pressed()
 	if attacking and _frame >= _swing.total_frames():
 		# A press seen on this frame is later than one kept for it, so it takes its place:
@@ -101,6 +122,9 @@ func advance(aim: Vector2, can_start: bool) -> void:
 	if not attacking and not _charging and can_start and press != Press.NONE:
 		_begin(press, aim)
 		press = Press.NONE
+	elif in_the_air and press == Press.HEAVY and not jump_attacking:
+		_begin_jump_attack(aim)
+		press = Press.NONE
 	if _charging:
 		_charge(aim)
 	if attacking:
@@ -108,6 +132,23 @@ func advance(aim: Vector2, can_start: bool) -> void:
 		if press != Press.NONE and _in_buffer_window():
 			_queued = press
 		_frame += 1
+
+
+## He has come down from a Jump: a Jump attack pressed in it strikes now, in this very frame. It
+## is called once per frame by Almos, after the Jump has advanced, with whether the Jump ended
+## in a gap, which puts him back where it began and cancels the Jump attack with no strike and no
+## recovery.
+func jump_ended(in_a_gap: bool) -> void:
+	if not _jump_pending:
+		return
+	_jump_pending = false
+	if in_a_gap:
+		return
+	var swing := weapon.jump_attack
+	_jump_swing = true
+	_begin_swing(swing, swing.damage, swing.stagger, _jump_aim)
+	_set_sword(swing.is_active(_frame))
+	_frame += 1
 
 
 # Which attack button was pressed this frame. If both were, it is the Light attack.
@@ -173,6 +214,19 @@ func _nearest_broken_enemy_in_range() -> Node2D:
 	return nearest
 
 
+# A Heavy attack press in the air. Nothing is charged: the Jump attack is committed at once and
+# paid for now, and a press that cannot be paid for is lost, so he just keeps jumping.
+func _begin_jump_attack(aim: Vector2) -> void:
+	if weapon.jump_attack == null or not stamina.spend(weapon.jump_attack.stamina_cost):
+		return
+	_jump_pending = true
+	_jump_aim = aim
+	_light_swing = 0
+	# The sword is turned now, with the Hitbox off, so that the physics server has it in place
+	# by the frame he lands, and the strike hits in the first of its active frames.
+	hitbox.rotation = aim.angle()
+
+
 func _begin_charge() -> void:
 	# The swing is paid for when it comes out, and no attack begins at zero Stamina, so there
 	# is nothing to charge for either.
@@ -216,6 +270,7 @@ func _begin_swing(swing: AttackData, damage: float, stagger: float, aim: Vector2
 func _end_swing() -> void:
 	_frame = -1
 	_critical = false
+	_jump_swing = false
 	hitbox.critical = false
 	_set_sword(false)
 	if _queued != Press.LIGHT:

@@ -31,8 +31,8 @@ var sprinting: bool:
 	get:
 		return _state == State.SPRINTING
 
-## Whether a Light or Heavy attack or the Critical hit is under way: its startup, active and
-## recovery frames.
+## Whether a Light or Heavy attack, the Critical hit or the strike of a Jump attack is under way:
+## its startup, active and recovery frames. A Jump attack is under way from the frame he lands.
 var attacking: bool:
 	get:
 		return _attacks.attacking
@@ -42,6 +42,13 @@ var attacking: bool:
 var critical: bool:
 	get:
 		return _attacks.critical
+
+## Whether a Jump attack is under way: from the Heavy attack press in the air, through the rest
+## of the Jump, to the end of its recovery. He is committed all that time: he stands still once
+## down, and can neither Roll, Jump, Block nor Parry.
+var jump_attacking: bool:
+	get:
+		return _attacks.jump_attacking
 
 ## Whether a Heavy attack is being charged: he holds the button and has not swung yet.
 var charging: bool:
@@ -91,8 +98,9 @@ var parry_window_open: bool:
 		return _parry.window_open
 
 ## Whether he is in the air, in a Jump: from the frame of the press to the frame he comes
-## down in. He can neither Roll, Block, Parry nor attack in it, and a press of any of those
-## buttons is lost. He can be hurt in it as usual.
+## down in. He can neither Roll, Block nor Parry in it, and a press of any of those buttons is
+## lost, as is a Light attack press. A Heavy attack press makes a Jump attack. He can be hurt in
+## it as usual.
 var airborne: bool:
 	get:
 		return _jump.airborne
@@ -163,6 +171,8 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
+	# A Jump attack pressed in the air strikes as he comes down, or is cancelled by a gap.
+	_jump.landed.connect(_attacks.jump_ended)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
 	_hurtbox.is_parried = func(from: Vector2) -> bool:
 		return _parry.catches(from, global_position, facing)
@@ -194,9 +204,10 @@ func _physics_process(delta: float) -> void:
 	if rolling and _roll_time >= tuning.roll_duration - TIME_SLACK:
 		_end_roll(direction)
 	# In the air he can do none of these, and a press of their buttons is lost, as it is in a
-	# Guard break. A Jump that comes down in this frame is still spent in the air.
+	# Guard break; only a Heavy attack press is read, as a Jump attack. A Jump that comes down in
+	# this frame is still spent in the air.
 	var in_the_air := airborne
-	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air)
+	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air, in_the_air)
 	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
 	# them is lost, not kept for after it.
 	if tapped and not _attacks.committed and not left_open and not left_parrying and not in_the_air:
