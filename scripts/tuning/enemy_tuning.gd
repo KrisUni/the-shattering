@@ -23,7 +23,7 @@ extends Resource
 @export var attack_reach: float
 
 ## Its one attack. The startup frames are its wind-up. Enemies have no Stamina, so the
-## attack's stamina_cost is not used.
+## attack's stamina_cost is not used, and nor is its stagger: Almos has no Stagger to build.
 @export var attack: AttackData
 
 ## The most Stagger the enemy can have. A full meter is this much.

@@ -81,7 +81,6 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	health.depleted.connect(_on_depleted)
 	_hitbox.set_reach(tuning.attack_reach)
-	_hitbox.stagger = tuning.attack.stagger
 	_hitbox.parried.connect(_on_parried)
 	_hurtbox.landed.connect(_on_hit_landed)
 	stagger.changed.connect(_show_stagger)
