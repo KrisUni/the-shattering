@@ -88,6 +88,36 @@ func test_depleted_is_emitted_only_once_however_much_more_damage_follows() -> vo
 	assert_signal_emit_count(health, "depleted", 1)
 
 
+func test_refill_fills_it_back_up_to_its_maximum() -> void:
+	var health := _new_health()
+	health.take_damage(30.0)
+
+	health.refill()
+
+	assert_almost_eq(health.current, MAXIMUM, TOLERANCE)
+
+
+func test_changed_is_emitted_when_a_refill_fills_it() -> void:
+	var health := _new_health()
+	health.take_damage(30.0)
+	watch_signals(health)
+
+	health.refill()
+
+	assert_signal_emit_count(health, "changed", 1)
+
+
+func test_refill_brings_it_back_from_zero_and_it_can_be_depleted_again() -> void:
+	var health := _new_health()
+	health.take_damage(MAXIMUM)
+	health.refill()
+	watch_signals(health)
+
+	health.take_damage(MAXIMUM)
+
+	assert_signal_emit_count(health, "depleted", 1)
+
+
 func _new_health() -> Health:
 	var health := Health.new()
 	health.maximum = MAXIMUM

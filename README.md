@@ -13,6 +13,7 @@
 | Block | Hold Shift or L | Hold LB |
 | Parry | E | LT |
 | Lock-on | Middle mouse button or Q (press again to let go) | R3 |
+| Rest at a Checkpoint | R | X |
 
 - A Heavy attack pressed in the air is a Jump attack.
 - A Light attack pressed next to a broken enemy is a Critical hit.

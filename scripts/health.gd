@@ -32,3 +32,10 @@ func take_damage(amount: float) -> void:
 	changed.emit()
 	if _current <= 0.0:
 		depleted.emit()
+
+
+## Fills it back up to its maximum, from wherever it was, even from zero. Resting at a
+## Checkpoint does this.
+func refill() -> void:
+	_current = maximum
+	changed.emit()

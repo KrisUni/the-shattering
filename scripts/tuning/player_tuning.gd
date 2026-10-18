@@ -114,3 +114,9 @@ extends Resource
 ## How much Stamina a Jump spends when it starts. It may be zero, and then a Jump needs no
 ## Stamina at all.
 @export var jump_stamina_cost: float
+
+## How close to the centre of a Checkpoint, in pixels, Almos must be to rest at it.
+@export var rest_reach: float
+
+## How long, in seconds, a Checkpoint flashes when Almos rests at it.
+@export var rest_flash_duration: float

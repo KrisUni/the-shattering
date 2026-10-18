@@ -15,6 +15,9 @@ const TIME_SLACK := 0.000001
 
 enum State { WALKING, SPRINTING, ROLLING }
 
+## Emitted when he rests at a Checkpoint, after his Health and Stamina are refilled.
+signal rested(checkpoint: Checkpoint)
+
 ## Where Almos last moved, snapped to the nearest of eight directions, as a unit
 ## vector. A Roll with no input goes this way, and so does an attack. Under Lock-on it is
 ## the direction to the target instead (snapped the same way), and it stays as it was when
@@ -221,7 +224,7 @@ func _physics_process(delta: float) -> void:
 	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
 	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
 	# to this frame, and so win against a Parry press made in the same frame.
-	_parry.advance(not rolling and not _attacks.committed and not left_open and not left_parrying and not in_the_air)
+	_parry.advance(_free_to_act(left_open, left_parrying, in_the_air))
 	var parry_on := left_parrying or parrying
 	# A Jump can be begun from a walk, a Sprint or while blocking, in the same places: not in a
 	# Roll, an attack, a Guard break or a Parry, which have begun by now if they were going to
@@ -229,6 +232,11 @@ func _physics_process(delta: float) -> void:
 	# read before Block is, so that blocking ends as he leaves the ground.
 	if _jump_pressed_and_free(left_open, parry_on, in_the_air):
 		_take_off(direction, delta)
+	# He rests at a Checkpoint in reach when free, and not while blocking as the last frame left
+	# it, since this comes before Block is advanced. A Jump taken off in this frame wins against
+	# a rest press made in the same frame, since he is in the air by now.
+	if _interact_pressed_and_free(left_open, parry_on):
+		_rest_at_a_checkpoint_in_reach()
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
@@ -282,8 +290,44 @@ func _walking_velocity(direction: Vector2, delta: float, sprint: bool) -> Vector
 # Whether the Jump button was pressed this frame by someone free to Jump. The press is read
 # only then, so that one made when he is not free is lost, not kept for after.
 func _jump_pressed_and_free(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
-	var free := not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air
-	return free and Input.is_action_just_pressed(&"jump")
+	return _free_to_act(left_open, parry_on, in_the_air) and Input.is_action_just_pressed(&"jump")
+
+
+# Whether he is free to begin something new: not in a Roll, an attack (charging a Heavy attack
+# and a Jump attack included), a Guard break, a Parry or the air. A Guard break or a Parry whose
+# last frame this is is still spent open, so the caller says whether one is on him.
+func _free_to_act(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
+	return not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air
+
+
+# Whether the Interact button was pressed this frame by someone free to rest, who is not
+# blocking. The press is read only then, so that one made when he is not free is lost, not kept
+# for after. The air is read as it is now, after any take-off of this frame.
+func _interact_pressed_and_free(left_open: bool, parry_on: bool) -> bool:
+	return _free_to_act(left_open, parry_on, airborne) and not blocking \
+			and Input.is_action_just_pressed(&"interact")
+
+
+# Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health and Stamina
+# are refilled, the Checkpoint flashes and the rest is announced. A press with none in reach
+# does nothing.
+func _rest_at_a_checkpoint_in_reach() -> void:
+	var nearest: Checkpoint = null
+	var nearest_distance := tuning.rest_reach
+	for node in get_tree().get_nodes_in_group(&"checkpoints"):
+		var checkpoint := node as Checkpoint
+		if checkpoint == null:
+			continue
+		var distance := global_position.distance_to(checkpoint.global_position)
+		if distance <= nearest_distance:
+			nearest = checkpoint
+			nearest_distance = distance
+	if nearest == null:
+		return
+	health.refill()
+	stamina.refill()
+	nearest.rest(tuning.rest_flash_duration)
+	rested.emit(nearest)
 
 
 # He takes off with the velocity he has this frame: walking, sprinting (which the Jump ends, so

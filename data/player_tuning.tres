@@ -34,3 +34,5 @@ parry_stagger = 40.0
 jump_duration = 0.45
 jump_height = 24.0
 jump_stamina_cost = 10.0
+rest_reach = 40.0
+rest_flash_duration = 0.4
