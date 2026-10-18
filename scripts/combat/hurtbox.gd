@@ -58,15 +58,25 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 
 
 ## A hit reaches this Hurtbox, for this much damage, building this much Stagger, coming from
-## this point in the world, and a Critical hit if it says so, and a low hit if it is one.
+## this point in the world, and a Critical hit if it says so, and a low hit if it is one, and an
+## unblockable hit if it is one.
 ## Returns what became of it: it misses while the owner is untouchable, or in the air if the hit
 ## is low, and is parried when the owner's Parry catches it. A hit that landed or was parried
 ## has been dealt with, even if none of its damage got through.
-func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false) -> Outcome:
+##
+## An unblockable hit can be neither parried nor blocked: once it does not miss it lands, for
+## all of its damage, and neither is_parried nor damage_through is asked, so the owner's Parry
+## is not spent nor ended by it and nothing is spent on blocking it. It misses while the owner
+## is untouchable, and is not low, so being in the air does not avoid it.
+func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false, unblockable := false) -> Outcome:
 	if is_untouchable.call():
 		return Outcome.MISSED
 	if low and is_airborne.call():
 		return Outcome.MISSED
+	if unblockable:
+		health.take_damage(damage)
+		landed.emit(stagger, from, critical)
+		return Outcome.LANDED
 	if is_parried.call(from):
 		return Outcome.PARRIED
 	health.take_damage(damage_through.call(damage, from))

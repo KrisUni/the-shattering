@@ -230,6 +230,12 @@ func test_the_guard_break_lasts_longer_than_it_takes_any_of_the_training_enemys_
 	for i in order.size():
 		var attack := tuning.attack_of(order[i])
 		var follow_up := tuning.attack_of(order[(i + 1) % order.size()])
+		# The rule is for attacks Block could have stopped. An Unblockable attack goes through
+		# Block, so it never breaks a guard, and it is never the follow-up to a Guard break: its
+		# long, warned wind-up is meant to be escaped by a Roll, so the Guard break may be over
+		# long before it strikes.
+		if order[i] == EnemyTuning.AttackKind.UNBLOCKABLE or order[(i + 1) % order.size()] == EnemyTuning.AttackKind.UNBLOCKABLE:
+			continue
 		var gap := attack.active_frames + attack.recovery_frames + follow_up.startup_frames
 		assert_gt(break_frames, gap, "physics frames the Guard break lasts, against the physics frames from a hit of attack %d of the training enemy's order to the hit of the next" % i)
 		assert_gt(break_frames, attack.total_frames(), "physics frames the Guard break lasts, against the physics frames attack %d of the training enemy's order takes to come round" % i)

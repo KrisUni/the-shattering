@@ -10,6 +10,9 @@ enum AttackKind {
 	STRIKE,
 	## A Low attack, which travels along the ground: low_attack and low_attack_reach.
 	LOW,
+	## An Unblockable attack, which neither Block nor Parry deals with: unblockable_attack and
+	## unblockable_attack_reach.
+	UNBLOCKABLE,
 }
 
 ## The order it makes its attacks in, over and over. Each time it starts an attack it makes the
@@ -49,6 +52,16 @@ enum AttackKind {
 ## Its Low attack, which travels along the ground and misses a target that is in the air.
 @export var low_attack: AttackData
 
+## How far from its centre, in pixels, its Unblockable attack reaches: the far edge of the box its
+## Unblockable Hitbox hurts with, as attack_reach is for the Strike. The box keeps its width and
+## height from the scene.
+@export var unblockable_attack_reach: float
+
+## Its Unblockable attack, which goes through Block and Parry in full. Only a Roll, or a Jump
+## that carries the target out of its reach, avoids it. Its startup frames are a long, warned
+## wind-up.
+@export var unblockable_attack: AttackData
+
 ## The most Stagger the enemy can have. A full meter is this much.
 @export var stagger_capacity: float
 
@@ -75,6 +88,8 @@ func attack_of(kind: AttackKind) -> AttackData:
 	match kind:
 		AttackKind.LOW:
 			return low_attack
+		AttackKind.UNBLOCKABLE:
+			return unblockable_attack
 	return attack
 
 
@@ -83,4 +98,6 @@ func reach_of(kind: AttackKind) -> float:
 	match kind:
 		AttackKind.LOW:
 			return low_attack_reach
+		AttackKind.UNBLOCKABLE:
+			return unblockable_attack_reach
 	return attack_reach

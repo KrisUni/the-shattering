@@ -8,11 +8,27 @@ const WIND_UP_TINT := Color(1.0, 0.35, 0.35)
 # Strike's and knows to Jump. Also a look.
 const LOW_WIND_UP_TINT := Color(1.0, 0.9, 0.2)
 
+# What it is tinted for the first UNBLOCKABLE_FLASH_FRAMES of the wind-up of an Unblockable
+# attack: a white brighter than the placeholder's own colours, which a plain white tint would
+# not be. No other attack flashes. Also a look.
+const UNBLOCKABLE_FLASH_TINT := Color(3.0, 3.0, 3.0)
+
+# How many physics frames the flash at the start of an Unblockable wind-up lasts. Also a look.
+const UNBLOCKABLE_FLASH_FRAMES := 8
+
+# What it is tinted for the rest of the wind-up of an Unblockable attack, so that the player can
+# tell it from every other and knows to Roll or Jump. Also a look.
+const UNBLOCKABLE_WIND_UP_TINT := Color(0.75, 0.3, 0.95)
+
 # What it is tinted while it is broken, so that the player can see it is open. Also a look.
 const BREAK_TINT := Color(0.4, 0.6, 1.0)
 
 ## Emitted once, at the end of the physics frame in which its Health reached zero.
 signal died
+
+## Emitted once each time the sound that warns of an Unblockable attack is played, as its wind-up
+## begins. No other attack plays it.
+signal unblockable_cue_played
 
 @export var tuning: EnemyTuning
 
@@ -45,7 +61,7 @@ var winding_up: bool:
 ## Whether its Hitbox is on: the attack's active frames.
 var striking: bool:
 	get:
-		return _hitbox.active or _low_hitbox.active
+		return _hitbox.active or _low_hitbox.active or _unblockable_hitbox.active
 
 ## Whether an attack is under way: its startup, active and recovery frames.
 var attacking: bool:
@@ -67,6 +83,8 @@ var dead: bool:
 @onready var stagger: Stagger = $Stagger
 @onready var _hitbox: Hitbox = $Hitbox
 @onready var _low_hitbox: Hitbox = $LowHitbox
+@onready var _unblockable_hitbox: Hitbox = $UnblockableHitbox
+@onready var _unblockable_cue: AudioStreamPlayer2D = $UnblockableCue
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _nose: Node2D = $Nose
 @onready var _stagger_bar: Node2D = $StaggerBar
@@ -104,8 +122,10 @@ func _ready() -> void:
 	assert(not tuning.attack_pattern.is_empty(), "attack_pattern in the tuning needs at least one attack")
 	_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.STRIKE))
 	_low_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.LOW))
+	_unblockable_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.UNBLOCKABLE))
 	_hitbox.parried.connect(_on_parried)
 	_low_hitbox.parried.connect(_on_parried)
+	_unblockable_hitbox.parried.connect(_on_parried)
 	_hurtbox.landed.connect(_on_hit_landed)
 	stagger.changed.connect(_show_stagger)
 	if is_instance_valid(target) and not _to_target().is_zero_approx():
@@ -155,6 +175,9 @@ func _act_freely() -> void:
 		# It commits to the swing: it goes where the target was now, wherever it moves to, and
 		# keeps facing that way until the swing is over.
 		box.rotation = _facing.angle()
+		if _kind == EnemyTuning.AttackKind.UNBLOCKABLE:
+			_unblockable_cue.play()
+			unblockable_cue_played.emit()
 	elif to_target.length() <= tuning.notice_range:
 		velocity = to_target.normalized() * tuning.move_speed
 		move_and_slide()
@@ -165,6 +188,8 @@ func _hitbox_of(kind: EnemyTuning.AttackKind) -> Hitbox:
 	match kind:
 		EnemyTuning.AttackKind.LOW:
 			return _low_hitbox
+		EnemyTuning.AttackKind.UNBLOCKABLE:
+			return _unblockable_hitbox
 	return _hitbox
 
 
@@ -172,7 +197,7 @@ func _hitbox_of(kind: EnemyTuning.AttackKind) -> Hitbox:
 # which shows while the Hitbox can hurt. The Hitbox of any other kind of attack is off.
 func _set_strike(on: bool) -> void:
 	var current := _hitbox_of(_kind)
-	for box in [_hitbox, _low_hitbox]:
+	for box in [_hitbox, _low_hitbox, _unblockable_hitbox]:
 		var lit: bool = on and box == current
 		box.active = lit
 		box.visible = lit
@@ -183,9 +208,20 @@ func _show_look() -> void:
 	if _broken:
 		modulate = BREAK_TINT
 	elif winding_up:
-		modulate = LOW_WIND_UP_TINT if _kind == EnemyTuning.AttackKind.LOW else WIND_UP_TINT
+		modulate = _wind_up_tint()
 	else:
 		modulate = Color.WHITE
+
+
+# The tint of the wind-up of the attack it is making: an Unblockable attack's flashes white
+# first and then keeps a tint of its own, a Low attack's and the Strike's have one each.
+func _wind_up_tint() -> Color:
+	match _kind:
+		EnemyTuning.AttackKind.LOW:
+			return LOW_WIND_UP_TINT
+		EnemyTuning.AttackKind.UNBLOCKABLE:
+			return UNBLOCKABLE_FLASH_TINT if _frame < UNBLOCKABLE_FLASH_FRAMES else UNBLOCKABLE_WIND_UP_TINT
+	return WIND_UP_TINT
 
 
 # A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other

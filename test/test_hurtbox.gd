@@ -396,6 +396,93 @@ func test_a_hitbox_that_is_not_low_hits_an_airborne_owner() -> void:
 	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
 
 
+func test_an_unblockable_hit_is_not_parried_and_neither_hook_is_asked() -> void:
+	var asked := [0]
+	_hurtbox.is_parried = func(_from: Vector2) -> bool:
+		asked[0] += 1
+		return true
+	_hurtbox.damage_through = func(damage: float, _from: Vector2) -> float:
+		asked[0] += 1
+		return 0.0
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.LANDED, "a Parry cannot negate an unblockable hit")
+	assert_eq(asked[0], 0, "the parry and damage hooks are for hits that can be blocked or parried")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE, "an unblockable hit deals all of its damage")
+
+
+func test_an_unblockable_hit_announces_its_landing_with_its_stagger_and_where_it_comes_from() -> void:
+	var landings: Array[Dictionary] = []
+	_hurtbox.landed.connect(func(stagger: float, from: Vector2, critical: bool) -> void:
+		landings.append({"stagger": stagger, "from": from, "critical": critical}))
+	var from := Vector2(12.0, -7.0)
+
+	_hurtbox.hurt(HIT_DAMAGE, from, HIT_STAGGER, false, false, true)
+
+	assert_eq(landings, [{"stagger": HIT_STAGGER, "from": from, "critical": false}] as Array[Dictionary])
+
+
+func test_an_unblockable_hit_on_an_untouchable_owner_misses() -> void:
+	_hurtbox.is_untouchable = func() -> bool: return true
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.MISSED, "a Roll avoids an unblockable hit")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
+
+
+func test_an_unblockable_hit_lands_on_an_airborne_owner() -> void:
+	_hurtbox.is_airborne = func() -> bool: return true
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, 0.0, false, false, true)
+
+	assert_eq(outcome, Hurtbox.Outcome.LANDED, "an unblockable hit is not low, so being in the air does not avoid it")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
+
+
+func test_a_hit_that_is_not_unblockable_is_still_parried_and_reduced() -> void:
+	_hurtbox.damage_through = func(damage: float, _from: Vector2) -> float: return damage / 2.0
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+
+	assert_eq(outcome, Hurtbox.Outcome.PARRIED, "the hooks still apply to a hit that can be blocked")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE / 2.0, TOLERANCE)
+
+
+func test_a_hitbox_is_not_unblockable_unless_it_is_set_to_be() -> void:
+	assert_false(autofree(Hitbox.new()).unblockable)
+
+
+func test_an_unblockable_hitbox_lands_on_an_owner_who_would_parry_and_block_and_does_not_report_a_parry() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	hitbox.unblockable = true
+	var parried: Array[Hurtbox] = []
+	hitbox.parried.connect(func(hurtbox: Hurtbox) -> void: parried.append(hurtbox))
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+	_hurtbox.damage_through = func(_damage: float, _from: Vector2) -> float: return 0.0
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES)
+	hitbox.active = false
+
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE, "the hit should land in full")
+	assert_eq(parried.size(), 0, "no Parry should be reported")
+
+
+func test_a_hitbox_that_is_not_unblockable_is_parried_by_an_owner_who_parries() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES)
+	hitbox.active = false
+
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
+
+
 # A Hitbox, switched off, covering the Hurtbox, which is in the tree.
 func _hitbox_over_the_hurtbox() -> Hitbox:
 	_hurtbox.collision_layer = 1

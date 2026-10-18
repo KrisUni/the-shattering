@@ -28,6 +28,10 @@ signal parried(hurtbox: Hurtbox)
 ## in the air, and a hit on someone in the air misses. A Low attack sets it.
 @export var low := false
 
+## Whether a hit is unblockable: the Hurtbox lets neither Parry nor Block deal with it, and it
+## lands in full. An Unblockable attack sets it.
+@export var unblockable := false
+
 ## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
 @export var strike_shape: CollisionShape2D
 
@@ -73,7 +77,7 @@ func _physics_process(_delta: float) -> void:
 	for area in get_overlapping_areas():
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
-			var outcome := hurtbox.hurt(damage, global_position, stagger, critical, low)
+			var outcome := hurtbox.hurt(damage, global_position, stagger, critical, low, unblockable)
 			if outcome != Hurtbox.Outcome.MISSED:
 				_hit.append(hurtbox)
 			if outcome == Hurtbox.Outcome.PARRIED:
