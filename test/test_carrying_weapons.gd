@@ -19,6 +19,7 @@ const GREATSWORD_PATH := "res://data/greatsword.tres"
 const TORCH_PATH := "res://data/torch.tres"
 const UNARMED_PATH := "res://data/unarmed.tres"
 const WEAPON_PICKUP_SCENE_PATH := "res://scenes/world/weapon_pickup.tscn"
+const GAP_SCENE_PATH := "res://scenes/world/gap.tscn"
 
 const PICKUPS_GROUP := &"weapon_pickups"
 
@@ -43,9 +44,22 @@ const POSITION_TOLERANCE := 0.01
 const TOLERANCE := 0.0001
 # In physics frames. How long a hurtful hit is held on to break a guard.
 const HURT_FRACTION := 0.6
+# In pixels. How much wider than the part of his Jump past his body a Gap is made, so that he comes
+# down well inside it.
+const GAP_MARGIN := 6.0
+# In pixels. Tall enough that no test goes round the Gap.
+const GAP_HEIGHT := 600.0
+# In pixels. How far before the edge of the Gap a run starts, and the physics frames it takes to
+# run that far at walking speed and stand against the edge.
+const RUN_UP := 60.0
+const RUN_UP_FRAMES := 60
+# In physics frames. Keeps a time that is a whole number of frames from being counted as one more.
+const FRAME_COUNT_ALLOWANCE := 0.0001
 
 var _almos_input: AlmosInput
 var _rig: AttackRig
+# The rig's frame in which the Jump button was pressed, in the test that jumps.
+var _jump_pressed_in_frame := 0
 
 
 func before_each() -> void:
@@ -573,6 +587,116 @@ func test_a_heavy_press_in_the_buffer_window_after_a_waiting_switch_swings_with_
 	assert_eq(almos.weapons.in_hand.resource_path, SPEAR_PATH)
 
 
+func test_a_light_press_the_frame_after_a_gap_cancels_a_jump_attack_swings_with_the_new_weapon() -> void:
+	var sword := load(SWORD_PATH) as WeaponData
+	var spear := load(SPEAR_PATH) as WeaponData
+	assert_ne(sword.light_attacks[0].damage, spear.light_attacks[0].damage, "the Weapons should hurt differently, so that the one swinging shows")
+	var almos = _rig.spawn_almos(_almos_input)
+	almos.weapons.pick_up(spear)
+	await _jump_attack_into_a_gap_with_a_switch_waiting(almos)
+
+	# Made in the last frame of the Jump, so that the next frame, the first after the Gap, sees it.
+	await _press_in_the_last_frame_of_the_jump(almos, &"attack_light")
+	await _rig.wait_frames(TAP_FRAMES)
+	_almos_input.release_action(&"attack_light")
+	await _wait_for_the_swing_to_end()
+
+	var hits := _rig.hits()
+	assert_eq(hits.size(), 1, "the swing should hit the target once")
+	if hits.size() == 1:
+		assert_almost_eq(hits[0].damage, spear.light_attacks[0].damage, TOLERANCE, "the swing is the spear's")
+	assert_eq(almos.weapons.in_hand.resource_path, SPEAR_PATH)
+
+
+func test_a_heavy_press_the_frame_after_a_gap_cancels_a_jump_attack_swings_with_the_new_weapon() -> void:
+	var sword := load(SWORD_PATH) as WeaponData
+	var spear := load(SPEAR_PATH) as WeaponData
+	assert_ne(sword.heavy_attack.damage, spear.heavy_attack.damage, "the Weapons should hurt differently, so that the one swinging shows")
+	var almos = _rig.spawn_almos(_almos_input)
+	almos.weapons.pick_up(spear)
+	await _jump_attack_into_a_gap_with_a_switch_waiting(almos)
+
+	await _press_in_the_last_frame_of_the_jump(almos, &"attack_heavy")
+	# Let go at once, so the charge is none.
+	await _rig.wait_frames(1)
+	_almos_input.release_action(&"attack_heavy")
+	await _wait_for_the_swing_to_end()
+
+	var hits := _rig.hits()
+	assert_eq(hits.size(), 1, "the swing should hit the target once")
+	if hits.size() == 1:
+		assert_almost_eq(hits[0].damage, spear.heavy_attack.damage, TOLERANCE, "the swing is the spear's")
+	assert_eq(almos.weapons.in_hand.resource_path, SPEAR_PATH)
+
+
+func test_a_switch_pressed_in_the_frame_a_recovery_ends_is_made_before_the_light_press_kept_for_it() -> void:
+	var sword := load(SWORD_PATH) as WeaponData
+	var spear := load(SPEAR_PATH) as WeaponData
+	assert_ne(sword.light_attacks[0].damage, spear.light_attacks[0].damage, "the Weapons should hurt differently, so that the one swinging shows")
+	assert_gt(sword.attack_buffer_frames, 0, "a press can be kept for the end of the swing")
+	var almos = _rig.spawn_almos(_almos_input)
+	almos.weapons.pick_up(spear)
+	await _rig.wait_frames(AlmosInput.SETTLE_FRAMES)
+
+	await _tap_light()
+	await _rig.wait_to_press_for_swing_frame(_swing_frames(sword.light_attacks[0]) - sword.attack_buffer_frames)
+	_almos_input.press_action(&"attack_light")
+	# The frame after the last one of the recovery, the one it ends in.
+	await _rig.wait_to_press_for_swing_frame(_swing_frames(sword.light_attacks[0]))
+	_almos_input.press_action(&"switch_weapon")
+	await _rig.wait_frames(2)
+	_almos_input.release_action(&"attack_light")
+	_almos_input.release_action(&"switch_weapon")
+	await _wait_for_the_swing_to_end()
+
+	var span := _rig.attack_span()
+	var hits := _rig.hits()
+	assert_eq(hits.size(), 2, "each swing should hit the target once")
+	if hits.size() == 2:
+		assert_almost_eq(hits[0].damage, sword.light_attacks[0].damage, TOLERANCE, "the first swing is the sword's")
+		assert_almost_eq(hits[1].damage, spear.light_attacks[0].damage, TOLERANCE, "the kept swing is the spear's first")
+		assert_eq(hits[1].sample - span.x, _swing_frames(sword.light_attacks[0]) + spear.light_attacks[0].startup_frames, "it follows the first swing without a gap")
+	assert_eq(almos.weapons.in_hand.resource_path, SPEAR_PATH)
+
+
+func test_a_switch_pressed_in_the_frame_a_recovery_ends_waits_for_no_second_swing() -> void:
+	var sword := load(SWORD_PATH) as WeaponData
+	var almos = _rig.spawn_almos(_almos_input)
+	almos.weapons.pick_up(load(SPEAR_PATH) as WeaponData)
+	await _rig.wait_frames(AlmosInput.SETTLE_FRAMES)
+
+	await _tap_light()
+	await _rig.wait_to_press_for_swing_frame(_swing_frames(sword.light_attacks[0]) - sword.attack_buffer_frames)
+	_almos_input.press_action(&"attack_light")
+	await _rig.wait_to_press_for_swing_frame(_swing_frames(sword.light_attacks[0]))
+	_almos_input.press_action(&"switch_weapon")
+	await _rig.wait_frames(2)
+	_almos_input.release_action(&"attack_light")
+	_almos_input.release_action(&"switch_weapon")
+	# One frame into the kept swing, which the switch is not to be waiting for.
+	await _rig.wait_frames(1)
+
+	assert_true(almos.attacking, "the kept swing should be under way")
+	assert_eq(almos.weapons.in_hand.resource_path, SPEAR_PATH, "made already, not waiting for the kept swing to end")
+
+
+func test_a_switch_pressed_with_a_parry_is_lost() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	await _pick_up(room, almos, "SpearPickup")
+
+	_almos_input.press_action(&"parry")
+	_almos_input.press_action(&"switch_weapon")
+	await wait_physics_frames(2)
+	_almos_input.release_action(&"parry")
+	_almos_input.release_action(&"switch_weapon")
+	assert_true(almos.parrying, "the Parry should have begun")
+	await _wait_until(func() -> bool: return not almos.parrying)
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_eq(almos.weapons.in_hand.resource_path, SWORD_PATH, "the Parry wins against a switch pressed in the same frame, and the press is not kept")
+
+
 func test_only_one_switch_waits_for_the_swing_to_end() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
@@ -1032,7 +1156,7 @@ func test_empty_hands_stay_empty_through_a_death() -> void:
 	assert_null(almos.weapons.in_hand)
 
 
-func test_going_into_the_tree_again_does_not_arm_him_again() -> void:
+func test_going_into_the_tree_again_does_not_pick_up_his_starting_weapon_again() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
 	await _hold_interact_to_drop()
@@ -1189,6 +1313,54 @@ func _wait_until_not_in_an_attack(almos: Almos, in_hand_during: String) -> void:
 		assert_eq(almos.weapons.in_hand.resource_path, in_hand_during, "swapped in the middle of an attack")
 		await get_tree().physics_frame
 	fail_test("the attack should have ended")
+
+
+# Almos, with the Weapon he is to switch to already carried, runs up to a Gap and jumps into it,
+# presses a Heavy attack in the air (a Jump attack) and then the Switch button, which waits for the
+# attack. He is left in the air, a few frames short of the end of the Jump. The Gap is just wide
+# enough for him to come down in it, and the target for his swings stands where he took off from.
+func _jump_attack_into_a_gap_with_a_switch_waiting(almos: Almos) -> void:
+	var tuning := _tuning()
+	var radius := ((almos.get_node("CollisionShape2D") as CollisionShape2D).shape as CircleShape2D).radius
+	var reach := tuning.walk_speed * tuning.jump_duration
+	var gap := (load(GAP_SCENE_PATH) as PackedScene).instantiate()
+	gap.size = Vector2(reach - radius + GAP_MARGIN, GAP_HEIGHT)
+	var left_edge := 500.0
+	gap.position = Vector2(left_edge + gap.size.x / 2.0, 300.0)
+	add_child_autofree(gap)
+	almos.global_position = Vector2(left_edge - radius - RUN_UP, gap.position.y)
+	# He takes off against the edge and comes back to it, facing the Gap.
+	_rig.target = _rig.place_target(Vector2(left_edge - radius + AttackRig.TARGET_DISTANCE, gap.position.y))
+	_almos_input.press_action(&"move_right")
+	await _rig.wait_frames(RUN_UP_FRAMES)
+	_almos_input.press_action(&"jump")
+	_jump_pressed_in_frame = _rig.frame()
+	await _rig.wait_frames(TAP_FRAMES)
+	_almos_input.release_action(&"jump")
+	_almos_input.release_action(&"move_right")
+	assert_true(almos.airborne, "he should be in the air")
+	_almos_input.press_action(&"attack_heavy")
+	await _rig.wait_frames(TAP_FRAMES)
+	_almos_input.release_action(&"attack_heavy")
+	assert_true(almos.jump_attacking, "he should be in a Jump attack")
+	await _tap_switch()
+	assert_eq(almos.weapons.in_hand.resource_path, SWORD_PATH, "the switch waits for the Jump attack")
+
+
+# Waits until the last frame of the Jump is the next to be processed and presses the action, which
+# the frame after that, the first after he has come down, sees. The Jump is as many frames as its
+# duration takes, the first being the one after the press that began it.
+func _press_in_the_last_frame_of_the_jump(almos: Almos, action: StringName) -> void:
+	var jump_frames := ceili(_tuning().jump_duration * Engine.physics_ticks_per_second - FRAME_COUNT_ALLOWANCE)
+	for i in WAIT_FRAME_LIMIT:
+		if _rig.frame() >= _jump_pressed_in_frame + jump_frames:
+			break
+		await get_tree().physics_frame
+	assert_true(almos.airborne, "he should still be in the air in the last frame of the Jump")
+	_almos_input.press_action(action)
+	await _rig.wait_frames(1)
+	assert_false(almos.airborne, "he should have come down")
+	assert_false(almos.jump_attacking, "the Gap should have cancelled the Jump attack")
 
 
 # Presses the Light attack button for a few frames, as the rig's frames go, and lets go.

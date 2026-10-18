@@ -193,7 +193,7 @@ var _roll_button_held_for := 0.0
 # counts for nothing, neither as a tap nor toward a Sprint, until the button is let go.
 var _roll_press_lost := false
 # Set once the Weapon he starts with has been put in his hands, so that going into the tree again
-# does not arm him again.
+# does not put it in his hands again.
 var _weapons_started := false
 # Whether an Interact press that began while he was free is being timed. It ends in a tap or a
 # drop, or is lost if he stops being free.
@@ -242,11 +242,11 @@ func _ready() -> void:
 	weapons.changed.connect(_hand_over_the_weapon_in_hand)
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
-	# A switch that waited for a swing is made in the frame its recovery ends, before an attack
-	# kept for that frame begins, which is then made with the new Weapon.
-	_attacks.swing_ended.connect(_make_the_waiting_switch)
+	# A switch pressed in a swing, or in the frame its recovery ends, is made in that frame, before
+	# the attack kept for it begins, which is then made with the new Weapon.
+	_attacks.kept_press_beginning.connect(_make_the_waiting_switch)
 	# A Jump attack pressed in the air strikes as he comes down, or is cancelled by a gap.
-	_jump.landed.connect(_attacks.jump_ended)
+	_jump.landed.connect(_on_landed)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
 	# A Low attack passes under him while he is in the air.
 	_hurtbox.is_airborne = func() -> bool: return airborne
@@ -286,6 +286,14 @@ func _physics_process(delta: float) -> void:
 	# Guard break; only a Heavy attack press is read, as a Jump attack. A Jump that comes down in
 	# this frame is still spent in the air.
 	var in_the_air := airborne
+	# A press of the Switch button is read ahead of the attacks, so that one made in the frame a
+	# swing's recovery ends counts as waiting for it, as an attack press made in that frame counts as
+	# kept for it. It is lost in a Guard break or a Parry; a Parry begun in this frame wins against it
+	# (see below).
+	var switch_was_waiting := _switch_waiting
+	var switch_pressed := Input.is_action_just_pressed(&"switch_weapon") and not left_open and not left_parrying
+	if switch_pressed:
+		_switch_waiting = true
 	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air, in_the_air)
 	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
 	# them is lost, not kept for after it.
@@ -303,10 +311,15 @@ func _physics_process(delta: float) -> void:
 	if _jump_pressed_and_free(left_open, parry_on, in_the_air):
 		_take_off(direction, delta)
 	# A switch is made in a Roll, a Block or a Jump, but not in a Guard break or a Parry, where the
-	# press is lost. A press in an attack waits for it to end. It comes after the attacks have
-	# been advanced, so that a swing that ends in this frame lets it through at once, and after
-	# a Parry has begun, which wins against a switch press made in the same frame.
-	_advance_switch(left_open, parry_on)
+	# press is lost. A press in an attack waits for it to end, which is the frame its recovery ends
+	# (a press kept for that frame is made with the new Weapon), or the frame he lands in a gap that
+	# cancels a Jump attack. What waits is made here once he is not in an attack, which comes after the
+	# attacks have been advanced, so that a Heavy attack charge or a swing that ends in this frame
+	# lets it through at once. A Parry begun in this frame wins against a switch press made in the
+	# same frame, though not against one that was already waiting.
+	if switch_pressed and parry_on and not switch_was_waiting:
+		_switch_waiting = false
+	_advance_switch()
 	# Interact is a tap or a hold, read as he is free and not blocking as the last frame left it,
 	# since this comes before Block is advanced. A tap rests at a Checkpoint in reach, or else picks
 	# up a Weapon in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
@@ -535,15 +548,23 @@ func _hand_over_the_weapon_in_hand() -> void:
 	_attacks.weapon = weapons.in_hand if weapons.in_hand != null else unarmed
 
 
-# Reads the Switch button. A press puts the next carried Weapon in hand, at once, unless he is in
-# an attack (a swing, a Heavy attack charge or a Jump attack): then it waits and is made in the
-# frame the attack is over, which for a swing is as its recovery ends (see
-# _make_the_waiting_switch), ahead of any attack kept for that frame. A press in a Guard break or a
-# Parry is lost. Only one press waits, and a press made while one is waiting does not add another.
-func _advance_switch(left_open: bool, parry_on: bool) -> void:
-	if Input.is_action_just_pressed(&"switch_weapon") and not left_open and not parry_on:
-		_switch_waiting = true
+# A press of the Switch button puts the next carried Weapon in hand, at once, unless he is in an
+# attack (a swing, a Heavy attack charge or a Jump attack): then it waits, and is made in the frame
+# the attack is over. For a swing that is the frame its recovery ends, ahead of the attack kept for
+# that frame (see _make_the_waiting_switch), and for a Jump attack that a gap cancels, the frame he
+# lands in (see _on_landed). Only one press waits, and a press made while one is waiting does not
+# add another. This makes the waiting switch in any other frame he is not in an attack.
+func _advance_switch() -> void:
 	if _switch_waiting and not _attacks.committed:
+		_make_the_waiting_switch()
+
+
+# He has come down from a Jump. A Jump attack pressed in it strikes now, or is cancelled by a gap,
+# and a switch that waited for it is then made in this very frame if he is not in an attack, so that
+# a press made in the next frame is made with the new Weapon.
+func _on_landed(in_a_gap: bool) -> void:
+	_attacks.jump_ended(in_a_gap)
+	if not _attacks.committed:
 		_make_the_waiting_switch()
 
 

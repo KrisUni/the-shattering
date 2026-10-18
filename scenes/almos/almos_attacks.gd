@@ -30,24 +30,25 @@ extends Node
 ## that Almos can turn to face it.
 signal critical_began(direction: Vector2)
 
-## Emitted when a swing's recovery is over, in the frame it ends and before any press kept for
-## that frame begins its attack. Almos makes a switch that waited for the swing here, so that the
-## kept attack is made with the Weapon switched to.
-signal swing_ended
+## Emitted when a swing's recovery is over and an attack press, kept for it or made in the very
+## frame it ends, is about to begin its attack: in that frame, before the attack begins. Almos
+## makes a switch that waited for the swing here, so that the attack is made with the Weapon
+## switched to. It is not emitted when no attack follows the swing.
+signal kept_press_beginning
 
 ## Which attack button a press was of.
 enum Press { NONE, LIGHT, HEAVY }
 
-## The attacks of the Weapon in his hand. It can be changed at any time, and the sword is
+## The attacks of the Weapon in his hand. It can be changed at any time, and the strike Hitbox is
 ## placed at the new Weapon's reach at once. A different Weapon starts the Light combo over. It is
 ## never changed in the middle of an attack: whoever hands over a Weapon waits until he is not
-## committed, or for swing_ended. Almos hands over Unarmed when his hands are empty. Null is
-## only a guard: every attack press is lost and the sword is off.
+## committed, or for kept_press_beginning. Almos hands over Unarmed when his hands are empty. Null
+## is only a guard: every attack press is lost and the strike Hitbox is off.
 @export var weapon: WeaponData:
 	set(value):
 		var different := value != weapon
 		weapon = value
-		# Before the node is ready the Hitbox is not set up yet, and _ready places the sword.
+		# Before the node is ready the Hitbox is not set up yet, and _ready places the strike Hitbox.
 		if not is_node_ready():
 			return
 		if different:
@@ -118,7 +119,7 @@ var _queued := Press.NONE
 
 
 func _ready() -> void:
-	# The sword sits as far out as the Weapon's data says it reaches, if he has one in hand.
+	# The strike Hitbox sits as far out as the Weapon's data says it reaches, if he has one in hand.
 	if weapon != null:
 		hitbox.set_reach(weapon.reach)
 
@@ -138,13 +139,15 @@ func advance(aim: Vector2, can_start: bool, in_the_air := false) -> void:
 		if press != Press.NONE and _queued != Press.NONE:
 			_queued = press
 		_end_swing()
-		# A switch that waited for the swing is made now, so that a press kept for its end is made
-		# with the new Weapon.
-		swing_ended.emit()
 		# A press that was kept for the end of the swing is made as it ends.
-		if _queued != Press.NONE:
-			press = _queued
+		var kept := _queued
 		_queued = Press.NONE
+		if kept != Press.NONE:
+			press = kept
+		# A switch that waited for the swing is made now, so that the attack is made with the new
+		# Weapon.
+		if press != Press.NONE and can_start:
+			kept_press_beginning.emit()
 	if not attacking and not _charging and can_start and press != Press.NONE:
 		_begin(press, aim)
 		press = Press.NONE
