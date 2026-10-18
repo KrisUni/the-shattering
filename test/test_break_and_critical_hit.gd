@@ -6,6 +6,7 @@ extends GutTest
 ## arithmetic, never from how the code works them out.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
+const EnemyFight := preload("res://test/helpers/enemy_fight.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
 
 # In Stagger and Health points.
@@ -42,6 +43,7 @@ const LONG_REFILL_PAUSE := 10.0
 
 var _almos_input: AlmosInput
 var _rig: EnemyRig
+var _fight: EnemyFight
 var _tuning: EnemyTuning
 var _player: PlayerTuning
 var _sword: WeaponData
@@ -77,6 +79,7 @@ func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
 	_rig = EnemyRig.new(self)
+	_fight = EnemyFight.new(self, _almos_input, _rig)
 	_tuning = _rig.tuning_with()
 	_player = load(AlmosInput.TUNING_PATH) as PlayerTuning
 	_sword = load(AlmosInput.WEAPON_PATH) as WeaponData
@@ -144,7 +147,7 @@ func test_the_parries_that_fill_the_meter_break_it_with_the_swing_over() -> void
 
 	for i in needed:
 		assert_false(enemy.broken, "it should not be broken before the last Parry (Parry %d)" % (i + 1))
-		await _parry_the_swing()
+		await _fight.parry_the_swing(_player)
 
 	assert_true(enemy.broken, "the last Parry should fill the meter and break it")
 	assert_almost_eq(enemy.stagger.current, 0.0, TOLERANCE)
@@ -574,19 +577,14 @@ func _spawn_idle_enemy_at(at: Vector2):
 	return enemy
 
 
-# Almos at the origin facing down with the enemy below him, going after a stand-in too far off
-# to notice, so that the enemy never swings at Almos. The stand-in is below it if the enemy has
-# its back to Almos, and above it, in Almos's direction, if it faces him.
+# As the helper spawns them, and sampled.
 func _spawn_almos_above_the_enemy(enemy_has_its_back_to_him: bool, tuning: PlayerTuning = null):
-	var almos = _almos_input.spawn_almos(tuning)
-	var enemy = _rig.spawn_enemy(null, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
-	var away := Vector2.DOWN if enemy_has_its_back_to_him else Vector2.UP
-	_rig.place_target(enemy.position + away * (_tuning.notice_range + BEYOND_NOTICE))
+	var almos = _fight.spawn_almos_above_the_enemy(enemy_has_its_back_to_him, tuning)
 	_sample_almos(almos)
 	return almos
 
 
-# As above, with the enemy at this offset from Almos, and broken.
+# As the above, with the enemy at this offset from Almos, and broken.
 func _spawn_almos_and_broken_enemy(offset: Vector2, enemy_has_its_back_to_him: bool, tuning: PlayerTuning = null):
 	var almos = _almos_input.spawn_almos(tuning)
 	var enemy = _rig.spawn_enemy(null, almos.position + offset)
@@ -626,19 +624,6 @@ func _standin_over(enemy, stagger: float, damage: float, from_behind: bool) -> H
 	hitbox.global_position = enemy.global_position + (Vector2.UP if from_behind else Vector2.DOWN) * NARROW_HITBOX_RADIUS
 	hitbox.stagger = stagger
 	return hitbox
-
-
-# Parries the swing the enemy is about to make or has begun. The press is timed so that the
-# window is open over the middle of the enemy's active frames. Returns once the hit has been
-# parried and Almos is free.
-func _parry_the_swing() -> void:
-	var swing := _tuning.attack
-	await _wait_until_the_enemy_is(_rig.enemy, "winding_up")
-	await _rig.wait_frames(swing.startup_frames - _player.parry_window_frames / 2 - 1)
-	var health_before := _rig.target_health.current
-	await _tap(&"parry")
-	await _rig.wait_frames(_player.parry_window_frames + SETTLE_FRAMES)
-	assert_almost_eq(_rig.target_health.current, health_before, TOLERANCE, "the swing should have been parried, not landed")
 
 
 func _wait_until_the_enemy_is(enemy, state: String) -> void:

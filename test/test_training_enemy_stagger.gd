@@ -6,6 +6,7 @@ extends GutTest
 ## scenes use and plain arithmetic, never from how the code works them out.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
+const EnemyFight := preload("res://test/helpers/enemy_fight.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
 
 # In Stagger points.
@@ -51,6 +52,7 @@ var heavy_params = ParameterFactory.named_parameters(
 
 var _almos_input: AlmosInput
 var _rig: EnemyRig
+var _fight: EnemyFight
 var _tuning: EnemyTuning
 var _player: PlayerTuning
 var _sword: WeaponData
@@ -62,6 +64,7 @@ func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
 	_rig = EnemyRig.new(self)
+	_fight = EnemyFight.new(self, _almos_input, _rig)
 	_tuning = _rig.tuning_with()
 	_player = load(AlmosInput.TUNING_PATH) as PlayerTuning
 	_sword = load(AlmosInput.WEAPON_PATH) as WeaponData
@@ -104,7 +107,7 @@ func test_the_enemys_stagger_meter_is_set_from_its_tuning_and_starts_empty() -> 
 func test_a_parry_of_its_swing_by_almos_builds_the_parry_stagger_and_costs_him_no_health() -> void:
 	var almos = _spawn_fight()
 
-	await _parry_the_swing()
+	await _fight.parry_the_swing(_player)
 
 	assert_almost_eq(_rig.enemy.stagger.current, _player.parry_stagger, TOLERANCE)
 	assert_almost_eq(almos.health.current, almos.tuning.health_maximum, TOLERANCE, "a parried swing should do no damage")
@@ -116,11 +119,11 @@ func test_the_parries_that_fill_the_meter_break_the_enemy_and_one_fewer_does_not
 	_spawn_fight()
 
 	for i in needed - 1:
-		await _parry_the_swing()
+		await _fight.parry_the_swing(_player)
 	assert_almost_eq(_rig.enemy.stagger.current, (needed - 1) * _player.parry_stagger, TOLERANCE, "after one Parry fewer")
 	assert_false(_rig.enemy.stagger.full, "one Parry fewer should not fill the meter")
 	assert_false(_rig.enemy.broken, "one Parry fewer should not break it")
-	await _parry_the_swing()
+	await _fight.parry_the_swing(_player)
 
 	assert_true(_rig.enemy.broken, "the Parries that fill the meter should break it")
 	assert_almost_eq(_rig.enemy.stagger.current, 0.0, TOLERANCE, "a Break empties the meter")
@@ -137,7 +140,7 @@ func test_a_swing_that_lands_on_almos_builds_no_stagger() -> void:
 # --- Hits ---
 
 func test_a_light_attack_by_almos_builds_none_from_the_front_and_the_behind_stagger_from_behind(params = use_parameters(side_params)) -> void:
-	var almos = _spawn_almos_above_the_enemy(params.from_behind)
+	var almos = _fight.spawn_almos_above_the_enemy(params.from_behind)
 
 	await _tap_and_wait_for_the_swing(almos, &"attack_light")
 
@@ -148,7 +151,7 @@ func test_a_light_attack_by_almos_builds_none_from_the_front_and_the_behind_stag
 
 func test_a_heavy_attack_by_almos_builds_its_stagger_in_proportion_to_the_charge_and_more_from_behind(params = use_parameters(heavy_params)) -> void:
 	var heavy := _sword.heavy_attack
-	var almos = _spawn_almos_above_the_enemy(params.from_behind)
+	var almos = _fight.spawn_almos_above_the_enemy(params.from_behind)
 
 	if params.charged:
 		_almos_input.press_action(&"attack_heavy")
@@ -164,7 +167,7 @@ func test_a_heavy_attack_by_almos_builds_its_stagger_in_proportion_to_the_charge
 
 func test_a_partly_charged_heavy_attack_builds_stagger_on_the_straight_line_between_the_two() -> void:
 	var heavy := _sword.heavy_attack
-	var almos = _spawn_almos_above_the_enemy(false)
+	var almos = _fight.spawn_almos_above_the_enemy(false)
 	var halfway := heavy.charge_start_frames + (heavy.charge_frames_max - heavy.charge_start_frames) / 2
 
 	_almos_input.press_action(&"attack_heavy")
@@ -276,7 +279,7 @@ func test_every_hit_restarts_the_pause_even_one_that_builds_nothing() -> void:
 
 func test_a_parry_restarts_the_pause() -> void:
 	_spawn_fight()
-	await _parry_the_swing()
+	await _fight.parry_the_swing(_player)
 
 	await _rig.wait_frames(_pause_frames() - PAUSE_MARGIN_FRAMES)
 
@@ -370,17 +373,6 @@ func _spawn_fight():
 	return almos
 
 
-# Almos at the origin facing down with the enemy below him, going after a stand-in too far off
-# to notice, so that the enemy never swings at Almos. The stand-in is below it if the enemy has
-# its back to Almos, and above it, in Almos's direction, if it faces him.
-func _spawn_almos_above_the_enemy(enemy_has_its_back_to_him: bool):
-	var almos = _almos_input.spawn_almos()
-	var enemy = _rig.spawn_enemy(null, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
-	var away := Vector2.DOWN if enemy_has_its_back_to_him else Vector2.UP
-	_rig.place_target(enemy.position + away * (_tuning.notice_range + BEYOND_NOTICE))
-	return almos
-
-
 # The enemy at the origin, turned to face down towards a stand-in too far off to notice.
 func _spawn_facing_down():
 	var enemy = _rig.spawn_enemy()
@@ -405,25 +397,6 @@ func _hitbox_at(enemy: Node2D, offset: Vector2, stagger: float) -> Hitbox:
 # How many Parries it takes to fill the meter.
 func _parries_to_fill_the_meter() -> int:
 	return ceili(_tuning.stagger_capacity / _player.parry_stagger)
-
-
-# Parries the swing the enemy is about to make or has begun. The press is timed so that the
-# window is open over the middle of the enemy's active frames. Returns once the hit has been
-# parried and Almos is free.
-func _parry_the_swing() -> void:
-	var swing := _tuning.attack
-	# The wind-up has been seen to begin: the enemy's first frame has been processed. The
-	# window opens in the frame the press is seen in, and is open for parry_window_frames.
-	for i in WAIT_FRAME_LIMIT:
-		if _rig.enemy.winding_up:
-			break
-		await get_tree().physics_frame
-	assert_true(_rig.enemy.winding_up, "the enemy should begin a swing")
-	await _rig.wait_frames(swing.startup_frames - _player.parry_window_frames / 2 - 1)
-	var parried_before := _rig.target_health.current
-	await _tap(&"parry")
-	await _rig.wait_frames(_player.parry_window_frames + SETTLE_FRAMES)
-	assert_almost_eq(_rig.target_health.current, parried_before, TOLERANCE, "the swing should have been parried, not landed")
 
 
 func _tap(action: StringName) -> void:
