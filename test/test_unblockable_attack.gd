@@ -44,6 +44,12 @@ const REACH_SHORTER_BY := 10.0
 const NO_STAGGER := 0.0
 # How many attacks the cue is watched for.
 const ATTACKS_WATCHED := 2
+# How many times round the whole order the cue is watched for.
+const ROUNDS_WATCHED := 2
+# In physics frames. How far before the swing's first active frame a Roll's last untouchable frame
+# is, or how far after its last active frame the Roll's first untouchable frame is, when the Roll
+# is to be mistimed: one frame, the narrowest miss.
+const ROLL_MISTIMED_BY := 1
 
 # How the Unblockable attack's reach is retuned from the one in the data file, how far beyond its
 # far edge the nearest edge of the target's Hurtbox is put (a negative number is inside it), and
@@ -56,6 +62,13 @@ var reach_params = ParameterFactory.named_parameters(
 		[-REACH_SHORTER_BY, -REACH_MARGIN, true],
 		[-REACH_SHORTER_BY, REACH_MARGIN, false],
 	],
+)
+
+# How a Roll is mistimed, as how many frames after the start that would just cover the swing's
+# active frames it is tapped: a negative number for too early, a positive for too late.
+var mistimed_roll_params = ParameterFactory.named_parameters(
+	["too_late"],
+	[[false], [true]],
 )
 
 var _almos_input: AlmosInput
@@ -424,6 +437,59 @@ func test_a_jump_that_carries_him_out_of_its_reach_through_all_of_its_active_fra
 	_assert_he_was_in_the_air_and_out_of_reach_while_its_hitbox_was_on(almos, _tuning.unblockable_attack_reach)
 	assert_eq(_rig.hits().size(), 0, "hits Almos took")
 	assert_almost_eq(almos.health.current, almos.tuning.health_maximum, TOLERANCE)
+
+
+func test_a_roll_whose_untouchable_frames_end_before_the_swing_or_begin_after_it_does_not_avoid_an_unblockable_attack(params = use_parameters(mistimed_roll_params)) -> void:
+	var unblockable := _tuning.unblockable_attack
+	var rolling_on_the_spot := _player.duplicate() as PlayerTuning
+	rolling_on_the_spot.roll_distance = 0.0
+	var almos = _almos_input.spawn_almos(rolling_on_the_spot)
+	_rig.spawn_enemy(_rig.tuning_with({"attack_pattern": _pattern([UNBLOCKABLE])}), almos.position + Vector2.DOWN * ENEMY_DISTANCE)
+	_rig.set_target(almos, almos.health)
+	_rig.sample_also("untouchable", func() -> bool: return almos.untouchable)
+	var frames_a_second := float(Engine.physics_ticks_per_second)
+	var k_open := ceili(rolling_on_the_spot.roll_untouchable_start * frames_a_second - FRAME_SLACK)
+	var k_close := ceili((rolling_on_the_spot.roll_untouchable_start + rolling_on_the_spot.roll_untouchable_duration) * frames_a_second - FRAME_SLACK)
+	var first_active := unblockable.startup_frames
+	var last_active := unblockable.startup_frames + unblockable.active_frames - 1
+	# The Roll starts in frame R, and he is untouchable in frames R - 1 + k_open .. R - 1 + k_close - 1
+	# (see _frames_to_wait_before_tapping_roll). Too early: the last of those is before the swing's
+	# first active frame by the margin. Too late: the first is after its last by the margin.
+	var roll_start := last_active + ROLL_MISTIMED_BY + 1 - k_open if params.too_late else first_active - ROLL_MISTIMED_BY + 2 - k_close
+	await _rig.wait_frames(roll_start - TAP_FRAMES + 1)
+
+	await _tap(&"roll")
+	await _play_out_the_first_attack(unblockable)
+
+	var striking := _rig.span("striking")
+	assert_ne(striking.x, -1, "its Hitbox should have gone on")
+	for i in range(striking.x, striking.y):
+		assert_false(_rig.samples[i].untouchable, "he should not be untouchable in sample %d, in which its Hitbox is on" % i)
+	var hits := _rig.hits()
+	assert_eq(hits.size(), 1, "hits Almos took")
+	if hits.size() == 1:
+		assert_almost_eq(hits[0].damage, unblockable.damage, TOLERANCE)
+
+
+func test_the_cue_plays_once_for_each_unblockable_wind_up_in_two_rounds_of_the_shipped_order_as_that_wind_up_begins() -> void:
+	var enemy = _rig.spawn_enemy()
+	_rig.place_target(Vector2.RIGHT * _tuning.attack_range)
+	var cues: Array[int] = []
+	enemy.unblockable_cue_played.connect(func() -> void: cues.append(_rig.samples.size()))
+	var round_frames := 0
+	var before_the_unblockable := 0
+	for kind in _tuning.attack_pattern:
+		if kind == UNBLOCKABLE:
+			before_the_unblockable = round_frames
+		round_frames += _tuning.attack_of(kind).total_frames()
+
+	await _rig.wait_frames(round_frames * ROUNDS_WATCHED + SETTLE_FRAMES)
+
+	var first := _rig.first_sample_where("attacking")
+	var expected: Array[int] = []
+	for i in ROUNDS_WATCHED:
+		expected.append(first + before_the_unblockable + i * round_frames)
+	assert_eq(cues, expected, "samples taken so far when the cue played: the Unblockable attack's first frame, each round")
 
 
 # The enemy given only Unblockable attacks to make (or this tuning), a little way below Almos,
