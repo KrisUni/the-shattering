@@ -29,6 +29,10 @@ extends Resource
 ## How much Stamina the attack spends when it begins.
 @export var stamina_cost: float
 
+## How much Stagger a hit builds on whoever it lands on. Light attacks build none. Only
+## Almos's attacks use it: the enemy's attack builds none on Almos.
+@export var stagger: float
+
 
 ## How many physics frames the whole attack lasts: its startup, active and recovery frames.
 func total_frames() -> int:

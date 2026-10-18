@@ -10,8 +10,19 @@ extends Area2D
 ## It tells the Hurtbox where the hit comes from: the Hitbox's own position, so a Hitbox
 ## belongs at the centre of whoever swings it, turning there to aim.
 
+## Emitted once for each hit that a Hurtbox reports parried, with that Hurtbox. The attacker
+## hears of it here.
+signal parried(hurtbox: Hurtbox)
+
 ## How much Health a hit takes off.
 @export var damage: float
+
+## How much Stagger a hit builds on whoever it lands on.
+@export var stagger: float
+
+## Whether a hit is a Critical hit, which the Hurtbox tells whoever owns it. Almos's Critical
+## swing is the one that sets it.
+@export var critical := false
 
 ## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
 @export var strike_shape: CollisionShape2D
@@ -29,8 +40,9 @@ var active := false:
 		active = value
 		_hit.clear()
 
-# The Hurtboxes this swing has hit already. A hit that did not land, on someone untouchable,
-# does not count: a swing that is still on when they stop being untouchable catches them.
+# The Hurtboxes this swing has hit already, parried hits included. A hit that did not land,
+# on someone untouchable, does not count: a swing that is still on when they stop being
+# untouchable catches them.
 var _hit: Array[Hurtbox] = []
 
 
@@ -57,8 +69,11 @@ func _physics_process(_delta: float) -> void:
 	for area in get_overlapping_areas():
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
-			if hurtbox.hurt(damage, global_position):
+			var outcome := hurtbox.hurt(damage, global_position, stagger, critical)
+			if outcome != Hurtbox.Outcome.MISSED:
 				_hit.append(hurtbox)
+			if outcome == Hurtbox.Outcome.PARRIED:
+				parried.emit(hurtbox)
 
 
 # Whether the Hurtbox is part of the same body as this Hitbox, such as the body of whoever

@@ -12,9 +12,15 @@ damage = 15.0
 
 [resource]
 script = ExtResource("1_tuning")
-health_maximum = 40.0
+health_maximum = 120.0
 move_speed = 70.0
 notice_range = 220.0
 attack_range = 40.0
 attack_reach = 42.0
 attack = SubResource("Resource_attack")
+stagger_capacity = 100.0
+stagger_drain_rate = 20.0
+stagger_drain_pause = 2.0
+break_frames = 120
+front_arc_degrees = 180.0
+behind_stagger = 15.0

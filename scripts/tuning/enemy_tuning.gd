@@ -23,5 +23,25 @@ extends Resource
 @export var attack_reach: float
 
 ## Its one attack. The startup frames are its wind-up. Enemies have no Stamina, so the
-## attack's stamina_cost is not used.
+## attack's stamina_cost is not used, and nor is its stagger: Almos has no Stagger to build.
 @export var attack: AttackData
+
+## The most Stagger the enemy can have. A full meter is this much.
+@export var stagger_capacity: float
+
+## How much Stagger drains each second once the pause is over.
+@export var stagger_drain_rate: float
+
+## How long, in seconds, nothing has to press the enemy before its Stagger starts to drain.
+@export var stagger_drain_pause: float
+
+## How long, in physics frames, a Break lasts, counting the frame its Stagger fills in. It is free
+## again on the frame after the last.
+@export var break_frames: int
+
+## How wide, in degrees, its front is, centred on the way it faces: half of it either side. A
+## hit from outside it is a hit from behind.
+@export var front_arc_degrees: float
+
+## How much Stagger a hit from behind builds on top of what the attack builds itself.
+@export var behind_stagger: float

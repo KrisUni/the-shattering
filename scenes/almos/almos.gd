@@ -31,10 +31,17 @@ var sprinting: bool:
 	get:
 		return _state == State.SPRINTING
 
-## Whether a Light or Heavy attack is under way: its startup, active and recovery frames.
+## Whether a Light or Heavy attack or the Critical hit is under way: its startup, active and
+## recovery frames.
 var attacking: bool:
 	get:
 		return _attacks.attacking
+
+## Whether the Critical hit is under way: his swing at a broken enemy, made by a Light attack
+## press in its range in place of a Light swing. Alongside attacking, the Light swing is 0.
+var critical: bool:
+	get:
+		return _attacks.critical
 
 ## Whether a Heavy attack is being charged: he holds the button and has not swung yet.
 var charging: bool:
@@ -71,6 +78,18 @@ var guard_broken: bool:
 	get:
 		return _block.guard_broken
 
+## Whether a Parry is under way: its window or its recovery. He stands still, and can neither
+## Roll, attack, Block nor Parry again; his Lock-on works as usual. He is free again from the
+## frame after the last recovery frame, or after a hit was parried.
+var parrying: bool:
+	get:
+		return _parry.parrying
+
+## Whether the window of a Parry is open: a hit from the front is parried.
+var parry_window_open: bool:
+	get:
+		return _parry.window_open
+
 ## Whether Almos cannot be hurt at this moment: during part of a Roll.
 var untouchable: bool:
 	get:
@@ -95,6 +114,7 @@ var untouchable: bool:
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn
 @onready var _block: AlmosBlock = $Block
+@onready var _parry: AlmosParry = $Parry
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
@@ -122,10 +142,16 @@ func _enter_tree() -> void:
 	($Attacks as AlmosAttacks).weapon = weapon
 	($LockOn as AlmosLockOn).tuning = tuning
 	($Block as AlmosBlock).tuning = tuning
+	($Parry as AlmosParry).tuning = tuning
 
 
 func _ready() -> void:
+	# The Critical hit turns him to the enemy it is made at.
+	_attacks.critical_began.connect(_face)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
+	_hurtbox.is_parried = func(from: Vector2) -> bool:
+		return _parry.catches(from, global_position, facing)
+	_hurtbox.parry_stagger = tuning.parry_stagger
 	_hurtbox.damage_through = func(damage: float, from: Vector2) -> float:
 		return _block.receive_hit(damage, from, global_position, facing)
 
@@ -134,6 +160,8 @@ func _physics_process(delta: float) -> void:
 	# A Guard break that runs out in this frame is still spent open, though the block clears it
 	# before the frame is over. So it is read once, here, for everything below.
 	var left_open := _block.guard_broken
+	# Likewise a Parry whose last recovery frame this is is still spent standing open.
+	var left_parrying := _parry.parrying
 	# get_vector applies the deadzone to the stick as a whole, not axis by axis, and
 	# never returns more than length 1, so diagonals are no faster.
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -150,19 +178,24 @@ func _physics_process(delta: float) -> void:
 	# start in that same frame and follow it without a gap.
 	if rolling and _roll_time >= tuning.roll_duration - TIME_SLACK:
 		_end_roll(direction)
-	_attacks.advance(_aim(), not rolling and not left_open)
-	# An attack commits him and a Guard break leaves him open, so a tap in either is lost, not
-	# kept for after it.
-	if tapped and not _attacks.committed and not left_open:
+	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying)
+	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
+	# them is lost, not kept for after it.
+	if tapped and not _attacks.committed and not left_open and not left_parrying:
 		_on_roll_tapped(direction)
-	# He is free to block unless he is in a Roll or an attack, which have begun by now if they
-	# were going to this frame, or sprinting, which is as the last frame left it.
-	_block.advance(not rolling and not _attacks.committed and not sprinting, delta)
+	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
+	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
+	# to this frame, and so win against a Parry press made in the same frame.
+	_parry.advance(not rolling and not _attacks.committed and not left_open and not left_parrying)
+	var parry_on := left_parrying or parrying
+	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
+	# if they were going to this frame, or sprinting, which is as the last frame left it.
+	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if rolling:
 		_roll(delta)
-	elif _attacks.committed or left_open:
+	elif _attacks.committed or left_open or parry_on:
 		_stand_still()
 	else:
 		_move_freely(direction, delta)
@@ -199,7 +232,7 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 
 # An attack commits him: he neither walks nor sprints from the moment he begins charging a
 # Heavy attack or swinging until the recovery is over. A Guard break leaves him standing
-# the same way.
+# the same way, and so does a Parry.
 func _stand_still() -> void:
 	_state = State.WALKING
 	velocity = Vector2.ZERO
@@ -221,6 +254,10 @@ func _face(direction: Vector2) -> void:
 # Without Lock-on, or standing on the target, there is nothing to turn to and he keeps his
 # facing.
 func _face_the_target() -> void:
+	# The Critical hit keeps him facing the broken enemy it was made at, to the end of its
+	# swing; the lock itself holds, and turns him back to its target after.
+	if _attacks.critical:
+		return
 	var to_target := _lock_on.direction_to_target()
 	if to_target != Vector2.ZERO:
 		_face(to_target)

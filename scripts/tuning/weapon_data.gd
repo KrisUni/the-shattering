@@ -17,6 +17,14 @@ extends Resource
 ## The Heavy attack.
 @export var heavy_attack: HeavyAttackData
 
+## How close to Almos's centre, in pixels, the centre of a broken enemy must be for a Light
+## attack press to make the Critical hit instead of a Light swing.
+@export var critical_range: float
+
+## The Critical hit, which Almos makes on a broken enemy. It uses the Weapon's reach. It
+## spends no Stamina, so its stamina_cost is not used, and it builds no Stagger.
+@export var critical_attack: AttackData
+
 ## A press of an attack button in the last this many physics frames of an attack's recovery
 ## is remembered, and the attack it asked for begins the moment the recovery ends.
 @export var attack_buffer_frames: int

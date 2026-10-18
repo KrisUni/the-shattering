@@ -27,3 +27,7 @@ block_arc_degrees = 180.0
 block_walk_speed = 60.0
 block_stamina_refill_factor = 0.5
 guard_break_duration = 1.3
+parry_window_frames = 8
+parry_recovery_frames = 24
+parry_arc_degrees = 180.0
+parry_stagger = 40.0

@@ -90,11 +90,7 @@ func _blocks(from: Vector2, centre: Vector2, facing: Vector2) -> bool:
 # Whether a hit that comes from this point is in the front that Block covers, for someone
 # standing at centre and facing this way.
 func _covers(from: Vector2, centre: Vector2, facing: Vector2) -> bool:
-	var to_hit := from - centre
-	# A hit from his own centre has no direction, and counts as from the front.
-	if to_hit.is_zero_approx():
-		return true
-	return absf(facing.angle_to(to_hit)) <= deg_to_rad(tuning.block_arc_degrees) / 2.0
+	return FrontArc.covers(from, centre, facing, tuning.block_arc_degrees)
 
 
 # A Guard break begins: he is not blocking from this moment, and the frames it lasts are

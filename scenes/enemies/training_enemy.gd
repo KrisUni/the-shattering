@@ -4,6 +4,9 @@ extends CharacterBody2D
 # coming. It is a look, not a tuning number.
 const WIND_UP_TINT := Color(1.0, 0.35, 0.35)
 
+# What it is tinted while it is broken, so that the player can see it is open. Also a look.
+const BREAK_TINT := Color(0.4, 0.6, 1.0)
+
 ## Emitted once, at the end of the physics frame in which its Health reached zero.
 signal died
 
@@ -11,6 +14,13 @@ signal died
 
 ## What it goes after.
 @export var target: Node2D
+
+## The way it faces, a unit vector. While it is free it turns to face its target exactly; in an
+## attack it keeps the direction it committed the swing to. Its front is centred on it, and a
+## hit from outside the front builds extra Stagger.
+var facing: Vector2:
+	get:
+		return _facing
 
 ## Whether it is winding up: the attack's startup frames, before its Hitbox is on.
 var winding_up: bool:
@@ -27,18 +37,33 @@ var attacking: bool:
 	get:
 		return _frame >= 0
 
+## Whether it is broken: its Stagger filled and the Break has neither run out nor been ended by
+## a Critical hit. It stands still and starts nothing, and no Stagger builds.
+var broken: bool:
+	get:
+		return _broken
+
 ## Whether its Health has reached zero. It is gone by the end of that physics frame.
 var dead: bool:
 	get:
 		return _dead
 
 @onready var health: Health = $Health
+@onready var stagger: Stagger = $Stagger
 @onready var _hitbox: Hitbox = $Hitbox
+@onready var _hurtbox: Hurtbox = $Hurtbox
+@onready var _nose: Node2D = $Nose
+@onready var _stagger_bar: Node2D = $StaggerBar
 
 # The frame of the attack it is processing, counted as AttackData counts them, from 0 for its
 # first frame. -1 when there is no attack.
 var _frame := -1
 var _dead := false
+var _broken := false
+# The physics frame it is free again in, once broken. The frame the Break begins in counts as the
+# first of its break_frames, whichever of Almos's blow and its own processing comes first in it.
+var _break_end_frame := 0
+var _facing := Vector2.DOWN
 
 
 func _enter_tree() -> void:
@@ -47,37 +72,61 @@ func _enter_tree() -> void:
 	var own_health := $Health as Health
 	if own_health.maximum != tuning.health_maximum:
 		own_health.maximum = tuning.health_maximum
+	var own_stagger := $Stagger as Stagger
+	own_stagger.capacity = tuning.stagger_capacity
+	own_stagger.drain_rate = tuning.stagger_drain_rate
+	own_stagger.drain_pause = tuning.stagger_drain_pause
 
 
 func _ready() -> void:
 	health.depleted.connect(_on_depleted)
 	_hitbox.set_reach(tuning.attack_reach)
+	_hitbox.parried.connect(_on_parried)
+	_hurtbox.landed.connect(_on_hit_landed)
+	stagger.changed.connect(_show_stagger)
+	if is_instance_valid(target) and not _to_target().is_zero_approx():
+		_facing = _to_target().normalized()
+	_show_stagger()
+	_nose.rotation = _facing.angle()
 
 
 func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(target):
 		return
+	# The Break runs for break_frames physics frames; it is free in the frame after the last.
+	if _broken and Engine.get_physics_frames() >= _break_end_frame:
+		_broken = false
 	if attacking:
 		_frame += 1
 		if _frame >= tuning.attack.total_frames():
 			_frame = -1
+	if _broken:
+		velocity = Vector2.ZERO
 	# One that has died in this frame starts nothing new, but the frame is played out all the
 	# same: whichever of Almos's blow and its own strike is processed first, the one that
 	# lands in the frame of its death still lands.
-	if not attacking and not _dead:
+	elif not attacking and not _dead:
 		_act_freely()
 	_set_strike(tuning.attack.is_active(_frame))
-	modulate = WIND_UP_TINT if winding_up else Color.WHITE
+	_show_look()
+	_nose.rotation = _facing.angle()
+
+
+func _to_target() -> Vector2:
+	return target.global_position - global_position
 
 
 # Between attacks: attack if the target is close enough, walk towards it if it is noticed.
 func _act_freely() -> void:
-	var to_target := target.global_position - global_position
+	var to_target := _to_target()
+	if not to_target.is_zero_approx():
+		_facing = to_target.normalized()
 	if to_target.length() <= tuning.attack_range:
 		_frame = 0
 		_hitbox.damage = tuning.attack.damage
-		# It commits to the swing: it goes where the target was now, wherever it moves to.
-		_hitbox.rotation = to_target.angle()
+		# It commits to the swing: it goes where the target was now, wherever it moves to, and
+		# keeps facing that way until the swing is over.
+		_hitbox.rotation = _facing.angle()
 	elif to_target.length() <= tuning.notice_range:
 		velocity = to_target.normalized() * tuning.move_speed
 		move_and_slide()
@@ -88,6 +137,61 @@ func _act_freely() -> void:
 func _set_strike(on: bool) -> void:
 	_hitbox.active = on
 	_hitbox.visible = on
+
+
+# Its tint: the Break's, or the wind-up's, or none.
+func _show_look() -> void:
+	if _broken:
+		modulate = BREAK_TINT
+	elif winding_up:
+		modulate = WIND_UP_TINT
+	else:
+		modulate = Color.WHITE
+
+
+# A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
+# builds what the attack builds, and more if the hit came from behind, unless it is broken.
+func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
+	if critical:
+		_broken = false
+		_show_look()
+		return
+	var built := hit_stagger
+	if not FrontArc.covers(from, global_position, _facing, tuning.front_arc_degrees):
+		built += tuning.behind_stagger
+	_build_stagger(built)
+
+
+# One of its attacks was parried: its Stagger builds what that Parry builds.
+func _on_parried(parrier: Hurtbox) -> void:
+	_build_stagger(parrier.parry_stagger)
+
+
+# Builds this much Stagger, which a Break does not allow, and breaks it if that fills the meter.
+func _build_stagger(amount: float) -> void:
+	if _broken:
+		return
+	stagger.add(amount)
+	if stagger.full:
+		_begin_break()
+
+
+# The Break begins at once: the attack under way is over with its Hitbox off, so that a strike
+# due later in this frame does not land, and the meter is emptied.
+func _begin_break() -> void:
+	_broken = true
+	_break_end_frame = Engine.get_physics_frames() + tuning.break_frames
+	_frame = -1
+	_set_strike(false)
+	stagger.reset()
+	_show_look()
+
+
+# The bar over it shows how full its Stagger is, and is hidden while it is empty.
+func _show_stagger() -> void:
+	var fraction := stagger.current / stagger.capacity
+	_stagger_bar.visible = fraction > 0.0
+	_stagger_bar.scale.x = fraction
 
 
 func _on_depleted() -> void:

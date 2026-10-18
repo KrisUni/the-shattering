@@ -179,7 +179,7 @@ A quick swing that chains into a short combo; costs stamina and commits the play
 _Avoid_: Attack, slash, quick attack
 
 **Heavy attack**:
-A slower, harder swing that can be charged by holding and builds more Stagger than a Light attack. A tap shorter than the charge start gives the plain Heavy attack; a fully charged one comes out by itself.
+A slower, harder swing that can be charged by holding and builds more Stagger than a Light attack; its Stagger grows with the charge as its damage does. A tap shorter than the charge start gives the plain Heavy attack; a fully charged one comes out by itself.
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
@@ -243,19 +243,19 @@ The helpless moment that follows when a blocked hit takes the player's last Stam
 _Avoid_: Shield break, block break
 
 **Parry**:
-A deflect with a tight timing window that negates an incoming attack and adds to the attacker's Stagger; the hardest and most precise defence.
+A tight-timing defence that negates an incoming attack and adds to the attacker's Stagger; the hardest and most precise defence. A press opens a short window; a hit from the front inside it deals no damage, never reaches Block, and ends the Parry at once. It is judged from the front the same way Block's is, costs no Stamina and works at zero Stamina. A window that catches nothing leaves the player standing still through a recovery: they cannot Roll, attack, Block or Parry, and every hit lands in full. It can be started from a Sprint or while blocking, which it stops (Block comes back afterwards if still held); a press during a Roll, an attack, a Heavy attack charge, a Guard break or another Parry is lost, not kept, so presses never stack, and a Parry never overlaps untouchable frames. Lock-on keeps working through it. The attacker is told of a Parried hit, for Stagger.
 _Avoid_: Deflect, counter
 
 **Stagger**:
-An enemy's accumulated loss of balance, shown as a meter that fills toward a Break. Parries build it fastest; Jump attacks, Heavy attacks and hits from behind more slowly; and it drains when the player stops pressing the enemy.
+An enemy's accumulated loss of balance, shown as a bar over the enemy that fills toward a Break. Parries build it most; Heavy attacks and Jump attacks build more slowly, Heavy attacks more the more they are charged; Light attacks build none from the front. Any hit from behind adds a flat amount on top, so a Light attack from behind builds a little. A Critical hit builds none. Any landed hit restarts a pause, and once the pause is over the meter drains. It is separate from Health and never takes any.
 _Avoid_: Poise, posture, balance
 
 **Break**:
-The moment an enemy's Stagger fills, leaving it helpless and open to a Critical hit.
+The moment an enemy's Stagger fills. It interrupts the enemy's attack at once, empties the meter, and builds no Stagger for as long as it lasts, though hits still take Health. The enemy stands still: it walks, turns and attacks no more. It ends when its time runs out or a Critical hit lands.
 _Avoid_: Stun, posture break
 
 **Critical hit**:
-The heavy follow-up the player can land on a broken enemy.
+Almos's own move on a broken enemy: a Light attack press made close enough to the enemy's centre makes it in place of a Light swing, at the nearest broken enemy in range, aimed at its true angle. Under Lock-on to another enemy he still turns to face the broken one for the whole swing; the lock holds and he faces its target again once the swing is over. It deals heavy damage, ends the Break, costs no Stamina (so it works at zero Stamina), builds no Stagger and restarts the Light combo. Two gaps are accepted: another enemy caught in its swing also takes its damage, and a Critical hit that lands after the Break has run out deals its damage but has nothing to end.
 _Avoid_: Riposte, deathblow, visceral
 
 ### People
