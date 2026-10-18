@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scenes/almos/almos_attacks.gd" id="8_attacks"]
 [ext_resource type="Script" path="res://scenes/almos/almos_lock_on.gd" id="9_lock_on"]
 [ext_resource type="Script" path="res://scenes/almos/almos_block.gd" id="10_block"]
+[ext_resource type="Script" path="res://scenes/almos/almos_parry.gd" id="11_parry"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -34,6 +35,11 @@ polygon = PackedVector2Array(14, 0, -10, -10, -4, 0, -10, 10)
 visible = false
 color = Color(0.6, 0.75, 0.95, 1)
 polygon = PackedVector2Array(11, -19.05, 19.05, -11, 22, 0, 19.05, 11, 11, 19.05, 9.5, 16.45, 16.45, 9.5, 19, 0, 16.45, -9.5, 9.5, -16.45)
+
+[node name="ParryPlaceholder" type="Polygon2D" parent="Placeholder"]
+visible = false
+color = Color(1, 0.55, 0.1, 1)
+polygon = PackedVector2Array(0, 0, 0, -30, 11.48, -27.72, 21.21, -21.21, 27.72, -11.48, 30, 0, 27.72, 11.48, 21.21, 21.21, 11.48, 27.72, 0, 30)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
@@ -91,4 +97,9 @@ marker = NodePath("../LockOnMarker")
 script = ExtResource("10_block")
 stamina = NodePath("../Stamina")
 placeholder = NodePath("../Placeholder/BlockPlaceholder")
+tinted_placeholder = NodePath("../Placeholder")
+
+[node name="Parry" type="Node" parent="." node_paths=PackedStringArray("placeholder", "tinted_placeholder")]
+script = ExtResource("11_parry")
+placeholder = NodePath("../Placeholder/ParryPlaceholder")
 tinted_placeholder = NodePath("../Placeholder")

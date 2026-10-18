@@ -71,6 +71,18 @@ var guard_broken: bool:
 	get:
 		return _block.guard_broken
 
+## Whether a Parry is under way: its window or its recovery. He stands still, and can neither
+## Roll, attack, Block nor Parry again; his Lock-on works as usual. He is free again from the
+## frame after the last recovery frame, or after a hit was parried.
+var parrying: bool:
+	get:
+		return _parry.parrying
+
+## Whether the window of a Parry is open: a hit from the front is parried.
+var parry_window_open: bool:
+	get:
+		return _parry.window_open
+
 ## Whether Almos cannot be hurt at this moment: during part of a Roll.
 var untouchable: bool:
 	get:
@@ -95,6 +107,7 @@ var untouchable: bool:
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn
 @onready var _block: AlmosBlock = $Block
+@onready var _parry: AlmosParry = $Parry
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
@@ -122,10 +135,13 @@ func _enter_tree() -> void:
 	($Attacks as AlmosAttacks).weapon = weapon
 	($LockOn as AlmosLockOn).tuning = tuning
 	($Block as AlmosBlock).tuning = tuning
+	($Parry as AlmosParry).tuning = tuning
 
 
 func _ready() -> void:
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
+	_hurtbox.is_parried = func(from: Vector2) -> bool:
+		return _parry.catches(from, global_position, facing)
 	_hurtbox.damage_through = func(damage: float, from: Vector2) -> float:
 		return _block.receive_hit(damage, from, global_position, facing)
 
@@ -134,6 +150,8 @@ func _physics_process(delta: float) -> void:
 	# A Guard break that runs out in this frame is still spent open, though the block clears it
 	# before the frame is over. So it is read once, here, for everything below.
 	var left_open := _block.guard_broken
+	# Likewise a Parry whose last recovery frame this is is still spent standing open.
+	var left_parrying := _parry.parrying
 	# get_vector applies the deadzone to the stick as a whole, not axis by axis, and
 	# never returns more than length 1, so diagonals are no faster.
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -150,19 +168,24 @@ func _physics_process(delta: float) -> void:
 	# start in that same frame and follow it without a gap.
 	if rolling and _roll_time >= tuning.roll_duration - TIME_SLACK:
 		_end_roll(direction)
-	_attacks.advance(_aim(), not rolling and not left_open)
-	# An attack commits him and a Guard break leaves him open, so a tap in either is lost, not
-	# kept for after it.
-	if tapped and not _attacks.committed and not left_open:
+	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying)
+	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
+	# them is lost, not kept for after it.
+	if tapped and not _attacks.committed and not left_open and not left_parrying:
 		_on_roll_tapped(direction)
-	# He is free to block unless he is in a Roll or an attack, which have begun by now if they
-	# were going to this frame, or sprinting, which is as the last frame left it.
-	_block.advance(not rolling and not _attacks.committed and not sprinting, delta)
+	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
+	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
+	# to this frame, and so win against a Parry press made in the same frame.
+	_parry.advance(not rolling and not _attacks.committed and not left_open and not left_parrying)
+	var parry_on := left_parrying or parrying
+	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
+	# if they were going to this frame, or sprinting, which is as the last frame left it.
+	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if rolling:
 		_roll(delta)
-	elif _attacks.committed or left_open:
+	elif _attacks.committed or left_open or parry_on:
 		_stand_still()
 	else:
 		_move_freely(direction, delta)
@@ -171,6 +194,17 @@ func _physics_process(delta: float) -> void:
 	_face_the_target()
 	# Turning the placeholder shape stands in for the eight facing sprites.
 	_placeholder.rotation = facing.angle()
+
+
+# Whether a hit that comes from this point is in the front of someone standing at centre and
+# facing this way, which is arc_degrees wide, half of it either side. Block and Parry judge
+# their fronts with it.
+static func covers_front(from: Vector2, centre: Vector2, facing: Vector2, arc_degrees: float) -> bool:
+	var to_hit := from - centre
+	# A hit from his own centre has no direction, and counts as from the front.
+	if to_hit.is_zero_approx():
+		return true
+	return absf(facing.angle_to(to_hit)) <= deg_to_rad(arc_degrees) / 2.0
 
 
 func _move_freely(direction: Vector2, delta: float) -> void:
@@ -199,7 +233,7 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 
 # An attack commits him: he neither walks nor sprints from the moment he begins charging a
 # Heavy attack or swinging until the recovery is over. A Guard break leaves him standing
-# the same way.
+# the same way, and so does a Parry.
 func _stand_still() -> void:
 	_state = State.WALKING
 	velocity = Vector2.ZERO

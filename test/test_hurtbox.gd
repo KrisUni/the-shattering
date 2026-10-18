@@ -35,9 +35,9 @@ func before_each() -> void:
 
 
 func test_by_default_a_hit_lands_and_takes_all_its_damage_off_the_health() -> void:
-	var landed := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
 
-	assert_true(landed, "a hit should land")
+	assert_eq(outcome, Hurtbox.Outcome.LANDED, "a hit should land")
 	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
 
 
@@ -81,9 +81,9 @@ func test_the_hook_is_asked_again_for_every_hit_that_lands() -> void:
 func test_a_hit_the_hook_lets_none_of_the_damage_through_still_lands() -> void:
 	_hurtbox.damage_through = func(_damage: float, _from: Vector2) -> float: return 0.0
 
-	var landed := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
 
-	assert_true(landed, "a hit that does no damage has still landed, so that its swing does not hit again")
+	assert_eq(outcome, Hurtbox.Outcome.LANDED, "a hit that does no damage has still landed, so that its swing does not hit again")
 	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
 
 
@@ -94,11 +94,106 @@ func test_a_hit_on_an_untouchable_owner_does_not_land_and_the_damage_hook_is_not
 		asked[0] += 1
 		return damage
 
-	var landed := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
 
-	assert_false(landed, "a hit on someone untouchable should not land")
+	assert_eq(outcome, Hurtbox.Outcome.MISSED, "a hit on someone untouchable should not land")
 	assert_eq(asked[0], 0, "the hook is for hits that land")
 	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
+
+
+func test_a_hit_the_owner_parries_is_negated_and_neither_asks_the_damage_hook_nor_lands() -> void:
+	var asked := [0]
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+	_hurtbox.damage_through = func(damage: float, _from: Vector2) -> float:
+		asked[0] += 1
+		return damage
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+
+	assert_eq(outcome, Hurtbox.Outcome.PARRIED)
+	assert_eq(asked[0], 0, "the damage hook is for hits that land")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
+
+
+func test_the_parry_hook_is_asked_once_with_the_point_the_hit_comes_from() -> void:
+	var asked: Array[Vector2] = []
+	_hurtbox.is_parried = func(from: Vector2) -> bool:
+		asked.append(from)
+		return false
+	var from := Vector2(-15.0, 60.0)
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, from)
+
+	assert_eq(asked, [from] as Array[Vector2], "the hook should be asked once")
+	assert_eq(outcome, Hurtbox.Outcome.LANDED, "a hit the owner does not parry lands")
+
+
+func test_a_hit_on_an_untouchable_owner_does_not_ask_the_parry_hook() -> void:
+	var asked := [0]
+	_hurtbox.is_untouchable = func() -> bool: return true
+	_hurtbox.is_parried = func(_from: Vector2) -> bool:
+		asked[0] += 1
+		return true
+
+	var outcome := _hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+
+	assert_eq(outcome, Hurtbox.Outcome.MISSED)
+	assert_eq(asked[0], 0)
+
+
+func test_a_hitbox_emits_parried_once_for_a_parried_hit_and_does_not_hit_it_again_in_the_swing() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	var asked := [0]
+	var emitted: Array[Hurtbox] = []
+	_hurtbox.is_parried = func(_from: Vector2) -> bool:
+		asked[0] += 1
+		return true
+	hitbox.parried.connect(func(hurtbox: Hurtbox) -> void: emitted.append(hurtbox))
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES * 2)
+	hitbox.active = false
+
+	assert_eq(emitted, [_hurtbox] as Array[Hurtbox], "parried should be emitted once, with the Hurtbox")
+	assert_eq(asked[0], 1, "a parried hit counts as hit, so the swing does not hit again")
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)
+
+
+func test_a_hitbox_does_not_emit_parried_for_a_hit_that_lands() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	var emitted := [0]
+	hitbox.parried.connect(func(_hurtbox: Hurtbox) -> void: emitted[0] += 1)
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES)
+	hitbox.active = false
+
+	assert_eq(emitted[0], 0)
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
+
+
+# A Hitbox, switched off, covering the Hurtbox, which is in the tree.
+func _hitbox_over_the_hurtbox() -> Hitbox:
+	_hurtbox.collision_layer = 1
+	_hurtbox.collision_mask = 0
+	_hurtbox.monitoring = false
+	var shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = HURTBOX_RADIUS
+	shape.shape = circle
+	_hurtbox.add_child(shape)
+	add_child(_hurtbox)
+	var hitbox := Hitbox.new()
+	hitbox.damage = HIT_DAMAGE
+	hitbox.collision_mask = 1
+	var strike := CollisionShape2D.new()
+	var wide := CircleShape2D.new()
+	wide.radius = HITBOX_RADIUS
+	strike.shape = wide
+	hitbox.add_child(strike)
+	add_child_autofree(hitbox)
+	await wait_physics_frames(SETTLE_FRAMES)
+	return hitbox
 
 
 func test_a_hitbox_says_its_hit_comes_from_where_it_sits_in_the_world() -> void:

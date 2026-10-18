@@ -243,7 +243,7 @@ The helpless moment that follows when a blocked hit takes the player's last Stam
 _Avoid_: Shield break, block break
 
 **Parry**:
-A deflect with a tight timing window that negates an incoming attack and adds to the attacker's Stagger; the hardest and most precise defence.
+A deflect with a tight timing window that negates an incoming attack and adds to the attacker's Stagger; the hardest and most precise defence. A press opens a short window; a hit from the front inside it deals no damage, never reaches Block, and ends the Parry at once. It is judged from the front the same way Block's is, costs no Stamina and works at zero Stamina. A window that catches nothing leaves the player standing still through a recovery: they cannot Roll, attack, Block or Parry, and every hit lands in full. It can be started from a Sprint or while blocking, which it stops (Block comes back afterwards if still held); a press during a Roll, an attack, a Heavy attack charge, a Guard break or another Parry is lost, not kept, so presses never stack, and a Parry never overlaps untouchable frames. Lock-on keeps working through it. The attacker is told of a Parried hit, for Stagger.
 _Avoid_: Deflect, counter
 
 **Stagger**:

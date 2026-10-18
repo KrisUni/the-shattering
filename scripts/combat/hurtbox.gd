@@ -14,7 +14,24 @@ extends Area2D
 ## it is, the owner can always be hurt.
 var is_untouchable: Callable = func() -> bool: return false
 
-## Asked on every hit that lands, which a hit on someone untouchable does not: how much of
+## Asked on every hit on someone who is not untouchable, given the point in the world the hit
+## comes from: whether the owner parries it, which negates it. Almos in the window of his
+## Parry, with the hit in front of him, is the case. A parried hit never reaches
+## damage_through. It is asked once for each hit, so it may do more than answer, such as end
+## the Parry. Left as it is, nothing is parried.
+var is_parried: Callable = func(_from: Vector2) -> bool: return false
+
+## What became of a hit that reached a Hurtbox.
+enum Outcome {
+	## The owner was untouchable, so the hit did not land and may land later.
+	MISSED,
+	## The hit landed, and whatever damage got through was taken off the Health.
+	LANDED,
+	## The owner parried the hit: it did no damage, and it has been dealt with.
+	PARRIED,
+}
+
+## Asked on every hit that does not miss, after is_parried has let it by: how much of
 ## the hit's damage gets through, given the damage and the point in the world the hit comes
 ## from. Almos blocking is the case: a hit from the front deals less. The Health takes what it
 ## returns. It is asked once for each hit, so it may do more than answer, such as spend
@@ -23,10 +40,13 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 
 
 ## A hit reaches this Hurtbox, for this much damage, coming from this point in the world.
-## Returns whether it landed: it does not while the owner is untouchable. A hit that landed
-## has been dealt with even if none of its damage got through.
-func hurt(damage: float, from: Vector2) -> bool:
+## Returns what became of it: it misses while the owner is untouchable and is parried when
+## the owner's Parry catches it. A hit that landed or was parried has been dealt with, even
+## if none of its damage got through.
+func hurt(damage: float, from: Vector2) -> Outcome:
 	if is_untouchable.call():
-		return false
+		return Outcome.MISSED
+	if is_parried.call(from):
+		return Outcome.PARRIED
 	health.take_damage(damage_through.call(damage, from))
-	return true
+	return Outcome.LANDED

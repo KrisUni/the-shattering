@@ -85,3 +85,15 @@ extends Resource
 ## takes the last of his Stamina, standing still and unable to Roll, attack or block. A time
 ## that is not a whole number of physics frames lasts until the next whole frame.
 @export var guard_break_duration: float
+
+## How many physics frames the window of a Parry lasts. It opens on the frame of the press,
+## which counts as the first. A hit in front of Almos in the window is parried.
+@export var parry_window_frames: int
+
+## How many physics frames Almos stands open after a window that caught nothing, unable to
+## Roll, attack, Block or Parry, with every hit landing in full.
+@export var parry_recovery_frames: int
+
+## How wide, in degrees, the front is that a Parry covers, centred on the way Almos faces:
+## half of it either side. A hit from outside it is not parried.
+@export var parry_arc_degrees: float
