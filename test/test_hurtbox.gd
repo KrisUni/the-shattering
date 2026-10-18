@@ -12,6 +12,8 @@ const TOLERANCE := 0.0001
 const HEALTH_MAXIMUM := 100.0
 # In Health points.
 const HIT_DAMAGE := 30.0
+# In Stagger points.
+const HIT_STAGGER := 22.0
 # In pixels. A strike this wide covers a Hurtbox from wherever the Hitbox is placed.
 const HITBOX_RADIUS := 200.0
 # In pixels.
@@ -170,6 +172,68 @@ func test_a_hitbox_does_not_emit_parried_for_a_hit_that_lands() -> void:
 
 	assert_eq(emitted[0], 0)
 	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
+
+
+func test_a_hit_that_lands_announces_its_stagger_and_where_it_comes_from_once() -> void:
+	var landed: Array[Dictionary] = []
+	_hurtbox.landed.connect(func(stagger: float, from: Vector2) -> void: landed.append({"stagger": stagger, "from": from}))
+	var from := Vector2(12.0, -7.0)
+
+	_hurtbox.hurt(HIT_DAMAGE, from, HIT_STAGGER)
+
+	assert_eq(landed.size(), 1, "landed should be emitted once")
+	if landed.size() == 1:
+		assert_almost_eq(landed[0].stagger, HIT_STAGGER, TOLERANCE)
+		assert_almost_eq(landed[0].from, from, Vector2.ONE * TOLERANCE)
+
+
+func test_a_hit_with_no_stagger_given_builds_none() -> void:
+	var landed: Array[float] = []
+	_hurtbox.landed.connect(func(stagger: float, _from: Vector2) -> void: landed.append(stagger))
+
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO)
+
+	assert_eq(landed, [0.0] as Array[float])
+
+
+func test_a_hit_the_hook_lets_none_of_the_damage_through_still_announces_landing() -> void:
+	var landed := [0]
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2) -> void: landed[0] += 1)
+	_hurtbox.damage_through = func(_damage: float, _from: Vector2) -> float: return 0.0
+
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, HIT_STAGGER)
+
+	assert_eq(landed[0], 1)
+
+
+func test_a_missed_or_parried_hit_does_not_announce_landing() -> void:
+	var landed := [0]
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2) -> void: landed[0] += 1)
+
+	_hurtbox.is_untouchable = func() -> bool: return true
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, HIT_STAGGER)
+	_hurtbox.is_untouchable = func() -> bool: return false
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+	_hurtbox.hurt(HIT_DAMAGE, Vector2.ZERO, HIT_STAGGER)
+
+	assert_eq(landed[0], 0)
+
+
+func test_a_hurtbox_carries_no_parry_stagger_unless_its_owner_sets_it() -> void:
+	assert_almost_eq(_hurtbox.parry_stagger, 0.0, TOLERANCE)
+
+
+func test_a_hitbox_hands_its_stagger_to_the_hurtbox_with_the_hit_once_in_the_swing() -> void:
+	var hitbox := await _hitbox_over_the_hurtbox()
+	hitbox.stagger = HIT_STAGGER
+	var landed: Array[float] = []
+	_hurtbox.landed.connect(func(stagger: float, _from: Vector2) -> void: landed.append(stagger))
+
+	hitbox.active = true
+	await wait_physics_frames(SETTLE_FRAMES * 2)
+	hitbox.active = false
+
+	assert_eq(landed, [HIT_STAGGER] as Array[float], "the stagger should arrive once with the hit")
 
 
 # A Hitbox, switched off, covering the Hurtbox, which is in the tree.

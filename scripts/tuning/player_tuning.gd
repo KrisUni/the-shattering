@@ -94,6 +94,10 @@ extends Resource
 ## Roll, attack, Block or Parry, with every hit landing in full.
 @export var parry_recovery_frames: int
 
+## How much Stagger each Parry builds on the attacker whose hit it parries. It is Almos's
+## number, not the Weapon's.
+@export var parry_stagger: float
+
 ## How wide, in degrees, the front is that a Parry covers, centred on the way Almos faces:
 ## half of it either side. A hit from outside it is not parried.
 @export var parry_arc_degrees: float

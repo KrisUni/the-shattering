@@ -68,7 +68,7 @@ func advance(free: bool) -> void:
 ## by his Hurtbox for every hit that is not on someone untouchable, so it is to be called once
 ## for each.
 func catches(from: Vector2, centre: Vector2, facing: Vector2) -> bool:
-	if not window_open or not Almos.covers_front(from, centre, facing, tuning.parry_arc_degrees):
+	if not window_open or not FrontArc.covers(from, centre, facing, tuning.parry_arc_degrees):
 		return false
 	_end()
 	_show()

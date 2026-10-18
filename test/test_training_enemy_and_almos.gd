@@ -28,7 +28,7 @@ const WINDOW_OPENS_LATER_BY := 0.05
 # The most physics frames any wait in these tests may take.
 const WAIT_FRAME_LIMIT := 240
 # The most Light swings Almos is given to kill the enemy.
-const MOST_SWINGS := 10
+const MOST_SWINGS := 20
 # How many physics frames the test runs after the exchange it is about, to let it play out.
 const SETTLE_FRAMES := 10
 
@@ -114,11 +114,16 @@ func test_it_does_not_hit_almos_while_he_is_untouchable_in_a_roll(params = use_p
 
 func test_almos_light_attacks_can_kill_it() -> void:
 	var sword := load(AlmosInput.WEAPON_PATH) as WeaponData
-	var almos = _almos_input.spawn_almos()
+	var swings_needed := ceili(_rig.tuning_with().health_maximum / sword.light_attacks[0].damage)
+	# With the enemy's Health what it is, it takes more swings than the Stamina and Health Almos
+	# has to spare, so he is given enough of both to see them through.
+	var enduring := (load(AlmosInput.TUNING_PATH) as PlayerTuning).duplicate() as PlayerTuning
+	enduring.stamina_maximum = swings_needed * sword.light_attacks[0].stamina_cost
+	enduring.health_maximum *= swings_needed
+	var almos = _almos_input.spawn_almos(enduring)
 	var enemy = _rig.spawn_enemy(null, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
 	var deaths := _rig.record_deaths()
 	var health_maximum: float = enemy.health.maximum
-	var swings_needed := ceili(health_maximum / sword.light_attacks[0].damage)
 	await _rig.wait_frames(AlmosInput.SETTLE_FRAMES)
 
 	var swings := 0

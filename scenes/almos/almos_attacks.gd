@@ -119,7 +119,7 @@ func _begin_light(aim: Vector2) -> void:
 		_light_swing = 0
 		return
 	_light_swing = index + 1
-	_begin_swing(next, next.damage, aim)
+	_begin_swing(next, next.damage, next.stagger, aim)
 
 
 func _begin_charge() -> void:
@@ -142,19 +142,20 @@ func _charge(aim: Vector2) -> void:
 		return
 	_charging = false
 	# Nothing is charged until the button has been held for the charge start, so a tap gives
-	# the plain Heavy attack. From there damage and cost grow in a straight line from the
+	# the plain Heavy attack. From there damage, Stagger and cost grow in a straight line from the
 	# plain ones to those of a full charge, which comes when the button has been held for
 	# charge_frames_max.
 	var built := float(_frames_held - heavy.charge_start_frames)
 	var charge := clampf(built / (heavy.charge_frames_max - heavy.charge_start_frames), 0.0, 1.0)
 	if stamina.spend(lerpf(heavy.stamina_cost, heavy.charged_stamina_cost, charge)):
-		_begin_swing(heavy, lerpf(heavy.damage, heavy.charged_damage, charge), aim)
+		_begin_swing(heavy, lerpf(heavy.damage, heavy.charged_damage, charge), lerpf(heavy.stagger, heavy.charged_stagger, charge), aim)
 
 
-func _begin_swing(swing: AttackData, damage: float, aim: Vector2) -> void:
+func _begin_swing(swing: AttackData, damage: float, stagger: float, aim: Vector2) -> void:
 	_swing = swing
 	_frame = 0
 	hitbox.damage = damage
+	hitbox.stagger = stagger
 	hitbox.rotation = aim.angle()
 
 

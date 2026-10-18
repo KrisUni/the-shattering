@@ -142,6 +142,7 @@ func _ready() -> void:
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
 	_hurtbox.is_parried = func(from: Vector2) -> bool:
 		return _parry.catches(from, global_position, facing)
+	_hurtbox.parry_stagger = tuning.parry_stagger
 	_hurtbox.damage_through = func(damage: float, from: Vector2) -> float:
 		return _block.receive_hit(damage, from, global_position, facing)
 
@@ -194,17 +195,6 @@ func _physics_process(delta: float) -> void:
 	_face_the_target()
 	# Turning the placeholder shape stands in for the eight facing sprites.
 	_placeholder.rotation = facing.angle()
-
-
-# Whether a hit that comes from this point is in the front of someone standing at centre and
-# facing this way, which is arc_degrees wide, half of it either side. Block and Parry judge
-# their fronts with it.
-static func covers_front(from: Vector2, centre: Vector2, facing: Vector2, arc_degrees: float) -> bool:
-	var to_hit := from - centre
-	# A hit from his own centre has no direction, and counts as from the front.
-	if to_hit.is_zero_approx():
-		return true
-	return absf(facing.angle_to(to_hit)) <= deg_to_rad(arc_degrees) / 2.0
 
 
 func _move_freely(direction: Vector2, delta: float) -> void:

@@ -90,7 +90,7 @@ func _blocks(from: Vector2, centre: Vector2, facing: Vector2) -> bool:
 # Whether a hit that comes from this point is in the front that Block covers, for someone
 # standing at centre and facing this way.
 func _covers(from: Vector2, centre: Vector2, facing: Vector2) -> bool:
-	return Almos.covers_front(from, centre, facing, tuning.block_arc_degrees)
+	return FrontArc.covers(from, centre, facing, tuning.block_arc_degrees)
 
 
 # A Guard break begins: he is not blocking from this moment, and the frames it lasts are

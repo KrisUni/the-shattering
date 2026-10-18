@@ -39,6 +39,8 @@ charge_start_frames = 8
 charge_frames_max = 60
 charged_damage = 60.0
 charged_stamina_cost = 70.0
+stagger = 20.0
+charged_stagger = 45.0
 
 [resource]
 script = ExtResource("3_weapon")

@@ -19,5 +19,9 @@ extends AttackData
 ## How much Health a hit takes off when the attack is fully charged.
 @export var charged_damage: float
 
+## How much Stagger a hit builds when the attack is fully charged. The Stagger it inherits is
+## that of a plain Heavy attack, and in between it grows in a straight line with the charge.
+@export var charged_stagger: float
+
 ## How much Stamina the attack spends when it is fully charged.
 @export var charged_stamina_cost: float

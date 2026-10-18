@@ -17,6 +17,9 @@ signal parried(hurtbox: Hurtbox)
 ## How much Health a hit takes off.
 @export var damage: float
 
+## How much Stagger a hit builds on whoever it lands on.
+@export var stagger: float
+
 ## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
 @export var strike_shape: CollisionShape2D
 
@@ -61,7 +64,7 @@ func _physics_process(_delta: float) -> void:
 	for area in get_overlapping_areas():
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
-			var outcome := hurtbox.hurt(damage, global_position)
+			var outcome := hurtbox.hurt(damage, global_position, stagger)
 			if outcome != Hurtbox.Outcome.MISSED:
 				_hit.append(hurtbox)
 			if outcome == Hurtbox.Outcome.PARRIED:
