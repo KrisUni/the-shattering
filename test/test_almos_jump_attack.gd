@@ -51,6 +51,12 @@ const ANGLE_TOLERANCE := 0.0001
 # How many samples show him in the air by the time a press is made that is seen in the very last
 # frame of the flight, the one he comes down in. One more and it would be seen on the ground.
 const LATE_PRESS_SAMPLES := 25
+# In pixels. How far from the middle of an enemy Almos comes down, to land half on it.
+const LANDING_OFFSET := 6.0
+# In pixels. How much closer than touching two bodies may be and still count as apart.
+const REST_TOLERANCE := 0.5
+# In physics frames. How long after he lands a plain landing on an enemy has him pushed out of it.
+const SEPARATION_FRAMES := 2
 
 # The presses that a Jump attack leaves him unable to make until it is over, and what each would
 # have started.
@@ -62,6 +68,13 @@ var committed_presses_params = ParameterFactory.named_parameters(
 		[&"parry", "parrying"],
 		[&"block", "blocking"],
 	],
+)
+
+# Whether the enemy goes after Almos, as it does when it notices him, or after a stand-in too far
+# off to notice, so that it stands about. Either way it does not move out of his way.
+var enemy_target_params = ParameterFactory.named_parameters(
+	["name", "after_almos"],
+	[["an idle enemy", false], ["an enemy after him", true]],
 )
 
 # Which side of the enemy Almos is on, and whether the enemy has its back to him.
@@ -365,6 +378,42 @@ func test_a_jump_attack_onto_a_low_ledge_strikes_as_he_lands_on_it() -> void:
 
 # --- On an enemy ---
 
+func test_a_jump_attack_landing_on_an_enemy_pushes_him_off_it_and_keeps_him_apart(params = use_parameters(enemy_target_params)) -> void:
+	var reach := _tuning().walk_speed * _tuning().jump_duration
+	_spawn_almos(Vector2.ZERO)
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap(&"jump")
+	_almos_input.release_action(&"move_right")
+	var takeoff: Vector2 = _samples[_first_sample_where("airborne") - 1].position
+	# He cannot steer in the air, and lands standing still, a little to one side of the
+	# enemy's middle.
+	_enemy = _rig.spawn_enemy(null, takeoff + Vector2(reach + LANDING_OFFSET, 0.0))
+	if params.after_almos:
+		_rig.set_target(_almos, _almos.health)
+	else:
+		_rig.place_target(Vector2(0.0, 5.0 * _enemy.tuning.notice_range))
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap(&"attack_heavy")
+
+	await _wait_until_the_jump_attack_is_over()
+
+	var landed := _first_sample_where_down_again()
+	var attacking := _span("attacking")
+	var touching := 2.0 * _body_radius() - REST_TOLERANCE
+	var apart_at := -1
+	for i in range(landed, attacking.y):
+		if _samples[i].position.distance_to(_samples[i].enemy_position) >= touching:
+			apart_at = i
+			break
+	assert_ne(apart_at, -1, "he should be pushed out of the enemy")
+	if apart_at == -1:
+		return
+	assert_lte(apart_at - landed, SEPARATION_FRAMES, "frames after he lands that he is pushed out in, as in a plain landing")
+	for i in range(apart_at, attacking.y):
+		assert_gte(_samples[i].position.distance_to(_samples[i].enemy_position), touching, "he should stay out of the enemy (sample %d)" % i)
+
+
 func test_a_landed_jump_attack_deals_its_damage_and_builds_its_stagger(params = use_parameters(side_params)) -> void:
 	_almos = _fight.spawn_almos_above_the_enemy(params.from_behind)
 	_enemy = _rig.enemy
@@ -483,6 +532,7 @@ func _take_sample() -> void:
 		"striking": sword.active,
 		"aim": sword.rotation,
 		"enemy_health": _enemy.health.current if is_instance_valid(_enemy) else 0.0,
+		"enemy_position": _enemy.position if is_instance_valid(_enemy) else Vector2.ZERO,
 	})
 
 

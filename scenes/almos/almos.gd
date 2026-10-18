@@ -296,10 +296,14 @@ func _take_off(direction: Vector2, delta: float) -> void:
 
 # An attack commits him: he neither walks nor sprints from the moment he begins charging a
 # Heavy attack or swinging until the recovery is over. A Guard break leaves him standing
-# the same way, and so does a Parry.
+# the same way, and so does a Parry. He still takes the step that moves nothing, as a free
+# frame without a push of the stick does, because that is what pushes him out of a body he has
+# landed on: only a step separates him from one, and a Jump attack or a Parry begun on landing
+# would otherwise have him stand inside an enemy to the end.
 func _stand_still() -> void:
 	_state = State.WALKING
 	velocity = Vector2.ZERO
+	move_and_slide()
 
 
 # Whether he is trying to Sprint: pushing a direction with the Roll button held to the

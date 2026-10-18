@@ -61,6 +61,8 @@ const ENEMY_DISTANCE := 100.0
 const PEAK_ALLOWANCE := 0.03
 # In pixels. How far from the middle of an enemy Almos comes down, to land half on it.
 const LANDING_OFFSET := 6.0
+# In physics frames. How long after he lands a plain landing on an enemy has him pushed out of it.
+const SEPARATION_FRAMES := 2
 
 var jump_binding_params = ParameterFactory.named_parameters(
 	["name", "press"],
@@ -343,6 +345,43 @@ func test_landing_on_an_enemy_pushes_him_off_it_and_never_stands_him_on_it() -> 
 	var apart: float = _almos.position.distance_to(enemy.position)
 	assert_gte(apart, 2.0 * _body_radius() - REST_TOLERANCE, "he should be pushed out of the enemy")
 	assert_eq(_almos.height_level, 0, "he should be on the ground")
+
+
+func test_a_parry_pressed_on_the_first_frame_after_a_landing_on_an_enemy_pushes_him_off_it() -> void:
+	var reach := _tuning().walk_speed * _tuning().jump_duration
+	_spawn_almos(Vector2.ZERO)
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap(&"jump")
+	_almos_input.release_action(&"move_right")
+	var enemy = _rig.spawn_enemy(null, _takeoff() + Vector2(reach + LANDING_OFFSET, 0.0))
+	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.notice_range))
+	# The press is made in the last frame of the flight, to be seen in the first frame on the
+	# ground.
+	await wait_until(func() -> bool: return _frames_in_the_air() >= _frames_for(_tuning().jump_duration), WAIT_LIMIT)
+	await _tap(&"parry")
+	await wait_physics_frames(PAST_THE_END_FRAMES)
+
+	var landed := _first_sample_where_down_again()
+	# A sample shows how the frame before it left things, so a Parry begun in the first frame on
+	# the ground shows in the sample after the one that shows him down.
+	assert_eq(_first_sample_where("parrying"), landed + 1, "the Parry should begin in the first frame he is down")
+	var apart_at := -1
+	for i in range(landed, _samples.size()):
+		if _samples[i].position.distance_to(enemy.position) >= 2.0 * _body_radius() - REST_TOLERANCE:
+			apart_at = i
+			break
+	assert_ne(apart_at, -1, "he should be pushed out of the enemy")
+	if apart_at == -1:
+		return
+	assert_lte(apart_at - landed, SEPARATION_FRAMES, "frames after he lands that he is pushed out in, as in a plain landing")
+	var parried_until := _samples.size()
+	for i in range(landed, _samples.size()):
+		if not _samples[i].parrying:
+			parried_until = i
+			break
+	for i in range(apart_at, parried_until):
+		assert_gte(_samples[i].position.distance_to(enemy.position), 2.0 * _body_radius() - REST_TOLERANCE, "he should stay out of the enemy through the Parry (sample %d)" % i)
 
 
 func test_landing_on_an_enemy_pushes_him_out_on_the_side_he_came_down_on(params = use_parameters(landing_side_params)) -> void:
@@ -717,6 +756,16 @@ func _landing() -> Vector2:
 			return _samples[i].position
 	fail_test("he should have come down")
 	return Vector2.ZERO
+
+
+# The index of the first sample to show him down again after the Jump.
+func _first_sample_where_down_again() -> int:
+	var first := _first_sample_where("airborne")
+	for i in range(first, _samples.size()):
+		if not _samples[i].airborne:
+			return i
+	fail_test("he should have come down")
+	return -1
 
 
 func _first_sample_where(state: String) -> int:
