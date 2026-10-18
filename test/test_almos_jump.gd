@@ -44,6 +44,9 @@ const PAST_THE_END_FRAMES := 12
 const FRAME_COUNT_ALLOWANCE := 0.0001
 # In Stamina points.
 const STAMINA_TOLERANCE := 0.0001
+# In pixels. How far the reach of a Jump under Lock-on may differ from the straight line of
+# his last step: the circling turns a little between frames.
+const LOCK_ON_VELOCITY_TOLERANCE := 1.5
 # In Health points.
 const HEALTH_TOLERANCE := 0.0001
 # A refill pause longer than any wait in these tests, for tests that need Stamina to stay
@@ -77,6 +80,12 @@ var blocking_sides_params = ParameterFactory.named_parameters(
 var attack_button_params = ParameterFactory.named_parameters(
 	["action"],
 	[[&"attack_light"], [&"attack_heavy"]],
+)
+
+# Which side of the enemy he comes down on, as the sign of how far from its middle he lands.
+var landing_side_params = ParameterFactory.named_parameters(
+	["name", "side"],
+	[["left", -1.0], ["right", 1.0]],
 )
 
 var _almos_input: AlmosInput
@@ -342,6 +351,40 @@ func test_landing_on_an_enemy_pushes_him_off_it_and_never_stands_him_on_it() -> 
 	assert_eq(_almos.height_level, 0, "he should be on the ground")
 
 
+func test_landing_on_an_enemy_pushes_him_out_on_the_side_he_came_down_on(params = use_parameters(landing_side_params)) -> void:
+	var reach := _tuning().walk_speed * _tuning().jump_duration
+	_spawn_almos(Vector2.ZERO)
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(SETTLE_FRAMES)
+	await _tap(&"jump")
+	_almos_input.release_action(&"move_right")
+	# He lands a little to this side of the enemy's middle.
+	var enemy = _rig.spawn_enemy(null, _takeoff() + Vector2(reach - params.side * LANDING_OFFSET, 0.0))
+	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.notice_range))
+
+	await _wait_until_down()
+	await wait_physics_frames(PAST_THE_END_FRAMES)
+
+	assert_gt((_almos.position.x - enemy.position.x) * params.side, 0.0, "he should be pushed out to the %s of the enemy" % params.name)
+
+
+func test_an_enemy_walks_under_him_while_he_is_in_the_air() -> void:
+	_spawn_almos(Vector2.ZERO)
+	# Touching him on his left, and after a target on his right, so that it would have to go
+	# through him.
+	var enemy = _rig.spawn_enemy(null, Vector2(-2.0 * _body_radius() - REST_TOLERANCE, 0.0))
+	_rig.place_target(Vector2(ENEMY_DISTANCE, 0.0))
+	await wait_physics_frames(SETTLE_FRAMES)
+	assert_lt(enemy.position.x, _almos.position.x, "the enemy should be held on his left while he stands on the ground")
+
+	await _tap_jump_and_wait_until_down()
+
+	var in_the_air := _samples.filter(func(sample: Dictionary) -> bool: return sample.airborne)
+	var last := _rig.samples.size() - 1
+	var walked: float = _rig.samples[last].position.x - _rig.samples[last - in_the_air.size()].position.x
+	assert_gt(walked, 2.0 * _body_radius(), "the enemy should have gone on past where he stood")
+
+
 func test_an_enemy_does_not_stop_him_in_the_air() -> void:
 	var reach := _tuning().walk_speed * _tuning().jump_duration
 	_spawn_almos(Vector2.ZERO)
@@ -356,6 +399,21 @@ func test_an_enemy_does_not_stop_him_in_the_air() -> void:
 
 
 # The Stamina
+
+func test_a_jump_keeps_the_circling_velocity_he_had_when_he_took_off_under_lock_on() -> void:
+	_spawn_almos(Vector2.ZERO)
+	_stand_in_enemy_at(Vector2.UP * ENEMY_DISTANCE)
+	await _tap(&"lock_on")
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(SETTLE_FRAMES)
+
+	await _tap_jump_and_wait_until_down()
+
+	var first := _first_sample_where("airborne")
+	var step_before: Vector2 = _samples[first - 1].position - _samples[first - 2].position
+	var expected := step_before * _frames_in_the_air()
+	assert_almost_eq(_landing() - _takeoff(), expected, Vector2.ONE * LOCK_ON_VELOCITY_TOLERANCE)
+
 
 func test_a_jump_costs_the_tuned_stamina_once_at_its_start() -> void:
 	_spawn_almos(Vector2.ZERO, _tuning_with({"stamina_refill_pause": LONG_REFILL_PAUSE}))
