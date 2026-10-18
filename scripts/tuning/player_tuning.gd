@@ -101,3 +101,16 @@ extends Resource
 ## How wide, in degrees, the front is that a Parry covers, centred on the way Almos faces:
 ## half of it either side. A hit from outside it is not parried.
 @export var parry_arc_degrees: float
+
+## How long, in seconds, a Jump lasts, from leaving the ground to coming down. He carries
+## the speed he had on the frame he took off for all of it, so this and that speed are how
+## far a Jump reaches.
+@export var jump_duration: float
+
+## How high, in pixels, his placeholder rises at the top of a Jump. It is how the Jump looks:
+## the height levels do not depend on it.
+@export var jump_height: float
+
+## How much Stamina a Jump spends when it starts. It may be zero, and then a Jump needs no
+## Stamina at all.
+@export var jump_stamina_cost: float

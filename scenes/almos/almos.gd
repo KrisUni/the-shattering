@@ -65,8 +65,8 @@ var lock_on_target: Node2D:
 		return _lock_on.target
 
 ## Whether he is blocking: the Block button is held and he is free, which he is not in a
-## Roll, in an attack, charging a Heavy attack, sprinting or in a Guard break. Holding the
-## Roll button while blocking does not start a Sprint.
+## Roll, in an attack, charging a Heavy attack, sprinting, in the air or in a Guard break.
+## Holding the Roll button while blocking does not start a Sprint.
 var blocking: bool:
 	get:
 		return _block.blocking
@@ -89,6 +89,19 @@ var parrying: bool:
 var parry_window_open: bool:
 	get:
 		return _parry.window_open
+
+## Whether he is in the air, in a Jump: from the frame of the press to the frame he comes
+## down in. He can neither Roll, Block, Parry nor attack in it, and a press of any of those
+## buttons is lost. He can be hurt in it as usual.
+var airborne: bool:
+	get:
+		return _jump.airborne
+
+## Which height level he is on: 0 for the ground, 1 for a low ledge. In the air it is the
+## level he took off from, until he comes down.
+var height_level: int:
+	get:
+		return _jump.height_level
 
 ## Whether Almos cannot be hurt at this moment: during part of a Roll.
 var untouchable: bool:
@@ -115,6 +128,7 @@ var untouchable: bool:
 @onready var _lock_on: AlmosLockOn = $LockOn
 @onready var _block: AlmosBlock = $Block
 @onready var _parry: AlmosParry = $Parry
+@onready var _jump: AlmosJump = $Jump
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
@@ -143,6 +157,7 @@ func _enter_tree() -> void:
 	($LockOn as AlmosLockOn).tuning = tuning
 	($Block as AlmosBlock).tuning = tuning
 	($Parry as AlmosParry).tuning = tuning
+	($Jump as AlmosJump).tuning = tuning
 
 
 func _ready() -> void:
@@ -178,22 +193,34 @@ func _physics_process(delta: float) -> void:
 	# start in that same frame and follow it without a gap.
 	if rolling and _roll_time >= tuning.roll_duration - TIME_SLACK:
 		_end_roll(direction)
-	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying)
+	# In the air he can do none of these, and a press of their buttons is lost, as it is in a
+	# Guard break. A Jump that comes down in this frame is still spent in the air.
+	var in_the_air := airborne
+	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air)
 	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
 	# them is lost, not kept for after it.
-	if tapped and not _attacks.committed and not left_open and not left_parrying:
+	if tapped and not _attacks.committed and not left_open and not left_parrying and not in_the_air:
 		_on_roll_tapped(direction)
 	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
 	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
 	# to this frame, and so win against a Parry press made in the same frame.
-	_parry.advance(not rolling and not _attacks.committed and not left_open and not left_parrying)
+	_parry.advance(not rolling and not _attacks.committed and not left_open and not left_parrying and not in_the_air)
 	var parry_on := left_parrying or parrying
+	# A Jump can be begun from a walk, a Sprint or while blocking, in the same places: not in a
+	# Roll, an attack, a Guard break or a Parry, which have begun by now if they were going to
+	# this frame and so win against a Jump press made in the same frame, nor in the air. It is
+	# read before Block is, so that blocking ends as he leaves the ground.
+	if _jump_pressed_and_free(left_open, parry_on, in_the_air):
+		_take_off(direction, delta)
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
-	# if they were going to this frame, or sprinting, which is as the last frame left it.
-	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting, delta)
+	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
+	# the air.
+	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
-	if rolling:
+	if airborne:
+		_jump.advance(delta)
+	elif rolling:
 		_roll(delta)
 	elif _attacks.committed or left_open or parry_on:
 		_stand_still()
@@ -214,6 +241,13 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 		sprint = stamina.spend(tuning.sprint_stamina_per_second * delta)
 		_out_of_breath = not sprint
 	_state = State.SPRINTING if sprint else State.WALKING
+	velocity = _walking_velocity(direction, delta, sprint)
+	move_and_slide()
+
+
+# The velocity he walks, sprints or, blocking, walks slowly at this frame, turning him to the
+# way he goes. Under Lock-on he circles the target instead of walking where the stick points.
+func _walking_velocity(direction: Vector2, delta: float, sprint: bool) -> Vector2:
 	var speed := tuning.walk_speed
 	if sprint:
 		speed = tuning.sprint_speed
@@ -222,12 +256,29 @@ func _move_freely(direction: Vector2, delta: float) -> void:
 	if _lock_on.locked:
 		# He circles the target instead of walking where the stick points, and faces it
 		# whichever way he goes (see _face_the_target).
-		velocity = _lock_on.circling_velocity(direction, speed, delta)
-	else:
-		if direction != Vector2.ZERO:
-			_face(direction)
-		velocity = direction * speed
-	move_and_slide()
+		return _lock_on.circling_velocity(direction, speed, delta)
+	if direction != Vector2.ZERO:
+		_face(direction)
+	return direction * speed
+
+
+# Whether the Jump button was pressed this frame by someone free to Jump. The press is read
+# only then, so that one made when he is not free is lost, not kept for after.
+func _jump_pressed_and_free(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
+	var free := not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air
+	return free and Input.is_action_just_pressed(&"jump")
+
+
+# He takes off with the velocity he has this frame: walking, sprinting (which the Jump ends, so
+# the frame is not paid for) or blocking, or none standing still. Block is read as the last
+# frame left it, since this comes before Block is advanced. A press he cannot pay for is no
+# Jump, and he carries on as usual; a Jump that costs nothing needs no Stamina.
+func _take_off(direction: Vector2, delta: float) -> void:
+	if tuning.jump_stamina_cost > 0.0 and not stamina.spend(tuning.jump_stamina_cost):
+		return
+	var sprint := _state == State.SPRINTING and _wants_to_sprint(direction)
+	_state = State.WALKING
+	_jump.begin(_walking_velocity(direction, delta, sprint))
 
 
 # An attack commits him: he neither walks nor sprints from the moment he begins charging a

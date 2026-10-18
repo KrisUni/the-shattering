@@ -219,7 +219,8 @@ Fast running, done by holding the Roll button while moving; drains Stamina conti
 _Avoid_: Run, dash
 
 **Jump**:
-A hop with its own button that carries the player across gaps, up onto low ledges, and over Low attacks. It gives no invulnerability: anything else still hits.
+A hop with its own button that carries the player across gaps, up onto low ledges, and over Low attacks. It gives no invulnerability: anything else still hits, and a shadow under the player shows his height. It costs Stamina, which may be none; with too little to pay for it there is no Jump. The player keeps the speed and direction he had as he took off, to the end, with no steering: walking, Sprinting or blocking carry him as far as that speed goes, and standing still jumps in place. It can be started from a walk, a Sprint (which it ends) or a Block, but not in a Roll, an attack, a Parry or a Guard break, where the press is lost. In the air the player can neither Roll, Block, Parry nor attack, and those presses are lost too.
+There are two height levels, the ground and the low ledge. On the ground, gaps and the sides of low ledges block the player like walls, and enemies as well; in the air only real walls do, and enemies are passed over. Where the player comes down sets his level: inside a ledge puts him on it, where its own edges keep him in, and anywhere else is the ground. Coming down on an enemy does not stand him on it: he is pushed out sideways. Coming down inside a gap is a Deadly fall; until that is built it puts the player back where the Jump began.
 _Avoid_: Leap, hop, vault
 
 **Jump attack**:

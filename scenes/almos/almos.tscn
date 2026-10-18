@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scenes/almos/almos_lock_on.gd" id="9_lock_on"]
 [ext_resource type="Script" path="res://scenes/almos/almos_block.gd" id="10_block"]
 [ext_resource type="Script" path="res://scenes/almos/almos_parry.gd" id="11_parry"]
+[ext_resource type="Script" path="res://scenes/almos/almos_jump.gd" id="12_jump"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -22,10 +23,17 @@ radius = 12.0
 size = Vector2(28, 28)
 
 [node name="Almos" type="CharacterBody2D"]
+collision_layer = 256
+collision_mask = 153
 motion_mode = 1
 script = ExtResource("1_script")
 tuning = ExtResource("2_tuning")
 weapon = ExtResource("6_weapon")
+
+[node name="Shadow" type="Polygon2D" parent="."]
+visible = false
+color = Color(0, 0, 0, 0.35)
+polygon = PackedVector2Array(12, 0, 8.49, 4.24, 0, 6, -8.49, 4.24, -12, 0, -8.49, -4.24, 0, -6, 8.49, -4.24)
 
 [node name="Placeholder" type="Polygon2D" parent="."]
 color = Color(0.45, 0.25, 0.7, 1)
@@ -103,3 +111,9 @@ tinted_placeholder = NodePath("../Placeholder")
 script = ExtResource("11_parry")
 placeholder = NodePath("../Placeholder/ParryPlaceholder")
 tinted_placeholder = NodePath("../Placeholder")
+
+[node name="Jump" type="Node" parent="." node_paths=PackedStringArray("body", "placeholder", "shadow")]
+script = ExtResource("12_jump")
+body = NodePath("..")
+placeholder = NodePath("../Placeholder")
+shadow = NodePath("../Shadow")
