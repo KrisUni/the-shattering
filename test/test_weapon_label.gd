@@ -70,6 +70,19 @@ func test_it_follows_a_drop_to_the_next_weapon_and_then_to_unarmed() -> void:
 	assert_eq(_label(room).text, UNARMED)
 
 
+func test_it_follows_a_weapon_picked_up_with_empty_hands_to_the_one_now_in_hand() -> void:
+	var room := _spawn_room()
+	var almos: Almos = room.find_child("Almos", true, false)
+	almos.global_position = Vector2(600.0, 420.0)
+	await _hold_to_drop()
+	assert_eq(_label(room).text, UNARMED, "his hands should be empty")
+	almos.global_position = room.find_child("SpearPickup", true, false).global_position
+
+	await _tap(&"interact")
+
+	assert_eq(_label(room).text, _name_of(SPEAR_PATH))
+
+
 func _spawn_room() -> Node:
 	var scene := load(TEST_ROOM_PATH) as PackedScene
 	assert_not_null(scene, "the test room scene should load")

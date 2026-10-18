@@ -17,6 +17,7 @@ const SWORD_PATH := "res://data/sword.tres"
 const SPEAR_PATH := "res://data/spear.tres"
 const GREATSWORD_PATH := "res://data/greatsword.tres"
 const TORCH_PATH := "res://data/torch.tres"
+const WEAPON_PICKUP_SCENE_PATH := "res://scenes/world/weapon_pickup.tscn"
 
 const PICKUPS_GROUP := &"weapon_pickups"
 
@@ -306,6 +307,91 @@ func test_a_press_lost_while_not_free_is_not_kept_for_when_he_is_free_again() ->
 	await wait_physics_frames(TAP_FRAMES)
 
 	assert_eq(almos.weapons.carried.size(), 1)
+
+
+func test_a_press_and_release_both_made_before_the_same_frame_is_a_tap() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	_stand_at(room, almos, "SpearPickup")
+
+	_almos_input.press_action(&"interact")
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_eq(_paths(almos.weapons.carried), [SWORD_PATH, SPEAR_PATH])
+
+
+func test_a_press_and_release_both_made_before_the_same_frame_while_blocking_picks_up_nothing() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	_stand_at(room, almos, "SpearPickup")
+	_almos_input.press_action(&"block")
+	await wait_physics_frames(TAP_FRAMES)
+	assert_true(almos.blocking, "he should be blocking")
+
+	_almos_input.press_action(&"interact")
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_eq(almos.weapons.carried.size(), 1)
+
+
+func test_a_press_let_go_of_and_pressed_again_before_the_same_frame_is_a_tap_and_a_new_press() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	var spear: Node2D = room.find_child("SpearPickup", true, false)
+	var greatsword: Node2D = room.find_child("GreatswordPickup", true, false)
+	almos.global_position = OPEN_SPOT
+	spear.global_position = almos.global_position
+	greatsword.global_position = almos.global_position
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+	_almos_input.release_action(&"interact")
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+	assert_eq(almos.weapons.carried.size(), 2, "the first press ended in a tap")
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_eq(almos.weapons.carried.size(), 3, "and the second press was a tap of its own")
+
+func test_a_pickup_exactly_at_the_edge_of_his_reach_is_taken() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	_stand_from(room, almos, "SpearPickup", _tuning().pickup_reach)
+
+	await _tap(&"interact")
+
+	assert_eq(almos.weapons.carried.size(), 2)
+
+
+func test_the_nearest_pickup_is_taken_whichever_is_first_in_the_room() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	var spear: Node2D = room.find_child("SpearPickup", true, false)
+	var greatsword: Node2D = room.find_child("GreatswordPickup", true, false)
+	almos.global_position = OPEN_SPOT
+	spear.global_position = almos.global_position + Vector2(10.0, 0.0)
+	greatsword.global_position = almos.global_position + Vector2(-20.0, 0.0)
+
+	await _tap(&"interact")
+
+	assert_eq(_paths(almos.weapons.carried), [SWORD_PATH, SPEAR_PATH])
+	assert_true(is_instance_valid(greatsword), "the farther pickup should still lie there")
+
+
+func test_a_pickup_holding_no_weapon_beside_him_does_not_stop_a_real_one_being_taken() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	_stand_from(room, almos, "SpearPickup", 10.0)
+	var empty := (load(WEAPON_PICKUP_SCENE_PATH) as PackedScene).instantiate() as Node2D
+	empty.position = almos.global_position
+	room.add_child(empty)
+
+	await _tap(&"interact")
+
+	assert_eq(_paths(almos.weapons.carried), [SWORD_PATH, SPEAR_PATH])
 
 
 # --- switching ---
@@ -828,6 +914,61 @@ func test_a_hold_he_stops_being_free_in_the_middle_of_is_not_a_tap_when_let_go_o
 	assert_eq(almos.weapons.carried.size(), 1, "the lost press picks nothing up")
 
 
+func test_a_hold_drops_on_the_frame_it_reaches_the_drop_time_and_not_the_frame_before() -> void:
+	var almos := _almos(_spawn_room())
+
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(_drop_frames() - 1)
+	assert_not_null(almos.weapons.in_hand, "not dropped a frame before the hold is up")
+	await wait_physics_frames(1)
+
+	assert_null(almos.weapons.in_hand, "dropped on the frame it is up")
+
+
+func test_a_hold_drops_on_the_frame_it_reaches_a_drop_time_of_a_whole_number_of_frames_other_than_the_shipped() -> void:
+	# A drop time of twelve frames at 60 frames a second, set here and not read from the data file.
+	var tuning := _tuning().duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as PlayerTuning
+	tuning.drop_hold_time = 0.2
+	var almos = _almos_input.spawn_almos(tuning)
+	var frames := 12
+
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(frames - 1)
+	assert_not_null(almos.weapons.in_hand, "not dropped a frame before the hold is up")
+	await wait_physics_frames(1)
+
+	assert_null(almos.weapons.in_hand, "dropped on the twelfth frame")
+
+func test_a_hold_begun_in_the_air_drops_nothing_after_he_lands() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	await _press(&"jump", TAP_FRAMES)
+	assert_true(almos.airborne, "he should be in the air")
+
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(_drop_frames() + HOLD_MARGIN)
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_false(almos.airborne, "he should have landed")
+	assert_eq(almos.weapons.carried.size(), 1, "the press was lost in the air")
+
+
+func test_a_hold_begun_in_a_swing_drops_nothing_after_it() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	await _press(&"attack_light", 1)
+	await wait_physics_frames(TAP_FRAMES)
+	assert_true(almos.attacking, "he should be in a swing")
+
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(_drop_frames() + HOLD_MARGIN)
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_false(almos.attacking, "the swing should be over")
+	assert_eq(almos.weapons.carried.size(), 1, "the press was lost in the swing")
+
 func test_dropped_pickups_stay_where_they_are_through_a_rest() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
@@ -855,6 +996,63 @@ func test_dropped_pickups_stay_where_they_are_through_a_death() -> void:
 	assert_true(is_instance_valid(dropped), "the dropped Weapon should still lie there")
 	assert_eq(dropped.global_position, OPEN_SPOT)
 
+
+func test_dropped_pickups_stay_where_they_are_through_a_rest_and_then_a_death() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	almos.global_position = OPEN_SPOT
+	await _hold_interact_to_drop()
+	var dropped := _dropped_sword(room)
+	almos.global_position = room.find_child("Checkpoint", true, false).global_position
+	await _tap(&"interact")
+
+	almos.health.take_damage(almos.health.maximum)
+	await _wait_until(func() -> bool: return not almos.dead)
+
+	assert_true(is_instance_valid(dropped), "the dropped Weapon should still lie there")
+	assert_eq(dropped.global_position, OPEN_SPOT)
+
+
+func test_empty_hands_stay_empty_through_a_death() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	await _hold_interact_to_drop()
+
+	almos.health.take_damage(almos.health.maximum)
+	await _wait_until(func() -> bool: return not almos.dead)
+
+	assert_eq(almos.weapons.carried.size(), 0)
+	assert_null(almos.weapons.in_hand)
+
+
+func test_going_into_the_tree_again_does_not_arm_him_again() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	await _hold_interact_to_drop()
+	var parent := almos.get_parent()
+
+	parent.remove_child(almos)
+	parent.add_child(almos)
+
+	assert_eq(almos.weapons.carried.size(), 0)
+
+
+func test_an_interact_press_held_through_a_death_is_no_tap_when_let_go_of_after_it() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	var checkpoint: Node2D = room.find_child("Checkpoint", true, false)
+	almos.global_position = checkpoint.global_position
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+	almos.health.take_damage(almos.health.maximum)
+	await _wait_until(func() -> bool: return not almos.dead)
+	almos.global_position = checkpoint.global_position
+	watch_signals(almos)
+
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_signal_not_emitted(almos, "rested")
 
 # --- helpers ---
 
