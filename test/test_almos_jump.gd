@@ -61,6 +61,9 @@ const ENEMY_DISTANCE := 100.0
 const PEAK_ALLOWANCE := 0.03
 # In pixels. How far from the middle of an enemy Almos comes down, to land half on it.
 const LANDING_OFFSET := 6.0
+# In pixels. How far beyond a body's width an enemy has to be able to walk while he is in the air
+# to be seen to have got past him.
+const PASSING_MARGIN := 12.0
 # In physics frames. How long after he lands a plain landing on an enemy has him pushed out of it.
 const SEPARATION_FRAMES := 2
 
@@ -402,7 +405,11 @@ func test_landing_on_an_enemy_pushes_him_out_on_the_side_he_came_down_on(params 
 
 
 func test_an_enemy_walks_under_him_while_he_is_in_the_air() -> void:
-	_spawn_almos(Vector2.ZERO)
+	# The Jump lasts long enough for the enemy, at its walking speed, to get past him with room
+	# to spare: the shipped one if it does, a longer one if a retune has made it shorter.
+	var enemy_tuning := _rig.tuning_with()
+	var duration := maxf(_tuning().jump_duration, (2.0 * _body_radius() + PASSING_MARGIN) / enemy_tuning.move_speed)
+	_spawn_almos(Vector2.ZERO, _tuning_with({"jump_duration": duration}))
 	# Touching him on his left, and after a target on his right, so that it would have to go
 	# through him.
 	var enemy = _rig.spawn_enemy(null, Vector2(-2.0 * _body_radius() - REST_TOLERANCE, 0.0))

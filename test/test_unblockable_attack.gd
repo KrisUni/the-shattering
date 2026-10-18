@@ -27,6 +27,8 @@ const TAP_FRAMES := 2
 # In physics frames. How many frames after the last of the swing's active frames his Jump ends,
 # when it is timed to end just after them.
 const JUMP_LANDS_AFTER_BY := 2
+# In pixels. How much closer than its attack range he starts, to be sure it swings at him.
+const IN_RANGE_BY := 1.0
 # In physics frames. How long the test runs after the exchange it is about, to let it play out.
 const SETTLE_FRAMES := 10
 # In seconds. Slack for the float sums that decide which frame a time falls in.
@@ -430,7 +432,17 @@ func test_a_jump_in_place_does_not_avoid_an_unblockable_attack() -> void:
 
 func test_a_jump_that_carries_him_out_of_its_reach_through_all_of_its_active_frames_avoids_it() -> void:
 	var unblockable := _tuning.unblockable_attack
-	var almos = _spawn_fight_with_unblockable_attacks()
+	# He starts as far from the enemy as it still swings at him, so that the Jump has the least
+	# to carry him.
+	var distance := _tuning.attack_range - IN_RANGE_BY
+	var almos = _spawn_fight_with_unblockable_attacks(null, distance)
+	# He is carried away at his walking speed from the take-off to the first active frame, which
+	# is the whole Jump but the swing's active frames and the frames he lands after it. A frame
+	# less is counted, for the frame the take-off may be late by.
+	var frames_carried := _jump_frames() - unblockable.active_frames - JUMP_LANDS_AFTER_BY - 1
+	var carried := _player.walk_speed * frames_carried / Engine.physics_ticks_per_second
+	var needed := _tuning.unblockable_attack_reach + _hurtbox_radius() - distance
+	assert_gt(carried, needed, "the Jump should carry him out of the Unblockable attack's reach by its first active frame, or no Jump can avoid it")
 
 	await _jump_away_through_the_active_frames(almos, unblockable)
 
@@ -494,11 +506,11 @@ func test_the_cue_plays_once_for_each_unblockable_wind_up_in_two_rounds_of_the_s
 
 # The enemy given only Unblockable attacks to make (or this tuning), a little way below Almos,
 # after him, and sampled. Almos is sampled too, for whether he is in the air and where he is.
-func _spawn_fight_with_unblockable_attacks(tuning: EnemyTuning = null):
+func _spawn_fight_with_unblockable_attacks(tuning: EnemyTuning = null, distance: float = ENEMY_DISTANCE):
 	var almos = _almos_input.spawn_almos()
 	if tuning == null:
 		tuning = _rig.tuning_with({"attack_pattern": _pattern([UNBLOCKABLE])})
-	_rig.spawn_enemy(tuning, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
+	_rig.spawn_enemy(tuning, almos.position + Vector2.DOWN * distance)
 	_rig.set_target(almos, almos.health)
 	_rig.sample_also("airborne", func() -> bool: return almos.airborne)
 	_rig.sample_also("almos_position", func() -> Vector2: return almos.global_position)
@@ -520,7 +532,7 @@ func _jump_away_through_the_active_frames(almos, attack: AttackData) -> void:
 # In every sample in which the enemy's Hitbox is on he is in the air, and the nearest edge of his
 # Hurtbox is farther from the enemy than the swing's far edge.
 func _assert_he_was_in_the_air_and_out_of_reach_while_its_hitbox_was_on(almos, reach: float) -> void:
-	var radius := ((almos.get_node("Hurtbox/CollisionShape2D") as CollisionShape2D).shape as CircleShape2D).radius
+	var radius := _hurtbox_radius()
 	var striking := _rig.span("striking")
 	assert_ne(striking.x, -1, "its Hitbox should have gone on")
 	for i in range(striking.x, striking.y):
@@ -553,6 +565,15 @@ func _frames_to_wait_before_tapping_roll(attack: AttackData, player: PlayerTunin
 	assert_lte(earliest_roll_start, latest_roll_start, "his untouchable window should be at least as long as the Unblockable attack's active frames, or no Roll can cover them")
 	var roll_start := floori((earliest_roll_start + latest_roll_start) / 2.0)
 	return roll_start - TAP_FRAMES + 1
+
+
+# The radius of his Hurtbox's circle, read off the scene.
+func _hurtbox_radius() -> float:
+	var scene := load(AlmosInput.ALMOS_SCENE_PATH) as PackedScene
+	var almos := scene.instantiate()
+	var radius := ((almos.get_node("Hurtbox/CollisionShape2D") as CollisionShape2D).shape as CircleShape2D).radius
+	almos.free()
+	return radius
 
 
 # How many physics frames a Jump keeps him in the air, from the tuning.
