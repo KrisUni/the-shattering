@@ -10,6 +10,11 @@
 [ext_resource type="Script" path="res://scenes/hud/experience_label.gd" id="8_experience_label"]
 [ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="9_checkpoint"]
 [ext_resource type="Script" path="res://scenes/hud/fallen_label.gd" id="10_fallen_label"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_pickup.tscn" id="11_pickup"]
+[ext_resource type="Resource" path="res://data/spear.tres" id="12_spear"]
+[ext_resource type="Resource" path="res://data/greatsword.tres" id="13_greatsword"]
+[ext_resource type="Resource" path="res://data/torch.tres" id="14_torch"]
+[ext_resource type="Resource" path="res://data/metal_bar.tres" id="15_metal_bar"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
 size = Vector2(1152, 16)
@@ -76,6 +81,22 @@ size = Vector2(200, 100)
 
 [node name="Checkpoint" parent="." instance=ExtResource("9_checkpoint")]
 position = Vector2(400, 180)
+
+[node name="SpearPickup" parent="." instance=ExtResource("11_pickup")]
+position = Vector2(640, 560)
+weapon = ExtResource("12_spear")
+
+[node name="GreatswordPickup" parent="." instance=ExtResource("11_pickup")]
+position = Vector2(700, 560)
+weapon = ExtResource("13_greatsword")
+
+[node name="TorchPickup" parent="." instance=ExtResource("11_pickup")]
+position = Vector2(760, 560)
+weapon = ExtResource("14_torch")
+
+[node name="MetalBarPickup" parent="." instance=ExtResource("11_pickup")]
+position = Vector2(820, 560)
+weapon = ExtResource("15_metal_bar")
 
 [node name="Almos" parent="." instance=ExtResource("1_almos")]
 position = Vector2(576, 324)

@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/attack_data.gd" id="1_attack"]
+[ext_resource type="Script" path="res://scripts/tuning/heavy_attack_data.gd" id="2_heavy"]
+[ext_resource type="Script" path="res://scripts/tuning/weapon_data.gd" id="3_weapon"]
+
+[sub_resource type="Resource" id="Resource_light_first"]
+script = ExtResource("1_attack")
+startup_frames = 8
+active_frames = 4
+recovery_frames = 14
+damage = 7.0
+stamina_cost = 12.0
+
+[sub_resource type="Resource" id="Resource_light_second"]
+script = ExtResource("1_attack")
+startup_frames = 8
+active_frames = 4
+recovery_frames = 14
+damage = 8.4
+stamina_cost = 14.0
+
+[sub_resource type="Resource" id="Resource_light_third"]
+script = ExtResource("1_attack")
+startup_frames = 10
+active_frames = 6
+recovery_frames = 22
+damage = 12.6
+stamina_cost = 20.0
+
+[sub_resource type="Resource" id="Resource_critical"]
+script = ExtResource("1_attack")
+startup_frames = 14
+active_frames = 4
+recovery_frames = 36
+damage = 63.0
+stamina_cost = 0.0
+stagger = 0.0
+
+[sub_resource type="Resource" id="Resource_jump_attack"]
+script = ExtResource("1_attack")
+startup_frames = 0
+active_frames = 6
+recovery_frames = 30
+damage = 28.0
+stamina_cost = 25.0
+stagger = 55.0
+
+[sub_resource type="Resource" id="Resource_heavy"]
+script = ExtResource("2_heavy")
+startup_frames = 20
+active_frames = 6
+recovery_frames = 26
+damage = 17.5
+stamina_cost = 30.0
+charge_start_frames = 8
+charge_frames_max = 60
+charged_damage = 42.0
+charged_stamina_cost = 70.0
+stagger = 20.0
+charged_stagger = 45.0
+
+[resource]
+script = ExtResource("3_weapon")
+display_name = "Torch"
+weight = 1.0
+reach = 34.0
+light_attacks = Array[ExtResource("1_attack")]([SubResource("Resource_light_first"), SubResource("Resource_light_second"), SubResource("Resource_light_third")])
+heavy_attack = SubResource("Resource_heavy")
+jump_attack = SubResource("Resource_jump_attack")
+critical_range = 48.0
+critical_attack = SubResource("Resource_critical")
+attack_buffer_frames = 8

@@ -33,8 +33,15 @@ signal critical_began(direction: Vector2)
 ## Which attack button a press was of.
 enum Press { NONE, LIGHT, HEAVY }
 
-## The attacks of the Weapon he carries.
-@export var weapon: WeaponData
+## The attacks of the Weapon he carries. It can be changed at any time, and the sword is
+## placed at the new Weapon's reach at once. It is never changed in the middle of an attack:
+## whoever hands over a Weapon waits until he is not committed.
+@export var weapon: WeaponData:
+	set(value):
+		weapon = value
+		# Before the node is ready the Hitbox is not set up yet, and _ready places the sword.
+		if is_node_ready() and weapon != null:
+			hitbox.set_reach(weapon.reach)
 
 ## The sword's Hitbox, switched on for a swing's active frames.
 @export var hitbox: Hitbox
