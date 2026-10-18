@@ -16,9 +16,6 @@ const TORCH_PATH := "res://data/torch.tres"
 
 # In Health points and Stagger points.
 const TOLERANCE := 0.0001
-# In pixels. How far below Almos the enemy stands when the distance does not matter: close enough
-# for Unarmed to reach it, and clear of both bodies. Almos starts out facing down.
-const ENEMY_DISTANCE := 30.0
 # In pixels. How far beyond the enemy's notice range the stand-in it goes after stands, so that it
 # turns to face it and goes nowhere.
 const BEYOND_NOTICE := 50.0
@@ -86,7 +83,7 @@ func after_each() -> void:
 
 # --- Empty hands ---
 
-func test_he_fights_unarmed_with_nothing_in_hand_however_his_hands_came_to_be_empty(params = use_parameters(empty_params)) -> void:
+func test_his_hands_are_empty_and_unarmed_is_what_he_has_however_his_hands_came_to_be_empty(params = use_parameters(empty_params)) -> void:
 	var almos := await _empty_handed_almos(params.how)
 
 	assert_null(almos.weapons.in_hand, "Unarmed is not carried")
@@ -98,7 +95,7 @@ func test_he_fights_unarmed_with_nothing_in_hand_however_his_hands_came_to_be_em
 
 func test_a_light_attack_with_empty_hands_takes_unarmeds_damage_off_the_enemy(params = use_parameters(empty_params)) -> void:
 	var swing := _unarmed.light_attacks[0]
-	await _spawn_fight(params.how, ENEMY_DISTANCE, false)
+	await _spawn_fight(params.how, _enemy_distance(), false)
 
 	await _tap(&"attack_light")
 	await _rig.wait_frames(swing.startup_frames + swing.active_frames + SETTLE_FRAMES)
@@ -112,7 +109,7 @@ func test_a_light_attack_with_empty_hands_takes_unarmeds_damage_off_the_enemy(pa
 
 func test_a_heavy_attack_with_empty_hands_takes_unarmeds_damage_off_the_enemy(params = use_parameters(empty_params)) -> void:
 	var heavy := _unarmed.heavy_attack
-	var almos := await _spawn_fight(params.how, ENEMY_DISTANCE, false)
+	var almos := await _spawn_fight(params.how, _enemy_distance(), false)
 
 	await _tap(&"attack_heavy")
 	await _wait_for_the_swing_to_end(almos)
@@ -154,7 +151,7 @@ func test_unarmed_reaches_less_far_than_the_sword() -> void:
 
 func test_a_light_attack_from_behind_with_empty_hands_builds_the_behind_stagger() -> void:
 	var swing := _unarmed.light_attacks[0]
-	var almos := await _spawn_fight("starting with no Weapon", ENEMY_DISTANCE, true)
+	var almos := await _spawn_fight("starting with no Weapon", _enemy_distance(), true)
 
 	await _tap(&"attack_light")
 	await _wait_for_the_swing_to_end(almos)
@@ -165,7 +162,7 @@ func test_a_light_attack_from_behind_with_empty_hands_builds_the_behind_stagger(
 
 func test_a_heavy_attack_with_empty_hands_builds_unarmeds_stagger_in_proportion_to_the_charge_and_more_from_behind(params = use_parameters(heavy_params)) -> void:
 	var heavy := _unarmed.heavy_attack
-	var almos := await _spawn_fight("starting with no Weapon", ENEMY_DISTANCE, params.from_behind)
+	var almos := await _spawn_fight("starting with no Weapon", _enemy_distance(), params.from_behind)
 
 	if params.charged:
 		_almos_input.press_action(&"attack_heavy")
@@ -184,7 +181,7 @@ func test_a_heavy_attack_with_empty_hands_builds_unarmeds_stagger_in_proportion_
 
 func test_a_parry_with_empty_hands_negates_the_enemys_strike_and_builds_its_stagger(params = use_parameters(empty_params)) -> void:
 	var almos := await _empty_handed_almos(params.how)
-	var enemy = _rig.spawn_enemy(_rig.tuning_with({"health_maximum": ENEMY_HEALTH}), almos.position + Vector2.DOWN * ENEMY_DISTANCE)
+	var enemy = _rig.spawn_enemy(_rig.tuning_with({"health_maximum": ENEMY_HEALTH}), almos.position + Vector2.DOWN * _enemy_distance())
 	_rig.set_target(almos, almos.health)
 	await _rig.wait_frames(SETTLE_FRAMES)
 
@@ -198,7 +195,7 @@ func test_a_parry_with_empty_hands_negates_the_enemys_strike_and_builds_its_stag
 
 func test_a_critical_hit_with_empty_hands_takes_unarmeds_critical_damage_and_ends_the_break(params = use_parameters(empty_params)) -> void:
 	var critical := _unarmed.critical_attack
-	var almos := await _spawn_fight(params.how, ENEMY_DISTANCE, false)
+	var almos := await _spawn_fight(params.how, _enemy_distance(), false)
 	var enemy = _rig.enemy
 	await _break(enemy)
 	var health_before: float = enemy.health.current
@@ -216,17 +213,20 @@ func test_a_light_press_with_empty_hands_beyond_unarmeds_critical_range_is_no_cr
 	await _break(enemy)
 
 	await _tap(&"attack_light")
+	var swinging := almos.attacking
+	var made_critical := almos.critical
 	await _wait_for_the_swing_to_end(almos)
 
+	assert_true(swinging, "the press should have made a swing")
+	assert_false(made_critical, "the swing should be a Light swing, not the Critical hit")
 	assert_true(enemy.broken, "no Critical hit should have ended the Break")
-	assert_almost_eq(enemy.health.current, ENEMY_HEALTH, TOLERANCE, "nothing should have hit the enemy")
 
 
 # --- Jump attack ---
 
 func test_a_jump_attack_with_empty_hands_lands_with_unarmeds_jump_attack_damage_and_builds_its_stagger(params = use_parameters(empty_params)) -> void:
 	var jump_attack := _unarmed.jump_attack
-	var almos := await _spawn_fight(params.how, ENEMY_DISTANCE, false)
+	var almos := await _spawn_fight(params.how, _enemy_distance(), false)
 	var enemy = _rig.enemy
 
 	await _tap(&"jump")
@@ -247,7 +247,7 @@ func test_a_jump_attack_with_empty_hands_lands_with_unarmeds_jump_attack_damage_
 
 func test_a_switch_with_empty_hands_keeps_him_unarmed(params = use_parameters(empty_params)) -> void:
 	var swing := _unarmed.light_attacks[0]
-	var almos := await _spawn_fight(params.how, ENEMY_DISTANCE, false)
+	var almos := await _spawn_fight(params.how, _enemy_distance(), false)
 
 	await _tap(&"switch_weapon")
 	await _rig.wait_frames(SETTLE_FRAMES)
@@ -267,7 +267,7 @@ func test_a_switch_with_empty_hands_keeps_him_unarmed(params = use_parameters(em
 func test_a_weapon_picked_up_with_empty_hands_replaces_unarmed_and_dropping_it_brings_unarmed_back() -> void:
 	var torch := load(TORCH_PATH) as WeaponData
 	assert_not_null(torch, "the torch data file should load")
-	var almos := await _spawn_fight("starting with no Weapon", ENEMY_DISTANCE, false)
+	var almos := await _spawn_fight("starting with no Weapon", _enemy_distance(), false)
 	almos.weapons.pick_up(torch)
 	var torch_swing := torch.light_attacks[0]
 	await _rig.wait_frames(SETTLE_FRAMES)
@@ -337,6 +337,13 @@ func _break(enemy) -> void:
 	await _rig.wait_frames(SETTLE_FRAMES)
 	await _rig.swing(hitbox, 1)
 	assert_true(enemy.broken, "the hit should have broken it")
+
+
+# In pixels. How far below Almos the enemy stands when the distance does not matter: its centre
+# inside both Unarmed's reach (counting the enemy's Hurtbox radius) and its critical_range, so that
+# it is hit however either is tuned. Almos starts out facing down.
+func _enemy_distance() -> float:
+	return minf(_unarmed.reach + _enemy_hurtbox_radius(), _unarmed.critical_range) - REACH_MARGIN
 
 
 # The radius of the circle the training enemy is hurt through.

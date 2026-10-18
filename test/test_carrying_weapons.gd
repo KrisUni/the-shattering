@@ -29,6 +29,9 @@ const TAP_FRAMES := 3
 # In physics frames. How far short of the hold, or past it, a press is held to see which side of
 # the threshold it falls on.
 const HOLD_MARGIN := 4
+# The shares of pickup_reach at which a nearer and a farther pickup are put: both in reach, at different distances.
+const NEAR_SHARE := 0.25
+const FAR_SHARE := 0.75
 # In physics frames. The most a test waits for an attack or a Death to be over.
 const WAIT_FRAME_LIMIT := 400
 # In pixels. How far from a pickup Almos is put to be clear of its reach, and the margin inside or
@@ -176,8 +179,8 @@ func test_the_nearest_pickup_in_reach_is_the_one_taken() -> void:
 	var spear: Node2D = room.find_child("SpearPickup", true, false)
 	var greatsword: Node2D = room.find_child("GreatswordPickup", true, false)
 	almos.global_position = OPEN_SPOT
-	greatsword.global_position = almos.global_position + Vector2(10.0, 0.0)
-	spear.global_position = almos.global_position + Vector2(-20.0, 0.0)
+	greatsword.global_position = almos.global_position + Vector2(_tuning().pickup_reach * NEAR_SHARE, 0.0)
+	spear.global_position = almos.global_position + Vector2(-_tuning().pickup_reach * FAR_SHARE, 0.0)
 
 	await _tap(&"interact")
 
@@ -387,8 +390,8 @@ func test_the_nearest_pickup_is_taken_whichever_is_first_in_the_room() -> void:
 	var spear: Node2D = room.find_child("SpearPickup", true, false)
 	var greatsword: Node2D = room.find_child("GreatswordPickup", true, false)
 	almos.global_position = OPEN_SPOT
-	spear.global_position = almos.global_position + Vector2(10.0, 0.0)
-	greatsword.global_position = almos.global_position + Vector2(-20.0, 0.0)
+	spear.global_position = almos.global_position + Vector2(_tuning().pickup_reach * NEAR_SHARE, 0.0)
+	greatsword.global_position = almos.global_position + Vector2(-_tuning().pickup_reach * FAR_SHARE, 0.0)
 
 	await _tap(&"interact")
 
@@ -399,7 +402,7 @@ func test_the_nearest_pickup_is_taken_whichever_is_first_in_the_room() -> void:
 func test_a_pickup_holding_no_weapon_beside_him_does_not_stop_a_real_one_being_taken() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
-	_stand_from(room, almos, "SpearPickup", 10.0)
+	_stand_from(room, almos, "SpearPickup", _tuning().pickup_reach * NEAR_SHARE)
 	var empty := (load(WEAPON_PICKUP_SCENE_PATH) as PackedScene).instantiate() as Node2D
 	empty.position = almos.global_position
 	room.add_child(empty)
@@ -1077,7 +1080,7 @@ func test_a_hold_begun_in_the_air_drops_nothing_after_he_lands() -> void:
 	assert_true(almos.airborne, "he should be in the air")
 
 	_almos_input.press_action(&"interact")
-	await wait_physics_frames(_drop_frames() + HOLD_MARGIN)
+	await wait_physics_frames(maxi(_drop_frames(), _jump_frames()) + HOLD_MARGIN)
 	_almos_input.release_action(&"interact")
 	await wait_physics_frames(TAP_FRAMES)
 
@@ -1093,7 +1096,7 @@ func test_a_hold_begun_in_a_swing_drops_nothing_after_it() -> void:
 	assert_true(almos.attacking, "he should be in a swing")
 
 	_almos_input.press_action(&"interact")
-	await wait_physics_frames(_drop_frames() + HOLD_MARGIN)
+	await wait_physics_frames(maxi(_drop_frames(), _first_light_swing_frames()) + HOLD_MARGIN)
 	_almos_input.release_action(&"interact")
 	await wait_physics_frames(TAP_FRAMES)
 
@@ -1213,6 +1216,17 @@ func _almos(room: Node) -> Almos:
 # The physics frames a hold lasts to reach drop_hold_time.
 func _drop_frames() -> int:
 	return ceili(_tuning().drop_hold_time * Engine.physics_ticks_per_second)
+
+
+# The physics frames a Jump lasts.
+func _jump_frames() -> int:
+	return ceili(_tuning().jump_duration * Engine.physics_ticks_per_second)
+
+
+# The physics frames the sword's first Light swing lasts, from its startup to the end of its recovery.
+func _first_light_swing_frames() -> int:
+	var swing := (load(SWORD_PATH) as WeaponData).light_attacks[0]
+	return swing.startup_frames + swing.active_frames + swing.recovery_frames
 
 
 # Almos's Weapons, as their data files' paths.
