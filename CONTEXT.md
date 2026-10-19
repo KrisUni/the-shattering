@@ -149,7 +149,7 @@ The marker left where the player died, holding all the Experience not yet cashed
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Weapon and a Checkpoint are both in reach, the tap rests. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Checkpoint, a Hiding spot and a Weapon are all in reach, the tap rests at the Checkpoint before it hides in the Hiding spot, and hides before it picks the Weapon up. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
 _Avoid_: Bonfire, save point, shrine
 
 **Death**:
@@ -292,23 +292,23 @@ _Avoid_: The healer
 ### Enemies
 
 **Pursuit**:
-An enemy chasing the player once it has noticed him. A pursuing enemy follows him through a Room's exit after a short delay. Pursuit ends at once when the player gets into a Hiding spot while out of the enemy's Sight, or after he has stayed out of its Sight long enough. The enemy then returns to its post and slowly recovers its Health.
+An enemy chasing the player once it has noticed him. A pursuing enemy follows him through a Room's exit after a short delay. Pursuit ends at once when the player gets into a Hiding spot while out of the enemy's Sight, or after he has stayed out of its Sight, without a break, for a set time; seeing him again starts that time over. Out of its Sight, the enemy walks to the place it last saw him and waits there until the time runs out. It then returns to its post, facing the way it was set, and recovers Health at a set rate there and on the way, never in Pursuit. An attack already under way is finished first, and a hit from the player always puts it in Pursuit again.
 _Avoid_: Aggro, agro, alert, hunting
 
 **Sight**:
-The cone in front of an enemy within which it can notice the player. The cone shrinks in darkness, and a torch put out with Flame draw darkens its surroundings.
+The cone in front of an enemy within which it can notice the player. Noticing is instant: it notices him on the first physics frame he is inside the cone with no wall between. Walls block it. The cone shrinks in darkness, its length following the light where the player stands from full light down to a short length in darkness, and a torch put out with Flame draw darkens its surroundings. An enemy at its post faces a set direction, not the player, and an enemy that is hit notices the player whatever its Sight shows.
 _Avoid_: Vision (that is the dream place), line of sight, view cone, detection
 
 **Noise**:
-The sound the player makes by Sprinting, Rolling and fighting; walking makes none.
+The sound the player makes by Sprinting, Rolling and fighting, each reaching its own distance; walking, standing, Blocking, Jumping and hiding make none. Only a Sound hunter hears it, and walls do not stop it.
 _Avoid_: Sound, loudness
 
 **Sound hunter**:
-A creature that notices the player by Noise instead of Sight, so darkness does not help against it.
+A creature that notices the player by Noise instead of Sight, so darkness does not help against it. It notices him as soon as he is within the distance of the Noise he is making, through walls, and never by Sight; for it, being in its Sight means being within that distance. In Pursuit it loses him once he has been silent, or out of earshot, for the same set time as any other enemy.
 _Avoid_: Blind hunter, listener
 
 **Hiding spot**:
-Any place common sense says a person could hide, such as a barrel, under a bed or behind a curtain. If an enemy sees the player get in, it drags him out with an Unblockable grab.
+Any place common sense says a person could hide, such as a barrel, under a bed or behind a curtain. The player gets in with a tap of Interact within reach and leaves with another tap. Inside he cannot move or act, makes no Noise and cannot be noticed. Getting in while out of the Sight of a pursuer ends its Pursuit at once. An enemy that sees him get in, being in its Sight on that frame (a Sound hunter: within the Noise he made the frame before, so hiding right after a Roll is heard and hiding after walking is not), goes to the Hiding spot and drags him out with an Unblockable grab, which is its Unblockable attack taken out of its pattern, with the usual long wind-up; if something stops it short of the spot, it gives up the drag as it would lose him, once the lose-time has run, from the moment it is free to head for the spot (after any attack already under way), without the grab starting, and he stays hidden. If he taps to leave during the wind-up he can Roll away from it; if he stays in, he is pulled out and takes the grab's damage. If he leaves first, Sight and Pursuit go on as usual. The test room has a barrel, a bed and a curtain as placeholders.
 _Avoid_: Cover, stealth spot, hidey-hole
 
 **Boss**:

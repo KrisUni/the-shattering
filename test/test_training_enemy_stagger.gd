@@ -5,6 +5,9 @@ extends GutTest
 ## the helpers stands in for the attacker. Every expected number comes from the data files the
 ## scenes use and plain arithmetic, never from how the code works them out.
 
+# In degrees. A Sight arc wider than all round, so that a target straight behind is inside it
+# whatever rounding does to the angle.
+const ALL_ROUND_DEGREES := 720.0
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const EnemyFight := preload("res://test/helpers/enemy_fight.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
@@ -330,33 +333,49 @@ func test_the_bar_follows_the_meter_down_and_hides_when_it_is_empty() -> void:
 
 # --- Facing ---
 
-func test_it_starts_out_facing_its_target_if_it_has_one_and_down_if_it_has_not() -> void:
+func test_it_starts_out_facing_its_post_direction_down_unless_set_otherwise() -> void:
 	var scene := load(EnemyRig.ENEMY_SCENE_PATH) as PackedScene
-	var without_target = scene.instantiate()
-	add_child_autofree(without_target)
-	assert_almost_eq(without_target.facing, Vector2.DOWN, Vector2.ONE * FACING_TOLERANCE)
+	var plain = scene.instantiate()
+	add_child_autofree(plain)
+	assert_almost_eq(plain.facing, Vector2.DOWN, Vector2.ONE * FACING_TOLERANCE)
 
-	var target := Node2D.new()
-	target.position = Vector2.RIGHT * 100.0
-	add_child_autofree(target)
-	var with_target = scene.instantiate()
-	with_target.target = target
-	add_child_autofree(with_target)
-	assert_almost_eq(with_target.facing, Vector2.RIGHT, Vector2.ONE * FACING_TOLERANCE)
+	var set_right = scene.instantiate()
+	set_right.post_facing = Vector2.RIGHT
+	add_child_autofree(set_right)
+	assert_almost_eq(set_right.facing, Vector2.RIGHT, Vector2.ONE * FACING_TOLERANCE)
+
+
+func test_while_free_and_not_having_noticed_it_keeps_facing_its_post_direction_whatever_its_target_does() -> void:
+	var enemy = _rig.spawn_enemy()
+	var target := _rig.place_target(Vector2.ZERO)
+	enemy.post_facing = Vector2.UP
+	target.global_position = Vector2.DOWN * (_tuning.sight_length_full + BEYOND_NOTICE)
+
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	assert_almost_eq(enemy.facing, Vector2.UP, Vector2.ONE * FACING_TOLERANCE)
+	assert_almost_eq(enemy.get_node("Nose").rotation, Vector2.UP.angle(), FACING_TOLERANCE, "the nose turns with it")
 
 
 func test_while_free_it_turns_to_face_its_target_exactly_wherever_it_goes() -> void:
-	var enemy = _rig.spawn_enemy()
-	var target := _rig.place_target(Vector2.ZERO)
+	# It does not walk, so that the target is where the test puts it, and it has noticed it.
+	# Nor does it lose the target: its Sight is all round and reaches past wherever he goes.
+	var reach := (_tuning.sight_length_full + BEYOND_NOTICE) * 2.0
+	var enemy = _rig.spawn_enemy(_rig.tuning_with({"move_speed": 0.0, "sight_arc_degrees": ALL_ROUND_DEGREES, "sight_length_full": reach, "sight_length_dark": reach}))
+	var target := _rig.place_target(Vector2.DOWN * (_tuning.sight_length_full + BEYOND_NOTICE))
+	var hit := _rig.hitbox_over(enemy, NO_DAMAGE, "enemy_hurtbox")
+	await _rig.wait_frames(SETTLE_FRAMES)
+	await _rig.swing(hit, 1)
 	for direction in [Vector2.RIGHT.rotated(deg_to_rad(ODD_ANGLE_DEGREES)), Vector2.LEFT.rotated(deg_to_rad(ODD_ANGLE_DEGREES)), Vector2.UP]:
-		target.global_position = direction * (_tuning.notice_range + BEYOND_NOTICE)
+		target.global_position = direction * (_tuning.sight_length_full + BEYOND_NOTICE)
 		await _rig.wait_frames(SETTLE_FRAMES)
 		assert_almost_eq(enemy.facing, direction, Vector2.ONE * FACING_TOLERANCE, "facing towards the target at %s" % direction)
 		assert_almost_eq(enemy.get_node("Nose").rotation, direction.angle(), FACING_TOLERANCE, "the nose turns with it")
 
 
 func test_while_attacking_it_keeps_the_direction_it_committed_the_swing_to() -> void:
-	var enemy = _rig.spawn_enemy()
+	# Its Sight is all round, so that the target who moves behind it is still in it.
+	var enemy = _rig.spawn_enemy(_rig.tuning_with({"sight_arc_degrees": ALL_ROUND_DEGREES}))
 	var target := _rig.place_target(Vector2.RIGHT * _tuning.attack_range / 2.0)
 	await _rig.wait_frames(SETTLE_FRAMES)
 	assert_true(enemy.attacking, "it should have begun to attack")
@@ -382,10 +401,10 @@ func _spawn_fight():
 	return almos
 
 
-# The enemy at the origin, turned to face down towards a stand-in too far off to notice.
+# The enemy at the origin, at its post with no target, facing down.
 func _spawn_facing_down():
 	var enemy = _rig.spawn_enemy()
-	_rig.place_target(Vector2.DOWN * (_tuning.notice_range + BEYOND_NOTICE))
+	enemy.post_facing = Vector2.DOWN
 	return enemy
 
 

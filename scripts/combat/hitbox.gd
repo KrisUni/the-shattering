@@ -32,6 +32,10 @@ signal parried(hurtbox: Hurtbox)
 ## lands in full. An Unblockable attack sets it.
 @export var unblockable := false
 
+## Whether a hit is a grab: an enemy dragging Almos out of a Hiding spot. Only a grab can hurt
+## someone in a Hiding spot. It is set for each swing, by whoever swings it.
+var grab := false
+
 ## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
 @export var strike_shape: CollisionShape2D
 
@@ -77,7 +81,7 @@ func _physics_process(_delta: float) -> void:
 	for area in get_overlapping_areas():
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
-			var outcome := hurtbox.hurt(damage, global_position, stagger, critical, low, unblockable)
+			var outcome := hurtbox.hurt(damage, global_position, stagger, critical, low, unblockable, grab)
 			if outcome != Hurtbox.Outcome.MISSED:
 				_hit.append(hurtbox)
 			if outcome == Hurtbox.Outcome.PARRIED:

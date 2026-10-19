@@ -6,7 +6,7 @@ extends RefCounted
 
 # In pixels. How far below Almos the enemy stands.
 const ENEMY_DISTANCE := 30.0
-# In pixels. How far past the enemy's notice range a stand-in is put.
+# In pixels. How far past the enemy's Sight a stand-in is put.
 const BEYOND_NOTICE := 50.0
 const TOLERANCE := 0.0001
 # In physics frames. How long the Parry button is held for a tap.
@@ -25,15 +25,14 @@ func _init(test: GutTest, almos_input, rig) -> void:
 	_rig = rig
 
 
-## Almos at the origin facing down with the enemy below him, going after a stand-in too far
-## off to notice, so that the enemy never swings at Almos. The stand-in is below it if the
-## enemy has its back to Almos, and above it, in Almos's direction, if it faces him. Almos
-## has this tuning if one is given.
+## Almos at the origin facing down with the enemy below him, standing at its post with no
+## target, so that the enemy never swings at Almos. It faces down, away from Almos, if it has its
+## back to him, and up, in Almos's direction, if it faces him. Almos has this tuning if one is given.
 func spawn_almos_above_the_enemy(enemy_has_its_back_to_him: bool, tuning: PlayerTuning = null):
 	var almos = _almos_input.spawn_almos(tuning)
 	var enemy = _rig.spawn_enemy(null, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
 	var away := Vector2.DOWN if enemy_has_its_back_to_him else Vector2.UP
-	_rig.place_target(enemy.position + away * (enemy.tuning.notice_range + BEYOND_NOTICE))
+	enemy.post_facing = away
 	return almos
 
 

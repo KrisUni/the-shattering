@@ -99,10 +99,10 @@ func test_it_stays_put_without_a_target() -> void:
 	assert_eq(_rig.samples[-1].position, _rig.samples[0].position)
 
 
-func test_it_stays_put_while_its_target_is_beyond_its_notice_range() -> void:
+func test_it_stays_put_while_its_target_is_beyond_its_sight() -> void:
 	var tuning := _rig.tuning_with()
 	_rig.spawn_enemy()
-	_rig.place_target(Vector2.RIGHT * (tuning.notice_range + OUT_OF_RANGE_MARGIN))
+	_rig.place_target(Vector2.RIGHT * (tuning.sight_length_full + OUT_OF_RANGE_MARGIN))
 
 	await _rig.wait_frames(IDLE_FRAMES)
 
@@ -110,10 +110,10 @@ func test_it_stays_put_while_its_target_is_beyond_its_notice_range() -> void:
 	assert_eq(_rig.samples[-1].position, _rig.samples[0].position)
 
 
-func test_it_approaches_its_target_at_the_move_speed_within_its_notice_range() -> void:
+func test_it_approaches_its_target_at_the_move_speed_within_its_sight() -> void:
 	var tuning := _rig.tuning_with()
 	var direction := Vector2(0.8, 0.6)
-	var distance := (tuning.attack_range + tuning.notice_range) / 2.0
+	var distance := (tuning.attack_range + tuning.sight_length_full) / 2.0
 	_rig.spawn_enemy()
 	_rig.place_target(direction * distance)
 

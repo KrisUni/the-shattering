@@ -29,8 +29,27 @@ enum AttackKind {
 ## How fast it walks towards its target, in pixels per second.
 @export var move_speed: float
 
-## How far from its target, in pixels, it still notices it. Beyond this it stays where it is.
-@export var notice_range: float
+## How wide, in degrees, its Sight is, centred on the way it faces: half of it either side.
+@export var sight_arc_degrees: float
+
+## How far, in pixels, its Sight reaches when Almos stands in full light (a light value of 1).
+@export var sight_length_full: float
+
+## How far, in pixels, its Sight reaches when Almos stands in the dark (a light value of 0). It
+## is no longer than sight_length_full; in between, the length follows the light value.
+@export var sight_length_dark: float
+
+## For how many physics frames in a row Almos has to stay out of its Sight (a Sound hunter: out
+## of earshot) for its Pursuit to end. Seeing him again starts the count over.
+@export var lose_sight_frames: int
+
+## How much Health it recovers each second while it walks back to its post and stands at it. It
+## recovers none in Pursuit.
+@export var health_recovery_rate: float
+
+## Whether it is a Sound hunter: it notices Almos by the Noise he makes, and never by Sight.
+## Any other enemy ignores Noise.
+@export var sound_hunter := false
 
 ## How close to its target, in pixels, it stops walking and attacks.
 @export var attack_range: float
@@ -88,6 +107,11 @@ enum AttackKind {
 
 ## How much Stagger a hit from behind builds on top of what the attack builds itself.
 @export var behind_stagger: float
+
+
+## How far its Sight reaches when Almos stands in this much light (0 to 1).
+func sight_length_at(light: float) -> float:
+	return lerpf(sight_length_dark, sight_length_full, clampf(light, 0.0, 1.0))
 
 
 ## The attack of this kind.

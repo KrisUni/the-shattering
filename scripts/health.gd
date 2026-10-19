@@ -34,6 +34,15 @@ func take_damage(amount: float) -> void:
 		depleted.emit()
 
 
+## Puts this much back, up to the maximum but never above it. Nothing happens at zero: what is
+## done for does not come back this way.
+func heal(amount: float) -> void:
+	if _current <= 0.0 or _current >= maximum:
+		return
+	_current = minf(_current + amount, maximum)
+	changed.emit()
+
+
 ## Fills it back up to its maximum, from wherever it was, even from zero. Resting at a
 ## Checkpoint does this.
 func refill() -> void:

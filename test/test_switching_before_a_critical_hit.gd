@@ -55,7 +55,7 @@ func test_the_critical_hit_made_after_a_waiting_switch_hurts_as_the_new_weapons_
 	var almos = _attack_rig.spawn_almos(_almos_input)
 	almos.weapons.pick_up(spear)
 	var enemy = _enemy_rig.spawn_enemy(tuning, FAR_AWAY)
-	_enemy_rig.place_target(enemy.position + Vector2.DOWN * (tuning.notice_range + BEYOND_NOTICE))
+	_enemy_rig.place_target(enemy.position + Vector2.DOWN * (tuning.sight_length_full + BEYOND_NOTICE))
 	await _attack_rig.wait_frames(SETTLE_FRAMES)
 	await _break(enemy, tuning)
 

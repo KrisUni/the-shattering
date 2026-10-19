@@ -35,6 +35,7 @@ class OrdinaryEnemy:
 	var parent: Node
 	var node_name: StringName
 	var position: Vector2
+	var post_facing: Vector2
 	var tuning: EnemyTuning
 	var target: Node2D
 	# The enemy that stands in this place now. It is gone once killed, until a rest brings it back.
@@ -65,6 +66,7 @@ func _remember(enemy: Node) -> void:
 	start.parent = enemy.get_parent()
 	start.node_name = enemy.name
 	start.position = enemy.position
+	start.post_facing = enemy.post_facing
 	start.tuning = enemy.tuning
 	start.target = enemy.target
 	start.current = enemy
@@ -90,6 +92,7 @@ func _bring_back_the_ordinary_enemies() -> void:
 		var fresh = start.scene.instantiate()
 		fresh.name = start.node_name
 		fresh.position = start.position
+		fresh.post_facing = start.post_facing
 		fresh.tuning = start.tuning
 		fresh.target = start.target
 		start.parent.add_child(fresh)

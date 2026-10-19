@@ -319,9 +319,9 @@ func test_real_walls_block_him_in_the_air() -> void:
 func test_the_training_enemy_is_blocked_by_gaps_and_low_ledge_sides_like_a_grounded_almos(params = use_parameters(blocking_sides_params)) -> void:
 	var world := _spawn_world(params.scene_path, NARROW_WIDTH)
 	var enemy = _rig.spawn_enemy(null, Vector2(world.position.x + NARROW_WIDTH / 2.0 + _body_radius() + RUN_UP, 0.0))
-	var notice_range: float = enemy.tuning.notice_range
+	var sight_range: float = enemy.tuning.sight_length_full
 	_rig.place_target(Vector2(world.position.x - NARROW_WIDTH / 2.0 - 1.0, 0.0))
-	assert_lt(enemy.position.x - _rig.target.position.x, notice_range, "the target should be near enough to be noticed")
+	assert_lt(enemy.position.x - _rig.target.position.x, sight_range, "the target should be near enough to be noticed")
 
 	await _rig.wait_frames(CROSS_LEDGE_FRAMES)
 
@@ -340,7 +340,7 @@ func test_landing_on_an_enemy_pushes_him_off_it_and_never_stands_him_on_it() -> 
 	# come down, a little to one side of its middle.
 	_almos_input.release_action(&"move_right")
 	var enemy = _rig.spawn_enemy(null, _takeoff() + Vector2(reach + LANDING_OFFSET, 0.0))
-	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.notice_range))
+	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.sight_length_full))
 
 	await _wait_until_down()
 	await wait_physics_frames(PAST_THE_END_FRAMES)
@@ -358,7 +358,7 @@ func test_a_parry_pressed_on_the_first_frame_after_a_landing_on_an_enemy_pushes_
 	await _tap(&"jump")
 	_almos_input.release_action(&"move_right")
 	var enemy = _rig.spawn_enemy(null, _takeoff() + Vector2(reach + LANDING_OFFSET, 0.0))
-	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.notice_range))
+	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.sight_length_full))
 	# The press is made in the last frame of the flight, to be seen in the first frame on the
 	# ground.
 	await wait_until(func() -> bool: return _frames_in_the_air() >= _frames_for(_tuning().jump_duration), WAIT_LIMIT)
@@ -396,7 +396,7 @@ func test_landing_on_an_enemy_pushes_him_out_on_the_side_he_came_down_on(params 
 	_almos_input.release_action(&"move_right")
 	# He lands a little to this side of the enemy's middle.
 	var enemy = _rig.spawn_enemy(null, _takeoff() + Vector2(reach - params.side * LANDING_OFFSET, 0.0))
-	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.notice_range))
+	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.sight_length_full))
 
 	await _wait_until_down()
 	await wait_physics_frames(PAST_THE_END_FRAMES)
@@ -429,7 +429,7 @@ func test_an_enemy_does_not_stop_him_in_the_air() -> void:
 	var reach := _tuning().walk_speed * _tuning().jump_duration
 	_spawn_almos(Vector2.ZERO)
 	var enemy = _rig.spawn_enemy(null, Vector2(reach / 2.0, 0.0))
-	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.notice_range))
+	_rig.place_target(Vector2(0.0, 5.0 * enemy.tuning.sight_length_full))
 	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 

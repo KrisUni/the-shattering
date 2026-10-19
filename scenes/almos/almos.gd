@@ -17,6 +17,10 @@ const TIME_SLACK := 0.000001
 # number.
 const DEATH_TINT := Color(0.35, 0.35, 0.4)
 
+# What his placeholder is tinted while he hides, so that the player can see he is out of sight. A
+# look, not a tuning number.
+const HIDDEN_TINT := Color(1.0, 1.0, 1.0, 0.35)
+
 # What he leaves on the ground when he drops the Weapon in hand.
 const WEAPON_PICKUP_SCENE := preload("res://scenes/world/weapon_pickup.tscn")
 
@@ -46,6 +50,30 @@ var facing := Vector2.DOWN
 var rolling: bool:
 	get:
 		return _state == State.ROLLING
+
+## How far from him, in pixels, a Sound hunter hears him in this physics frame: the largest of the
+## radii of what he is doing, 0 when he walks, stands, Blocks or Jumps with no attack. Sprinting,
+## a Roll and any attack under way (a swing, a Heavy attack charge, a Jump attack, a Critical hit)
+## each make Noise.
+var noise_radius: float:
+	get:
+		if _dead or _hiding:
+			return 0.0
+		var radius := 0.0
+		if sprinting:
+			radius = maxf(radius, tuning.noise_sprint_radius)
+		if rolling:
+			radius = maxf(radius, tuning.noise_roll_radius)
+		if _attacks.committed:
+			radius = maxf(radius, tuning.noise_attack_radius)
+		return radius
+
+## Whether he is in a Hiding spot: he got in with a tap of Interact and has not left. He cannot
+## move or act, makes no Noise, and no enemy can notice him. A tap of Interact leaves, and so does
+## being pulled out by a hit.
+var hiding: bool:
+	get:
+		return _hiding
 
 ## Whether Almos is sprinting.
 var sprinting: bool:
@@ -209,6 +237,11 @@ var _switch_waiting := false
 # button is let go. Without it, the sliver of Stamina that comes back when the refill
 # pause ends would pay for one frame of Sprint, which would start the pause again.
 var _out_of_breath := false
+# Whether he is in a Hiding spot.
+var _hiding := false
+# The Noise radius he made in the physics frame before this one, read at the start of this frame: it
+# is what an enemy that sees him get into a Hiding spot in this frame heard of him.
+var _noise_before := 0.0
 
 
 func _enter_tree() -> void:
@@ -247,7 +280,11 @@ func _ready() -> void:
 	_attacks.kept_press_beginning.connect(_make_the_waiting_switch)
 	# A Jump attack pressed in the air strikes as he comes down, or is cancelled by a gap.
 	_jump.landed.connect(_on_landed)
+	# A hit that lands on him in a Hiding spot pulls him out of it.
+	_hurtbox.landed.connect(_on_hurt_landed)
 	_hurtbox.is_untouchable = func() -> bool: return untouchable
+	# In a Hiding spot only a grab hurts him.
+	_hurtbox.is_hidden = func() -> bool: return _hiding
 	# A Low attack passes under him while he is in the air.
 	_hurtbox.is_airborne = func() -> bool: return airborne
 	_hurtbox.is_parried = func(from: Vector2) -> bool:
@@ -260,6 +297,10 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _dead:
 		_lie_limp(delta)
+		return
+	_noise_before = noise_radius
+	if _hiding:
+		_stay_hidden(delta)
 		return
 	# A Guard break that runs out in this frame is still spent open, though the block clears it
 	# before the frame is over. So it is read once, here, for everything below.
@@ -325,6 +366,9 @@ func _physics_process(delta: float) -> void:
 	# up a Weapon in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
 	# against a press made in the same frame, since he is in the air by now.
 	_advance_interact(_free_to_act(left_open, parry_on, airborne) and not blocking, delta)
+	# Getting into a Hiding spot in this frame leaves him in it, still, whatever else was pressed.
+	if _hiding:
+		return
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
@@ -384,7 +428,7 @@ func return_to(point: Vector2) -> void:
 	returned.emit()
 
 
-# Ends whatever he is in, at once, and leaves him still: a Roll and the Roll kept for its end,
+# Ends whatever he is in, at once, and leaves him still: a Hiding spot, a Roll and the Roll kept for its end,
 # a Sprint, a swing, a charge, a Jump, a Block, a Guard break, a Parry and the Lock-on, along with
 # what each of them showed. The Roll button is forgotten, so that a hold begun before does not
 # count after, and so are an Interact press being timed and a switch kept for the end of a swing.
@@ -398,6 +442,9 @@ func _end_every_action() -> void:
 	_interact_counted = false
 	_switch_waiting = false
 	velocity = Vector2.ZERO
+	if _hiding:
+		_hiding = false
+		_placeholder.modulate = Color.WHITE
 	_attacks.reset()
 	_block.reset()
 	_parry.reset()
@@ -479,14 +526,65 @@ func _advance_interact(free: bool, delta: float) -> void:
 	_interact_held_for += delta
 	if not _interact_hold_spent and _interact_held_for >= tuning.drop_hold_time - TIME_SLACK:
 		_interact_hold_spent = true
-		_drop_the_weapon_in_hand()
+		if not _hiding:
+			_drop_the_weapon_in_hand()
 
 
-# A tap of Interact: he rests if a Checkpoint is in reach, and picks up a Weapon only if there is
-# none, so a Weapon lying beside a Checkpoint stays where it is.
+# A tap of Interact: in a Hiding spot he leaves it. Otherwise he rests if a Checkpoint is in reach,
+# or else hides if a Hiding spot is, and picks up a Weapon only if there is neither, so a Weapon
+# lying beside a Checkpoint or a Hiding spot stays where it is.
 func _on_interact_tapped() -> void:
-	if not _rest_at_a_checkpoint_in_reach():
+	if _hiding:
+		_leave_hiding()
+	elif not _rest_at_a_checkpoint_in_reach() and not _hide_in_a_spot_in_reach():
 		_pick_up_a_weapon_in_reach()
+
+
+# One frame in a Hiding spot: he neither moves nor acts, and a tap of Interact leaves. A Roll button
+# press made in there is lost, so that holding it on the way out does not Roll or Sprint.
+func _stay_hidden(delta: float) -> void:
+	_roll_press_lost = Input.is_action_pressed(&"roll")
+	velocity = Vector2.ZERO
+	_advance_interact(true, delta)
+
+
+# Gets into the nearest Hiding spot within hide_reach of him, if there is one, and says whether he
+# did. Every enemy is told first, from where he stands: those that saw him get in go to the spot
+# to drag him out, and every other pursuer ends its Pursuit at once. Then he is in the spot, still,
+# and in none of the actions.
+func _hide_in_a_spot_in_reach() -> bool:
+	var nearest: HidingSpot = null
+	var nearest_distance := tuning.hide_reach
+	for node in get_tree().get_nodes_in_group(&"hiding_spots"):
+		var spot := node as HidingSpot
+		if spot == null:
+			continue
+		var distance := global_position.distance_to(spot.global_position)
+		if distance <= nearest_distance:
+			nearest = spot
+			nearest_distance = distance
+	if nearest == null:
+		return false
+	for enemy in get_tree().get_nodes_in_group(&"enemies"):
+		if enemy.has_method(&"react_to_hiding"):
+			enemy.react_to_hiding(nearest.global_position, _noise_before)
+	_end_every_action()
+	global_position = nearest.global_position
+	_hiding = true
+	_placeholder.modulate = HIDDEN_TINT
+	return true
+
+
+# He leaves the Hiding spot, standing where it is.
+func _leave_hiding() -> void:
+	_hiding = false
+	_placeholder.modulate = Color.WHITE
+
+
+# A hit landed on him: in a Hiding spot, that pulls him out of it.
+func _on_hurt_landed(_stagger: float, _from: Vector2, _critical: bool) -> void:
+	if _hiding:
+		_leave_hiding()
 
 
 # Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health and Stamina

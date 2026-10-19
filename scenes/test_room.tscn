@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="3_health_bar"]
 [ext_resource type="Script" path="res://scenes/test_room.gd" id="4_room"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="5_enemy"]
+[ext_resource type="Resource" path="res://data/sound_hunter.tres" id="18_sound_hunter"]
 [ext_resource type="PackedScene" path="res://scenes/world/gap.tscn" id="6_gap"]
 [ext_resource type="PackedScene" path="res://scenes/world/ledge.tscn" id="7_ledge"]
 [ext_resource type="Script" path="res://scenes/hud/experience_label.gd" id="8_experience_label"]
@@ -16,6 +17,8 @@
 [ext_resource type="Resource" path="res://data/torch.tres" id="14_torch"]
 [ext_resource type="Resource" path="res://data/metal_bar.tres" id="15_metal_bar"]
 [ext_resource type="Script" path="res://scenes/hud/weapon_label.gd" id="16_weapon_label"]
+[ext_resource type="PackedScene" path="res://scenes/world/light_zone.tscn" id="17_light_zone"]
+[ext_resource type="PackedScene" path="res://scenes/world/hiding_spot.tscn" id="19_hiding_spot"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
 size = Vector2(1152, 16)
@@ -72,6 +75,11 @@ shape = SubResource("RectangleShape2D_wall_down")
 color = Color(0.35, 0.33, 0.42, 1)
 polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
 
+[node name="DarkZone" parent="." instance=ExtResource("17_light_zone")]
+position = Vector2(1000, 480)
+light = 0.0
+size = Vector2(240, 240)
+
 [node name="Gap" parent="." instance=ExtResource("6_gap")]
 position = Vector2(260, 324)
 size = Vector2(70, 280)
@@ -99,12 +107,31 @@ weapon = ExtResource("14_torch")
 position = Vector2(820, 560)
 weapon = ExtResource("15_metal_bar")
 
+[node name="Barrel" parent="." instance=ExtResource("19_hiding_spot")]
+position = Vector2(700, 100)
+modulate = Color(0.75, 0.5, 0.3, 1)
+
+[node name="Bed" parent="." instance=ExtResource("19_hiding_spot")]
+position = Vector2(960, 120)
+modulate = Color(0.6, 0.6, 0.9, 1)
+
+[node name="Curtain" parent="." instance=ExtResource("19_hiding_spot")]
+position = Vector2(1060, 280)
+modulate = Color(0.85, 0.4, 0.5, 1)
+
 [node name="Almos" parent="." instance=ExtResource("1_almos")]
 position = Vector2(576, 324)
 
 [node name="TrainingEnemy" parent="." node_paths=PackedStringArray("target") instance=ExtResource("5_enemy")]
 position = Vector2(776, 324)
 target = NodePath("../Almos")
+post_facing = Vector2(-1, 0)
+
+[node name="SoundHunter" parent="." node_paths=PackedStringArray("target") instance=ExtResource("5_enemy")]
+position = Vector2(120, 560)
+tuning = ExtResource("18_sound_hunter")
+target = NodePath("../Almos")
+post_facing = Vector2(1, 0)
 
 [node name="Hud" type="CanvasLayer" parent="."]
 

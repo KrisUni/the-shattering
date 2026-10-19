@@ -944,6 +944,7 @@ func test_an_enemys_blow_can_kill_him_and_he_comes_back_with_the_remains_where_i
 	almos.experience.gain(CARRIED)
 	almos.health.take_damage(almos.health.maximum - 1.0)
 	enemy.global_position = DEATH_SPOT + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
+	enemy.post_facing = Vector2.UP
 	for i in WAIT_FRAME_LIMIT:
 		if almos.dead:
 			break
@@ -1138,6 +1139,7 @@ func test_an_enemy_swinging_at_the_return_point_when_he_falls_cannot_hurt_him_af
 	var old: Node = _enemy(room)
 	var swing: AttackData = old.tuning.attack
 	old.global_position = almos.global_position + Vector2.DOWN * ENEMY_STRIKE_DISTANCE
+	old.post_facing = Vector2.UP
 	for i in WAIT_FRAME_LIMIT:
 		if old.attacking:
 			break
@@ -1197,11 +1199,20 @@ func _add_an_enemy_in_lock_on_range(almos: Almos) -> void:
 	add_child_autofree(enemy)
 
 
+# These tests count the enemies the room comes with, which they take to be the one Training
+# enemy, so the Sound hunter placed in the room is taken out before the room starts.
+func _drop_the_sound_hunter(room: Node) -> void:
+	var hunter := room.get_node("SoundHunter")
+	room.remove_child(hunter)
+	hunter.free()
+
+
 # The test room as shipped. The test frees it.
 func _spawn_room() -> Node:
 	var scene := load(TEST_ROOM_PATH) as PackedScene
 	assert_not_null(scene, "the test room scene should load")
 	var room := scene.instantiate()
+	_drop_the_sound_hunter(room)
 	add_child_autofree(room)
 	return room
 
@@ -1214,10 +1225,14 @@ func _spawn_room_with_a_named_enemy() -> Node:
 	assert_not_null(scene, "the test room scene should load")
 	assert_not_null(enemy_scene, "the training enemy scene should load")
 	var room := scene.instantiate()
+	_drop_the_sound_hunter(room)
 	var named := enemy_scene.instantiate()
 	named.name = "NamedEnemy"
 	named.named = true
 	named.position = Vector2(900.0, 500.0)
+	# It recovers no Health at its post, so that the Health a test hurts it to is what it is read at.
+	named.tuning = (load(ENEMY_TUNING_PATH) as EnemyTuning).duplicate(true)
+	named.tuning.health_recovery_rate = 0.0
 	named.target = room.find_child("Almos", true, false)
 	room.add_child(named)
 	add_child_autofree(room)

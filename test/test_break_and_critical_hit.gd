@@ -257,7 +257,7 @@ func test_it_stands_still_starts_nothing_and_does_not_turn_while_broken() -> voi
 	var position_before: Vector2 = enemy.global_position
 	# The target moves to the other side, still noticed but out of attack range: it would turn
 	# to it and walk, if it were free.
-	target.global_position = Vector2.LEFT * (_tuning.attack_range + _tuning.notice_range) / 2.0
+	target.global_position = Vector2.LEFT * (_tuning.attack_range + _tuning.sight_length_full) / 2.0
 
 	for i in _tuning.break_frames - SETTLE_FRAMES:
 		await get_tree().physics_frame
@@ -559,7 +559,7 @@ func test_under_lock_on_he_faces_the_broken_enemy_for_the_whole_critical_hit_and
 # it attacks no one. It is sampled.
 func _spawn_idle_enemy():
 	var enemy = _rig.spawn_enemy()
-	_rig.place_target(Vector2.DOWN * (_tuning.notice_range + BEYOND_NOTICE))
+	_rig.place_target(Vector2.DOWN * (_tuning.sight_length_full + BEYOND_NOTICE))
 	return enemy
 
 
@@ -570,7 +570,7 @@ func _spawn_idle_enemy_at(at: Vector2):
 	var enemy = scene.instantiate()
 	enemy.position = at
 	var far := Node2D.new()
-	far.position = at + Vector2.DOWN * (_tuning.notice_range + BEYOND_NOTICE)
+	far.position = at + Vector2.DOWN * (_tuning.sight_length_full + BEYOND_NOTICE)
 	add_child_autofree(far)
 	enemy.target = far
 	add_child_autofree(enemy)
@@ -589,7 +589,7 @@ func _spawn_almos_and_broken_enemy(offset: Vector2, enemy_has_its_back_to_him: b
 	var almos = _almos_input.spawn_almos(tuning)
 	var enemy = _rig.spawn_enemy(null, almos.position + offset)
 	var away := Vector2.DOWN if enemy_has_its_back_to_him else Vector2.UP
-	_rig.place_target(enemy.position + away * (_tuning.notice_range + BEYOND_NOTICE))
+	enemy.post_facing = away
 	_sample_almos(almos)
 	await _rig.wait_frames(SETTLE_FRAMES)
 	await _break(enemy)

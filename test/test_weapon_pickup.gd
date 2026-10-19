@@ -78,7 +78,7 @@ func test_no_pickup_in_the_test_room_holds_the_weapon_almos_starts_with() -> voi
 		assert_ne(pickup.weapon.resource_path, almos.weapon.resource_path, "a pickup should not hold the Weapon he starts with")
 
 
-func test_every_pickup_lies_clear_of_the_gap_the_ledge_the_checkpoint_and_the_enemys_notice_range(params = use_parameters(lying_weapon_params)) -> void:
+func test_every_pickup_lies_clear_of_the_gap_the_ledge_the_checkpoint_and_the_enemys_sight(params = use_parameters(lying_weapon_params)) -> void:
 	var room := _room()
 	if room == null:
 		return
@@ -87,14 +87,14 @@ func test_every_pickup_lies_clear_of_the_gap_the_ledge_the_checkpoint_and_the_en
 		return
 	var at := pickup.global_position
 	var enemy := room.get_node("TrainingEnemy") as Node2D
-	var notice_range := (load(ENEMY_TUNING_PATH) as EnemyTuning).notice_range
+	var notice_range := (load(ENEMY_TUNING_PATH) as EnemyTuning).sight_length_full
 
 	for footprint_name in ["Gap", "Ledge"]:
 		var footprint := room.get_node(footprint_name) as Footprint
 		var area := Rect2(footprint.global_position - footprint.size / 2.0, footprint.size).grow(CLEARANCE)
 		assert_false(area.has_point(at), "the pickup should lie clear of the %s" % footprint_name)
 	assert_gt(at.distance_to(room.get_node("Checkpoint").global_position), CLEARANCE * 4.0, "distance from the Checkpoint")
-	assert_gt(at.distance_to(enemy.global_position), notice_range + CLEARANCE, "distance from the enemy, against its notice range")
+	assert_gt(at.distance_to(enemy.global_position), notice_range + CLEARANCE, "distance from the enemy, against its Sight")
 	var floor_area := Rect2(Vector2.ZERO, _floor_size(room)).grow(-CLEARANCE * 4.0)
 	assert_true(floor_area.has_point(at), "the pickup should lie on the floor, away from the walls")
 

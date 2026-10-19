@@ -129,7 +129,21 @@ extends Resource
 ## How close to the centre of a Weapon pickup, in pixels, Almos must be to pick it up.
 @export var pickup_reach: float
 
+## How close to the centre of a Hiding spot, in pixels, Almos must be to get into it.
+@export var hide_reach: float
+
 ## How long, in seconds, Almos lies limp after his Health reaches zero, before he returns to his
 ## last Checkpoint. He takes no input and cannot be hit all that time. A time that is not a
 ## whole number of physics frames lasts until the next whole frame.
 @export var death_pause: float
+
+## How far from Almos, in pixels, a Sound hunter hears him while he Sprints. Walking, standing,
+## Blocking and a Jump on its own make no Noise.
+@export var noise_sprint_radius: float
+
+## How far, in pixels, a Sound hunter hears him while he Rolls.
+@export var noise_roll_radius: float
+
+## How far, in pixels, a Sound hunter hears him while any attack of his is under way: a swing, a
+## Heavy attack charge, a Jump attack or a Critical hit.
+@export var noise_attack_radius: float
