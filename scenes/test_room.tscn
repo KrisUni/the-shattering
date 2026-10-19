@@ -18,6 +18,7 @@
 [ext_resource type="Resource" path="res://data/metal_bar.tres" id="15_metal_bar"]
 [ext_resource type="Script" path="res://scenes/hud/weapon_label.gd" id="16_weapon_label"]
 [ext_resource type="Script" path="res://scenes/hud/flask_label.gd" id="23_flask_label"]
+[ext_resource type="PackedScene" path="res://scenes/world/flask_upgrade.tscn" id="24_flask_upgrade"]
 [ext_resource type="PackedScene" path="res://scenes/world/light_zone.tscn" id="17_light_zone"]
 [ext_resource type="PackedScene" path="res://scenes/world/hiding_spot.tscn" id="19_hiding_spot"]
 [ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="20_torch"]
@@ -184,6 +185,10 @@ position = Vector2(812, 30)
 
 [node name="StandTorch" parent="." instance=ExtResource("20_torch")]
 position = Vector2(1070, 540)
+
+[node name="FlaskUpgrade" parent="." instance=ExtResource("24_flask_upgrade")]
+position = Vector2(480, 180)
+id = &"test_room_flask_upgrade"
 
 [node name="Almos" parent="." instance=ExtResource("1_almos")]
 position = Vector2(576, 324)

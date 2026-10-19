@@ -73,3 +73,22 @@ func _blocker(id: StringName) -> PathBlocker:
 	blocker.size = BLOCKER_SIZE
 	add_child_autofree(blocker)
 	return blocker
+
+
+func test_a_pickup_is_not_taken_until_it_is_recorded() -> void:
+	assert_false(WorldState.is_taken(BLOCKER_ID))
+
+
+func test_a_recorded_pickup_is_taken_and_another_is_not() -> void:
+	WorldState.record_taken(BLOCKER_ID)
+
+	assert_true(WorldState.is_taken(BLOCKER_ID))
+	assert_false(WorldState.is_taken(OTHER_ID))
+
+
+func test_resetting_forgets_taken_pickups() -> void:
+	WorldState.record_taken(BLOCKER_ID)
+
+	WorldState.reset()
+
+	assert_false(WorldState.is_taken(BLOCKER_ID))
