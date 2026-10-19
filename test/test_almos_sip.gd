@@ -216,6 +216,20 @@ func test_a_press_while_not_free_to_act_is_lost() -> void:
 	assert_eq(_almos.flasks.health_charges, _flasks.health_charges)
 
 
+func test_a_sip_pressed_while_blocking_does_nothing_and_costs_nothing() -> void:
+	_spawn_almos()
+	_hurt()
+	_almos_input.press_action(&"block")
+	await wait_physics_frames(TAP_FRAMES)
+	assert_true(_almos.blocking, "he should be blocking")
+
+	await _tap(&"sip_health")
+
+	assert_false(_almos.sipping, "there should be no Sip")
+	assert_true(_almos.blocking, "he should still be blocking")
+	assert_eq(_almos.flasks.health_charges, _flasks.health_charges)
+
+
 func test_a_hit_during_a_sip_wastes_the_charge_and_restores_nothing() -> void:
 	_set_up_room()
 	var enemy := _room.get_node("TrainingEnemy")

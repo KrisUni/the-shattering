@@ -398,10 +398,12 @@ func _physics_process(delta: float) -> void:
 	# A Sip is made from the same places, and an attack, a Roll, a Parry or a Spell begun in this frame
 	# wins against a press made in the same frame. A press he cannot Sip on is lost, as is one with no
 	# charge left.
-	if _free_to_act(left_open, parry_on, in_the_air) and Input.is_action_just_pressed(&"sip_health"):
-		flasks.sip()
-	elif Input.is_action_just_pressed(&"sip_mana"):
-		flasks.sip_mana()
+	# Like the Spell, it is not made while blocking.
+	if _free_to_act(left_open, parry_on, in_the_air) and not blocking:
+		if Input.is_action_just_pressed(&"sip_health"):
+			flasks.sip()
+		elif Input.is_action_just_pressed(&"sip_mana"):
+			flasks.sip_mana()
 	flasks.advance(delta)
 	_sipping = _sipping or flasks.sipping
 	# A Jump can be begun from a walk, a Sprint or while blocking, in the same places: not in a
