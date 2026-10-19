@@ -19,6 +19,8 @@ const MARGIN_FRAMES := 6
 const HURTBOX_RADIUS := 12.0
 # In pixels. Slack put between a thing and the edge of the splash when it is to stand clear.
 const CLEAR_OF_THE_SPLASH := 20.0
+# In pixels. The thickness of the walls the tests build.
+const WALL_THICKNESS := 16.0
 # In pixels. How far from the stand torch Almos stands to cast, within Flame draw's range.
 const BESIDE_THE_STAND_TORCH := 20.0
 
@@ -92,11 +94,33 @@ func test_a_fireball_hitting_a_wall_lights_a_flammable_thing_within_the_radius()
 	_enemy.global_position = Vector2(100.0, 100.0)
 	var wall_y := -_spell.fireball_range / 2.0
 	_add_wall(wall_y)
-	_curtain.global_position = _almos.global_position + Vector2(_spell.splash_radius / 2.0, wall_y)
+	# On the fireball's side of the wall, not inside it.
+	_curtain.global_position = _almos.global_position + Vector2(_spell.splash_radius / 2.0, wall_y + WALL_THICKNESS)
 
 	await _cast()
 
 	assert_true(_curtain.burning)
+
+
+func test_an_enemy_within_the_radius_behind_a_wall_from_the_impact_takes_no_splash() -> void:
+	_set_up_room()
+	var behind = _spawn_second_enemy(Vector2.RIGHT * _spell.splash_radius / 2.0)
+	_add_screen(_spell.splash_radius / 4.0)
+	var before: float = behind.health.current
+
+	await _cast()
+
+	assert_eq(behind.health.current, before)
+
+
+func test_a_flammable_thing_within_the_radius_behind_a_wall_is_not_lit() -> void:
+	_set_up_room()
+	_curtain.global_position = _enemy.global_position + Vector2.RIGHT * _spell.splash_radius / 2.0
+	_add_screen(_spell.splash_radius / 4.0)
+
+	await _cast()
+
+	assert_false(_curtain.burning)
 
 
 func test_a_flammable_thing_beyond_the_splash_radius_is_not_lit() -> void:
@@ -165,13 +189,27 @@ func _add_wall(y_from_almos: float) -> void:
 	wall.collision_layer = 1
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()
-	rectangle.size = Vector2(400.0, 16.0)
+	rectangle.size = Vector2(400.0, WALL_THICKNESS)
 	shape.shape = rectangle
 	wall.add_child(shape)
 	_room.add_child(wall)
-	wall.global_position = _almos.global_position + Vector2(0.0, y_from_almos - 8.0)
+	wall.global_position = _almos.global_position + Vector2(0.0, y_from_almos - WALL_THICKNESS / 2.0)
 	# The wall is the fireball's way; the training enemy is out of it.
 	_enemy.global_position = Vector2(100.0, 100.0)
+
+
+# A tall thin wall beside the line of fire, this far to the right of the training enemy, between
+# the fireball's impact on it and things further right.
+func _add_screen(x_from_enemy: float) -> void:
+	var wall := StaticBody2D.new()
+	wall.collision_layer = 1
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(4.0, 200.0)
+	shape.shape = rectangle
+	wall.add_child(shape)
+	_room.add_child(wall)
+	wall.global_position = _enemy.global_position + Vector2(x_from_enemy, 0.0)
 
 
 # --- driving ---
