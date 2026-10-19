@@ -26,7 +26,7 @@ const WEAPON_PICKUP_SCENE := preload("res://scenes/world/weapon_pickup.tscn")
 
 enum State { WALKING, SPRINTING, ROLLING }
 
-## Emitted when he rests at a Checkpoint, after his Health and Stamina are refilled.
+## Emitted when he rests at a Checkpoint, after his Health, Stamina and Flasks are refilled.
 signal rested(checkpoint: Checkpoint)
 
 ## Emitted once, in the frame his Health reaches zero, with the place he fell. He is limp from
@@ -74,6 +74,13 @@ var noise_radius: float:
 var hiding: bool:
 	get:
 		return _hiding
+
+## Whether a Sip is under way: from the frame of the press to the frame Health comes back in, the
+## latter included. He can only walk, slowly, and cannot attack, Roll, Sprint, Jump, Block, Parry,
+## cast, interact or switch. A hit wastes the Sip: it ends at once with nothing restored.
+var sipping: bool:
+	get:
+		return flasks.sipping
 
 ## Whether Almos is sprinting.
 var sprinting: bool:
@@ -209,6 +216,11 @@ var untouchable: bool:
 ## His Spell, Flame draw: made with its own button, and it commits him while it winds up.
 @onready var spell: AlmosSpell = $Spell
 
+## His Flasks: a press of the Sip button drinks from the Health Flask (the Mana Flask is empty until
+## he has a Mana bar), which keeps him slow and
+## otherwise busy until it ends.
+@onready var flasks: AlmosFlasks = $Flasks
+
 ## The Weapons he carries and the one in hand. The one in hand is given to his attacks, and
 ## what he carries survives a Death.
 @onready var weapons: AlmosWeapons = $Weapons
@@ -256,6 +268,10 @@ var _out_of_breath := false
 # as the last frame left it, so that the frame the fireball leaves in is spent committed too, and set
 # again once the Spell has been advanced, so that the frame of a press is.
 var _casting := false
+# Whether he is in a Sip in this frame: set at the start of the frame from the Sip as the last frame
+# left it, so that the frame Health comes back in is spent sipping too, and set again once the Sip
+# has been advanced, so that the frame of a press is.
+var _sipping := false
 # Whether he is in a Hiding spot.
 var _hiding := false
 
@@ -335,6 +351,7 @@ func _physics_process(delta: float) -> void:
 	# Likewise a Parry whose last recovery frame this is is still spent standing open.
 	var left_parrying := _parry.parrying
 	_casting = spell.winding_up
+	_sipping = flasks.sipping
 	# get_vector applies the deadzone to the stick as a whole, not axis by axis, and
 	# never returns more than length 1, so diagonals are no faster.
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -360,13 +377,13 @@ func _physics_process(delta: float) -> void:
 	# kept for it. It is lost in a Guard break or a Parry; a Parry begun in this frame wins against it
 	# (see below).
 	var switch_was_waiting := _switch_waiting
-	var switch_pressed := Input.is_action_just_pressed(&"switch_weapon") and not left_open and not left_parrying
+	var switch_pressed := Input.is_action_just_pressed(&"switch_weapon") and not left_open and not left_parrying and not _sipping
 	if switch_pressed:
 		_switch_waiting = true
-	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air and not _casting, in_the_air)
+	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air and not _casting and not _sipping, in_the_air)
 	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
 	# them is lost, not kept for after it.
-	if tapped and not _attacks.committed and not left_open and not left_parrying and not in_the_air and not _casting:
+	if tapped and not _attacks.committed and not left_open and not left_parrying and not in_the_air and not _casting and not _sipping:
 		_on_roll_tapped(direction)
 	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
 	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
@@ -378,6 +395,17 @@ func _physics_process(delta: float) -> void:
 	# against a press made in the same frame.
 	spell.advance(_free_to_act(left_open, parry_on, in_the_air) and not blocking, _aim())
 	_casting = _casting or spell.winding_up
+	# A Sip is made from the same places, and an attack, a Roll, a Parry or a Spell begun in this frame
+	# wins against a press made in the same frame. A press he cannot Sip on is lost, as is one with no
+	# charge left.
+	# Like the Spell, it is not made while blocking.
+	if _free_to_act(left_open, parry_on, in_the_air) and not blocking:
+		if Input.is_action_just_pressed(&"sip_health"):
+			flasks.sip()
+		elif Input.is_action_just_pressed(&"sip_mana"):
+			flasks.sip_mana()
+	flasks.advance(delta)
+	_sipping = _sipping or flasks.sipping
 	# A Jump can be begun from a walk, a Sprint or while blocking, in the same places: not in a
 	# Roll, an attack, a Guard break or a Parry, which have begun by now if they were going to
 	# this frame and so win against a Jump press made in the same frame, nor in the air. It is
@@ -405,7 +433,7 @@ func _physics_process(delta: float) -> void:
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
-	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne and not _casting, delta)
+	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne and not _casting and not _sipping, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if airborne:
@@ -447,7 +475,7 @@ func _lie_limp(delta: float) -> void:
 
 
 ## He is back on his feet at this point, in global coordinates: on the ground level, with full
-## Health and Stamina, still, and in none of the actions. His Experience, his facing and
+## Health, Stamina and Flask charges, still, and in none of the actions. His Experience, his facing and
 ## everything outside him are left as they are; whoever sends him back sees to those.
 func return_to(point: Vector2) -> void:
 	_end_every_action()
@@ -458,6 +486,7 @@ func return_to(point: Vector2) -> void:
 	global_position = point
 	health.refill()
 	stamina.refill()
+	flasks.refill()
 	returned.emit()
 
 
@@ -484,6 +513,8 @@ func _end_every_action() -> void:
 	_jump.reset()
 	spell.reset()
 	_casting = false
+	flasks.reset()
+	_sipping = false
 	_lock_on.release()
 
 
@@ -505,6 +536,8 @@ func _walking_velocity(direction: Vector2, delta: float, sprint: bool) -> Vector
 	var speed := tuning.walk_speed
 	if sprint:
 		speed = tuning.sprint_speed
+	elif _sipping:
+		speed = flasks.tuning.sip_walk_speed
 	elif blocking:
 		speed = tuning.block_walk_speed
 	if _lock_on.locked:
@@ -523,10 +556,10 @@ func _jump_pressed_and_free(left_open: bool, parry_on: bool, in_the_air: bool) -
 
 
 # Whether he is free to begin something new: not in a Roll, an attack (charging a Heavy attack
-# and a Jump attack included), a Guard break, a Parry, the air or the wind-up of a Spell. A Guard break or a Parry whose
+# and a Jump attack included), a Guard break, a Parry, the air, the wind-up of a Spell or a Sip. A Guard break or a Parry whose
 # last frame this is is still spent open, so the caller says whether one is on him.
 func _free_to_act(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
-	return not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air and not _casting
+	return not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air and not _casting and not _sipping
 
 
 # Times a press of the Interact button and acts on it. A press counts only if it begins while he
@@ -632,8 +665,8 @@ func _on_hurt_landed(_stagger: float, _from: Vector2, _critical: bool) -> void:
 		_leave_hiding()
 
 
-# Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health and Stamina
-# are refilled, the Checkpoint flashes and the rest is announced. Says whether he rested; a tap
+# Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health, Stamina and
+# the Flasks are refilled, the Checkpoint flashes and the rest is announced. Says whether he rested; a tap
 # with none in reach does nothing.
 func _rest_at_a_checkpoint_in_reach() -> bool:
 	var nearest: Checkpoint = null
@@ -650,6 +683,7 @@ func _rest_at_a_checkpoint_in_reach() -> bool:
 		return false
 	health.refill()
 	stamina.refill()
+	flasks.refill()
 	nearest.rest(tuning.rest_flash_duration)
 	rested.emit(nearest)
 	return true
@@ -771,7 +805,7 @@ func _stand_still() -> void:
 # passed over. A Sprint he was in when he pressed Block is not ended by it: he does not block
 # while he sprints. It only asks; paying for the Sprint is up to the caller.
 func _wants_to_sprint(direction: Vector2) -> bool:
-	return direction != Vector2.ZERO and _held_to_the_threshold() and not _out_of_breath and not blocking
+	return direction != Vector2.ZERO and _held_to_the_threshold() and not _out_of_breath and not blocking and not _sipping
 
 
 func _face(direction: Vector2) -> void:

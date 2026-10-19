@@ -113,15 +113,15 @@ A way the player opens that links a deeper part of an area back to a Checkpoint,
 _Avoid_: Unlock, back door
 
 **Health Flask**, **Mana Flask**:
-The two refillable vessels the player carries, each holding its own fixed number of charges that restore its bar. Every Checkpoint refills both, and upgrades found while exploring add charges. Almos carries the Mana Flask from the start, but it stays empty and useless until he gains his Mana bar.
+The two refillable vessels the player carries, each holding its own fixed number of charges that restore its bar. Every Checkpoint refills both, and so does the return after a Death; upgrades found while exploring add charges. Almos carries the Mana Flask from the start, but it stays empty and useless until he gains his Mana bar, though upgrades still raise its charges.
 _Avoid_: Estus, potion bottle, potions (as separate items)
 
 **Sip**:
-Drinking one Flask charge: a short animation that cannot be cancelled, during which the player can only walk slowly. The bar refills at the end; a hit before then wastes the charge.
+Drinking one Flask charge: a short animation that cannot be cancelled, during which the player can only walk slowly; Almos cannot attack, Roll, Sprint, Jump, Block, Parry, cast, Interact or Switch. A fixed share of the bar (not the whole bar) comes back at the end; any Health loss before then, Fire included, wastes the charge. A Sip at a full bar is allowed and spends the charge; with no charge left a Sip does nothing.
 _Avoid_: Drink, heal, quaff
 
 **Flask upgrade**:
-A collectible found while exploring that adds one charge to both the Health Flask and the Mana Flask.
+A collectible found while exploring that adds one charge to both the Health Flask and the Mana Flask. It is taken by walking over it and stays taken for good.
 _Avoid_: Estus shard, flask shard, charge upgrade
 
 **Experience**:

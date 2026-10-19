@@ -20,6 +20,8 @@
 [ext_resource type="Resource" path="res://data/torch.tres" id="18_torch_weapon"]
 [ext_resource type="Resource" path="res://data/torch_unlit.tres" id="19_torch_unlit"]
 [ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="20_torch"]
+[ext_resource type="Script" path="res://scenes/almos/almos_flasks.gd" id="21_flasks"]
+[ext_resource type="Resource" path="res://data/flasks.tres" id="22_flask_tuning"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -143,3 +145,8 @@ spell_data = ExtResource("17_flame_draw")
 body = NodePath("..")
 health = NodePath("../Health")
 stamina = NodePath("../Stamina")
+
+[node name="Flasks" type="Node" parent="." node_paths=PackedStringArray("health")]
+script = ExtResource("21_flasks")
+tuning = ExtResource("22_flask_tuning")
+health = NodePath("../Health")

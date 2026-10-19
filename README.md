@@ -15,6 +15,8 @@
 | Lock-on | Middle mouse button or Q (press again to let go) | R3 |
 | Switch Weapon | Tab | Y |
 | Spell | C | L3 (press the left stick) |
+| Sip from the Health Flask | 1 | View (Back) |
+| Sip from the Mana Flask (once Almos has a Mana bar) | 2 | Menu (Start) |
 | Interact | R (tap to rest at a Checkpoint, hide in or leave a Hiding spot, or pick up a Weapon; hold to drop the Weapon in hand) | X (tap to rest, hide, leave or pick up; hold to drop) |
 
 - A Heavy attack pressed in the air is a Jump attack.
