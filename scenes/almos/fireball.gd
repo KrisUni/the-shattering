@@ -2,8 +2,13 @@ class_name Fireball
 extends Node2D
 ## A fireball flying in a straight line at a fixed speed. A wall stops it, and so does the first
 ## enemy Hurtbox it reaches, which it hurts for its damage and nothing more: no Stagger and no
-## knockback. So does the first flammable thing, which it sets alight. It dies out after its range. It flies over gaps and ledges. It is freed when it
-## stops.
+## knockback. So does the first flammable thing, which it sets alight. It dies out after its range.
+## It flies over gaps and ledges. It is freed when it stops.
+##
+## Where it stops on a thing, it splashes: every other enemy Hurtbox within the splash radius of
+## that point takes the splash fraction of its damage, damage only as a direct hit is, and every
+## flammable thing within the radius catches. The enemy it hit takes no splash on top of its hit.
+## Running out of range in open air splashes nothing.
 ##
 ## It looks ahead along each frame's step, so a thin wall or a small Hurtbox cannot be flown
 ## through however fast it goes.
@@ -19,6 +24,12 @@ signal hit(hurtbox: Hurtbox)
 
 ## How much Health it takes off the enemy it hits.
 var damage := 0.0
+
+## How far from where it stops its splash reaches, in pixels. None by default.
+var splash_radius := 0.0
+
+## What fraction of its damage the splash takes off each other enemy.
+var splash_fraction := 0.0
 
 var _direction := Vector2.RIGHT
 var _speed := 0.0
@@ -58,12 +69,35 @@ func _physics_process(delta: float) -> void:
 		var flammable := found["collider"] as Flammable
 		if flammable != null:
 			flammable.ignite()
+		_splash(hurtbox)
 		queue_free()
 		return
 	global_position += _direction * step
 	_range_left -= step
 	if _range_left <= 0.0:
 		queue_free()
+
+
+# The splash at the point it stopped at: the other enemy Hurtboxes and the flammable things within
+# the splash radius. The Hurtbox it hit, if any, is left out.
+func _splash(direct: Hurtbox) -> void:
+	if splash_radius <= 0.0:
+		return
+	var circle := CircleShape2D.new()
+	circle.radius = splash_radius
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = circle
+	query.transform = Transform2D(0.0, global_position)
+	query.collision_mask = ENEMY_HURTBOX | FLAMMABLE
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	for found in get_world_2d().direct_space_state.intersect_shape(query, 64):
+		var hurtbox := found["collider"] as Hurtbox
+		if hurtbox != null and hurtbox != direct:
+			hurtbox.hurt_damage_only(damage * splash_fraction, global_position)
+		var flammable := found["collider"] as Flammable
+		if flammable != null:
+			flammable.ignite()
 
 
 # The flammable things whose area holds the point it starts from: it does not hit them.
