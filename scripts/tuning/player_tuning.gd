@@ -147,3 +147,7 @@ extends Resource
 ## How far, in pixels, a Sound hunter hears him while any attack of his is under way: a swing, a
 ## Heavy attack charge, a Jump attack or a Critical hit.
 @export var noise_attack_radius: float
+
+## His Channelling, the stat that raises Spell damage. A placeholder until Levels can buy it:
+## the number he starts with.
+@export var channelling: int

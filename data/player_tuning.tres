@@ -43,3 +43,4 @@ death_pause = 2.0
 noise_sprint_radius = 160.0
 noise_roll_radius = 200.0
 noise_attack_radius = 260.0
+channelling = 5

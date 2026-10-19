@@ -18,13 +18,18 @@ func _enter_tree() -> void:
 	add_to_group("light_zones")
 
 
-## The gameplay light at this point (global coordinates), given the zones to read: 1 outside
-## every zone, and the darkest light of the zones the point is in.
-static func light_at(zones: Array, point: Vector2) -> float:
+## The gameplay light at this point (global coordinates), given the zones and the torches to read:
+## 1 outside every zone, and the darkest light of the zones the point is in. Within the radius of a
+## lit torch the light is at least that torch's light, whatever the zones say; an unlit torch gives
+## none.
+static func light_at(zones: Array, point: Vector2, torches: Array = []) -> float:
 	var lowest := 1.0
 	for zone in zones:
 		if zone.covers(point):
 			lowest = minf(lowest, zone.light)
+	for torch in torches:
+		if torch.lights(point):
+			lowest = maxf(lowest, torch.light)
 	return lowest
 
 

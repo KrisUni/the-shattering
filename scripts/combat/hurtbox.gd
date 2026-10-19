@@ -31,6 +31,10 @@ var is_airborne: Callable = func() -> bool: return false
 ## ending its Break.
 signal landed(stagger: float, from: Vector2, critical: bool)
 
+## Emitted in place of landed for a hit that is damage only, such as a fireball's: it builds no
+## Stagger, from whichever side, so the owner only hears that it was hit, and from where.
+signal landed_damage_only(from: Vector2)
+
 ## Asked on every hit on someone who is not untouchable, given the point in the world the hit
 ## comes from: whether the owner parries it, which negates it. Almos in the window of his
 ## Parry, with the hit in front of him, is the case. A parried hit never reaches
@@ -74,6 +78,19 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 ## is not spent nor ended by it and nothing is spent on blocking it. It misses while the owner
 ## is untouchable, and is not low, so being in the air does not avoid it.
 func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false, unblockable := false, grab := false) -> Outcome:
+	return _receive(damage, from, stagger, critical, low, unblockable, grab, false)
+
+
+## A hit that is damage only, such as a fireball's, reaches this Hurtbox, for this much damage,
+## coming from this point in the world. It builds no Stagger and is neither a Critical hit, low,
+## unblockable nor a grab: it is parried, blocked, missed and dealt with as any hit is, but the
+## owner is told with landed_damage_only, not landed. Returns what became of it, as hurt does.
+func hurt_damage_only(damage: float, from: Vector2) -> Outcome:
+	return _receive(damage, from, 0.0, false, false, false, false, true)
+
+
+# The hit itself, for hurt and hurt_damage_only.
+func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low: bool, unblockable: bool, grab: bool, damage_only: bool) -> Outcome:
 	if is_untouchable.call():
 		return Outcome.MISSED
 	if not grab and is_hidden.call():
@@ -82,10 +99,18 @@ func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low :
 		return Outcome.MISSED
 	if unblockable:
 		health.take_damage(damage)
-		landed.emit(stagger, from, critical)
+		_announce_landed(stagger, from, critical, damage_only)
 		return Outcome.LANDED
 	if is_parried.call(from):
 		return Outcome.PARRIED
 	health.take_damage(damage_through.call(damage, from))
-	landed.emit(stagger, from, critical)
+	_announce_landed(stagger, from, critical, damage_only)
 	return Outcome.LANDED
+
+
+# A damage-only hit is told apart from one that builds Stagger.
+func _announce_landed(stagger: float, from: Vector2, critical: bool, damage_only: bool) -> void:
+	if damage_only:
+		landed_damage_only.emit(from)
+	else:
+		landed.emit(stagger, from, critical)

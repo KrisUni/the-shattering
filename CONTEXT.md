@@ -187,11 +187,11 @@ A slower, harder swing that can be charged by holding and builds more Stagger th
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
-A channelled ability with its own button. Spells normally cost Mana and Stamina, since channelling is physical work. Almos's first Spell is Flame draw; Shove, Pull and Deep bolt come from the Time Keeper's lessons in channelling.
+A channelled ability with its own button (the `cast_spell` action). Spells normally cost Mana and Stamina, since channelling is physical work. Almos's first Spell is Flame draw; Shove, Pull and Deep bolt come from the Time Keeper's lessons in channelling.
 _Avoid_: Magic, ability, skill, cast
 
 **Flame draw**:
-Almos's first Spell, discovered in the Dungeons: he channels the fire out of a magical torch and throws it as a single fireball. It costs Health and Stamina instead of Mana and Stamina, and each torch's flame can be drawn only once. That includes a torch carried as a Weapon, which lights the way while it burns and is left as an unlit club once drawn. Torches on walls and stands relight whenever enemies return.
+Almos's first Spell, discovered in the Dungeons: he channels the fire out of a magical torch and throws it as a single fireball, made with the Spell button (the `cast_spell` action). The torch is the nearest lit one within the Spell's range, on a wall, on a stand or in Almos's hand; a lit torch in his hand is at his own position, so it is drawn first. It costs Health and Stamina instead of Mana and Stamina, and each torch's flame can be drawn only once. A press that cannot draw does nothing and spends nothing: with no lit torch in range, with Health that would not stay above the Health cost, or with too little Stamina. The fireball does damage only and no Stagger. A torch carried as a Weapon burns and lights the way only while it is in hand; carried but not in hand it gives no light and cannot be drawn. Once drawn it is left in hand as an unlit club, in the same place in his list, with attacks of its own, and it never relights. Torches on walls and stands relight whenever enemies return, which is a rest at a Checkpoint or the return after a Death.
 _Avoid_: Torch spell, fire grab, flame weapon
 
 **Shove**:
@@ -296,7 +296,7 @@ An enemy chasing the player once it has noticed him. A pursuing enemy follows hi
 _Avoid_: Aggro, agro, alert, hunting
 
 **Sight**:
-The cone in front of an enemy within which it can notice the player. Noticing is instant: it notices him on the first physics frame he is inside the cone with no wall between. Walls block it. The cone shrinks in darkness, its length following the light where the player stands from full light down to a short length in darkness, and a torch put out with Flame draw darkens its surroundings. An enemy at its post faces a set direction, not the player, and an enemy that is hit notices the player whatever its Sight shows.
+The cone in front of an enemy within which it can notice the player. Noticing is instant: it notices him on the first physics frame he is inside the cone with no wall between. Walls block it. The cone shrinks in darkness, its length following the light where the player stands from full light down to a short length in darkness, a lit torch lifts the darkness within its radius, and a torch put out with Flame draw darkens its surroundings. A torch Almos holds lights him wherever he is, so enemies see him further in the dark, until it is drawn. An enemy at its post faces a set direction, not the player, and an enemy that is hit notices the player whatever its Sight shows.
 _Avoid_: Vision (that is the dream place), line of sight, view cone, detection
 
 **Noise**:

@@ -186,6 +186,14 @@ var untouchable: bool:
 ## Weapon is in hand, and it is not carried, so it is never in his Weapons.
 @export var unarmed: WeaponData
 
+## The torch Weapon (data/torch.tres). While it is the one in hand it burns and lights the way,
+## and Flame draw can take its flame; once drawn it is replaced where it is by unlit_torch.
+@export var torch_weapon: WeaponData
+
+## What a drawn torch becomes in his hand: the unlit club, with its own attacks. It never burns
+## again, and is not relit when enemies return.
+@export var unlit_torch: WeaponData
+
 ## What Roll and Sprint spend, and what the Stamina bar shows. It is given Almos's tuning,
 ## so his tuning is the only one to set.
 @onready var stamina: Stamina = $Stamina
@@ -198,9 +206,16 @@ var untouchable: bool:
 ## shows.
 @onready var experience: Experience = $Experience
 
+## His Spell, Flame draw: made with its own button, and it commits him while it winds up.
+@onready var spell: AlmosSpell = $Spell
+
 ## The Weapons he carries and the one in hand. The one in hand is given to his attacks, and
 ## what he carries survives a Death.
 @onready var weapons: AlmosWeapons = $Weapons
+
+## The flame of the torch in his hand, at his own position. It is in the group "torches", and so
+## gives light and can be drawn, only while the torch Weapon is in hand and burning.
+@onready var carried_torch: Torch = $CarriedTorch
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn
@@ -237,6 +252,10 @@ var _switch_waiting := false
 # button is let go. Without it, the sliver of Stamina that comes back when the refill
 # pause ends would pay for one frame of Sprint, which would start the pause again.
 var _out_of_breath := false
+# Whether he is in the wind-up of his Spell in this frame: set at the start of the frame from the wind-up
+# as the last frame left it, so that the frame the fireball leaves in is spent committed too, and set
+# again once the Spell has been advanced, so that the frame of a press is.
+var _casting := false
 # Whether he is in a Hiding spot.
 var _hiding := false
 # The Noise radius he made in the physics frame before this one, read at the start of this frame: it
@@ -266,6 +285,7 @@ func _enter_tree() -> void:
 	($Block as AlmosBlock).tuning = tuning
 	($Parry as AlmosParry).tuning = tuning
 	($Jump as AlmosJump).tuning = tuning
+	($Spell as AlmosSpell).tuning = tuning
 
 
 func _ready() -> void:
@@ -273,6 +293,10 @@ func _ready() -> void:
 	# Whichever Weapon is in hand is the one his attacks make. A switch is only made when he is not
 	# in an attack, and a drop only when he is free, so nothing is handed over in the middle of one.
 	weapons.changed.connect(_hand_over_the_weapon_in_hand)
+	# The torch in hand burns; a torch drawn becomes the unlit club.
+	weapons.changed.connect(_tend_the_carried_torch)
+	carried_torch.put_out.connect(_leave_an_unlit_club)
+	_tend_the_carried_torch()
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
 	# A switch pressed in a swing, or in the frame its recovery ends, is made in that frame, before
@@ -307,6 +331,7 @@ func _physics_process(delta: float) -> void:
 	var left_open := _block.guard_broken
 	# Likewise a Parry whose last recovery frame this is is still spent standing open.
 	var left_parrying := _parry.parrying
+	_casting = spell.winding_up
 	# get_vector applies the deadzone to the stick as a whole, not axis by axis, and
 	# never returns more than length 1, so diagonals are no faster.
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -335,16 +360,21 @@ func _physics_process(delta: float) -> void:
 	var switch_pressed := Input.is_action_just_pressed(&"switch_weapon") and not left_open and not left_parrying
 	if switch_pressed:
 		_switch_waiting = true
-	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air, in_the_air)
+	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air and not _casting, in_the_air)
 	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
 	# them is lost, not kept for after it.
-	if tapped and not _attacks.committed and not left_open and not left_parrying and not in_the_air:
+	if tapped and not _attacks.committed and not left_open and not left_parrying and not in_the_air and not _casting:
 		_on_roll_tapped(direction)
 	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
 	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
 	# to this frame, and so win against a Parry press made in the same frame.
 	_parry.advance(_free_to_act(left_open, left_parrying, in_the_air))
 	var parry_on := left_parrying or parrying
+	# The Spell is made from the same places as resting is, and its wind-up commits him: it begins
+	# only if he is free and not blocking, and an attack, a Roll or a Parry begun in this frame wins
+	# against a press made in the same frame.
+	spell.advance(_free_to_act(left_open, parry_on, in_the_air) and not blocking, _aim())
+	_casting = _casting or spell.winding_up
 	# A Jump can be begun from a walk, a Sprint or while blocking, in the same places: not in a
 	# Roll, an attack, a Guard break or a Parry, which have begun by now if they were going to
 	# this frame and so win against a Jump press made in the same frame, nor in the air. It is
@@ -372,14 +402,14 @@ func _physics_process(delta: float) -> void:
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
-	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne, delta)
+	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne and not _casting, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if airborne:
 		_jump.advance(delta)
 	elif rolling:
 		_roll(delta)
-	elif _attacks.committed or left_open or parry_on:
+	elif _attacks.committed or left_open or parry_on or _casting:
 		_stand_still()
 	else:
 		_move_freely(direction, delta)
@@ -449,6 +479,8 @@ func _end_every_action() -> void:
 	_block.reset()
 	_parry.reset()
 	_jump.reset()
+	spell.reset()
+	_casting = false
 	_lock_on.release()
 
 
@@ -488,10 +520,10 @@ func _jump_pressed_and_free(left_open: bool, parry_on: bool, in_the_air: bool) -
 
 
 # Whether he is free to begin something new: not in a Roll, an attack (charging a Heavy attack
-# and a Jump attack included), a Guard break, a Parry or the air. A Guard break or a Parry whose
+# and a Jump attack included), a Guard break, a Parry, the air or the wind-up of a Spell. A Guard break or a Parry whose
 # last frame this is is still spent open, so the caller says whether one is on him.
 func _free_to_act(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
-	return not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air
+	return not rolling and not _attacks.committed and not left_open and not parry_on and not in_the_air and not _casting
 
 
 # Times a press of the Interact button and acts on it. A press counts only if it begins while he
@@ -646,14 +678,35 @@ func _hand_over_the_weapon_in_hand() -> void:
 	_attacks.weapon = weapons.in_hand if weapons.in_hand != null else unarmed
 
 
+# The torch in hand burns and lights the way, and can be drawn; with anything else in hand, or
+# nothing, the carried torch is out and out of the group of torches. Putting it out here is not a
+# draw, so it leaves no unlit club behind.
+func _tend_the_carried_torch() -> void:
+	var burning := torch_weapon != null and weapons.in_hand == torch_weapon
+	if burning:
+		carried_torch.relight()
+		carried_torch.add_to_group(&"torches")
+	else:
+		carried_torch.remove_from_group(&"torches")
+		carried_torch.extinguish()
+
+
+# The torch in hand has been drawn: it is an unlit club from now on, in the same place in the list
+# and still in hand.
+func _leave_an_unlit_club() -> void:
+	if torch_weapon != null and weapons.in_hand == torch_weapon:
+		weapons.replace_in_hand(unlit_torch)
+
+
 # A press of the Switch button puts the next carried Weapon in hand, at once, unless he is in an
-# attack (a swing, a Heavy attack charge or a Jump attack): then it waits, and is made in the frame
+# attack (a swing, a Heavy attack charge or a Jump attack) or in the wind-up of his Spell, which
+# a switch would spoil by putting out the torch in hand: then it waits, and is made in the frame
 # the attack is over. For a swing that is the frame its recovery ends, ahead of the attack kept for
 # that frame (see _make_the_waiting_switch), and for a Jump attack that a gap cancels, the frame he
 # lands in (see _on_landed). Only one press waits, and a press made while one is waiting does not
 # add another. This makes the waiting switch in any other frame he is not in an attack.
 func _advance_switch() -> void:
-	if _switch_waiting and not _attacks.committed:
+	if _switch_waiting and not _attacks.committed and not _casting:
 		_make_the_waiting_switch()
 
 
