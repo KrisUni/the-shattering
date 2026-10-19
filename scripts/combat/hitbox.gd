@@ -5,7 +5,8 @@ extends Area2D
 ## It never hurts the body it is part of.
 ##
 ## A Hitbox sits on no layer and looks for Hurtboxes through its mask: an attack on the
-## player masks player_hurtbox, an attack on enemies masks enemy_hurtbox.
+## player masks player_hurtbox, an attack on enemies masks enemy_hurtbox. Almos's also masks
+## flammable, for lighting things with a torch (see ignites).
 ##
 ## It tells the Hurtbox where the hit comes from: the Hitbox's own position, so a Hitbox
 ## belongs at the centre of whoever swings it, turning there to aim.
@@ -43,6 +44,10 @@ var grab := false
 ## box, so that it keeps covering it. Optional.
 @export var strike_placeholder: Node2D
 
+## Whether a swing sets alight the flammable things it reaches. Almos sets it while he has a lit
+## torch in hand. It does not draw the torch's flame.
+var ignites := false
+
 ## Whether the swing is on. Switching it on starts a new swing, which may hit every
 ## Hurtbox again; switching it on when it is already on changes nothing.
 var active := false:
@@ -79,6 +84,9 @@ func _physics_process(_delta: float) -> void:
 	# Polled, not listened for, so that a Hurtbox already under the Hitbox when it is
 	# switched on is hit as well as one that walks into it.
 	for area in get_overlapping_areas():
+		if ignites and area is Flammable:
+			(area as Flammable).ignite()
+			continue
 		var hurtbox := area as Hurtbox
 		if hurtbox != null and hurtbox not in _hit and not _is_part_of_same_body(hurtbox):
 			var outcome := hurtbox.hurt(damage, global_position, stagger, critical, low, unblockable, grab)

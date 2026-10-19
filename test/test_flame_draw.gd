@@ -326,6 +326,8 @@ func test_a_fireball_dies_out_after_its_range() -> void:
 
 func test_a_fireball_flies_at_the_lock_on_target_not_the_nearest_facing() -> void:
 	_set_up_room()
+	# The bed is flammable, so a fireball stops at it: it is moved off the line to the enemy.
+	(_room.get_node("Bed") as Node2D).global_position = Vector2.ZERO
 	# Off the eight facings, so only an exact aim at the target reaches it.
 	_enemy.global_position = _almos.global_position + Vector2(_spell.fireball_range * 0.45, _spell.fireball_range * 0.16)
 	_almos_input.press_action(&"lock_on")

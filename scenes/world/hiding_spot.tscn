@@ -1,10 +1,16 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/world/hiding_spot.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="2_flammable"]
 
-[node name="HidingSpot" type="Node2D" groups=["hiding_spots"]]
+[node name="HidingSpot" type="Node2D" node_paths=PackedStringArray("flammable") groups=["hiding_spots"]]
 script = ExtResource("1_script")
+flammable = NodePath("Flammable")
 
 [node name="Placeholder" type="Polygon2D" parent="."]
 color = Color(0.45, 0.32, 0.2, 1)
 polygon = PackedVector2Array(-16, -20, 16, -20, 16, 20, -16, 20)
+
+[node name="Flammable" parent="." node_paths=PackedStringArray("look") instance=ExtResource("2_flammable")]
+look = NodePath("../Placeholder")
+kind = 0

@@ -128,3 +128,4 @@ cast_spell={
 2d_physics/layer_7="ledge_area"
 2d_physics/layer_8="enemy_body"
 2d_physics/layer_9="player_body"
+2d_physics/layer_10="flammable"

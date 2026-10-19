@@ -678,11 +678,13 @@ func _hand_over_the_weapon_in_hand() -> void:
 	_attacks.weapon = weapons.in_hand if weapons.in_hand != null else unarmed
 
 
-# The torch in hand burns and lights the way, and can be drawn; with anything else in hand, or
+# The torch in hand burns, lights the way, sets things alight with his swings, and can be drawn; with anything else in hand, or
 # nothing, the carried torch is out and out of the group of torches. Putting it out here is not a
 # draw, so it leaves no unlit club behind.
 func _tend_the_carried_torch() -> void:
 	var burning := torch_weapon != null and weapons.in_hand == torch_weapon
+	# A lit torch in hand sets alight what his swings reach; it is not drawn by doing so.
+	_attacks.hitbox.ignites = burning
 	if burning:
 		carried_torch.relight()
 		carried_torch.add_to_group(&"torches")

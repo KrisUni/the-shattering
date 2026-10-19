@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/flammable.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
+size = Vector2(32, 40)
+
+[node name="Flammable" type="Area2D"]
+collision_layer = 512
+collision_mask = 0
+monitoring = false
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_flammable")
+
+[node name="Flame" type="Polygon2D" parent="."]
+visible = false
+color = Color(1, 0.5, 0.1, 0.85)
+polygon = PackedVector2Array(0, -26, 10, -10, 6, 0, -6, 0, -10, -10)
