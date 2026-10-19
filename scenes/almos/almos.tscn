@@ -17,6 +17,9 @@
 [ext_resource type="Resource" path="res://data/unarmed.tres" id="15_unarmed"]
 [ext_resource type="Script" path="res://scenes/almos/almos_spell.gd" id="16_spell"]
 [ext_resource type="Resource" path="res://data/flame_draw.tres" id="17_flame_draw"]
+[ext_resource type="Resource" path="res://data/torch.tres" id="18_torch_weapon"]
+[ext_resource type="Resource" path="res://data/torch_unlit.tres" id="19_torch_unlit"]
+[ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="20_torch"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -35,6 +38,8 @@ script = ExtResource("1_script")
 tuning = ExtResource("2_tuning")
 weapon = ExtResource("6_weapon")
 unarmed = ExtResource("15_unarmed")
+torch_weapon = ExtResource("18_torch_weapon")
+unlit_torch = ExtResource("19_torch_unlit")
 
 [node name="Shadow" type="Polygon2D" parent="."]
 visible = false
@@ -69,6 +74,8 @@ script = ExtResource("13_experience")
 
 [node name="Weapons" type="Node" parent="."]
 script = ExtResource("14_weapons")
+
+[node name="CarriedTorch" parent="." instance=ExtResource("20_torch")]
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
 collision_layer = 2

@@ -186,6 +186,14 @@ var untouchable: bool:
 ## Weapon is in hand, and it is not carried, so it is never in his Weapons.
 @export var unarmed: WeaponData
 
+## The torch Weapon (data/torch.tres). While it is the one in hand it burns and lights the way,
+## and Flame draw can take its flame; once drawn it is replaced where it is by unlit_torch.
+@export var torch_weapon: WeaponData
+
+## What a drawn torch becomes in his hand: the unlit club, with its own attacks. It never burns
+## again, and is not relit when enemies return.
+@export var unlit_torch: WeaponData
+
 ## What Roll and Sprint spend, and what the Stamina bar shows. It is given Almos's tuning,
 ## so his tuning is the only one to set.
 @onready var stamina: Stamina = $Stamina
@@ -204,6 +212,10 @@ var untouchable: bool:
 ## The Weapons he carries and the one in hand. The one in hand is given to his attacks, and
 ## what he carries survives a Death.
 @onready var weapons: AlmosWeapons = $Weapons
+
+## The flame of the torch in his hand, at his own position. It is in the group "torches", and so
+## gives light and can be drawn, only while the torch Weapon is in hand and burning.
+@onready var carried_torch: Torch = $CarriedTorch
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _attacks: AlmosAttacks = $Attacks
 @onready var _lock_on: AlmosLockOn = $LockOn
@@ -281,6 +293,10 @@ func _ready() -> void:
 	# Whichever Weapon is in hand is the one his attacks make. A switch is only made when he is not
 	# in an attack, and a drop only when he is free, so nothing is handed over in the middle of one.
 	weapons.changed.connect(_hand_over_the_weapon_in_hand)
+	# The torch in hand burns; a torch drawn becomes the unlit club.
+	weapons.changed.connect(_tend_the_carried_torch)
+	carried_torch.put_out.connect(_leave_an_unlit_club)
+	_tend_the_carried_torch()
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
 	# A switch pressed in a swing, or in the frame its recovery ends, is made in that frame, before
@@ -660,6 +676,26 @@ func _drop_the_weapon_in_hand() -> void:
 # Hands his attacks the Weapon in hand, or Unarmed when his hands are empty.
 func _hand_over_the_weapon_in_hand() -> void:
 	_attacks.weapon = weapons.in_hand if weapons.in_hand != null else unarmed
+
+
+# The torch in hand burns and lights the way, and can be drawn; with anything else in hand, or
+# nothing, the carried torch is out and out of the group of torches. Putting it out here is not a
+# draw, so it leaves no unlit club behind.
+func _tend_the_carried_torch() -> void:
+	var burning := torch_weapon != null and weapons.in_hand == torch_weapon
+	if burning:
+		carried_torch.relight()
+		carried_torch.add_to_group(&"torches")
+	else:
+		carried_torch.remove_from_group(&"torches")
+		carried_torch.draw()
+
+
+# The torch in hand has been drawn: it is an unlit club from now on, in the same place in the list
+# and still in hand.
+func _leave_an_unlit_club() -> void:
+	if torch_weapon != null and weapons.in_hand == torch_weapon:
+		weapons.replace_in_hand(unlit_torch)
 
 
 # A press of the Switch button puts the next carried Weapon in hand, at once, unless he is in an

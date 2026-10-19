@@ -251,3 +251,35 @@ func _weapon(path: String) -> WeaponData:
 	var weapon := load(path) as WeaponData
 	assert_not_null(weapon, "%s should load as a Weapon" % path)
 	return weapon
+
+
+func test_replacing_the_weapon_in_hand_keeps_its_place_in_the_list_and_in_hand() -> void:
+	var weapons := _new_weapons()
+	var sword := _weapon(SWORD_PATH)
+	var torch := _weapon(TORCH_PATH)
+	var bar := _weapon(METAL_BAR_PATH)
+	var spear := _weapon(SPEAR_PATH)
+	weapons.pick_up(sword)
+	weapons.pick_up(torch)
+	weapons.pick_up(bar)
+	weapons.switch_to_next()
+
+	weapons.replace_in_hand(spear)
+
+	assert_eq(weapons.carried, [sword, spear, bar])
+	assert_same(weapons.in_hand, spear)
+	weapons.switch_to_next()
+	assert_same(weapons.in_hand, bar, "the cycle goes on from the replacement")
+
+
+func test_replacing_with_empty_hands_or_with_nothing_changes_nothing() -> void:
+	var weapons := _new_weapons()
+	var sword := _weapon(SWORD_PATH)
+	weapons.replace_in_hand(sword)
+	assert_eq(weapons.carried.size(), 0, "empty hands: nothing to replace")
+	weapons.pick_up(sword)
+
+	weapons.replace_in_hand(null)
+
+	assert_eq(weapons.carried, [sword])
+	assert_same(weapons.in_hand, sword)
