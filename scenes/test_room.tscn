@@ -17,6 +17,7 @@
 [ext_resource type="Resource" path="res://data/torch.tres" id="14_torch"]
 [ext_resource type="Resource" path="res://data/metal_bar.tres" id="15_metal_bar"]
 [ext_resource type="Script" path="res://scenes/hud/weapon_label.gd" id="16_weapon_label"]
+[ext_resource type="Script" path="res://scenes/hud/flask_label.gd" id="23_flask_label"]
 [ext_resource type="PackedScene" path="res://scenes/world/light_zone.tscn" id="17_light_zone"]
 [ext_resource type="PackedScene" path="res://scenes/world/hiding_spot.tscn" id="19_hiding_spot"]
 [ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="20_torch"]
@@ -234,6 +235,14 @@ offset_right = 216.0
 offset_bottom = 114.0
 script = ExtResource("16_weapon_label")
 weapons = NodePath("../../Almos/Weapons")
+
+[node name="FlaskLabel" type="Label" parent="Hud" node_paths=PackedStringArray("flasks")]
+offset_left = 16.0
+offset_top = 118.0
+offset_right = 216.0
+offset_bottom = 141.0
+script = ExtResource("23_flask_label")
+flasks = NodePath("../../Almos/Flasks")
 
 [node name="FallenLabel" type="Label" parent="Hud" node_paths=PackedStringArray("almos")]
 visible = false
