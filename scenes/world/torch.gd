@@ -6,7 +6,8 @@ extends Node2D
 ## While it burns it lights the area around it, which is what enemies read at Almos's position
 ## to tell how far they see (see LightZone.light_at). A rest or a Death relights it.
 
-## Emitted once, when the flame is drawn and the torch goes out.
+## Emitted once, when the flame is drawn and the torch goes out. Going out quietly (see
+## extinguish) is not a draw and does not emit it.
 signal put_out
 
 ## The numbers of its light. They live in data/torch_light.tres.
@@ -45,6 +46,13 @@ func draw() -> bool:
 	_show()
 	put_out.emit()
 	return true
+
+
+## The torch goes out without being drawn, and says nothing: put_out is for a draw only. Almos
+## does this to the torch he carries when it leaves his hand. A torch already out is left as it is.
+func extinguish() -> void:
+	_lit = false
+	_show()
 
 
 ## The flame burns again. Says whether it was out; a lit torch is left as it is.

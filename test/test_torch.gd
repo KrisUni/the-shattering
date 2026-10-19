@@ -143,3 +143,21 @@ func _torch() -> Torch:
 	var torch := (load(TORCH_PATH) as PackedScene).instantiate() as Torch
 	add_child_autofree(torch)
 	return torch
+
+
+func test_going_out_quietly_puts_the_torch_out_and_says_nothing() -> void:
+	var torch := _torch()
+	watch_signals(torch)
+
+	torch.extinguish()
+
+	assert_false(torch.lit)
+	assert_signal_not_emitted(torch, "put_out")
+
+
+func test_a_torch_put_out_quietly_can_be_relit() -> void:
+	var torch := _torch()
+	torch.extinguish()
+
+	assert_true(torch.relight())
+	assert_true(torch.lit)

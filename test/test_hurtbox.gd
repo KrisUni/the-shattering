@@ -545,3 +545,32 @@ func test_a_hitbox_says_its_hit_comes_from_where_it_sits_in_the_world() -> void:
 	assert_eq(from_hook.size(), 1, "the hit should have landed once")
 	if from_hook.size() == 1:
 		assert_almost_eq(from_hook[0], Vector2(130.0, 40.0), Vector2.ONE * TOLERANCE)
+
+
+func test_a_damage_only_hit_takes_its_damage_and_announces_it_apart_from_landing() -> void:
+	var landed := [0]
+	var damage_only: Array[Vector2] = []
+	_hurtbox.landed.connect(func(_stagger: float, _from: Vector2, _critical: bool) -> void: landed[0] += 1)
+	_hurtbox.landed_damage_only.connect(func(from: Vector2) -> void: damage_only.append(from))
+	var from := Vector2(3.0, 4.0)
+
+	var outcome := _hurtbox.hurt_damage_only(HIT_DAMAGE, from)
+
+	assert_eq(outcome, Hurtbox.Outcome.LANDED)
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM - HIT_DAMAGE, TOLERANCE)
+	assert_eq(landed[0], 0, "landed is for hits that build Stagger")
+	assert_eq(damage_only, [from] as Array[Vector2])
+
+
+func test_a_damage_only_hit_misses_and_is_parried_as_any_hit_is() -> void:
+	var damage_only := [0]
+	_hurtbox.landed_damage_only.connect(func(_from: Vector2) -> void: damage_only[0] += 1)
+
+	_hurtbox.is_untouchable = func() -> bool: return true
+	assert_eq(_hurtbox.hurt_damage_only(HIT_DAMAGE, Vector2.ZERO), Hurtbox.Outcome.MISSED)
+	_hurtbox.is_untouchable = func() -> bool: return false
+	_hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+	assert_eq(_hurtbox.hurt_damage_only(HIT_DAMAGE, Vector2.ZERO), Hurtbox.Outcome.PARRIED)
+
+	assert_eq(damage_only[0], 0)
+	assert_almost_eq(_health.current, HEALTH_MAXIMUM, TOLERANCE)

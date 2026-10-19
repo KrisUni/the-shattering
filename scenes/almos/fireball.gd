@@ -45,8 +45,8 @@ func _physics_process(delta: float) -> void:
 		global_position = found["position"]
 		var hurtbox := found["collider"] as Hurtbox
 		if hurtbox != null:
-			hurtbox.hurt(damage, global_position, 0.0, false, false, false, false, true)
-			hit.emit(hurtbox)
+			if hurtbox.hurt_damage_only(damage, global_position) != Hurtbox.Outcome.MISSED:
+				hit.emit(hurtbox)
 		queue_free()
 		return
 	global_position += _direction * step

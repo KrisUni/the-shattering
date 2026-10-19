@@ -56,6 +56,8 @@ var _health_at_throw := -1.0
 var _stamina_at_throw := -1.0
 # Whether he was winding up at the start of each physics frame sampled.
 var _winding_samples := []
+# How many times a fireball has said it hit an enemy.
+var _fireball_hits := 0
 
 
 func before_each() -> void:
@@ -64,6 +66,7 @@ func before_each() -> void:
 	_health_at_throw = -1.0
 	_stamina_at_throw = -1.0
 	_winding_samples = []
+	_fireball_hits = 0
 	_spell = load(FLAME_DRAW_PATH) as SpellData
 	assert_not_null(_spell, "Flame draw's data file should load")
 
@@ -336,6 +339,23 @@ func test_a_fireball_flies_at_the_lock_on_target_not_the_nearest_facing() -> voi
 	assert_lt(_enemy.health.current, before)
 
 
+func test_a_fireball_says_it_hit_an_enemy_it_hurt() -> void:
+	_set_up_room()
+
+	await _cast_and_wait_for_the_fireball()
+
+	assert_eq(_fireball_hits, 1)
+
+
+func test_a_fireball_that_misses_an_untouchable_enemy_does_not_say_it_hit() -> void:
+	_set_up_room()
+	(_enemy.get_node("Hurtbox") as Hurtbox).is_untouchable = func() -> bool: return true
+
+	await _cast_and_wait_for_the_fireball()
+
+	assert_eq(_fireball_hits, 0)
+
+
 func test_a_fireball_hit_makes_the_enemy_notice_him() -> void:
 	_set_up_room()
 	assert_false(_enemy.in_pursuit, "it has not noticed him yet")
@@ -448,7 +468,8 @@ func _sample_winding_up() -> void:
 		_winding_samples.append(_almos.spell.winding_up)
 
 
-func _on_fireball_thrown(_fireball: Fireball, _from_torch: Torch) -> void:
+func _on_fireball_thrown(fireball: Fireball, _from_torch: Torch) -> void:
+	fireball.hit.connect(func(_hurtbox: Hurtbox) -> void: _fireball_hits += 1)
 	_health_at_throw = _almos.health.current
 	_stamina_at_throw = _almos.stamina.current
 

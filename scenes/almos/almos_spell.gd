@@ -1,12 +1,12 @@
 class_name AlmosSpell
 extends Node
-## Almos's Spell, cast with its own button. He has one, Flame draw, until the Mana Task adds
+## Almos's Spell, made with its own button. He has one, Flame draw, until the Mana Task adds
 ## switching: with a lit torch in range, the press winds up for wind_up_frames, and at the end of
 ## the wind-up the Health and Stamina it costs are spent, the nearest lit torch in range goes out
 ## and a fireball leaves him. The fireball flies the way he aims, which is at the Lock-on target
 ## under Lock-on and along his facing otherwise.
 ##
-## A press that cannot cast does nothing and spends nothing: no lit torch in range, Health that
+## A press that cannot draw does nothing and spends nothing: no lit torch in range, Health that
 ## would not stay above the Health cost, or Stamina below the Stamina cost. So does a press made
 ## when he is not free to act, which Almos decides; it is lost, not kept for after. The wind-up
 ## commits him: Almos treats him as busy while it lasts.
@@ -40,7 +40,7 @@ var _frames := 0
 var _torch: Torch
 
 
-## Lets one physics frame go by. free says whether he is free to begin a cast; aim is the unit
+## Lets one physics frame go by. free says whether he is free to begin Flame draw; aim is the unit
 ## direction a fireball thrown now flies in. A press made when he is not free is lost.
 func advance(free: bool, aim: Vector2) -> void:
 	if not _winding_up and free and Input.is_action_just_pressed(&"cast_spell"):
@@ -60,7 +60,7 @@ func reset() -> void:
 	_torch = null
 
 
-# Starts the wind-up on the nearest lit torch in range, if he can pay for the cast.
+# Starts the wind-up on the nearest lit torch in range, if he can pay for Flame draw.
 func _begin() -> void:
 	var torch := _nearest_lit_torch_in_range()
 	if torch == null or not _can_pay():
@@ -86,7 +86,7 @@ func _release(aim: Vector2) -> void:
 	fireball_thrown.emit(fireball, torch)
 
 
-# Whether he could pay for a cast now: his Health stays above the Health cost, and his Stamina
+# Whether he could pay for Flame draw now: his Health stays above the Health cost, and his Stamina
 # covers the Stamina cost.
 func _can_pay() -> bool:
 	return health.current > spell_data.health_cost and stamina.current >= spell_data.stamina_cost

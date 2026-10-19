@@ -67,7 +67,7 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 
 ## A hit reaches this Hurtbox, for this much damage, building this much Stagger, coming from
 ## this point in the world, and a Critical hit if it says so, and a low hit if it is one, and an
-## unblockable hit if it is one, and a grab if it is one, and a damage-only hit if it is one (see landed_damage_only). It also misses while the owner is
+## unblockable hit if it is one, and a grab if it is one. It also misses while the owner is
 ## hidden, unless it is a grab.
 ## Returns what became of it: it misses while the owner is untouchable, or in the air if the hit
 ## is low, and is parried when the owner's Parry catches it. A hit that landed or was parried
@@ -77,7 +77,20 @@ var damage_through: Callable = func(damage: float, _from: Vector2) -> float: ret
 ## all of its damage, and neither is_parried nor damage_through is asked, so the owner's Parry
 ## is not spent nor ended by it and nothing is spent on blocking it. It misses while the owner
 ## is untouchable, and is not low, so being in the air does not avoid it.
-func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false, unblockable := false, grab := false, damage_only := false) -> Outcome:
+func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low := false, unblockable := false, grab := false) -> Outcome:
+	return _receive(damage, from, stagger, critical, low, unblockable, grab, false)
+
+
+## A hit that is damage only, such as a fireball's, reaches this Hurtbox, for this much damage,
+## coming from this point in the world. It builds no Stagger and is neither a Critical hit, low,
+## unblockable nor a grab: it is parried, blocked, missed and dealt with as any hit is, but the
+## owner is told with landed_damage_only, not landed. Returns what became of it, as hurt does.
+func hurt_damage_only(damage: float, from: Vector2) -> Outcome:
+	return _receive(damage, from, 0.0, false, false, false, false, true)
+
+
+# The hit itself, for hurt and hurt_damage_only.
+func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low: bool, unblockable: bool, grab: bool, damage_only: bool) -> Outcome:
 	if is_untouchable.call():
 		return Outcome.MISSED
 	if not grab and is_hidden.call():

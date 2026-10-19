@@ -206,7 +206,7 @@ var untouchable: bool:
 ## shows.
 @onready var experience: Experience = $Experience
 
-## His Spell, Flame draw: cast with its own button, and it commits him while it winds up.
+## His Spell, Flame draw: made with its own button, and it commits him while it winds up.
 @onready var spell: AlmosSpell = $Spell
 
 ## The Weapons he carries and the one in hand. The one in hand is given to his attacks, and
@@ -370,7 +370,7 @@ func _physics_process(delta: float) -> void:
 	# to this frame, and so win against a Parry press made in the same frame.
 	_parry.advance(_free_to_act(left_open, left_parrying, in_the_air))
 	var parry_on := left_parrying or parrying
-	# The Spell is cast from the same places as resting is, and its wind-up commits him: it begins
+	# The Spell is made from the same places as resting is, and its wind-up commits him: it begins
 	# only if he is free and not blocking, and an attack, a Roll or a Parry begun in this frame wins
 	# against a press made in the same frame.
 	spell.advance(_free_to_act(left_open, parry_on, in_the_air) and not blocking, _aim())
@@ -688,7 +688,7 @@ func _tend_the_carried_torch() -> void:
 		carried_torch.add_to_group(&"torches")
 	else:
 		carried_torch.remove_from_group(&"torches")
-		carried_torch.draw()
+		carried_torch.extinguish()
 
 
 # The torch in hand has been drawn: it is an unlit club from now on, in the same place in the list
@@ -699,13 +699,14 @@ func _leave_an_unlit_club() -> void:
 
 
 # A press of the Switch button puts the next carried Weapon in hand, at once, unless he is in an
-# attack (a swing, a Heavy attack charge or a Jump attack): then it waits, and is made in the frame
+# attack (a swing, a Heavy attack charge or a Jump attack) or in the wind-up of his Spell, which
+# a switch would spoil by putting out the torch in hand: then it waits, and is made in the frame
 # the attack is over. For a swing that is the frame its recovery ends, ahead of the attack kept for
 # that frame (see _make_the_waiting_switch), and for a Jump attack that a gap cancels, the frame he
 # lands in (see _on_landed). Only one press waits, and a press made while one is waiting does not
 # add another. This makes the waiting switch in any other frame he is not in an attack.
 func _advance_switch() -> void:
-	if _switch_waiting and not _attacks.committed:
+	if _switch_waiting and not _attacks.committed and not _casting:
 		_make_the_waiting_switch()
 
 

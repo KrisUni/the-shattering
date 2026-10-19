@@ -184,6 +184,81 @@ func test_with_a_lit_torch_in_hand_beside_the_stand_torch_the_one_in_hand_is_dra
 	assert_true(_stand_torch.lit, "the stand torch still burns")
 
 
+func test_a_switch_pressed_in_the_wind_up_waits_for_it_and_the_flame_is_still_drawn() -> void:
+	_set_up_room()
+	await _carry_the_torch_in_hand()
+	_stand_far_from_every_torch()
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"cast_spell")
+	assert_true(_almos.spell.winding_up, "winding up")
+
+	_almos_input.press_action(&"switch_weapon")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"switch_weapon")
+	assert_true(_almos.spell.winding_up, "still winding up")
+	assert_same(_almos.weapons.in_hand, load(TORCH_PATH), "the switch waits")
+	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
+
+	assert_eq(_fireballs_thrown, 1, "the fireball is thrown")
+	assert_same(_almos.weapons.in_hand, load(SWORD_PATH), "then the switch is made")
+
+
+func test_dropping_the_unlit_club_leaves_a_pickup_that_is_picked_up_as_the_unlit_club() -> void:
+	_set_up_room()
+	await _carry_the_torch_in_hand()
+	_stand_far_from_every_torch()
+	await _cast()
+
+	await _drop_the_weapon_in_hand()
+
+	var pickup := _the_weapon_pickup_at_almos()
+	assert_not_null(pickup, "a pickup is left")
+	assert_same(pickup.weapon, load(UNLIT_TORCH_PATH), "the unlit club")
+	assert_eq(_almos.weapons.carried, [load(SWORD_PATH)])
+	await _press_interact()
+	assert_eq(_almos.weapons.carried, [load(SWORD_PATH), load(UNLIT_TORCH_PATH)], "picked up as the unlit club")
+	assert_false(_almos.carried_torch.lit, "and it is not lit")
+
+
+func test_switching_away_from_the_lit_torch_and_back_leaves_it_lit_and_drawable() -> void:
+	_set_up_room()
+	await _carry_the_torch_in_hand()
+	_stand_far_from_every_torch()
+	watch_signals(_almos.carried_torch)
+
+	await _tap(&"switch_weapon")
+	assert_same(_almos.weapons.in_hand, load(SWORD_PATH), "the sword is in hand")
+	assert_false(_almos.carried_torch.lit, "away from the hand it is out")
+	await _tap(&"switch_weapon")
+
+	assert_same(_almos.weapons.in_hand, load(TORCH_PATH), "the torch is back in hand, not the unlit club")
+	assert_true(_almos.carried_torch.lit, "lit")
+	assert_signal_not_emitted(_almos.carried_torch, "put_out")
+	await _cast()
+	assert_eq(_fireballs_thrown, 1, "drawable")
+
+
+func test_dropping_and_picking_up_a_lit_torch_again_leaves_it_lit_and_drawable() -> void:
+	_set_up_room()
+	await _carry_the_torch_in_hand()
+	_stand_far_from_every_torch()
+
+	await _drop_the_weapon_in_hand()
+
+	var pickup := _the_weapon_pickup_at_almos()
+	assert_not_null(pickup, "a pickup is left")
+	assert_same(pickup.weapon, load(TORCH_PATH), "the lit torch")
+	await _press_interact()
+	assert_eq(_almos.weapons.carried, [load(SWORD_PATH), load(TORCH_PATH)])
+	await _tap(&"switch_weapon")
+	assert_same(_almos.weapons.in_hand, load(TORCH_PATH), "in hand again")
+	assert_true(_almos.carried_torch.lit, "lit")
+	await _cast()
+	assert_eq(_fireballs_thrown, 1, "drawable")
+	assert_same(_almos.weapons.in_hand, load(UNLIT_TORCH_PATH))
+
+
 # --- set-up ---
 
 
@@ -283,3 +358,30 @@ func _press_interact() -> void:
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"interact")
 	await wait_physics_frames(PRESS_FRAMES)
+
+
+# Taps an action and lets the tap take effect.
+func _tap(action: StringName) -> void:
+	_almos_input.press_action(action)
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(action)
+	await wait_physics_frames(PRESS_FRAMES)
+
+
+# Holds Interact for the drop and lets it take effect.
+func _drop_the_weapon_in_hand() -> void:
+	_almos_input.press_action(&"interact")
+	await wait_physics_frames(ceili(_drop_hold_time() * 60.0) + MARGIN_FRAMES)
+	_almos_input.release_action(&"interact")
+	await wait_physics_frames(PRESS_FRAMES)
+
+
+func _drop_hold_time() -> float:
+	return (load("res://data/player_tuning.tres") as PlayerTuning).drop_hold_time
+
+
+func _the_weapon_pickup_at_almos() -> WeaponPickup:
+	for node in get_tree().get_nodes_in_group(&"weapon_pickups"):
+		if node.global_position.distance_to(_almos.global_position) < 1.0:
+			return node as WeaponPickup
+	return null
