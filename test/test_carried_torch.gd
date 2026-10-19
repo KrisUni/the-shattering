@@ -184,7 +184,7 @@ func test_with_a_lit_torch_in_hand_beside_the_stand_torch_the_one_in_hand_is_dra
 	assert_true(_stand_torch.lit, "the stand torch still burns")
 
 
-func test_a_switch_pressed_in_the_wind_up_waits_for_it_and_the_flame_is_still_drawn() -> void:
+func test_a_switch_pressed_in_the_wind_up_waits_but_is_lost_once_he_holds_the_flame() -> void:
 	_set_up_room()
 	await _carry_the_torch_in_hand()
 	_stand_far_from_every_torch()
@@ -201,7 +201,7 @@ func test_a_switch_pressed_in_the_wind_up_waits_for_it_and_the_flame_is_still_dr
 	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
 	assert_true(_almos.spell.holding, "holding the flame")
 	assert_eq(_fireballs_thrown, 0, "nothing thrown yet")
-	assert_same(_almos.weapons.in_hand, load(SWORD_PATH), "the switch is made once the wind-up is over")
+	assert_same(_almos.weapons.in_hand, load(UNLIT_TORCH_PATH), "the switch is lost: the drawn club stays in hand")
 
 	_almos_input.press_action(&"cast_spell")
 	await wait_physics_frames(TAP_FRAMES)

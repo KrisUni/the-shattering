@@ -4,7 +4,7 @@ extends GutTest
 ## flame and Almos holds it, with nothing thrown however long he waits; a second tap throws it at
 ## once for nothing; while he holds it he can move, Sprint, Roll and Jump but not attack, Block,
 ## Parry, Interact or Switch; it lights the way; any loss of Health, a Fire tick included, puts it
-## out with the cost still spent; and a Death, a rest, hiding and a return put it out. Every wait
+## out with the cost still spent; and a Death, a fall and a return put it out; he cannot rest or hide while he holds it. Every wait
 ## and distance is worked from the data files.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
@@ -311,6 +311,46 @@ func test_he_cannot_interact_while_holding_so_he_cannot_rest_hide_or_pick_up() -
 	assert_true(_almos.spell.holding, "still holding")
 
 
+func test_he_cannot_hide_while_holding() -> void:
+	_set_up_room()
+	await _draw()
+	_almos.global_position = _room.get_node("Barrel").global_position
+
+	await _tap(&"interact")
+
+	assert_false(_almos.hiding, "hiding")
+	assert_true(_almos.spell.holding, "still holding")
+
+
+func test_a_switch_pressed_in_the_wind_up_is_lost_once_he_holds_the_flame() -> void:
+	_set_up_room()
+	_almos.weapons.pick_up(load(SPEAR_PATH))
+	var in_hand := _almos.weapons.in_hand
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"cast_spell")
+	assert_true(_almos.spell.winding_up, "control: winding up")
+
+	await _tap(&"switch_weapon")
+	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
+
+	assert_true(_almos.spell.holding, "holding")
+	assert_same(_almos.weapons.in_hand, in_hand, "no switch")
+
+
+func test_a_sip_pressed_while_holding_does_nothing_and_costs_nothing() -> void:
+	_set_up_room()
+	await _draw()
+	var charges := _almos.flasks.health_charges
+
+	await _tap(&"sip_health")
+	await _tap(&"sip_mana")
+
+	assert_false(_almos.flasks.sipping, "sipping")
+	assert_eq(_almos.flasks.health_charges, charges, "charges")
+	assert_true(_almos.spell.holding, "still holding")
+
+
 # --- light ---
 
 
@@ -430,30 +470,6 @@ func test_return_to_puts_the_flame_out() -> void:
 	await _draw()
 
 	_almos.return_to(_almos.global_position)
-
-	assert_false(_almos.spell.holding)
-
-
-func test_a_rest_puts_the_flame_out() -> void:
-	_set_up_room()
-	await _draw()
-	_almos.global_position = _room.get_node("Checkpoint").global_position + Vector2.RIGHT * BESIDE_THE_CHECKPOINT
-
-	# Interact is shut while he holds the flame, so the rest is asked for directly.
-	assert_true(_almos._rest_at_a_checkpoint_in_reach(), "control: he rested")
-	# The rest sends the room's enemies back as new ones: the old ones are freed at the end of the frame.
-	await wait_physics_frames(1)
-
-	assert_false(_almos.spell.holding)
-
-
-func test_hiding_puts_the_flame_out() -> void:
-	_set_up_room()
-	await _draw()
-	_almos.global_position = _room.get_node("Barrel").global_position
-
-	# Interact is shut while he holds the flame, so the hiding is asked for directly.
-	assert_true(_almos._hide_in_a_spot_in_reach(), "control: he hid")
 
 	assert_false(_almos.spell.holding)
 

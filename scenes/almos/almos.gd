@@ -399,7 +399,7 @@ func _physics_process(delta: float) -> void:
 	# wins against a press made in the same frame. A press he cannot Sip on is lost, as is one with no
 	# charge left.
 	# Like the Spell, it is not made while blocking.
-	if _free_to_act(left_open, parry_on, in_the_air) and not blocking:
+	if _free_to_act(left_open, parry_on, in_the_air) and not blocking and not spell.holding:
 		if Input.is_action_just_pressed(&"sip_health"):
 			flasks.sip()
 		elif Input.is_action_just_pressed(&"sip_mana"):
@@ -756,7 +756,10 @@ func _leave_an_unlit_club() -> void:
 # lands in (see _on_landed). Only one press waits, and a press made while one is waiting does not
 # add another. This makes the waiting switch in any other frame he is not in an attack.
 func _advance_switch() -> void:
-	if _switch_waiting and not _attacks.committed and not _casting:
+	if _switch_waiting and spell.holding:
+		# A Switch is not made while he holds a flame; the one that waited for the wind-up is lost.
+		_switch_waiting = false
+	elif _switch_waiting and not _attacks.committed and not _casting:
 		_make_the_waiting_switch()
 
 
