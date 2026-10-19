@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/path_blocker.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="2_flammable"]
+
+[node name="PathBlocker" type="StaticBody2D" node_paths=PackedStringArray("flammable")]
+script = ExtResource("1_script")
+flammable = NodePath("Flammable")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="Placeholder" type="Polygon2D" parent="."]
+color = Color(0.4, 0.28, 0.16, 1)
+
+[node name="Flammable" parent="." node_paths=PackedStringArray("look") instance=ExtResource("2_flammable")]
+look = NodePath("../Placeholder")
+kind = 2

@@ -8,8 +8,9 @@ extends Area2D
 ## draw never finds it, and Fire never draws, puts out or relights a torch.
 ##
 ## It is on the physics layer flammable, where a fireball and the torch's Hitbox find it. It is in
-## the group "flammables", which is where Fire looks for the things to spread to. Coming back after
-## it is burnt out is not its business yet.
+## the group "flammables", which is where Fire looks for the things to spread to. When enemies
+## return (a rest, or the return after a Death) the room calls come_back: every Fire goes out, a
+## Hiding spot or fungus is whole again, and a path blocker that has caught stays burnt out for good.
 ##
 ## While it burns it hurts, in ticks, every Hurtbox of Almos or an enemy that overlaps it: the tick
 ## damage every tick interval, the first one tick interval after it catches, none once it is burnt
@@ -25,6 +26,9 @@ signal burned_out
 
 ## Emitted at each tick, after the damage is dealt.
 signal ticked
+
+## Emitted when it is whole again after a return, having caught before.
+signal restored
 
 ## What the thing is, for what Fire does to it afterwards.
 enum Kind { HIDING_SPOT, FUNGUS, PATH_BLOCKER }
@@ -63,6 +67,8 @@ var _burnt_out := false
 var _burned_for := 0.0
 var _spread := false
 var _ticks := 0
+# The physics layer it was made with, which it has again when it is whole.
+var _home_layer := 0
 
 @onready var _flame: CanvasItem = get_node_or_null("Flame")
 
@@ -72,6 +78,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	_home_layer = collision_layer
 	_show()
 
 
@@ -99,6 +106,36 @@ func ignite() -> bool:
 	_show()
 	caught.emit()
 	return true
+
+
+## Burns it out at once, whatever state it is in, without it ever catching: it is gone. Says
+## nothing if it was gone already.
+func burn_out_now() -> void:
+	if _burnt_out:
+		return
+	_burn_out()
+
+
+## Enemies have returned: every Fire goes out. A Hiding spot or fungus, burning or burnt out, is
+## whole again, with its look, its collision and its flammability. A path blocker that has caught is
+## burnt out for good, even if it was still burning; one that has not is left as it is.
+func come_back() -> void:
+	if kind == Kind.PATH_BLOCKER:
+		if _burning:
+			_burn_out()
+		return
+	if not (_burning or _burnt_out):
+		return
+	_burning = false
+	_burnt_out = false
+	_burned_for = 0.0
+	_spread = false
+	_ticks = 0
+	remove_from_group(&"fires")
+	collision_layer = _home_layer
+	set_deferred(&"monitorable", true)
+	_show()
+	restored.emit()
 
 
 ## Whether it lights this point (global coordinates): it burns and the point is within its light

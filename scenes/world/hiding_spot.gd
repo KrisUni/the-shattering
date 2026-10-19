@@ -7,14 +7,20 @@ extends Node2D
 ## Every one is flammable: it has a Flammable that sets it alight and burns it away.
 
 ## The part of it that catches Fire. Once it is burnt out the spot is no longer one: it leaves the
-## group, so he cannot get in. Optional.
+## group, so he cannot get in, until it is whole again after a return. Optional.
 @export var flammable: Flammable
 
 
 func _ready() -> void:
 	if flammable != null:
 		flammable.burned_out.connect(_on_burned_out)
+		flammable.restored.connect(_on_restored)
 
 
 func _on_burned_out() -> void:
 	remove_from_group(&"hiding_spots")
+
+
+# It is whole again after a return: Almos can get into it once more.
+func _on_restored() -> void:
+	add_to_group(&"hiding_spots")
