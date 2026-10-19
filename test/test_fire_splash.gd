@@ -233,10 +233,14 @@ func _add_screen(x_from_enemy: float) -> void:
 # --- driving ---
 
 
-# Taps the Spell button and waits for the wind-up and the flight to end.
+# Taps the Spell button to draw the flame, waits for the wind-up, taps again to throw it, and waits for the flight to end.
 func _cast() -> void:
 	_almos_input.press_action(&"cast_spell")
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"cast_spell")
+	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"cast_spell")
 	var flight := ceili(_spell.fireball_range / _spell.fireball_speed * 60.0)
-	await wait_physics_frames(_spell.wind_up_frames + flight + MARGIN_FRAMES)
+	await wait_physics_frames(flight + MARGIN_FRAMES)

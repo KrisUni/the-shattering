@@ -377,10 +377,10 @@ func _physics_process(delta: float) -> void:
 	# kept for it. It is lost in a Guard break or a Parry; a Parry begun in this frame wins against it
 	# (see below).
 	var switch_was_waiting := _switch_waiting
-	var switch_pressed := Input.is_action_just_pressed(&"switch_weapon") and not left_open and not left_parrying and not _sipping
+	var switch_pressed := Input.is_action_just_pressed(&"switch_weapon") and not left_open and not left_parrying and not _sipping and not spell.holding
 	if switch_pressed:
 		_switch_waiting = true
-	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air and not _casting and not _sipping, in_the_air)
+	_attacks.advance(_aim(), not rolling and not left_open and not left_parrying and not in_the_air and not _casting and not _sipping and not spell.holding, in_the_air and not spell.holding)
 	# An attack commits him and a Guard break or a Parry leaves him open, so a tap in any of
 	# them is lost, not kept for after it.
 	if tapped and not _attacks.committed and not left_open and not left_parrying and not in_the_air and not _casting and not _sipping:
@@ -388,7 +388,7 @@ func _physics_process(delta: float) -> void:
 	# A Parry can be begun from a Sprint or while blocking, but not in a Roll, an attack or a
 	# Guard break, nor in a Parry. The attack and the Roll have begun by now if they were going
 	# to this frame, and so win against a Parry press made in the same frame.
-	_parry.advance(_free_to_act(left_open, left_parrying, in_the_air))
+	_parry.advance(_free_to_act(left_open, left_parrying, in_the_air) and not spell.holding)
 	var parry_on := left_parrying or parrying
 	# The Spell is made from the same places as resting is, and its wind-up commits him: it begins
 	# only if he is free and not blocking, and an attack, a Roll or a Parry begun in this frame wins
@@ -426,14 +426,14 @@ func _physics_process(delta: float) -> void:
 	# since this comes before Block is advanced. A tap rests at a Checkpoint in reach, or else picks
 	# up a Weapon in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
 	# against a press made in the same frame, since he is in the air by now.
-	_advance_interact(_free_to_act(left_open, parry_on, airborne) and not blocking, delta)
+	_advance_interact(_free_to_act(left_open, parry_on, airborne) and not blocking and not spell.holding, delta)
 	# Getting into a Hiding spot in this frame leaves him in it, still, whatever else was pressed.
 	if _hiding:
 		return
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
-	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne and not _casting and not _sipping, delta)
+	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne and not _casting and not _sipping and not spell.holding, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if airborne:
@@ -681,6 +681,7 @@ func _rest_at_a_checkpoint_in_reach() -> bool:
 			nearest_distance = distance
 	if nearest == null:
 		return false
+	spell.reset()
 	health.refill()
 	stamina.refill()
 	flasks.refill()
