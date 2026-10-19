@@ -1,6 +1,6 @@
 extends Label
-## A placeholder label for the HUD that shows the charges of Almos's Health Flask, such as
-## "Health Flask 2/3". It follows his Flasks through their changed signal.
+## A placeholder label for the HUD that shows the charges of Almos's Flasks, such as
+## "Health Flask 2/3 · Mana Flask 0/3". It follows his Flasks through their changed signal.
 
 @export var flasks: AlmosFlasks
 
@@ -11,4 +11,4 @@ func _ready() -> void:
 
 
 func _refresh() -> void:
-	text = "Health Flask %d/%d" % [flasks.health_charges, flasks.health_charges_maximum]
+	text = "Health Flask %d/%d · Mana Flask %d/%d" % [flasks.health_charges, flasks.health_charges_maximum, flasks.mana_charges, flasks.mana_charges_maximum]

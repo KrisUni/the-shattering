@@ -216,7 +216,8 @@ var untouchable: bool:
 ## His Spell, Flame draw: made with its own button, and it commits him while it winds up.
 @onready var spell: AlmosSpell = $Spell
 
-## His Flasks: a press of the Sip button drinks from the Health Flask, which keeps him slow and
+## His Flasks: a press of the Sip button drinks from the Health Flask (the Mana Flask is empty until
+## he has a Mana bar), which keeps him slow and
 ## otherwise busy until it ends.
 @onready var flasks: AlmosFlasks = $Flasks
 
@@ -399,6 +400,8 @@ func _physics_process(delta: float) -> void:
 	# charge left.
 	if _free_to_act(left_open, parry_on, in_the_air) and Input.is_action_just_pressed(&"sip_health"):
 		flasks.sip()
+	elif Input.is_action_just_pressed(&"sip_mana"):
+		flasks.sip_mana()
 	flasks.advance(delta)
 	_sipping = _sipping or flasks.sipping
 	# A Jump can be begun from a walk, a Sprint or while blocking, in the same places: not in a

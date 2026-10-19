@@ -9,6 +9,9 @@ extends Resource
 ## How long, in seconds, a Sip lasts. Health comes back at its end.
 @export var sip_duration: float
 
+## How many charges the Mana Flask holds once Almos has a Mana bar. Until then it holds none.
+@export var mana_charges: int
+
 ## The share of the Health maximum a Sip of the Health Flask restores, from 0 to 1.
 @export_range(0.0, 1.0) var health_restore_share: float
 

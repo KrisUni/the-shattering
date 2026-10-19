@@ -138,6 +138,43 @@ func test_changed_is_emitted_when_the_charges_do() -> void:
 	assert_eq(_changes, 2, "a refill")
 
 
+func test_the_mana_flask_has_its_tuned_maximum_but_is_empty() -> void:
+	assert_eq(_flasks.mana_charges_maximum, _tuning.mana_charges)
+	assert_eq(_flasks.mana_charges, 0)
+
+
+func test_refilling_leaves_the_mana_flask_empty_without_a_mana_bar() -> void:
+	assert_false(_flasks.has_mana_bar)
+
+	_flasks.refill()
+
+	assert_eq(_flasks.mana_charges, 0)
+
+
+func test_a_mana_sip_does_nothing_and_costs_nothing_without_a_mana_bar() -> void:
+	_health.take_damage(10.0)
+	var health_before := _health.current
+	_changes = 0
+
+	var began := _flasks.sip_mana()
+
+	assert_false(began)
+	assert_false(_flasks.sipping)
+	assert_eq(_flasks.mana_charges, 0)
+	assert_eq(_flasks.health_charges, _tuning.health_charges)
+	assert_eq(_changes, 0, "nothing should have changed")
+	assert_almost_eq(_health.current, health_before, TOLERANCE)
+
+
+func test_adding_charges_raises_both_flasks_with_the_mana_flask_still_empty() -> void:
+	_flasks.add_charges(2)
+
+	assert_eq(_flasks.health_charges_maximum, _tuning.health_charges + 2)
+	assert_eq(_flasks.health_charges, _tuning.health_charges + 2)
+	assert_eq(_flasks.mana_charges_maximum, _tuning.mana_charges + 2)
+	assert_eq(_flasks.mana_charges, 0)
+
+
 # Lets this many seconds go by, a physics frame at a time.
 func _run(seconds: float) -> void:
 	var frames := int(round(seconds / FRAME))

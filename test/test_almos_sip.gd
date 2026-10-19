@@ -301,15 +301,16 @@ func test_the_hud_label_follows_the_charges() -> void:
 	_set_up_room()
 	var label := _room.get_node("Hud/FlaskLabel") as Label
 	var charges := _flasks.health_charges
-	assert_eq(label.text, "Health Flask %d/%d" % [charges, charges], "at the start")
+	var mana := " · Mana Flask 0/%d" % _flasks.mana_charges
+	assert_eq(label.text, "Health Flask %d/%d%s" % [charges, charges, mana], "at the start")
 	_stand_beside_the_checkpoint()
 
 	await _tap(&"sip_health")
-	assert_eq(label.text, "Health Flask %d/%d" % [charges - 1, charges], "after a Sip")
+	assert_eq(label.text, "Health Flask %d/%d%s" % [charges - 1, charges, mana], "after a Sip")
 	await wait_physics_frames(_sip_frames() + MARGIN_FRAMES)
 	await _tap_interact()
 
-	assert_eq(label.text, "Health Flask %d/%d" % [charges, charges], "after a rest")
+	assert_eq(label.text, "Health Flask %d/%d%s" % [charges, charges, mana], "after a rest")
 
 
 func _spawn_almos() -> void:
