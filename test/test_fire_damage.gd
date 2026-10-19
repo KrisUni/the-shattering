@@ -129,6 +129,33 @@ func test_hidden_in_the_barrel_when_it_catches_he_is_put_out_and_hurt() -> void:
 	assert_false(_almos.hiding)
 
 
+func test_a_burning_barrel_cannot_be_entered_and_he_takes_the_ticks() -> void:
+	_set_up_room()
+	var barrel := _room.get_node("Barrel/Flammable") as Flammable
+	_almos.global_position = _room.get_node("Barrel").global_position
+	barrel.ignite()
+	await wait_physics_frames(MARGIN_FRAMES)
+
+	await _tap(&"interact")
+
+	assert_false(_almos.hiding, "the tap does not get him into a burning spot")
+	await _wait_for_ticks(barrel, 1)
+	assert_eq(_lost(), _fire.damage_per_tick, "and the Fire hurts him")
+
+
+func test_a_barrel_is_whole_to_enter_again_after_a_return_that_put_its_fire_out() -> void:
+	_set_up_room()
+	var barrel := _room.get_node("Barrel/Flammable") as Flammable
+	_almos.global_position = _room.get_node("Barrel").global_position
+	barrel.ignite()
+	barrel.come_back()
+	await wait_physics_frames(MARGIN_FRAMES)
+
+	await _tap(&"interact")
+
+	assert_true(_almos.hiding, "after the return he can get into it")
+
+
 func test_hidden_in_a_spot_that_does_not_burn_he_stays_hidden_while_another_burns() -> void:
 	_set_up_room()
 	var barrel := _room.get_node("Barrel/Flammable") as Flammable
@@ -172,6 +199,22 @@ func test_the_training_enemy_beside_its_curtain_takes_what_almos_does_and_no_sta
 
 	assert_eq(enemy.health.maximum - enemy.health.current, _fire.damage_per_tick)
 	assert_eq(enemy.stagger.current, 0.0, "Fire builds no Stagger")
+
+
+func test_an_enemy_hurt_by_a_fire_tick_goes_into_pursuit() -> void:
+	_set_up_room()
+	var enemy = _room.get_node("TrainingEnemy")
+	var curtain := _room.get_node("EnemyCurtain/Flammable") as Flammable
+	_almos.global_position = FAR_CORNER
+	await wait_physics_frames(MARGIN_FRAMES)
+	assert_false(enemy.in_pursuit, "control: it is not in Pursuit before the tick")
+
+	curtain.ignite()
+	await _wait_for_ticks(curtain, 1)
+	await wait_physics_frames(MARGIN_FRAMES)
+
+	assert_lt(enemy.health.current, enemy.health.maximum, "control: the tick hurt it")
+	assert_true(enemy.in_pursuit)
 
 
 func test_the_sound_hunter_beside_its_curtain_is_hurt_the_same() -> void:

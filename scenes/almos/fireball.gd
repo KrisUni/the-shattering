@@ -23,6 +23,9 @@ var damage := 0.0
 var _direction := Vector2.RIGHT
 var _speed := 0.0
 var _range_left := 0.0
+# Whether the flammable things its flight starts inside are found yet, and which they are.
+var _started := false
+var _starts_inside: Array[RID] = []
 
 
 ## Sets it going from this point in the world, along this unit direction, at this speed in pixels
@@ -37,10 +40,14 @@ func launch(from: Vector2, direction: Vector2, speed: float, flight_range: float
 
 
 func _physics_process(delta: float) -> void:
+	if not _started:
+		_started = true
+		_find_what_it_starts_inside()
 	var step := minf(_speed * delta, _range_left)
 	var query := PhysicsRayQueryParameters2D.create(global_position, global_position + _direction * step, WALLS | ENEMY_HURTBOX | FLAMMABLE)
 	query.collide_with_areas = true
 	query.hit_from_inside = true
+	query.exclude = _starts_inside
 	var found := get_world_2d().direct_space_state.intersect_ray(query)
 	if not found.is_empty():
 		global_position = found["position"]
@@ -57,3 +64,14 @@ func _physics_process(delta: float) -> void:
 	_range_left -= step
 	if _range_left <= 0.0:
 		queue_free()
+
+
+# The flammable things whose area holds the point it starts from: it does not hit them.
+func _find_what_it_starts_inside() -> void:
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = global_position
+	query.collision_mask = FLAMMABLE
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	for found in get_world_2d().direct_space_state.intersect_point(query):
+		_starts_inside.append(found["rid"])

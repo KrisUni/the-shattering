@@ -8,6 +8,7 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const ENEMY_TUNING_PATH := "res://data/training_enemy.tres"
+const FIRE_PATH := "res://data/fire.tres"
 # In pixels. Where Almos stands when the test does not move him: clear of the walls and the pickups.
 const OPEN_SPOT := Vector2(300.0, 150.0)
 # In physics frames. How long a case that should stay unnoticed is watched for.
@@ -76,6 +77,25 @@ func test_almos_standing_at_a_distance_is_noticed_in_the_light_but_not_in_the_da
 	var lit := _dark_zone_case(distance, true)
 	await _watch(WATCH_FRAMES)
 	assert_true(lit.enemy.in_pursuit, "the same distance in the light is within the Sight")
+
+
+func test_a_burning_thing_lights_almos_in_the_dark_zone_so_the_enemy_sees_him_farther() -> void:
+	var fire := load(FIRE_PATH) as FireTuning
+	var lit_length := _tuning.sight_length_at(fire.light)
+	assert_gt(lit_length, _tuning.sight_length_dark, "control: the Fire's light lengthens the Sight")
+	var distance := (_tuning.sight_length_dark + lit_length) / 2.0
+
+	var dark := _dark_zone_case(distance, false)
+	_place_a_curtain_beside(dark)
+	await _watch(WATCH_FRAMES)
+	assert_false(dark.enemy.in_pursuit, "control: unlit, he is beyond the dark Sight")
+	await _retire(dark)
+
+	var burning := _dark_zone_case(distance, false)
+	var flammable := _place_a_curtain_beside(burning)
+	flammable.ignite()
+	await _watch(WATCH_FRAMES)
+	assert_true(burning.enemy.in_pursuit, "with the curtain burning beside him the enemy sees him")
 
 
 func test_almos_close_enough_is_noticed_even_in_the_dark_zone() -> void:
@@ -160,6 +180,15 @@ func _dark_zone_case(distance: float, zone_away: bool) -> Dictionary:
 	enemy.post_facing = Vector2.RIGHT
 	add_child_autofree(room)
 	return {"room": room, "almos": almos, "enemy": enemy}
+
+
+# Moves the room's Curtain to the side of Almos, within the light radius of its Fire and clear of
+# the enemy's line, and returns its Flammable. Nothing else in the room is within its spread.
+func _place_a_curtain_beside(room_case: Dictionary) -> Flammable:
+	var fire := load(FIRE_PATH) as FireTuning
+	var curtain := room_case.room.get_node("Curtain") as Node2D
+	curtain.position = room_case.almos.position + Vector2.DOWN * (fire.light_radius / 2.0)
+	return curtain.get_node("Flammable") as Flammable
 
 
 func _wall_in(room: Node, at: Vector2) -> void:

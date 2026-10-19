@@ -108,6 +108,23 @@ func test_a_fireball_reaches_the_enemy_when_no_flammable_thing_is_in_the_way() -
 	assert_lt(_enemy.health.current, health_before, "the fireball hurts the enemy")
 
 
+func test_a_fireball_cast_from_inside_a_flammable_thing_flies_on_to_the_enemy_and_does_not_light_it() -> void:
+	_set_up_room()
+	var enemy_curtain := _room.get_node("EnemyCurtain/Flammable") as Flammable
+	await _carry_the_torch_in_hand()
+	_almos.global_position = _room.get_node("EnemyCurtain").global_position
+	_enemy.global_position = _almos.global_position + Vector2.RIGHT * (_spell.fireball_range - 40.0)
+	_enemy.target = null
+	_almos.facing = Vector2.RIGHT
+	var health_before: float = _enemy.health.current
+
+	await _cast()
+
+	assert_eq(_fireballs_thrown, 1, "control: a fireball is thrown")
+	assert_lt(_enemy.health.current, health_before, "the fireball hurts the enemy")
+	assert_false(enemy_curtain.burning, "the thing he stands in does not catch")
+
+
 func test_the_lit_torch_in_hand_swung_at_the_barrel_lights_it() -> void:
 	_set_up_room()
 	await _carry_the_torch_in_hand()
