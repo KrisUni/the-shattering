@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpellData" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/spell_data.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+health_cost = 10.0
+stamina_cost = 20.0
+draw_range = 48.0
+wind_up_frames = 12
+fireball_speed = 360.0
+fireball_range = 320.0
+base_damage = 20.0
+damage_per_channelling = 2.0

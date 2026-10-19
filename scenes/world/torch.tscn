@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/torch.gd" id="1_script"]
+
+[node name="Torch" type="Node2D" groups=["torches"]]
+script = ExtResource("1_script")
+
+[node name="Bracket" type="Polygon2D" parent="."]
+color = Color(0.3, 0.26, 0.22, 1)
+polygon = PackedVector2Array(-2, -2, 2, -2, 2, 12, -2, 12)
+
+[node name="Flame" type="Polygon2D" parent="."]
+color = Color(1, 0.6, 0.15, 1)
+polygon = PackedVector2Array(0, -16, 6, -8, 4, -2, -4, -2, -6, -8)

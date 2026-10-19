@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/almos/fireball.gd" id="1_script"]
+
+[node name="Fireball" type="Node2D" groups=["fireballs"]]
+script = ExtResource("1_script")
+
+[node name="Placeholder" type="Polygon2D" parent="."]
+color = Color(1, 0.55, 0.1, 1)
+polygon = PackedVector2Array(8, 0, 4, 5, -4, 5, -8, 0, -4, -5, 4, -5)

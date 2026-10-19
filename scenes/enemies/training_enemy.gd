@@ -173,6 +173,7 @@ func _ready() -> void:
 	_low_hitbox.parried.connect(_on_parried)
 	_unblockable_hitbox.parried.connect(_on_parried)
 	_hurtbox.landed.connect(_on_hit_landed)
+	_hurtbox.landed_damage_only.connect(_notice_the_hit)
 	stagger.changed.connect(_show_stagger)
 	_facing = post_facing.normalized()
 	_post = global_position
@@ -399,12 +400,17 @@ func _wind_up_tint() -> Color:
 	return WIND_UP_TINT
 
 
-# A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
-# builds what the attack builds, and more if the hit came from behind, unless it is broken.
-func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
+# A hit of any kind makes it notice the target, whatever its Sight shows.
+func _notice_the_hit(_from := Vector2.ZERO) -> void:
 	_state = State.PURSUIT
 	_last_seen = target.global_position if is_instance_valid(target) else global_position
 	_unseen_frames = 0
+
+
+# A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
+# builds what the attack builds, and more if the hit came from behind, unless it is broken.
+func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
+	_notice_the_hit()
 	if critical:
 		_broken = false
 		_show_look()
