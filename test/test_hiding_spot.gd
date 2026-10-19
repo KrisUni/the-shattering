@@ -250,6 +250,43 @@ func test_leaving_in_the_wind_up_and_rolling_away_avoids_the_grab() -> void:
 	assert_eq(c.almos.health.current, c.almos.health.maximum, "the grab found nobody")
 
 
+func test_a_drag_out_that_a_wall_stops_short_gives_up_after_the_lose_time_and_it_goes_back() -> void:
+	var c := _case()
+	await _frames(SETTLE_FRAMES)
+	_almos_input.press_action(&"interact")
+	await _frames(TAP_FRAMES)
+	_almos_input.release_action(&"interact")
+	# Frame by frame, so that the frame he gets in is the one the count starts from.
+	for i in FRAME_LIMIT:
+		await get_tree().physics_frame
+		if c.almos.hiding:
+			break
+	assert_true(c.almos.hiding, "control: he is in")
+	assert_true(c.enemy.in_pursuit, "control: it saw him get in and is after the spot")
+	# A wall midway between the enemy and the spot, put up once it has set off.
+	var wall := StaticBody2D.new()
+	wall.collision_layer = 1
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(WALL_THICKNESS, WALL_WIDTH)
+	shape.shape = rectangle
+	wall.add_child(shape)
+	wall.position = (c.enemy.global_position + c.spot.global_position) / 2.0
+	c.room.add_child(wall)
+
+	await _frames(_enemy_tuning.lose_sight_frames - 1)
+	assert_true(c.enemy.in_pursuit, "one frame before the lose-time it is still at the wall")
+	assert_false(c.enemy.attacking, "it never got to grab")
+	await _frames(1)
+	assert_false(c.enemy.in_pursuit, "the lose-time after he got in, it gives up")
+
+	await _until(func() -> bool: return c.enemy.global_position.distance_to(POST) < 1.0)
+	assert_lt(c.enemy.global_position.distance_to(POST), 1.0, "it is back at its post")
+	assert_false(c.enemy.in_pursuit, "and stays out of Pursuit")
+	assert_true(c.almos.hiding, "he is still hidden")
+	assert_eq(c.almos.health.current, c.almos.health.maximum, "and unharmed")
+
+
 func test_two_pursuers_one_that_saw_him_drags_and_one_that_did_not_ends_its_pursuit() -> void:
 	var c := _case()
 	var second := _second_enemy_behind_a_wall(c)

@@ -146,6 +146,9 @@ var _sees_target := false
 # that spot is. It lasts until he is out of the spot, however that comes about.
 var _dragging := false
 var _drag_spot := Vector2.ZERO
+# Whether the grab of the drag-out has started. Until it has, the lose-time runs on the drag.
+var _grab_started := false
+var _drag_start_frame := -1
 
 
 func _enter_tree() -> void:
@@ -211,10 +214,19 @@ func _to_target() -> Vector2:
 func _update_pursuit() -> void:
 	if _dragging:
 		if _target_hidden():
-			# It has eyes on the spot, not on him: the lose-time does not run.
+			# It has eyes on the spot, not on him: the lose-time does not run on him. It runs on
+			# the drag instead until the grab starts, so that an enemy something stops short of
+			# the spot gives up, as for losing him.
 			_sees_target = false
 			_state = State.PURSUIT
-			_unseen_frames = 0
+			if not _grab_started and not attacking:
+				# The count starts on the first frame it is free to head for the spot, after any
+				# attack that was already under way.
+				if _drag_start_frame < 0:
+					_drag_start_frame = Engine.get_physics_frames()
+				if Engine.get_physics_frames() - _drag_start_frame >= tuning.lose_sight_frames:
+					_dragging = false
+					end_pursuit()
 			return
 		_dragging = false
 	_sees_target = _target_noticed()
@@ -252,6 +264,8 @@ func react_to_hiding(spot: Vector2, noise_before: float) -> void:
 		return
 	_dragging = true
 	_drag_spot = spot
+	_grab_started = false
+	_drag_start_frame = -1
 	_state = State.PURSUIT
 	_last_seen = spot
 	_unseen_frames = 0
@@ -322,6 +336,7 @@ func _act_freely() -> void:
 		# keeps facing that way until the swing is over.
 		box.rotation = _facing.angle()
 		_unblockable_hitbox.grab = _dragging
+		_grab_started = _grab_started or (_dragging and _kind == EnemyTuning.AttackKind.UNBLOCKABLE)
 		if _kind == EnemyTuning.AttackKind.UNBLOCKABLE:
 			_unblockable_cue.play()
 			unblockable_cue_played.emit()
