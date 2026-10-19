@@ -174,12 +174,16 @@ func _stand_beside_the_checkpoint() -> void:
 # --- driving ---
 
 
-# Taps the Spell button and waits for the wind-up to end.
+# Taps the Spell button to draw the flame and waits for the wind-up, then taps it again to throw.
 func _cast() -> void:
 	_almos_input.press_action(&"cast_spell")
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"cast_spell")
 	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"cast_spell")
+	await wait_physics_frames(MARGIN_FRAMES)
 
 
 # Taps Interact and lets the tap take effect.

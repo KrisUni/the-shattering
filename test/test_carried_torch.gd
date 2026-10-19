@@ -184,7 +184,7 @@ func test_with_a_lit_torch_in_hand_beside_the_stand_torch_the_one_in_hand_is_dra
 	assert_true(_stand_torch.lit, "the stand torch still burns")
 
 
-func test_a_switch_pressed_in_the_wind_up_waits_for_it_and_the_flame_is_still_drawn() -> void:
+func test_a_switch_pressed_in_the_wind_up_waits_but_is_lost_once_he_holds_the_flame() -> void:
 	_set_up_room()
 	await _carry_the_torch_in_hand()
 	_stand_far_from_every_torch()
@@ -199,9 +199,15 @@ func test_a_switch_pressed_in_the_wind_up_waits_for_it_and_the_flame_is_still_dr
 	assert_true(_almos.spell.winding_up, "still winding up")
 	assert_same(_almos.weapons.in_hand, load(TORCH_PATH), "the switch waits")
 	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
+	assert_true(_almos.spell.holding, "holding the flame")
+	assert_eq(_fireballs_thrown, 0, "nothing thrown yet")
+	assert_same(_almos.weapons.in_hand, load(UNLIT_TORCH_PATH), "the switch is lost: the drawn club stays in hand")
 
-	assert_eq(_fireballs_thrown, 1, "the fireball is thrown")
-	assert_same(_almos.weapons.in_hand, load(SWORD_PATH), "then the switch is made")
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"cast_spell")
+
+	assert_eq(_fireballs_thrown, 1, "the second tap throws the fireball")
 
 
 func test_dropping_the_unlit_club_leaves_a_pickup_that_is_picked_up_as_the_unlit_club() -> void:
@@ -344,12 +350,16 @@ func _on_fireball_thrown(_fireball: Fireball, _torch: Torch) -> void:
 # --- driving ---
 
 
-# Taps the Spell button and waits for the wind-up to end.
+# Taps the Spell button to draw the flame and waits for the wind-up, then taps it again to throw.
 func _cast() -> void:
 	_almos_input.press_action(&"cast_spell")
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"cast_spell")
 	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"cast_spell")
+	await wait_physics_frames(MARGIN_FRAMES)
 
 
 # Taps Interact and lets the tap take effect.

@@ -79,6 +79,8 @@ script = ExtResource("14_weapons")
 
 [node name="CarriedTorch" parent="." instance=ExtResource("20_torch")]
 
+[node name="HeldFlame" parent="." instance=ExtResource("20_torch")]
+
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
 collision_layer = 2
 collision_mask = 0
@@ -139,10 +141,11 @@ body = NodePath("..")
 placeholder = NodePath("../Placeholder")
 shadow = NodePath("../Shadow")
 
-[node name="Spell" type="Node" parent="." node_paths=PackedStringArray("body", "health", "stamina")]
+[node name="Spell" type="Node" parent="." node_paths=PackedStringArray("body", "held_flame", "health", "stamina")]
 script = ExtResource("16_spell")
 spell_data = ExtResource("17_flame_draw")
 body = NodePath("..")
+held_flame = NodePath("../HeldFlame")
 health = NodePath("../Health")
 stamina = NodePath("../Stamina")
 

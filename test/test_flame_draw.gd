@@ -247,9 +247,13 @@ func test_a_press_made_in_a_swing_is_lost() -> void:
 	_almos_input.press_action(&"attack_light")
 	await wait_physics_frames(1)
 	_almos_input.release_action(&"attack_light")
+	assert_true(_almos.attacking, "control: he is in the swing")
 
-	await _cast_and_wait_for_the_fireball()
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(1)
+	_almos_input.release_action(&"cast_spell")
 
+	assert_false(_almos.spell.winding_up, "no wind-up begun")
 	assert_true(_torch.lit, "the torch")
 	assert_almost_eq(_almos.health.current, health_before, TOLERANCE, "Health")
 
@@ -476,14 +480,23 @@ func _on_fireball_thrown(fireball: Fireball, _from_torch: Torch) -> void:
 	_stamina_at_throw = _almos.stamina.current
 
 
-# Taps the Spell button, then waits for the wind-up and for a fireball to fly its whole range, and
-# a little more.
+# Taps the Spell button to draw, waits for the wind-up, taps again to throw, then waits for a
+# fireball to fly its whole range, and a little more.
 func _cast_and_wait_for_the_fireball() -> void:
+	await _draw_the_flame()
 	_almos_input.press_action(&"cast_spell")
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"cast_spell")
 	var flight_frames := ceili(_spell.fireball_range / (_spell.fireball_speed / 60.0))
-	await wait_physics_frames(_spell.wind_up_frames + flight_frames + MARGIN_FRAMES)
+	await wait_physics_frames(flight_frames + MARGIN_FRAMES)
+
+
+# Taps the Spell button and waits for the wind-up to end.
+func _draw_the_flame() -> void:
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(&"cast_spell")
+	await wait_physics_frames(_spell.wind_up_frames + MARGIN_FRAMES)
 
 
 func _wait_until(condition: Callable) -> void:
