@@ -100,16 +100,19 @@ func _splash(direct: Hurtbox, on_a_wall: bool) -> void:
 	query.collide_with_bodies = false
 	for found in get_world_2d().direct_space_state.intersect_shape(query, 64):
 		var hurtbox := found["collider"] as Hurtbox
-		if hurtbox != null and hurtbox != direct and _clear_to(origin, hurtbox.global_position):
+		if hurtbox != null and hurtbox != direct and _clear_to(origin, hurtbox.global_position, null):
 			hurtbox.hurt_damage_only(damage * splash_fraction, global_position)
 		var flammable := found["collider"] as Flammable
-		if flammable != null and _clear_to(origin, flammable.global_position):
+		if flammable != null and _clear_to(origin, flammable.global_position, flammable.get_parent() as CollisionObject2D):
 			flammable.ignite()
 
 
-# Whether no wall is on the straight line between these two points.
-func _clear_to(from: Vector2, to: Vector2) -> bool:
+# Whether no wall is on the straight line between these two points. The body the target belongs to,
+# if any (a path blocker's own), does not count as a wall to it.
+func _clear_to(from: Vector2, to: Vector2, own_body: CollisionObject2D) -> bool:
 	var query := PhysicsRayQueryParameters2D.create(from, to, WALLS)
+	if own_body != null:
+		query.exclude = [own_body.get_rid()]
 	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 

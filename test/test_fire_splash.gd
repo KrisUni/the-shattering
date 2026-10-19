@@ -10,6 +10,7 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
+const PATH_BLOCKER_PATH := "res://scenes/world/path_blocker.tscn"
 const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
 const TOLERANCE := 0.0001
 # In physics frames.
@@ -121,6 +122,23 @@ func test_a_flammable_thing_within_the_radius_behind_a_wall_is_not_lit() -> void
 	await _cast()
 
 	assert_false(_curtain.burning)
+
+
+func test_a_wall_hit_lights_a_whole_path_blocker_within_the_radius_whose_own_body_is_in_the_line() -> void:
+	WorldState.reset()
+	_set_up_room()
+	var wall_y := -_spell.fireball_range / 2.0
+	_add_wall(wall_y)
+	var blocker := (load(PATH_BLOCKER_PATH) as PackedScene).instantiate() as PathBlocker
+	blocker.id = &"test_splash_blocker"
+	_room.add_child(blocker)
+	# On the fireball's side of the wall, its body between the impact and its middle.
+	blocker.global_position = _almos.global_position + Vector2(_spell.splash_radius / 2.0, wall_y + blocker.size.y / 2.0)
+
+	await _cast()
+
+	assert_true(blocker.flammable.burning)
+	WorldState.reset()
 
 
 func test_a_flammable_thing_beyond_the_splash_radius_is_not_lit() -> void:
