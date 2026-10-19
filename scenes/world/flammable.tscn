@@ -7,8 +7,7 @@ size = Vector2(32, 40)
 
 [node name="Flammable" type="Area2D"]
 collision_layer = 512
-collision_mask = 0
-monitoring = false
+collision_mask = 6
 script = ExtResource("1_script")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

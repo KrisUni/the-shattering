@@ -120,6 +120,14 @@ modulate = Color(0.6, 0.6, 0.9, 1)
 position = Vector2(1060, 280)
 modulate = Color(0.85, 0.4, 0.5, 1)
 
+[node name="EnemyCurtain" parent="." instance=ExtResource("19_hiding_spot")]
+position = Vector2(800, 344)
+modulate = Color(0.85, 0.4, 0.5, 1)
+
+[node name="HunterCurtain" parent="." instance=ExtResource("19_hiding_spot")]
+position = Vector2(144, 580)
+modulate = Color(0.85, 0.4, 0.5, 1)
+
 [node name="WallTorch" parent="." instance=ExtResource("20_torch")]
 position = Vector2(812, 30)
 

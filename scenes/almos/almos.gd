@@ -258,6 +258,9 @@ var _out_of_breath := false
 var _casting := false
 # Whether he is in a Hiding spot.
 var _hiding := false
+
+# The Hiding spot he is in, while he is in one.
+var _hiding_spot: HidingSpot
 # The Noise radius he made in the physics frame before this one, read at the start of this frame: it
 # is what an enemy that sees him get into a Hiding spot in this frame heard of him.
 var _noise_before := 0.0
@@ -603,6 +606,9 @@ func _hide_in_a_spot_in_reach() -> bool:
 	_end_every_action()
 	global_position = nearest.global_position
 	_hiding = true
+	_hiding_spot = nearest
+	if nearest.flammable != null and not nearest.flammable.caught.is_connected(_on_hiding_spot_caught):
+		nearest.flammable.caught.connect(_on_hiding_spot_caught)
 	_placeholder.modulate = HIDDEN_TINT
 	return true
 
@@ -611,6 +617,13 @@ func _hide_in_a_spot_in_reach() -> bool:
 func _leave_hiding() -> void:
 	_hiding = false
 	_placeholder.modulate = Color.WHITE
+
+
+# A Hiding spot caught Fire: if it is the one he is in, he is out of it at once, as with a tap, and
+# so can be hurt by the Fire.
+func _on_hiding_spot_caught() -> void:
+	if _hiding and _hiding_spot != null and _hiding_spot.flammable != null and _hiding_spot.flammable.burning:
+		_leave_hiding()
 
 
 # A hit landed on him: in a Hiding spot, that pulls him out of it.

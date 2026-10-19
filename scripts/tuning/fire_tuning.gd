@@ -18,3 +18,10 @@ extends Resource
 
 ## How far from a burning thing, in pixels, its light reaches.
 @export var light_radius: float
+
+## How much damage, a tick, Fire does to each body standing in a burning thing.
+@export var damage_per_tick: float
+
+## How long, in seconds, between one tick and the next while a thing burns. The first tick comes
+## this long after it catches.
+@export var tick_interval: float
