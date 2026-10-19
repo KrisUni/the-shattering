@@ -30,6 +30,14 @@ extends Resource
 @export var damage_per_channelling: float
 
 
+## How far from the point where a fireball stops, in pixels, its splash reaches: every other enemy
+## within it takes the splash, and every flammable thing within it catches.
+@export var splash_radius: float
+
+## What fraction of the fireball's damage the splash takes off each other enemy it reaches.
+@export var splash_fraction: float
+
+
 ## How much Health a fireball takes off when the caster has this much Channelling.
 func damage_for(channelling: int) -> float:
 	return base_damage + damage_per_channelling * channelling

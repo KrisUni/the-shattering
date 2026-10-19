@@ -258,6 +258,9 @@ var _out_of_breath := false
 var _casting := false
 # Whether he is in a Hiding spot.
 var _hiding := false
+
+# The Hiding spot he is in, while he is in one.
+var _hiding_spot: HidingSpot
 # The Noise radius he made in the physics frame before this one, read at the start of this frame: it
 # is what an enemy that sees him get into a Hiding spot in this frame heard of him.
 var _noise_before := 0.0
@@ -603,6 +606,9 @@ func _hide_in_a_spot_in_reach() -> bool:
 	_end_every_action()
 	global_position = nearest.global_position
 	_hiding = true
+	_hiding_spot = nearest
+	if nearest.flammable != null and not nearest.flammable.caught.is_connected(_on_hiding_spot_caught):
+		nearest.flammable.caught.connect(_on_hiding_spot_caught)
 	_placeholder.modulate = HIDDEN_TINT
 	return true
 
@@ -611,6 +617,13 @@ func _hide_in_a_spot_in_reach() -> bool:
 func _leave_hiding() -> void:
 	_hiding = false
 	_placeholder.modulate = Color.WHITE
+
+
+# A Hiding spot caught Fire: if it is the one he is in, he is out of it at once, as with a tap, and
+# so can be hurt by the Fire.
+func _on_hiding_spot_caught() -> void:
+	if _hiding and _hiding_spot != null and _hiding_spot.flammable != null and _hiding_spot.flammable.burning:
+		_leave_hiding()
 
 
 # A hit landed on him: in a Hiding spot, that pulls him out of it.
@@ -678,11 +691,13 @@ func _hand_over_the_weapon_in_hand() -> void:
 	_attacks.weapon = weapons.in_hand if weapons.in_hand != null else unarmed
 
 
-# The torch in hand burns and lights the way, and can be drawn; with anything else in hand, or
+# The torch in hand burns, lights the way, sets things alight with his swings, and can be drawn; with anything else in hand, or
 # nothing, the carried torch is out and out of the group of torches. Putting it out here is not a
 # draw, so it leaves no unlit club behind.
 func _tend_the_carried_torch() -> void:
 	var burning := torch_weapon != null and weapons.in_hand == torch_weapon
+	# A lit torch in hand sets alight what his swings reach; it is not drawn by doing so.
+	_attacks.hitbox.ignites = burning
 	if burning:
 		carried_torch.relight()
 		carried_torch.add_to_group(&"torches")

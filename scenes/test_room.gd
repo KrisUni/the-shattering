@@ -80,7 +80,8 @@ func _on_almos_rested(checkpoint: Checkpoint) -> void:
 
 
 # Every torch drawn burns again and every ordinary enemy comes back as new, whether Almos rested
-# or died. One still alive is taken out
+# or died. Every Fire goes out: a Hiding spot or fungus that burnt is whole again, and a path
+# blocker that caught is open for good. One still alive is taken out
 # of the tree at once, so that it leaves the "enemies" group in this frame, and a fresh one is made
 # at its starting place. A named enemy is not in the list, so it is left as it is. A fresh enemy is
 # added last, so that it comes after Almos in the tree: he is processed before enemies, and the
@@ -88,6 +89,8 @@ func _on_almos_rested(checkpoint: Checkpoint) -> void:
 func _bring_back_the_ordinary_enemies() -> void:
 	for torch in get_tree().get_nodes_in_group("torches"):
 		torch.relight()
+	for flammable in get_tree().get_nodes_in_group("flammables"):
+		flammable.come_back()
 	for start in _ordinary_enemies:
 		if is_instance_valid(start.current):
 			start.current.get_parent().remove_child(start.current)

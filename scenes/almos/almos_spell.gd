@@ -83,6 +83,8 @@ func _release(aim: Vector2) -> void:
 	var fireball := FIREBALL_SCENE.instantiate() as Fireball
 	body.get_parent().add_child(fireball)
 	fireball.launch(body.global_position, aim, spell_data.fireball_speed, spell_data.fireball_range, spell_data.damage_for(tuning.channelling))
+	fireball.splash_radius = spell_data.splash_radius
+	fireball.splash_fraction = spell_data.splash_fraction
 	fireball_thrown.emit(fireball, torch)
 
 

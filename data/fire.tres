@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FireTuning" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/fire_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+spread_radius = 140.0
+spread_delay = 1.0
+burn_time = 4.0
+light = 0.7
+light_radius = 90.0
+damage_per_tick = 4.0
+tick_interval = 0.6

@@ -298,7 +298,7 @@ func _target_in_earshot() -> bool:
 func _target_in_sight() -> bool:
 	var light := LightZone.light_at(
 		get_tree().get_nodes_in_group("light_zones"), target.global_position,
-		get_tree().get_nodes_in_group("torches"),
+		get_tree().get_nodes_in_group("torches") + get_tree().get_nodes_in_group("fires"),
 	)
 	return Sight.sees(
 		get_world_2d().direct_space_state, global_position, _facing, target.global_position,

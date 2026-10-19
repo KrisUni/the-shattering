@@ -85,8 +85,9 @@ func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low :
 ## coming from this point in the world. It builds no Stagger and is neither a Critical hit, low,
 ## unblockable nor a grab: it is parried, blocked, missed and dealt with as any hit is, but the
 ## owner is told with landed_damage_only, not landed. Returns what became of it, as hurt does.
-func hurt_damage_only(damage: float, from: Vector2) -> Outcome:
-	return _receive(damage, from, 0.0, false, false, false, false, true)
+## If it is unblockable, as Fire's is, it is neither parried nor blocked, as with hurt.
+func hurt_damage_only(damage: float, from: Vector2, unblockable := false) -> Outcome:
+	return _receive(damage, from, 0.0, false, false, unblockable, false, true)
 
 
 # The hit itself, for hurt and hurt_damage_only.
