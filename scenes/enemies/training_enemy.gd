@@ -296,7 +296,10 @@ func _target_in_earshot() -> bool:
 # Whether the target is in its Sight now: inside the cone, which points the way it faces, as long as the light at the target
 # lets it reach, and with no wall in between.
 func _target_in_sight() -> bool:
-	var light := LightZone.light_at(get_tree().get_nodes_in_group("light_zones"), target.global_position)
+	var light := LightZone.light_at(
+		get_tree().get_nodes_in_group("light_zones"), target.global_position,
+		get_tree().get_nodes_in_group("torches"),
+	)
 	return Sight.sees(
 		get_world_2d().direct_space_state, global_position, _facing, target.global_position,
 		tuning.sight_arc_degrees, tuning.sight_length_at(light), WALL_MASK,
