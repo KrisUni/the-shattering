@@ -43,7 +43,7 @@ How the Base of the tree ends. If the Nar guards bring Almos's Health to zero, o
 _Avoid_: Arrest, forced death
 
 **Dungeons**:
-The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in a cell of living roots and gets out by burning through it with his first Flame draw. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with Flame draw. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
+The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in a cell of living roots and gets out by burning through it with his first Pull and Shove of a torch's flame. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
 _Avoid_: Prison, cells, roots
 
 **Store room**:
@@ -133,11 +133,11 @@ One step of the player's growth, bought with Experience at a Checkpoint. Each Le
 _Avoid_: Level-up point, rank
 
 **Strength**:
-The stat that raises Weapon damage and sets the greatest Weight a Spell can move.
+The stat that raises Weapon damage and sets the greatest Weight a Spell can move; a flame is within any Weight limit.
 _Avoid_: Might, power, attack
 
 **Weight**:
-How heavy an enemy or object is. A Spell that pushes or lifts can only move things whose Weight is within what the player's Strength allows.
+How heavy an enemy or object is. A Spell that pushes or lifts can only move things whose Weight is within what the player's Strength allows. A thing too heavy has the cost paid and shudders.
 _Avoid_: Mass, size class, poise
 
 **Channelling**:
@@ -187,31 +187,27 @@ A slower, harder swing that can be charged by holding and builds more Stagger th
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
-A channelled ability with its own button (the `cast_spell` action). Spells normally cost Mana and Stamina, since channelling is physical work. Almos's first Spell is Flame draw; Shove, Pull and Deep bolt come from the Time Keeper's lessons in channelling.
+A channelled ability with its own button (the `cast_spell` action). Spells are Pull, Shove (and Deep bolt, #19). One button (the `switch_spell` action) switches the selected Spell; a held flame selects Shove and locks it until the flame is thrown or out, then the selection returns. Until Almos has his Mana bar, a Spell costs Health and Stamina; after, Mana and Stamina. A press that cannot act or cannot be paid does nothing and spends nothing.
 _Avoid_: Magic, ability, skill, cast
 
-**Flame draw**:
-Almos's first Spell, discovered in the Dungeons: he channels the fire out of a magical torch, holds it, and throws it as a single fireball, made with the Spell button (the `cast_spell` action). A tap draws: after a short wind-up the cost is paid, the torch goes out and he holds its flame. Nothing is thrown without a second tap, and he may hold it as long as he likes; the second tap throws it at once, for nothing, along his aim (at the Lock-on target, else the way he faces). A throw tap made when he is not free to act, in a Roll or in the air, is lost. While he holds the flame he can move, Sprint, Roll and Jump, but cannot attack, Block, Parry, Interact, Switch or Sip, and the flame lights the way as a lit torch in his hand does. Any loss of Health, a Fire tick included, puts the held flame out, and the cost stays spent; so do a Death, a fall and any return. He cannot rest or hide while he holds it: he throws it first. The torch is the nearest lit one within the Spell's range, on a wall, on a stand or in Almos's hand; a lit torch in his hand is at his own position, so it is drawn first. It costs Health and Stamina instead of Mana and Stamina, and each torch's flame can be drawn only once. A press that cannot draw does nothing and spends nothing: with no lit torch in range, with Health that would not stay above the Health cost, or with too little Stamina. The fireball does damage only and no Stagger. Where it stops on something, an enemy, a flammable thing or a wall, it splashes: every other enemy within a small radius of that point takes a fraction of its damage, also damage only, and every flammable thing within it catches, but a wall stops it: it reaches nothing it has no straight line to. The enemy it hit takes its full damage once and no splash, Almos is never hurt by his own splash, and a fireball that only runs out of range splashes nothing. A torch carried as a Weapon burns and lights the way only while it is in hand; carried but not in hand it gives no light and cannot be drawn. Once drawn it is left in hand as an unlit club, in the same place in his list, with attacks of its own, and it never relights. Torches on walls and stands relight whenever enemies return, which is a rest at a Checkpoint or the return after a Death.
-_Avoid_: Torch spell, fire grab, flame weapon
-
 **Shove**:
-A Spell that pushes an enemy or object away from the player. It can only move things whose Weight is within what Strength allows.
+A Spell that pushes the aimed enemy or object away from the player a set distance. It can only move things whose Weight is within what Strength allows; a thing too heavy has the cost paid and shudders. An enemy slammed into a wall, or into a Crate or Boulder, builds Stagger enough to Break and takes no damage. An enemy Shoved into a Gap takes a Deadly fall; an object Shoved to rest in a Gap is gone. With a flame held, Shove throws it as a single fireball instead, at once and along his aim (at the Lock-on target, else the way he faces): a throw tap made when he is not free to act, in a Roll or in the air, is lost. The fireball does damage only and no Stagger. Where it stops on something, an enemy, a flammable thing or a wall, it splashes: every other enemy within a small radius of that point takes a fraction of its damage, also damage only, and every flammable thing within it catches, but a wall stops it: it reaches nothing it has no straight line to. The enemy it hit takes its full damage once and no splash, Almos is never hurt by his own splash, and a fireball that only runs out of range splashes nothing. It costs Health and Stamina like any Spell. A flame is within any Weight limit.
 _Avoid_: Push, force push, telekinesis
 
 **Pull**:
-A Spell that drags an enemy or object toward the player, including items across gaps the player cannot Jump. Limited by Weight, like Shove.
-_Avoid_: Grab, yank, telekinesis
+A Spell that takes the thing in front of the player, tried in order: the flame of a lit torch within range, the flame of a Fire within a short range of its edge, else the nearest enemy or object in a narrow cone along his aim within range. A target needs a straight line from him: an enemy or object with a wall between is not a target. A Pulled enemy or object stops short of him and Pull stays selected; objects are lifted across gaps the player cannot Jump, and a Pulled object never comes to rest in a Gap: if its stopping place is inside one it is carried on past him to the first clear place beyond. An enemy dragged into a Gap takes a Deadly fall. Limited by Weight, like Shove. Taking a flame is a tap that winds up briefly, then the cost is paid and he holds the flame, which selects and locks Shove. The torch is the nearest lit one, on a wall, on a stand or in Almos's hand; a lit torch in his hand is at his own position, so it is taken first. The torch goes out, and each torch's flame can be taken only once. A Fire's flame leaves the thing unburnt, not burnt out, and goes out after a hold time if not thrown. While he holds a flame he can move, Sprint, Roll and Jump, but cannot attack, Block, Parry, Interact, Switch or Sip, and the flame lights the way as a lit torch in his hand does. Any loss of Health, a Fire tick included, puts the held flame out, and the cost stays spent; so do a Death, a fall and any return. He cannot rest or hide while he holds it: he throws it first. A torch carried as a Weapon burns and lights the way only while it is in hand; carried but not in hand it gives no light and its flame cannot be taken. Once taken it is left in hand as an unlit club, in the same place in his list, with attacks of its own, and it never relights. Torches on walls and stands relight whenever enemies return, which is a rest at a Checkpoint or the return after a Death.
+_Avoid_: Grab, yank, telekinesis, Flame draw
 
 **Deep bolt**:
 A ranged Spell of the Path of the Deep, paid for with Mana and Stamina; the player's everyday ranged attack, needing no torch or storm.
 _Avoid_: Magic missile, mana bolt, blast
 
 **Storm draw**:
-Catching a Parried Lightning strike and throwing it as a single bolt, in the manner of Flame draw. It costs Stamina only, since the storm supplies the power. A caught bolt lasts only a few seconds before it fades.
+Catching a Parried Lightning strike and throwing it as a single bolt, in the manner of Pull and Shove of a flame. It costs Stamina only, since the storm supplies the power. A caught bolt lasts only a few seconds before it fades.
 _Avoid_: Lightning catch, bolt throw, thunder parry
 
 **Fire**:
-Burning started by a fireball, or by touching a lit torch in hand to something flammable; the touch is an attack swing with the lit torch in hand. Anything flammable, such as living roots, barrels, curtains, a bed, wooden doors or dry fungus, catches and, after a delay, spreads it to flammable things within a radius. It burns for a set time and gives light while it burns, as a lit torch does, but it is never a torch, so Flame draw cannot draw it. Checkpoint shoots and torches are not flammable. Fire hurts anyone standing in it, Almos included, in ticks. A tick is damage only: it cannot be Blocked, it misses during a Roll's untouchable moment, and it alerts an enemy like any hit. A burning Hiding spot puts Almos out at once and cannot be entered: a tap of Interact in reach of one falls through to the next thing in reach, as for a burnt-out one. A fireball does not hit a flammable thing its flight starts inside; it flies on to the first thing it meets. Burnt means gone: nothing of it is seen or touched. At a return, whether a rest or the return after a Death, every Fire goes out; Hiding spots and fungus that burnt are whole again, and a path blocker that caught, even one still burning, stays open for good.
+Burning started by a fireball, or by touching a lit torch in hand to something flammable; the touch is an attack swing with the lit torch in hand. Anything flammable, such as living roots, barrels, curtains, a bed, wooden doors or dry fungus, catches and, after a delay, spreads it to flammable things within a radius. It burns for a set time and gives light while it burns, as a lit torch does, but it is never a torch: Pull takes a Fire's flame under its own rules, from a short range measured to the burning thing's edge and only for a hold time, but a Fire is never a torch. Checkpoint shoots and torches are not flammable. Fire hurts anyone standing in it, Almos included, in ticks. A tick is damage only: it cannot be Blocked, it misses during a Roll's untouchable moment, and it alerts an enemy like any hit. A burning Hiding spot puts Almos out at once and cannot be entered: a tap of Interact in reach of one falls through to the next thing in reach, as for a burnt-out one. A fireball does not hit a flammable thing its flight starts inside; it flies on to the first thing it meets. Burnt means gone: nothing of it is seen or touched. At a return, whether a rest or the return after a Death, every Fire goes out; Hiding spots and fungus that burnt are whole again, and a path blocker that caught, even one still burning, stays open for good.
 _Avoid_: Flames, burning, blaze
 
 **Roll**:
@@ -296,7 +292,7 @@ An enemy chasing the player once it has noticed him. A pursuing enemy follows hi
 _Avoid_: Aggro, agro, alert, hunting
 
 **Sight**:
-The cone in front of an enemy within which it can notice the player. Noticing is instant: it notices him on the first physics frame he is inside the cone with no wall between. Walls block it. The cone shrinks in darkness, its length following the light where the player stands from full light down to a short length in darkness, a lit torch lifts the darkness within its radius, and a torch put out with Flame draw darkens its surroundings. A torch Almos holds lights him wherever he is, so enemies see him further in the dark, until it is drawn. An enemy at its post faces a set direction, not the player, and an enemy that is hit notices the player whatever its Sight shows.
+The cone in front of an enemy within which it can notice the player. Noticing is instant: it notices him on the first physics frame he is inside the cone with no wall between. Walls block it. The cone shrinks in darkness, its length following the light where the player stands from full light down to a short length in darkness, a lit torch lifts the darkness within its radius, and a torch whose flame Pull has taken darkens its surroundings. A torch Almos holds lights him wherever he is, so enemies see him further in the dark, until its flame is taken. An enemy at its post faces a set direction, not the player, and an enemy that is hit notices the player whatever its Sight shows.
 _Avoid_: Vision (that is the dream place), line of sight, view cone, detection
 
 **Noise**:

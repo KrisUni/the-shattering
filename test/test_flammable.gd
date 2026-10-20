@@ -177,7 +177,7 @@ func test_a_burning_thing_is_among_the_fires_and_not_among_the_torches() -> void
 	thing.ignite()
 
 	assert_has(get_tree().get_nodes_in_group("fires"), thing)
-	assert_does_not_have(get_tree().get_nodes_in_group("torches"), thing, "Flame draw never finds it")
+	assert_does_not_have(get_tree().get_nodes_in_group("torches"), thing, "Pull never finds it as a torch")
 
 
 func test_a_burnt_out_thing_leaves_the_fires() -> void:

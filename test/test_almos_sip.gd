@@ -162,6 +162,16 @@ func test_a_switch_pressed_during_a_sip_is_lost() -> void:
 	assert_eq(_almos.weapons.in_hand, in_hand)
 
 
+func test_a_spell_switch_pressed_during_a_sip_is_refused() -> void:
+	_spawn_almos()
+	await _tap(&"sip_health")
+	assert_true(_almos.flasks.sipping, "control: sipping")
+
+	await _tap(&"switch_spell")
+
+	assert_eq(_almos.spell.selected, AlmosSpell.Spell.PULL)
+
+
 func test_a_spell_pressed_during_a_sip_is_not_cast() -> void:
 	_spawn_almos()
 	var torch := (load(TORCH_SCENE_PATH) as PackedScene).instantiate() as Torch

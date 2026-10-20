@@ -9,7 +9,7 @@ extends GutTest
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const FIRE_PATH := "res://data/fire.tres"
 const TORCH_PATH := "res://data/torch.tres"
 const UNLIT_TORCH_PATH := "res://data/torch_unlit.tres"
@@ -26,7 +26,7 @@ const HALF_WIDTH := 16.0
 const SWING_GAP := 15.0
 # In pixels. How far short of the enemy a flammable thing is put when it is to stand between.
 const SHORT_OF_ENEMY := 120.0
-# In pixels. How far from the stand torch Almos stands to cast, within Flame draw's range.
+# In pixels. How far from the stand torch Almos stands to cast, within the Pull's draw range.
 const BESIDE_THE_STAND_TORCH := 20.0
 
 var _almos_input: AlmosInput
@@ -45,7 +45,7 @@ var _floor_spot: Vector2
 func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
-	_spell = load(FLAME_DRAW_PATH) as SpellData
+	_spell = load(FIREBALL_PATH) as SpellData
 	_fire = load(FIRE_PATH) as FireTuning
 	_fireballs_thrown = 0
 

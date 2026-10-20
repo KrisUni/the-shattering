@@ -11,7 +11,7 @@ const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const PATH_BLOCKER_PATH := "res://scenes/world/path_blocker.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const TOLERANCE := 0.0001
 # In physics frames.
 const TAP_FRAMES := 2
@@ -22,11 +22,13 @@ const HURTBOX_RADIUS := 12.0
 const CLEAR_OF_THE_SPLASH := 20.0
 # In pixels. The thickness of the walls the tests build.
 const WALL_THICKNESS := 16.0
-# In pixels. How far from the stand torch Almos stands to cast, within Flame draw's range.
+# In pixels. How far from the stand torch Almos stands to cast, within the Pull's draw range.
 const BESIDE_THE_STAND_TORCH := 20.0
 
 var _almos_input: AlmosInput
 var _spell: SpellData
+var _pull: SpellCost
+var _shove: SpellCost
 var _room: Node
 var _almos: Almos
 var _enemy
@@ -38,7 +40,9 @@ var _damage := 0.0
 func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
-	_spell = load(FLAME_DRAW_PATH) as SpellData
+	_spell = load(FIREBALL_PATH) as SpellData
+	_pull = load("res://data/pull.tres") as SpellCost
+	_shove = load("res://data/shove.tres") as SpellCost
 
 
 func after_each() -> void:
@@ -87,7 +91,7 @@ func test_almos_within_the_splash_radius_is_not_hurt_by_it() -> void:
 
 	await _cast()
 
-	assert_almost_eq(_almos.health.current, health_before - _spell.health_cost, TOLERANCE, "he lost only the cost of the cast")
+	assert_almost_eq(_almos.health.current, health_before - _pull.health_cost - _shove.health_cost, TOLERANCE, "he lost only the cost of the cast")
 
 
 func test_a_fireball_hitting_a_wall_lights_a_flammable_thing_within_the_radius() -> void:

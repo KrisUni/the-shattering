@@ -132,3 +132,10 @@ func reach_of(kind: AttackKind) -> float:
 		AttackKind.UNBLOCKABLE:
 			return unblockable_attack_reach
 	return attack_reach
+
+## How heavy it is. Shove and Pull move it only if this is no more than the greatest Weight he can
+## move (see PlayerTuning.greatest_weight); a heavier one shudders and stays where it is.
+@export var weight: float
+
+## How much Stagger it builds when a Shove or a Pull slides it into a wall. A slam takes no Health.
+@export var wall_stagger: float

@@ -1,8 +1,8 @@
 extends GutTest
-## Flame draw in the test room with the real Almos, the real training enemy and the shipped
-## numbers, driven through the cast_spell action: a press with a lit torch in range throws a fireball
+## Taking a torch's flame with Pull and throwing it, in the test room with the real Almos, the real
+## training enemy and the shipped numbers, driven through the cast_spell action: a press with a lit torch in range throws a fireball
 ## that damages the first enemy it hits and puts the torch out, spending Health and Stamina; a
-## press that cannot cast spends nothing. Every distance and wait is worked from Flame draw's data
+## press that cannot cast spends nothing. Every distance and wait is worked from the fireball's data
 ## file and Almos's tuning, so nothing here pins a number in them. The one exception is the damage
 ## formula, which is worked by hand from numbers this test gives (see
 ## test_fireball_damage_is_the_base_plus_each_point_of_channelling).
@@ -11,7 +11,9 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const TORCH_PATH := "res://scenes/world/torch.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
+const PULL_PATH := "res://data/pull.tres"
+const SHOVE_PATH := "res://data/shove.tres"
 const TOLERANCE := 0.0001
 # In physics frames. How long a button is held for a tap, and how long to carry on after.
 const TAP_FRAMES := 2
@@ -47,6 +49,8 @@ var spell_binding_params = ParameterFactory.named_parameters(
 
 var _almos_input: AlmosInput
 var _spell: SpellData
+var _pull: SpellCost
+var _shove: SpellCost
 var _room: Node
 var _almos: Almos
 var _torch: Torch
@@ -67,8 +71,12 @@ func before_each() -> void:
 	_stamina_at_throw = -1.0
 	_winding_samples = []
 	_fireball_hits = 0
-	_spell = load(FLAME_DRAW_PATH) as SpellData
-	assert_not_null(_spell, "Flame draw's data file should load")
+	_spell = load(FIREBALL_PATH) as SpellData
+	assert_not_null(_spell, "the fireball's data file should load")
+	_pull = load(PULL_PATH) as SpellCost
+	_shove = load(SHOVE_PATH) as SpellCost
+	assert_not_null(_pull, "Pull's cost file should load")
+	assert_not_null(_shove, "Shove's cost file should load")
 
 
 func after_each() -> void:
@@ -118,20 +126,22 @@ func test_casting_puts_the_torch_out() -> void:
 	assert_false(_torch.lit)
 
 
-func test_casting_spends_the_health_cost() -> void:
+func test_casting_spends_the_pull_and_shove_health_costs() -> void:
 	_set_up_room()
 
 	await _cast_and_wait_for_the_fireball()
 
-	assert_almost_eq(_health_at_throw, _almos.health.maximum - _spell.health_cost, TOLERANCE)
+	assert_almost_eq(_health_at_throw, _almos.health.maximum - _pull.health_cost - _shove.health_cost, TOLERANCE)
 
 
-func test_casting_spends_the_stamina_cost() -> void:
+func test_casting_spends_the_pull_and_shove_stamina_costs() -> void:
 	_set_up_room()
 
 	await _cast_and_wait_for_the_fireball()
 
-	assert_almost_eq(_stamina_at_throw, _almos.stamina.maximum - _spell.stamina_cost, TOLERANCE)
+	# Stamina refills between the draw and the throw, so the exact amounts are worked in test_spell_switching; here
+	# the draw and the throw together cannot have left more than the throw alone leaves.
+	assert_lte(_stamina_at_throw, _almos.stamina.maximum - _shove.stamina_cost + TOLERANCE)
 
 
 func test_nothing_is_spent_and_no_fireball_flies_until_the_wind_up_is_over() -> void:
@@ -184,6 +194,8 @@ func test_a_roll_tapped_while_winding_up_is_lost() -> void:
 func test_a_press_with_no_torch_in_range_does_nothing_and_spends_nothing() -> void:
 	_set_up_room()
 	_place_almos_from_the_torch(_spell.draw_range + EDGE_MARGIN)
+	# With no enemy to Pull either: this one stands out of Pull's reach.
+	_enemy.global_position = _almos.global_position + Vector2(0.0, _pull.target_range + EDGE_MARGIN)
 
 	await _cast_and_wait_for_the_fireball()
 
@@ -201,19 +213,19 @@ func test_a_torch_just_inside_the_draw_range_is_drawn() -> void:
 
 func test_a_press_when_last_on_health_does_nothing_and_spends_nothing() -> void:
 	_set_up_room()
-	_almos.health.take_damage(_almos.health.maximum - _spell.health_cost)
+	_almos.health.take_damage(_almos.health.maximum - _pull.health_cost)
 
 	await _cast_and_wait_for_the_fireball()
 
 	assert_true(_torch.lit, "the torch")
-	assert_almost_eq(_almos.health.current, _spell.health_cost, TOLERANCE, "Health")
+	assert_almost_eq(_almos.health.current, _pull.health_cost, TOLERANCE, "Health")
 	assert_almost_eq(_almos.stamina.current, _almos.stamina.maximum, TOLERANCE, "Stamina")
 	assert_eq(get_tree().get_nodes_in_group("fireballs").size(), 0, "fireballs")
 
 
 func test_he_can_cast_with_a_sliver_of_health_to_spare() -> void:
 	_set_up_room()
-	_almos.health.take_damage(_almos.health.maximum - _spell.health_cost - EDGE_MARGIN)
+	_almos.health.take_damage(_almos.health.maximum - _pull.health_cost - _shove.health_cost - EDGE_MARGIN)
 
 	await _cast_and_wait_for_the_fireball()
 
@@ -222,7 +234,7 @@ func test_he_can_cast_with_a_sliver_of_health_to_spare() -> void:
 
 func test_a_press_with_too_little_stamina_does_nothing_and_spends_nothing() -> void:
 	_set_up_room()
-	_almos.stamina.spend(_almos.stamina.maximum - _spell.stamina_cost + EDGE_MARGIN)
+	_almos.stamina.spend(_almos.stamina.maximum - _pull.stamina_cost + EDGE_MARGIN)
 	var stamina_before: float = _almos.stamina.current
 
 	await _cast_and_wait_for_the_fireball()
@@ -232,9 +244,9 @@ func test_a_press_with_too_little_stamina_does_nothing_and_spends_nothing() -> v
 	assert_gte(_almos.stamina.current, stamina_before, "Stamina")
 
 
-func test_he_can_cast_with_exactly_the_stamina_the_cost_asks() -> void:
+func test_he_can_cast_with_exactly_the_stamina_the_costs_ask() -> void:
 	_set_up_room()
-	_almos.stamina.spend(_almos.stamina.maximum - _spell.stamina_cost)
+	_almos.stamina.spend(_almos.stamina.maximum - _pull.stamina_cost - _shove.stamina_cost)
 
 	await _cast_and_wait_for_the_fireball()
 

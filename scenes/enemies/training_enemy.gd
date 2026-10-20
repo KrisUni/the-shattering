@@ -23,6 +23,17 @@ const BREAK_TINT := Color(0.4, 0.6, 1.0)
 # What a Sound hunter is tinted at rest, so that it can be told from the others. A look.
 const SOUND_HUNTER_TINT := Color(0.6, 1.0, 0.6)
 
+# The collision layers a slide is shaped by: the walls it slams into (the first), and the edge of a
+# Gap (the fourth), which does not block it, and the area inside a Gap (the sixth), which kills it.
+const WALL_LAYER := 1
+const GAP_EDGE_LAYER := 8
+const GAP_AREA_LAYER := 32
+
+# How a shudder looks: for this many physics frames its look jumps this many pixels from side to
+# side, each frame the other way. A look, not tuning.
+const SHUDDER_FRAMES := 8
+const SHUDDER_OFFSET := 3.0
+
 # How close, in pixels, to the place it walks to counts as being there. A look of the walk, not tuning.
 const ARRIVED_DISTANCE := 0.5
 
@@ -34,6 +45,10 @@ enum State { POST, PURSUIT, RETURNING }
 
 ## Emitted once, at the end of the physics frame in which its Health reached zero.
 signal died
+
+## Emitted once each time a Shove or a Pull is too much for its Weight and it shudders instead of
+## moving.
+signal shuddered
 
 ## Emitted once each time the sound that warns of an Unblockable attack is played, as its wind-up
 ## begins. No other attack plays it.
@@ -104,6 +119,16 @@ var broken: bool:
 	get:
 		return _broken
 
+## How heavy it is, from its tuning.
+var weight: float:
+	get:
+		return tuning.weight
+
+## Whether a Shove or a Pull is sliding it: it does not act until the slide is over.
+var sliding: bool:
+	get:
+		return _sliding
+
 ## Whether its Health has reached zero. It is gone by the end of that physics frame.
 var dead: bool:
 	get:
@@ -118,6 +143,7 @@ var dead: bool:
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _nose: Node2D = $Nose
 @onready var _stagger_bar: Node2D = $StaggerBar
+@onready var _placeholder: Node2D = $Placeholder
 
 # The kind of the attack under way, or of the last one made.
 var _kind := EnemyTuning.AttackKind.STRIKE
@@ -133,6 +159,14 @@ var _broken := false
 # first of its break_frames, whichever of Almos's blow and its own processing comes first in it.
 var _break_end_frame := 0
 var _facing := Vector2.DOWN
+# The slide a Shove or a Pull put it in: whether it is under way, the unit direction, how far is left
+# of it, in pixels, and how fast, in pixels per second.
+var _sliding := false
+var _slide_direction := Vector2.ZERO
+var _slide_left := 0.0
+var _slide_speed := 0.0
+# For how many more physics frames it shudders.
+var _shudder_left := 0
 var _state := State.POST
 # Where it stands at its post: where it started. It returns here.
 var _post := Vector2.ZERO
@@ -182,6 +216,13 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	_show_shudder()
+	if _sliding:
+		# It does not act while it slides, with or without a target.
+		_slide(get_physics_process_delta_time())
+		_set_strike(false)
+		_show_look()
+		return
 	if not is_instance_valid(target):
 		return
 	if not _dead:
@@ -203,6 +244,78 @@ func _physics_process(_delta: float) -> void:
 	_set_strike(current_attack.is_active(_frame))
 	_show_look()
 	_nose.rotation = _facing.angle()
+
+
+## A Shove or a Pull slides it this way, a unit vector, for this many pixels at this many pixels
+## per second. It does not act while it slides, and an attack under way is interrupted. It stops
+## short at a wall, which builds wall_stagger Stagger on it, or at anything else solid, but not at the
+## edge of a Gap: one that has its centre inside a Gap takes a Deadly fall and dies.
+func slide(direction: Vector2, distance: float, speed: float) -> void:
+	if _dead or distance <= 0.0 or direction.is_zero_approx():
+		return
+	_sliding = true
+	_slide_direction = direction.normalized()
+	_slide_left = distance
+	_slide_speed = speed
+	_frame = -1
+	_set_strike(false)
+	velocity = Vector2.ZERO
+	collision_mask &= ~GAP_EDGE_LAYER
+	_notice_the_hit()
+
+
+## A Shove or a Pull is more than its Weight allows: it shudders, a few frames of jitter, and
+## stays where it is.
+func shudder() -> void:
+	_shudder_left = SHUDDER_FRAMES
+	shuddered.emit()
+
+
+# One physics frame of the slide.
+func _slide(delta: float) -> void:
+	var step := minf(_slide_speed * delta, _slide_left)
+	var hit := move_and_collide(_slide_direction * step)
+	_slide_left -= step
+	if _in_a_gap():
+		_end_slide()
+		_fall_to_its_death()
+		return
+	if hit != null:
+		var collider := hit.get_collider() as CollisionObject2D
+		if collider != null and collider.collision_layer & WALL_LAYER:
+			_build_stagger(tuning.wall_stagger)
+		_end_slide()
+	elif _slide_left <= 0.0:
+		_end_slide()
+
+
+func _end_slide() -> void:
+	_sliding = false
+	collision_mask |= GAP_EDGE_LAYER
+
+
+# Whether its centre is inside a Gap.
+func _in_a_gap() -> bool:
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = global_position
+	query.collision_mask = GAP_AREA_LAYER
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	return not get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+
+
+# A Deadly fall: it dies as if killed.
+func _fall_to_its_death() -> void:
+	health.take_damage(health.current)
+
+
+# Its look jumps from side to side while it shudders.
+func _show_shudder() -> void:
+	if _shudder_left > 0:
+		_placeholder.position.x = SHUDDER_OFFSET if _shudder_left % 2 == 0 else -SHUDDER_OFFSET
+		_shudder_left -= 1
+	else:
+		_placeholder.position.x = 0.0
 
 
 func _to_target() -> Vector2:

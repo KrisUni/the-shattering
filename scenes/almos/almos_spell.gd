@@ -1,28 +1,46 @@
 class_name AlmosSpell
 extends Node
-## Almos's Spell, made with its own button. He has one, Flame draw, until the Mana Task adds
-## switching. A tap with a lit torch in range draws: the press winds up for wind_up_frames, and at
-## the end of the wind-up the Health and Stamina it costs are spent, the nearest lit torch in range
-## goes out and he HOLDS its flame. Nothing is thrown until a second tap, however long he waits:
-## that tap throws a fireball at once, for free. It flies the way he aims, which is at the Lock-on
-## target under Lock-on and along his facing otherwise.
+## Almos's Spells, made with the Spell button. He has two, Pull and Shove, and the switch_spell
+## button cycles between them; the one selected starts as Pull. A switch tap is read only when he
+## is free to act, as a Switch Weapon tap is, and is refused while he winds up or holds a flame.
+##
+## A tap of the Spell button with Pull selected and a lit torch in range draws: the press winds up
+## for wind_up_frames, and at the end of the wind-up the Pull cost is spent, the nearest lit torch
+## in range goes out and he HOLDS its flame. Holding selects Shove and locks the selection. Nothing
+## is thrown until a tap with Shove: that tap throws a fireball at once, paying the Shove cost, and
+## it flies the way he aims, which is at the Lock-on target under Lock-on and along his facing
+## otherwise. After the throw, or when the flame goes out, the selection returns to what it was
+## before the draw.
 ##
 ## While he holds the flame it lights the way as a lit torch in his hand does. Any loss of Health,
 ## a Fire tick included, puts it out, and the cost stays spent; so does reset (a Death, a rest, a
-## fall, a Hiding spot, a return).
+## fall, a Hiding spot, a return). The Health a Spell spends itself is not such a loss.
 ##
-## A press that cannot draw does nothing and spends nothing: no lit torch in range, Health that
-## would not stay above the Health cost, or Stamina below the Stamina cost. So does a press made
+## A press that cannot cast does nothing and spends nothing: Pull with no lit torch in range,
+## Shove with no flame held, Health that would not stay above the Health cost, or Stamina below the
+## Stamina cost; with too little to pay for the throw the flame stays held. So does a press made
 ## when he is not free to act, which Almos decides; it is lost, not kept for after. The wind-up
 ## commits him: Almos treats him as busy while it lasts.
+
+enum Spell { PULL, SHOVE }
+
+# The collision layer of the walls, the first, which block the line to a target.
+const WALL_MASK := 1
 
 const FIREBALL_SCENE := preload("res://scenes/almos/fireball.tscn")
 
 ## Emitted when the fireball leaves him, with the fireball and the torch whose flame it is.
 signal fireball_thrown(fireball: Fireball, torch: Torch)
 
-## The Spell's numbers. Flame draw's data file is given in the Almos scene.
+## Emitted when the selected Spell changes.
+signal selection_changed
+
+## The fireball's numbers, and those of taking a torch's flame. The data file is given in the Almos scene.
 @export var spell_data: SpellData
+
+## What each Spell costs.
+@export var pull_cost: SpellCost
+@export var shove_cost: SpellCost
 
 ## What the numbers of Channelling come from. Almos gives his own tuning.
 @export var tuning: PlayerTuning
@@ -49,12 +67,23 @@ var holding: bool:
 	get:
 		return _holding
 
+## The Spell the Spell button makes now.
+var selected: Spell:
+	get:
+		return _selected
+
+var _selected := Spell.PULL
+var _selected_before_draw := Spell.PULL
 var _holding := false
 var _drawn_from: Torch
 var _health_seen := 0.0
 var _winding_up := false
 var _frames := 0
 var _torch: Torch
+# The Fire whose flame the wind-up is for, and for how many more seconds he holds a flame taken from
+# a Fire (zero for a torch's, which he holds as long as he likes).
+var _fire: Flammable
+var _fire_hold_left := 0.0
 
 
 func _ready() -> void:
@@ -63,16 +92,29 @@ func _ready() -> void:
 	_light_the_way(false)
 
 
-## Lets one physics frame go by. free says whether he is free to begin Flame draw or to throw the
-## flame he holds; aim is the unit direction a fireball thrown now flies in. A press made when he
-## is not free is lost.
+## Lets one physics frame go by. free says whether he is free to switch Spell, to begin a draw or
+## to throw the flame he holds; aim is the unit direction a fireball thrown now flies in. A press
+## made when he is not free is lost.
 func advance(free: bool, aim: Vector2) -> void:
+	if free and not _holding and not _winding_up and Input.is_action_just_pressed(&"switch_spell"):
+		_select(Spell.SHOVE if _selected == Spell.PULL else Spell.PULL)
 	if _holding:
-		if free and Input.is_action_just_pressed(&"cast_spell"):
+		if _fire_hold_left > 0.0:
+			_fire_hold_left -= get_physics_process_delta_time()
+			if _fire_hold_left <= 0.0:
+				# A flame taken from a Fire goes out unthrown: the cost stays spent.
+				reset()
+				return
+		if free and Input.is_action_just_pressed(&"cast_spell") and _selected == Spell.SHOVE and _can_pay(shove_cost):
 			_throw(aim)
 		return
 	if not _winding_up and free and Input.is_action_just_pressed(&"cast_spell"):
-		_begin()
+		if _selected == Spell.PULL and _nearest_lit_torch_in_range() != null:
+			_begin()
+		elif _selected == Spell.PULL and _nearest_fire_in_range() != null:
+			_begin_on_a_fire()
+		else:
+			_act_on_an_enemy(aim)
 	if not _winding_up:
 		return
 	_frames += 1
@@ -81,38 +123,134 @@ func advance(free: bool, aim: Vector2) -> void:
 
 
 ## The wind-up is over and any flame he holds is out at once, with nothing spent and nothing
-## thrown. Called when Almos falls, rests, hides or is returned.
+## thrown, and the selection is what it was before the draw. Called when Almos falls, rests, hides
+## or is returned.
 func reset() -> void:
+	if _holding:
+		_select(_selected_before_draw)
 	_winding_up = false
 	_frames = 0
 	_torch = null
+	_fire = null
+	_fire_hold_left = 0.0
 	_drawn_from = null
 	_holding = false
 	_light_the_way(false)
 
 
-# Starts the wind-up on the nearest lit torch in range, if he can pay for Flame draw.
+# Starts the wind-up on the nearest lit torch in range, if he can pay for the Pull.
 func _begin() -> void:
 	var torch := _nearest_lit_torch_in_range()
-	if torch == null or not _can_pay():
+	if torch == null or not _can_pay(pull_cost):
 		return
 	_torch = torch
 	_winding_up = true
 	_frames = 0
 
 
+# Shove or Pull on the nearest enemy or movable object in the cone around the aim, if he can pay: the cost is spent
+# whatever comes of it. An enemy within the greatest Weight he can move slides, one beyond it
+# shudders. With no enemy in the cone nothing happens and nothing is spent.
+func _act_on_an_enemy(aim: Vector2) -> void:
+	var pulling := _selected == Spell.PULL
+	var cost := pull_cost if pulling else shove_cost
+	var enemy = _nearest_enemy_in_the_cone(cost, aim)
+	if enemy == null or not _can_pay(cost):
+		return
+	_pay(cost)
+	if enemy.weight > tuning.greatest_weight():
+		enemy.shudder()
+		return
+	var away: Vector2 = enemy.global_position - body.global_position
+	if pulling and enemy.has_method(&"pull_towards"):
+		enemy.pull_towards(body.global_position, cost.distance, cost.move_speed)
+	elif pulling:
+		enemy.slide(-away, maxf(away.length() - cost.distance, 0.0), cost.move_speed)
+	else:
+		enemy.slide(away, cost.distance, cost.move_speed)
+
+
+# The nearest living enemy or movable object within the cost's range and cone around the aim, or null.
+func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance := cost.target_range
+	for node in get_tree().get_nodes_in_group(&"enemies") + get_tree().get_nodes_in_group(&"movables"):
+		var enemy := node as Node2D
+		if enemy == null or not enemy.has_method(&"slide") or enemy.dead:
+			continue
+		var away := enemy.global_position - body.global_position
+		var distance := away.length()
+		if distance > nearest_distance or distance <= 0.0:
+			continue
+		if rad_to_deg(absf(aim.angle_to(away))) > cost.cone_half_angle_degrees:
+			continue
+		if _wall_between(enemy):
+			continue
+		nearest = enemy
+		nearest_distance = distance
+	return nearest
+
+
+# Whether a wall (the walls layer) stands between him and this target, which a Shove or a Pull needs a
+# straight line to. The target itself is not a wall, though a movable object is on that layer.
+func _wall_between(target: Node2D) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(body.global_position, target.global_position, WALL_MASK)
+	var collider := target as CollisionObject2D
+	if collider != null:
+		query.exclude = [collider.get_rid()]
+	return not body.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
+# Starts the wind-up on the nearest Fire in range, if he can pay for the Pull. The Fire is chosen now
+# and must still burn at the end of the wind-up.
+func _begin_on_a_fire() -> void:
+	var fire := _nearest_fire_in_range()
+	if fire == null or not _can_pay(pull_cost):
+		return
+	_fire = fire
+	_winding_up = true
+	_frames = 0
+
+
+# The nearest burning flammable thing whose nearest edge is within the Pull's flame_range of him
+# (its edge, not its centre: a bed or a curtain is big), or null.
+func _nearest_fire_in_range() -> Flammable:
+	var nearest: Flammable = null
+	var nearest_distance := pull_cost.flame_range
+	for node in get_tree().get_nodes_in_group(&"fires"):
+		var fire := node as Flammable
+		if fire == null or not fire.burning:
+			continue
+		var distance := fire.distance_to_edge(body.global_position)
+		if distance <= nearest_distance:
+			nearest = fire
+			nearest_distance = distance
+	return nearest
+
+
 # The end of the wind-up: he pays and holds the flame, if the torch is still lit and he can still
 # pay; otherwise it fizzles with nothing spent.
 func _release() -> void:
 	var torch := _torch
+	var fire := _fire
 	reset()
-	if not is_instance_valid(torch) or not torch.lit or not _can_pay():
+	if not _can_pay(pull_cost):
 		return
-	health.take_damage(spell_data.health_cost)
-	stamina.spend(spell_data.stamina_cost)
-	torch.draw()
-	_drawn_from = torch
+	if fire != null:
+		if not is_instance_valid(fire) or not fire.burning:
+			return
+		_pay(pull_cost)
+		fire.extinguish()
+		_fire_hold_left = pull_cost.fire_flame_hold_time
+	else:
+		if not is_instance_valid(torch) or not torch.lit:
+			return
+		_pay(pull_cost)
+		torch.draw()
+		_drawn_from = torch
 	_holding = true
+	_selected_before_draw = _selected
+	_select(Spell.SHOVE)
 	_light_the_way(true)
 
 
@@ -120,6 +258,7 @@ func _release() -> void:
 func _throw(aim: Vector2) -> void:
 	var torch := _drawn_from if is_instance_valid(_drawn_from) else null
 	reset()
+	_pay(shove_cost)
 	var fireball := FIREBALL_SCENE.instantiate() as Fireball
 	body.get_parent().add_child(fireball)
 	fireball.launch(body.global_position, aim, spell_data.fireball_speed, spell_data.fireball_range, spell_data.damage_for(tuning.channelling))
@@ -136,7 +275,7 @@ func _on_health_changed() -> void:
 
 
 # The held flame burns, and so lights the way as a lit torch in hand does, or is out and out of
-# the group of torches, where Flame draw looks for one to draw.
+# the group of torches, where Pull looks for one to take.
 func _light_the_way(on: bool) -> void:
 	if held_flame == null:
 		return
@@ -148,10 +287,26 @@ func _light_the_way(on: bool) -> void:
 		held_flame.extinguish()
 
 
-# Whether he could pay for Flame draw now: his Health stays above the Health cost, and his Stamina
-# covers the Stamina cost.
-func _can_pay() -> bool:
-	return health.current > spell_data.health_cost and stamina.current >= spell_data.stamina_cost
+# Whether he could pay this Spell's cost now: his Health stays above the Health cost, and his
+# Stamina covers the Stamina cost. Mana arrives with #19: when AlmosFlasks.has_mana_bar is true
+# this and _pay are the one place that picks Mana for the Health cost.
+func _can_pay(cost: SpellCost) -> bool:
+	return health.current > cost.health_cost and stamina.current >= cost.stamina_cost
+
+
+# Spends the cost. The Health a Spell spends itself is not a loss that puts the held flame out:
+# Pull pays before he holds, and Shove after the flame has left him.
+func _pay(cost: SpellCost) -> void:
+	health.take_damage(cost.health_cost)
+	stamina.spend(cost.stamina_cost)
+
+
+# Selects a Spell, and says so if it is another.
+func _select(spell: Spell) -> void:
+	if spell == _selected:
+		return
+	_selected = spell
+	selection_changed.emit()
 
 
 # The nearest lit torch within draw_range of him, or null.

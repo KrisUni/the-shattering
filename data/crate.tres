@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="MovableTuning" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/movable_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+weight = 10.0
+size = 24.0
+color = Color(0.6, 0.4, 0.2, 1)

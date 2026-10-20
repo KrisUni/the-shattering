@@ -49,3 +49,5 @@ stagger_drain_pause = 2.0
 break_frames = 120
 front_arc_degrees = 180.0
 behind_stagger = 15.0
+weight = 30.0
+wall_stagger = 100.0

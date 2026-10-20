@@ -1,8 +1,8 @@
 extends GutTest
-## The numbers of a Spell: how its fireball's damage grows with Channelling, worked by hand, and
-## that Flame draw's data file loads as them.
+## The numbers of the fireball: how its fireball's damage grows with Channelling, worked by hand, and
+## that the fireball's data file loads as them.
 
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const TOLERANCE := 0.0001
 
 
@@ -19,8 +19,8 @@ func test_each_point_of_channelling_adds_its_damage() -> void:
 	assert_almost_eq(spell.damage_for(4), 19.0, TOLERANCE)
 
 
-func test_flame_draws_data_file_loads_as_spell_data() -> void:
-	assert_true(load(FLAME_DRAW_PATH) is SpellData)
+func test_fireballs_data_file_loads_as_spell_data() -> void:
+	assert_true(load(FIREBALL_PATH) is SpellData)
 
 
 func _spell(base: float, per_channelling: float) -> SpellData:

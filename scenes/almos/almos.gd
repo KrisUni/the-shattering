@@ -194,7 +194,7 @@ var untouchable: bool:
 @export var unarmed: WeaponData
 
 ## The torch Weapon (data/torch.tres). While it is the one in hand it burns and lights the way,
-## and Flame draw can take its flame; once drawn it is replaced where it is by unlit_torch.
+## and Pull can take its flame; once taken it is replaced where it is by unlit_torch.
 @export var torch_weapon: WeaponData
 
 ## What a drawn torch becomes in his hand: the unlit club, with its own attacks. It never burns
@@ -213,7 +213,7 @@ var untouchable: bool:
 ## shows.
 @onready var experience: Experience = $Experience
 
-## His Spell, Flame draw: made with its own button, and it commits him while it winds up.
+## His Spells, Pull and Shove: made with their own button, and a draw commits him while it winds up.
 @onready var spell: AlmosSpell = $Spell
 
 ## His Flasks: a press of the Sip button drinks from the Health Flask (the Mana Flask is empty until

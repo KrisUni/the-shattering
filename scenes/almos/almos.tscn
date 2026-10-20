@@ -16,12 +16,14 @@
 [ext_resource type="Script" path="res://scenes/almos/almos_weapons.gd" id="14_weapons"]
 [ext_resource type="Resource" path="res://data/unarmed.tres" id="15_unarmed"]
 [ext_resource type="Script" path="res://scenes/almos/almos_spell.gd" id="16_spell"]
-[ext_resource type="Resource" path="res://data/flame_draw.tres" id="17_flame_draw"]
+[ext_resource type="Resource" path="res://data/fireball.tres" id="17_fireball"]
 [ext_resource type="Resource" path="res://data/torch.tres" id="18_torch_weapon"]
 [ext_resource type="Resource" path="res://data/torch_unlit.tres" id="19_torch_unlit"]
 [ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="20_torch"]
 [ext_resource type="Script" path="res://scenes/almos/almos_flasks.gd" id="21_flasks"]
 [ext_resource type="Resource" path="res://data/flasks.tres" id="22_flask_tuning"]
+[ext_resource type="Resource" path="res://data/pull.tres" id="23_pull"]
+[ext_resource type="Resource" path="res://data/shove.tres" id="24_shove"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -143,7 +145,9 @@ shadow = NodePath("../Shadow")
 
 [node name="Spell" type="Node" parent="." node_paths=PackedStringArray("body", "held_flame", "health", "stamina")]
 script = ExtResource("16_spell")
-spell_data = ExtResource("17_flame_draw")
+spell_data = ExtResource("17_fireball")
+pull_cost = ExtResource("23_pull")
+shove_cost = ExtResource("24_shove")
 body = NodePath("..")
 held_flame = NodePath("../HeldFlame")
 health = NodePath("../Health")
