@@ -2,13 +2,13 @@ extends GutTest
 ## Pulling the flame off a Fire, in the test room with the real Almos and the shipped numbers, driven
 ## through the switch_spell and cast_spell actions. The Curtain is set alight and Pull takes its flame
 ## when its nearest edge is within the Pull's flame_range, measured from the edge and not the centre.
-## Every distance, cost and time is worked from Pull's cost file, Flame draw's data file and the room's
+## Every distance, cost and time is worked from Pull's cost file, the fireball's data file and the room's
 ## own nodes, so nothing here pins a number in them.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const PULL_PATH := "res://data/pull.tres"
 const SHOVE_PATH := "res://data/shove.tres"
 const TOLERANCE := 0.0001
@@ -34,7 +34,7 @@ func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
 	_thrown = 0
-	_spell = load(FLAME_DRAW_PATH) as SpellData
+	_spell = load(FIREBALL_PATH) as SpellData
 	_pull = load(PULL_PATH) as SpellCost
 	_shove = load(SHOVE_PATH) as SpellCost
 

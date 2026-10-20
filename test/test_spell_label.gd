@@ -5,7 +5,7 @@ extends GutTest
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 # In physics frames. A press held this long is a tap, and the same time is waited after it.
 const TAP_FRAMES := 3
 
@@ -49,7 +49,7 @@ func test_it_says_shove_while_he_holds_a_flame_and_pull_when_it_is_out() -> void
 	var room := _spawn_room()
 	var almos: Almos = room.find_child("Almos", true, false)
 	var torch: Torch = room.find_child("WallTorch", true, false)
-	var spell := load(FLAME_DRAW_PATH) as SpellData
+	var spell := load(FIREBALL_PATH) as SpellData
 	almos.global_position = torch.global_position + Vector2(0.0, spell.draw_range / 2.0)
 
 	await _tap(&"cast_spell")

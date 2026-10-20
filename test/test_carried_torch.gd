@@ -9,7 +9,7 @@ extends GutTest
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const ENEMY_TUNING_PATH := "res://data/training_enemy.tres"
 const TORCH_LIGHT_PATH := "res://data/torch_light.tres"
 const TORCH_PATH := "res://data/torch.tres"
@@ -24,7 +24,7 @@ const MARGIN_FRAMES := 6
 const WATCH_FRAMES := 30
 # In pixels. How far from the Checkpoint's centre Almos is put when he is to rest.
 const BESIDE_THE_CHECKPOINT := 10.0
-# As a fraction of Flame draw's range: how far from the stand torch Almos stands, within reach.
+# As a fraction of the Pull's draw range: how far from the stand torch Almos stands, within reach.
 const ALMOS_AT_DRAW_FRACTION := 0.5
 
 var _almos_input: AlmosInput
@@ -44,7 +44,7 @@ var _floor_spot: Vector2
 func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
-	_spell = load(FLAME_DRAW_PATH) as SpellData
+	_spell = load(FIREBALL_PATH) as SpellData
 	_torch_light = load(TORCH_LIGHT_PATH) as TorchTuning
 	_enemy_tuning = load(ENEMY_TUNING_PATH) as EnemyTuning
 	_fireballs_thrown = 0
@@ -308,7 +308,7 @@ func _stand_in_the_dark_zone() -> void:
 	_almos.global_position = _zone.global_position
 
 
-# Beyond Flame draw's range of every torch on a wall or a stand.
+# Beyond the Pull's draw range of every torch on a wall or a stand.
 func _stand_far_from_every_torch() -> void:
 	_almos.global_position = _floor_spot
 	for node in get_tree().get_nodes_in_group("torches"):

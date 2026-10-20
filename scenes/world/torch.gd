@@ -1,7 +1,7 @@
 class_name Torch
 extends Node2D
 ## A torch on a wall or a stand, drawn as a placeholder bracket with a flame. It is lit at first.
-## Flame draw takes the flame of the nearest lit one in range and puts it out. It is in the group
+## Pull takes the flame of the nearest lit one in range and puts it out. It is in the group
 ## "torches", which is where Almos looks for one, and has no body, so he walks through it.
 ## While it burns it lights the area around it, which is what enemies read at Almos's position
 ## to tell how far they see (see LightZone.light_at). A rest or a Death relights it.

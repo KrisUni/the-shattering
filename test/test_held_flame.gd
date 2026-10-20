@@ -1,5 +1,5 @@
 extends GutTest
-## The held flame of Flame draw, in the test room with the real Almos, the real training enemy and
+## The held flame Pull takes, in the test room with the real Almos, the real training enemy and
 ## the shipped numbers, driven through the cast_spell action and the other actions: a tap draws the
 ## flame and Almos holds it, with nothing thrown however long he waits; a second tap throws it at
 ## once for nothing; while he holds it he can move, Sprint, Roll and Jump but not attack, Block,
@@ -10,7 +10,7 @@ extends GutTest
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const TORCH_PATH := "res://data/torch.tres"
 const UNLIT_TORCH_PATH := "res://data/torch_unlit.tres"
 const SPEAR_PATH := "res://data/spear.tres"
@@ -49,8 +49,8 @@ func before_each() -> void:
 	_thrown = 0
 	_health_at_throw = -1.0
 	_stamina_at_throw = -1.0
-	_spell = load(FLAME_DRAW_PATH) as SpellData
-	assert_not_null(_spell, "Flame draw's data file should load")
+	_spell = load(FIREBALL_PATH) as SpellData
+	assert_not_null(_spell, "the fireball's data file should load")
 	_pull = load("res://data/pull.tres") as SpellCost
 	_shove = load("res://data/shove.tres") as SpellCost
 	assert_not_null(_pull, "Pull's cost file should load")

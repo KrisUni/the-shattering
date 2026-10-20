@@ -3,12 +3,12 @@ extends GutTest
 ## numbers: drawing the stand torch in the DarkZone through the cast_spell action darkens its
 ## surroundings for the training enemy's Sight, and a rest at the Checkpoint or the return after a
 ## Death relights every torch drawn. Distances and waits are worked from the torch's data file,
-## Flame draw's data file and the training enemy's tuning, so nothing here pins a number in them.
+## the fireball's data file and the training enemy's tuning, so nothing here pins a number in them.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const ENEMY_TUNING_PATH := "res://data/training_enemy.tres"
 # In physics frames. How long a button is held for a tap, and how long to let a press take effect.
 const TAP_FRAMES := 2
@@ -19,7 +19,7 @@ const MARGIN_FRAMES := 6
 const WATCH_FRAMES := 30
 # In pixels. How far from the Checkpoint's centre Almos is put when he is to rest.
 const BESIDE_THE_CHECKPOINT := 10.0
-# As a fraction of Flame draw's range: how far from the stand torch Almos stands, within reach.
+# As a fraction of the Pull's draw range: how far from the stand torch Almos stands, within reach.
 const ALMOS_AT_DRAW_FRACTION := 0.5
 
 var _almos_input: AlmosInput
@@ -35,7 +35,7 @@ var _enemy
 func before_each() -> void:
 	await get_tree().process_frame
 	_almos_input = AlmosInput.new(self)
-	_spell = load(FLAME_DRAW_PATH) as SpellData
+	_spell = load(FIREBALL_PATH) as SpellData
 	_enemy_tuning = load(ENEMY_TUNING_PATH) as EnemyTuning
 
 

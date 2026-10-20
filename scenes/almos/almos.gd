@@ -194,7 +194,7 @@ var untouchable: bool:
 @export var unarmed: WeaponData
 
 ## The torch Weapon (data/torch.tres). While it is the one in hand it burns and lights the way,
-## and Flame draw can take its flame; once drawn it is replaced where it is by unlit_torch.
+## and Pull can take its flame; once taken it is replaced where it is by unlit_torch.
 @export var torch_weapon: WeaponData
 
 ## What a drawn torch becomes in his hand: the unlit club, with its own attacks. It never burns

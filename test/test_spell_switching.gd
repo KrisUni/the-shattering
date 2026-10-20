@@ -9,7 +9,7 @@ extends GutTest
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const FLAME_DRAW_PATH := "res://data/flame_draw.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
 const PULL_PATH := "res://data/pull.tres"
 const SHOVE_PATH := "res://data/shove.tres"
 const TOLERANCE := 0.0001
@@ -52,10 +52,10 @@ func before_each() -> void:
 	_health_at_throw = -1.0
 	_stamina_at_throw = -1.0
 	_changes = 0
-	_spell = load(FLAME_DRAW_PATH) as SpellData
+	_spell = load(FIREBALL_PATH) as SpellData
 	_pull = load(PULL_PATH) as SpellCost
 	_shove = load(SHOVE_PATH) as SpellCost
-	assert_not_null(_spell, "Flame draw's data file should load")
+	assert_not_null(_spell, "the fireball's data file should load")
 	assert_not_null(_pull, "Pull's cost file should load")
 	assert_not_null(_shove, "Shove's cost file should load")
 

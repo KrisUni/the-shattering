@@ -1,9 +1,9 @@
 class_name SpellData
 extends Resource
-## The numbers of Flame draw's fireball: how far it reaches and how hard it hits. The values
-## live in the Spell's data file, such as data/flame_draw.tres, not here.
+## The numbers of the fireball Shove throws, and of taking a torch's flame with Pull: how far it
+## reaches and how hard it hits. The values live in the data file, data/fireball.tres, not here.
 
-## How close to him, in pixels, a lit torch must be for Flame draw to take its flame.
+## How close to him, in pixels, a lit torch must be for Pull to take its flame.
 @export var draw_range: float
 
 ## How many physics frames he is committed for between the press and the fireball leaving. The

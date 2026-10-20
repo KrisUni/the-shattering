@@ -32,7 +32,7 @@ signal fireball_thrown(fireball: Fireball, torch: Torch)
 ## Emitted when the selected Spell changes.
 signal selection_changed
 
-## The fireball's and the draw's numbers. Flame draw's data file is given in the Almos scene.
+## The fireball's numbers, and those of taking a torch's flame. The data file is given in the Almos scene.
 @export var spell_data: SpellData
 
 ## What each Spell costs.
@@ -135,7 +135,7 @@ func reset() -> void:
 	_light_the_way(false)
 
 
-# Starts the wind-up on the nearest lit torch in range, if he can pay for Flame draw.
+# Starts the wind-up on the nearest lit torch in range, if he can pay for the Pull.
 func _begin() -> void:
 	var torch := _nearest_lit_torch_in_range()
 	if torch == null or not _can_pay(pull_cost):
@@ -258,7 +258,7 @@ func _on_health_changed() -> void:
 
 
 # The held flame burns, and so lights the way as a lit torch in hand does, or is out and out of
-# the group of torches, where Flame draw looks for one to draw.
+# the group of torches, where Pull looks for one to take.
 func _light_the_way(on: bool) -> void:
 	if held_flame == null:
 		return
