@@ -11,8 +11,6 @@ const TOLERANCE := 0.0001
 const TAP_FRAMES := 3
 # In seconds. Slack after a Sip's duration.
 const SLACK := 0.2
-# In physics frames. Where in the Sip a hit lands.
-const HALF_SIP := 24
 
 var _almos_input: AlmosInput
 var _flasks: FlaskTuning
@@ -82,7 +80,7 @@ func test_a_loss_of_health_during_the_mana_sip_wastes_the_charge() -> void:
 	_almos.mana.spend(_almos.mana.maximum)
 
 	await _tap(&"sip_mana")
-	await wait_physics_frames(HALF_SIP)
+	await wait_physics_frames(int(_flasks.sip_duration * Engine.physics_ticks_per_second / 2.0))
 	_almos.health.take_damage(5.0)
 	await wait_seconds(_flasks.sip_duration + SLACK)
 

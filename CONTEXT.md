@@ -199,7 +199,7 @@ A Spell that takes the thing in front of the player, tried in order: the flame o
 _Avoid_: Grab, yank, telekinesis, Flame draw
 
 **Deep bolt**:
-A ranged Spell of the Path of the Deep; the player's everyday ranged attack, needing no torch or storm. A tap winds up briefly, committing him, and he can pay only if he can at the start and still at the end, else it does nothing and spends nothing; then a bolt flies straight along his aim (at the Lock-on target, else the way he faces) and damages the first enemy it hits. It does damage only: no Stagger, no splash, and it lights nothing, passing flammable things as if they were not there. A wall stops it, and it dies out after its range. Its damage is a base plus an amount for each point of Channelling. It costs Health and Stamina until Almos has his Mana bar, Mana and Stamina after, like any Spell.
+A ranged Spell of the Path of the Deep; the player's everyday ranged attack, needing no torch or storm. A tap winds up briefly, committing him, and he can pay only if he can at the start and still at the end, else it does nothing and spends nothing; then a bolt flies straight along his aim (at the Lock-on target, else the way he faces) and damages the first enemy it hits. It does damage only: no Stagger, no splash, and it lights nothing, passing flammable things such as curtains as if they were not there, though a path blocker stops it, unlit, like a wall. A wall stops it, and it dies out after its range. Its damage is a base plus an amount for each point of Channelling. It costs Health and Stamina until Almos has his Mana bar, Mana and Stamina after, like any Spell.
 _Avoid_: Magic missile, mana bolt, blast
 
 **Storm draw**:

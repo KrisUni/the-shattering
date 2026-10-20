@@ -299,10 +299,12 @@ func test_a_wind_up_he_can_no_longer_pay_for_fizzles_and_spends_nothing() -> voi
 	_almos_input.press_action(&"cast_spell")
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"cast_spell")
-	_almos.stamina.spend(_almos.stamina.maximum)
+	# Health falls to the cost, which it must stay above: he can no longer pay, whatever Stamina does.
+	_almos.health.take_damage(_almos.health.current - _bolt.health_cost)
 	await _wait_for_the_flight(NEAR)
 
-	assert_almost_eq(_almos.health.current, _almos.health.maximum, TOLERANCE, "Health")
+	assert_almost_eq(_almos.health.current, _bolt.health_cost, TOLERANCE, "Health")
+	assert_eq(get_tree().get_nodes_in_group(&"deep_bolts").size(), 0, "no bolt")
 	assert_almost_eq(_enemy.health.current, before, TOLERANCE, "the enemy")
 
 
