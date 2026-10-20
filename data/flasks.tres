@@ -8,4 +8,5 @@ health_charges = 3
 mana_charges = 3
 sip_duration = 0.8
 health_restore_share = 0.5
+mana_restore_share = 0.5
 sip_walk_speed = 60.0

@@ -156,6 +156,16 @@ extends Resource
 ## can buy it: the number he starts with.
 @export var strength: int
 
+## His Mana stat, the points that size his Mana bar. A placeholder until Levels can buy it: the
+## number he starts with, which is also what is waiting in it when he gains the bar.
+@export var mana: int
+
+## The Mana bar's size with no points in the Mana stat at all.
+@export var mana_base: float
+
+## How much bigger the Mana bar is for each point of the Mana stat.
+@export var mana_per_point: float
+
 ## The greatest Weight he can move with no Strength at all.
 @export var weight_limit_base: float
 
@@ -166,3 +176,8 @@ extends Resource
 ## The greatest Weight he can move with Shove and Pull: a target of this Weight or less moves.
 func greatest_weight() -> float:
 	return weight_limit_base + weight_limit_per_strength * strength
+
+
+## The size of the Mana bar he is given: read when he gains it, from the Mana stat as it stands then.
+func mana_maximum() -> float:
+	return mana_base + mana_per_point * mana

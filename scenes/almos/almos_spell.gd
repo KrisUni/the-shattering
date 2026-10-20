@@ -52,8 +52,9 @@ signal selection_changed
 ## only while he holds a flame.
 @export var held_flame: Torch
 
-## What the costs are spent from.
+## What the costs are spent from: Health before he has his Mana bar, Mana after.
 @export var health: Health
+@export var mana: Mana
 @export var stamina: Stamina
 
 ## Whether the wind-up is under way: from the frame of the press to the frame the fireball leaves
@@ -287,18 +288,30 @@ func _light_the_way(on: bool) -> void:
 		held_flame.extinguish()
 
 
-# Whether he could pay this Spell's cost now: his Health stays above the Health cost, and his
-# Stamina covers the Stamina cost. Mana arrives with #19: when AlmosFlasks.has_mana_bar is true
-# this and _pay are the one place that picks Mana for the Health cost.
+# Whether he could pay this Spell's cost now. Once he has his Mana bar, his Mana covers the Mana
+# cost; before, his Health stays above the Health cost. Either way his Stamina covers the Stamina
+# cost. This and _pay are the one place that picks Mana or Health.
 func _can_pay(cost: SpellCost) -> bool:
-	return health.current > cost.health_cost and stamina.current >= cost.stamina_cost
+	if stamina.current < cost.stamina_cost:
+		return false
+	if _has_mana_bar():
+		return mana.current >= cost.mana_cost
+	return health.current > cost.health_cost
 
 
 # Spends the cost. The Health a Spell spends itself is not a loss that puts the held flame out:
 # Pull pays before he holds, and Shove after the flame has left him.
 func _pay(cost: SpellCost) -> void:
-	health.take_damage(cost.health_cost)
+	if _has_mana_bar():
+		mana.spend(cost.mana_cost)
+	else:
+		health.take_damage(cost.health_cost)
 	stamina.spend(cost.stamina_cost)
+
+
+# Whether he has his Mana bar, and so pays Mana for a Spell.
+func _has_mana_bar() -> bool:
+	return mana != null and mana.granted
 
 
 # Selects a Spell, and says so if it is another.

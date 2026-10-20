@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/time_keeper_mark.gd" id="1_script"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mark"]
+radius = 14.0
+
+[node name="TimeKeeperMark" type="Area2D"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_mark")
+
+[node name="Placeholder" type="Polygon2D" parent="."]
+color = Color(0.6, 0.8, 1, 0.8)
+polygon = PackedVector2Array(14, 0, 12.9, 5.4, 9.9, 9.9, 5.4, 12.9, 0, 14, -5.4, 12.9, -9.9, 9.9, -12.9, 5.4, -14, 0, -12.9, -5.4, -9.9, -9.9, -5.4, -12.9, 0, -14, 5.4, -12.9, 9.9, -9.9, 12.9, -5.4)

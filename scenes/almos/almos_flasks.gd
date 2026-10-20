@@ -9,7 +9,8 @@ extends Node
 ## Almos decides when he is free to Sip and calls sip(); he advances the Sip every physics frame.
 
 ## The Mana Flask is carried from the start, but it stays empty and unusable until Almos has a Mana
-## bar, which no part of the game gives him yet: has_mana_bar is the one place that says so.
+## bar: has_mana_bar is the one place that says so. Gaining the bar does not fill the Flask: it holds
+## its charges from the next Checkpoint refill on.
 
 ## Emitted whenever the charges change.
 signal changed
@@ -19,6 +20,9 @@ signal changed
 
 ## What a Sip restores, and whose loss of Health wastes a Sip.
 @export var health: Health
+
+## What a Mana Sip restores. Without it, or until it is granted, there is no Mana bar.
+@export var mana: Mana
 
 ## How many charges the Health Flask holds now.
 var health_charges: int:
@@ -46,17 +50,19 @@ var mana_charges_maximum: int:
 	get:
 		return _mana_charges_maximum
 
-## Whether Almos has his Mana bar. He has none yet, so this is false; whatever gives him the bar
-## switches it, and the Mana Flask then fills at a Checkpoint and can be sipped.
+## Whether Almos has his Mana bar, which is Mana's to say. Once he has it the Mana Flask fills at a
+## Checkpoint and can be sipped.
 var has_mana_bar: bool:
 	get:
-		return false
+		return mana != null and mana.granted
 
 var _health_charges := 0
 var _health_charges_maximum := 0
 var _mana_charges := 0
 var _mana_charges_maximum := 0
 var _sipping := false
+# Whether the Sip under way is from the Mana Flask.
+var _sipping_mana := false
 var _sipped_for := 0.0
 var _health_seen := 0.0
 
@@ -76,15 +82,24 @@ func sip() -> bool:
 		return false
 	_health_charges -= 1
 	_sipping = true
+	_sipping_mana = false
 	_sipped_for = 0.0
 	changed.emit()
 	return true
 
 
-## A Sip of the Mana Flask: does nothing and costs nothing while he has no Mana bar, which is
-## always for now. Says whether a Sip began.
+## A Sip of the Mana Flask, as a Sip of the Health Flask but for the Mana bar: does nothing and
+## costs nothing while he has no Mana bar, with no charge left or with a Sip under way. Says whether
+## a Sip began.
 func sip_mana() -> bool:
-	return false
+	if not has_mana_bar or _sipping or _mana_charges <= 0:
+		return false
+	_mana_charges -= 1
+	_sipping = true
+	_sipping_mana = true
+	_sipped_for = 0.0
+	changed.emit()
+	return true
 
 
 ## Raises how many charges both Flasks hold by this many, a Flask upgrade's worth. The Health Flask
@@ -98,7 +113,7 @@ func add_charges(count: int = 1) -> void:
 	changed.emit()
 
 
-## Lets this many seconds of a Sip go by. At its end the Health comes back. The time is counted in
+## Lets this many seconds of a Sip go by. At its end the Health comes back, or the Mana of a Mana Sip. The time is counted in
 ## summed frame lengths compared through Almos.TIME_SLACK, as his other durations are.
 func advance(delta: float) -> void:
 	if not _sipping:
@@ -106,7 +121,10 @@ func advance(delta: float) -> void:
 	_sipped_for += delta
 	if _sipped_for >= tuning.sip_duration - Almos.TIME_SLACK:
 		_sipping = false
-		health.heal(health.maximum * tuning.health_restore_share)
+		if _sipping_mana:
+			mana.restore(mana.maximum * tuning.mana_restore_share)
+		else:
+			health.heal(health.maximum * tuning.health_restore_share)
 
 
 ## Every charge is back, the Mana Flask's only if he has a Mana bar. Resting at a Checkpoint and

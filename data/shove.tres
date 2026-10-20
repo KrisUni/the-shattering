@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_cost")
 health_cost = 5.0
+mana_cost = 5.0
 stamina_cost = 15.0
 target_range = 200.0
 cone_half_angle_degrees = 20.0

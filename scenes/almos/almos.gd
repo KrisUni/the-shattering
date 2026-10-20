@@ -26,7 +26,7 @@ const WEAPON_PICKUP_SCENE := preload("res://scenes/world/weapon_pickup.tscn")
 
 enum State { WALKING, SPRINTING, ROLLING }
 
-## Emitted when he rests at a Checkpoint, after his Health, Stamina and Flasks are refilled.
+## Emitted when he rests at a Checkpoint, after his Health, Stamina, Mana and Flasks are refilled.
 signal rested(checkpoint: Checkpoint)
 
 ## Emitted once, in the frame his Health reaches zero, with the place he fell. He is limp from
@@ -208,6 +208,10 @@ var untouchable: bool:
 ## What hits take off, and what the Health bar shows. It is given its maximum from Almos's
 ## tuning, so his tuning is the only one to set.
 @onready var health: Health = $Health
+
+## What Spells and the Mana Flask's Sip draw on once he has his Mana bar. It is empty and has no bar
+## until grant_mana_bar() gives it, once.
+@onready var mana: Mana = $Mana
 
 ## What killing enemies has given him and he has not yet cashed in, and what the Experience count
 ## shows.
@@ -474,8 +478,15 @@ func _lie_limp(delta: float) -> void:
 		death_pause_over.emit()
 
 
+## Gives him his Mana bar, once and for good: it starts full, sized by the Mana stat as it stands now,
+## so the points bought before he had the bar are in it. A bar he already has is left as it is. The
+## Mana Flask holds its charges from the next Checkpoint refill on. The Time Keeper's mark calls this.
+func grant_mana_bar() -> void:
+	mana.grant(tuning.mana_maximum())
+
+
 ## He is back on his feet at this point, in global coordinates: on the ground level, with full
-## Health, Stamina and Flask charges, still, and in none of the actions. His Experience, his facing and
+## Health, Stamina, Mana and Flask charges, still, and in none of the actions. His Experience, his facing and
 ## everything outside him are left as they are; whoever sends him back sees to those.
 func return_to(point: Vector2) -> void:
 	_end_every_action()
@@ -486,6 +497,7 @@ func return_to(point: Vector2) -> void:
 	global_position = point
 	health.refill()
 	stamina.refill()
+	mana.refill()
 	flasks.refill()
 	returned.emit()
 
@@ -665,8 +677,8 @@ func _on_hurt_landed(_stagger: float, _from: Vector2, _critical: bool) -> void:
 		_leave_hiding()
 
 
-# Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health, Stamina and
-# the Flasks are refilled, the Checkpoint flashes and the rest is announced. Says whether he rested; a tap
+# Rests at the nearest Checkpoint within rest_reach of him, if there is one: Health, Stamina, Mana
+# (if he has the bar) and the Flasks are refilled, the Checkpoint flashes and the rest is announced. Says whether he rested; a tap
 # with none in reach does nothing.
 func _rest_at_a_checkpoint_in_reach() -> bool:
 	var nearest: Checkpoint = null
@@ -684,6 +696,7 @@ func _rest_at_a_checkpoint_in_reach() -> bool:
 	spell.reset()
 	health.refill()
 	stamina.refill()
+	mana.refill()
 	flasks.refill()
 	nearest.rest(tuning.rest_flash_duration)
 	rested.emit(nearest)

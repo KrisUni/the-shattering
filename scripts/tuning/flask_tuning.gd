@@ -15,5 +15,8 @@ extends Resource
 ## The share of the Health maximum a Sip of the Health Flask restores, from 0 to 1.
 @export_range(0.0, 1.0) var health_restore_share: float
 
+## The share of the Mana maximum a Sip of the Mana Flask restores, from 0 to 1.
+@export_range(0.0, 1.0) var mana_restore_share: float
+
 ## Walking speed during a Sip, in pixels per second.
 @export var sip_walk_speed: float
