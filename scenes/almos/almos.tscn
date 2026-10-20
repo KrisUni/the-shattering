@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="20_torch"]
 [ext_resource type="Script" path="res://scenes/almos/almos_flasks.gd" id="21_flasks"]
 [ext_resource type="Resource" path="res://data/flasks.tres" id="22_flask_tuning"]
+[ext_resource type="Resource" path="res://data/pull.tres" id="23_pull"]
+[ext_resource type="Resource" path="res://data/shove.tres" id="24_shove"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -144,6 +146,8 @@ shadow = NodePath("../Shadow")
 [node name="Spell" type="Node" parent="." node_paths=PackedStringArray("body", "held_flame", "health", "stamina")]
 script = ExtResource("16_spell")
 spell_data = ExtResource("17_flame_draw")
+pull_cost = ExtResource("23_pull")
+shove_cost = ExtResource("24_shove")
 body = NodePath("..")
 held_flame = NodePath("../HeldFlame")
 health = NodePath("../Health")

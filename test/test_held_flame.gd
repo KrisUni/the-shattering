@@ -32,6 +32,8 @@ const SPEED_SLACK := 1.0
 
 var _almos_input: AlmosInput
 var _spell: SpellData
+var _pull: SpellCost
+var _shove: SpellCost
 var _room: Node
 var _almos: Almos
 var _torch: Torch
@@ -49,6 +51,10 @@ func before_each() -> void:
 	_stamina_at_throw = -1.0
 	_spell = load(FLAME_DRAW_PATH) as SpellData
 	assert_not_null(_spell, "Flame draw's data file should load")
+	_pull = load("res://data/pull.tres") as SpellCost
+	_shove = load("res://data/shove.tres") as SpellCost
+	assert_not_null(_pull, "Pull's cost file should load")
+	assert_not_null(_shove, "Shove's cost file should load")
 
 
 func after_each() -> void:
@@ -66,7 +72,7 @@ func test_a_tap_draws_the_flame_he_holds_it_and_nothing_is_thrown_however_long_h
 
 	assert_true(_almos.spell.holding, "holding")
 	assert_false(_torch.lit, "the torch is out")
-	assert_almost_eq(_almos.health.current, _almos.health.maximum - _spell.health_cost, TOLERANCE, "Health spent")
+	assert_almost_eq(_almos.health.current, _almos.health.maximum - _pull.health_cost, TOLERANCE, "Health spent")
 	assert_almost_eq(_almos.stamina.current, _almos.stamina.maximum, TOLERANCE, "Stamina refilled by now")
 	assert_eq(_thrown, 0, "thrown")
 	assert_eq(get_tree().get_nodes_in_group("fireballs").size(), 0, "fireballs")
@@ -80,7 +86,7 @@ func test_the_draw_spends_the_stamina_cost_when_the_wind_up_ends() -> void:
 	await _until(func() -> bool: return _almos.spell.holding)
 
 	# Stamina is refilling by now, so only the instant after the draw shows the whole cost.
-	assert_lte(_almos.stamina.current, _almos.stamina.maximum - _spell.stamina_cost + TOLERANCE)
+	assert_lte(_almos.stamina.current, _almos.stamina.maximum - _pull.stamina_cost + TOLERANCE)
 
 
 func test_he_is_not_holding_during_the_wind_up() -> void:
@@ -119,17 +125,15 @@ func test_a_second_tap_throws_the_fireball_at_the_enemy_in_his_aim() -> void:
 	assert_false(_almos.spell.holding, "no longer holding")
 
 
-func test_the_throw_costs_nothing() -> void:
+func test_the_throw_costs_the_shove_cost() -> void:
 	_set_up_room()
 	await _draw()
 	var health := _almos.health.current
-	var stamina := _almos.stamina.current
 
 	await _throw()
 
-	assert_almost_eq(_health_at_throw, health, TOLERANCE, "Health")
-	assert_gte(_stamina_at_throw, stamina, "Stamina")
-	assert_almost_eq(_almos.health.current, health, TOLERANCE, "Health after")
+	assert_almost_eq(_health_at_throw, health - _shove.health_cost, TOLERANCE, "Health")
+	assert_almost_eq(_almos.health.current, health - _shove.health_cost, TOLERANCE, "Health after")
 
 
 func test_a_tap_after_the_throw_with_no_lit_torch_in_range_draws_and_throws_nothing() -> void:

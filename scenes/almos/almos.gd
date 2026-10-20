@@ -213,7 +213,7 @@ var untouchable: bool:
 ## shows.
 @onready var experience: Experience = $Experience
 
-## His Spell, Flame draw: made with its own button, and it commits him while it winds up.
+## His Spells, Pull and Shove: made with their own button, and a draw commits him while it winds up.
 @onready var spell: AlmosSpell = $Spell
 
 ## His Flasks: a press of the Sip button drinks from the Health Flask (the Mana Flask is empty until

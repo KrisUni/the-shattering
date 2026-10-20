@@ -38,7 +38,7 @@ var dpad_params = ParameterFactory.named_parameters(
 	["button", "direction"],
 	[
 		[JOY_BUTTON_DPAD_LEFT, Vector2.LEFT], [JOY_BUTTON_DPAD_RIGHT, Vector2.RIGHT],
-		[JOY_BUTTON_DPAD_UP, Vector2.UP], [JOY_BUTTON_DPAD_DOWN, Vector2.DOWN],
+		[JOY_BUTTON_DPAD_DOWN, Vector2.DOWN],
 	],
 )
 
@@ -100,6 +100,15 @@ func test_dpad_walks_in_its_direction(params = use_parameters(dpad_params)) -> v
 	var velocity: Vector2 = await _measured_velocity(almos)
 
 	assert_almost_eq(velocity, params.direction * _walk_speed(), Vector2.ONE * TOLERANCE)
+
+
+func test_dpad_up_does_not_walk_because_it_switches_the_spell() -> void:
+	var almos = _almos_input.spawn_almos()
+
+	_almos_input.press_joypad_button(JOY_BUTTON_DPAD_UP)
+	var velocity: Vector2 = await _measured_velocity(almos)
+
+	assert_almost_eq(velocity, Vector2.ZERO, Vector2.ONE * TOLERANCE)
 
 
 func test_walking_diagonally_is_no_faster_than_walking_straight() -> void:

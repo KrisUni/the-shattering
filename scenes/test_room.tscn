@@ -17,6 +17,7 @@
 [ext_resource type="Resource" path="res://data/torch.tres" id="14_torch"]
 [ext_resource type="Resource" path="res://data/metal_bar.tres" id="15_metal_bar"]
 [ext_resource type="Script" path="res://scenes/hud/weapon_label.gd" id="16_weapon_label"]
+[ext_resource type="Script" path="res://scenes/hud/spell_label.gd" id="30_spell_label"]
 [ext_resource type="Script" path="res://scenes/hud/flask_label.gd" id="23_flask_label"]
 [ext_resource type="PackedScene" path="res://scenes/world/flask_upgrade.tscn" id="24_flask_upgrade"]
 [ext_resource type="PackedScene" path="res://scenes/world/light_zone.tscn" id="17_light_zone"]
@@ -240,6 +241,14 @@ offset_right = 216.0
 offset_bottom = 114.0
 script = ExtResource("16_weapon_label")
 weapons = NodePath("../../Almos/Weapons")
+
+[node name="SpellLabel" type="Label" parent="Hud" node_paths=PackedStringArray("spell")]
+offset_left = 16.0
+offset_top = 145.0
+offset_right = 216.0
+offset_bottom = 168.0
+script = ExtResource("30_spell_label")
+spell = NodePath("../../Almos/Spell")
 
 [node name="FlaskLabel" type="Label" parent="Hud" node_paths=PackedStringArray("flasks")]
 offset_left = 16.0

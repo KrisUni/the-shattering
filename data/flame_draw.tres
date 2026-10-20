@@ -4,8 +4,6 @@
 
 [resource]
 script = ExtResource("1_spell")
-health_cost = 10.0
-stamina_cost = 20.0
 draw_range = 48.0
 wind_up_frames = 12
 fireball_speed = 360.0
