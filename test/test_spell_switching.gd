@@ -82,13 +82,15 @@ func test_he_starts_with_pull_selected() -> void:
 	assert_eq(_almos.spell.selected, AlmosSpell.Spell.PULL)
 
 
-func test_a_tap_of_switch_spell_cycles_pull_and_shove() -> void:
+func test_a_tap_of_switch_spell_cycles_pull_shove_and_deep_bolt() -> void:
 	_set_up_room()
 
 	await _tap(&"switch_spell")
 	assert_eq(_almos.spell.selected, AlmosSpell.Spell.SHOVE, "first tap")
 	await _tap(&"switch_spell")
-	assert_eq(_almos.spell.selected, AlmosSpell.Spell.PULL, "second tap")
+	assert_eq(_almos.spell.selected, AlmosSpell.Spell.DEEP_BOLT, "second tap")
+	await _tap(&"switch_spell")
+	assert_eq(_almos.spell.selected, AlmosSpell.Spell.PULL, "third tap")
 
 
 func test_the_switch_buttons_other_than_the_action_switch_too(params = use_parameters(switch_binding_params)) -> void:

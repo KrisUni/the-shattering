@@ -105,7 +105,7 @@ _Avoid_: Bolt, thunder strike
 ### Player state
 
 **Health**, **Stamina**, **Mana**:
-The player's three bars. Only Stamina refills by itself; Health and Mana come back only at Checkpoints and from Flasks. Almos has no Mana bar at first: he gains it from the Time Keeper early in the Lands between.
+The player's three bars. Only Stamina refills by itself; Health and Mana come back only at Checkpoints and from Flasks. Almos has no Mana bar at first: he gains it from the Time Keeper early in the Lands between, once and for good (a placeholder mark in the test room stands in for the Time Keeper until the Lands between exist). The bar starts full and is sized by the Mana stat, including points bought before he had it; it refills at a Checkpoint and on the return after a Death.
 _Avoid_: HP, energy, FP, mana points
 
 **Shortcut**:
@@ -113,7 +113,7 @@ A way the player opens that links a deeper part of an area back to a Checkpoint,
 _Avoid_: Unlock, back door
 
 **Health Flask**, **Mana Flask**:
-The two refillable vessels the player carries, each holding its own fixed number of charges that restore its bar. Every Checkpoint refills both, and so does the return after a Death; upgrades found while exploring add charges. Almos carries the Mana Flask from the start, but it stays empty and useless until he gains his Mana bar, though upgrades still raise its charges.
+The two refillable vessels the player carries, each holding its own fixed number of charges that restore its bar. Every Checkpoint refills both, and so does the return after a Death; upgrades found while exploring add charges. Almos carries the Mana Flask from the start, but it stays empty and useless until he gains his Mana bar, though upgrades still raise its charges. Once he has the bar it fills at the next Checkpoint and can be sipped, restoring a share of the Mana bar.
 _Avoid_: Estus, potion bottle, potions (as separate items)
 
 **Sip**:
@@ -187,7 +187,7 @@ A slower, harder swing that can be charged by holding and builds more Stagger th
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
-A channelled ability with its own button (the `cast_spell` action). Spells are Pull, Shove (and Deep bolt, #19). One button (the `switch_spell` action) switches the selected Spell; a held flame selects Shove and locks it until the flame is thrown or out, then the selection returns. Until Almos has his Mana bar, a Spell costs Health and Stamina; after, Mana and Stamina. A press that cannot act or cannot be paid does nothing and spends nothing.
+A channelled ability with its own button (the `cast_spell` action). Spells are Pull, Shove and Deep bolt. One button (the `switch_spell` action) switches the selected Spell, in the order Pull, Shove, Deep bolt and round again (Storm draw is not selectable: it comes from a Parry); a held flame selects Shove and locks it until the flame is thrown or out, then the selection returns. Until Almos has his Mana bar, a Spell costs Health and Stamina; after, Mana and Stamina. A press that cannot act or cannot be paid does nothing and spends nothing.
 _Avoid_: Magic, ability, skill, cast
 
 **Shove**:
@@ -199,7 +199,7 @@ A Spell that takes the thing in front of the player, tried in order: the flame o
 _Avoid_: Grab, yank, telekinesis, Flame draw
 
 **Deep bolt**:
-A ranged Spell of the Path of the Deep, paid for with Mana and Stamina; the player's everyday ranged attack, needing no torch or storm.
+A ranged Spell of the Path of the Deep; the player's everyday ranged attack, needing no torch or storm. A tap winds up briefly, committing him, and he can pay only if he can at the start and still at the end, else it does nothing and spends nothing; then a bolt flies straight along his aim (at the Lock-on target, else the way he faces) and damages the first enemy it hits. It does damage only: no Stagger, no splash, and it lights nothing, passing flammable things as if they were not there. A wall stops it, and it dies out after its range. Its damage is a base plus an amount for each point of Channelling. It costs Health and Stamina until Almos has his Mana bar, Mana and Stamina after, like any Spell.
 _Avoid_: Magic missile, mana bolt, blast
 
 **Storm draw**:

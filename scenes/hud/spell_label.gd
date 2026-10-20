@@ -1,5 +1,5 @@
 extends Label
-## A placeholder label for the HUD that names the Spell Almos has selected, "Pull" or "Shove". It
+## A placeholder label for the HUD that names the Spell Almos has selected, "Pull", "Shove" or "Deep bolt". It
 ## follows the selection through the Spell's selection_changed signal.
 
 @export var spell: AlmosSpell
@@ -11,4 +11,10 @@ func _ready() -> void:
 
 
 func _refresh() -> void:
-	text = "Shove" if spell.selected == AlmosSpell.Spell.SHOVE else "Pull"
+	match spell.selected:
+		AlmosSpell.Spell.SHOVE:
+			text = "Shove"
+		AlmosSpell.Spell.DEEP_BOLT:
+			text = "Deep bolt"
+		_:
+			text = "Pull"

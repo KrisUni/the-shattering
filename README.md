@@ -14,8 +14,8 @@
 | Parry | E | LT |
 | Lock-on | Middle mouse button or Q (press again to let go) | R3 |
 | Switch Weapon | Tab | Y |
-| Spell | C (tap to cast the selected Spell: Pull drags an enemy or object closer or takes a torch's or a Fire's flame, and Shove pushes an enemy or object away or throws the held flame) | L3 (press the left stick; tap to cast the selected Spell) |
-| Switch Spell | V | D-pad up |
+| Spell | C (tap to cast the selected Spell: Pull drags an enemy or object closer or takes a torch's or a Fire's flame, Shove pushes an enemy or object away or throws the held flame, and Deep bolt fires a bolt along the aim) | L3 (press the left stick; tap to cast the selected Spell) |
+| Switch Spell | V (cycles Pull, Shove and Deep bolt) | D-pad up |
 | Sip from the Health Flask | 1 | View (Back) |
 | Sip from the Mana Flask (once Almos has a Mana bar) | 2 | Menu (Start) |
 | Interact | R (tap to rest at a Checkpoint, hide in or leave a Hiding spot, or pick up a Weapon; hold to drop the Weapon in hand) | X (tap to rest, hide, leave or pick up; hold to drop) |
