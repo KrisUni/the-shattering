@@ -194,6 +194,8 @@ func test_a_roll_tapped_while_winding_up_is_lost() -> void:
 func test_a_press_with_no_torch_in_range_does_nothing_and_spends_nothing() -> void:
 	_set_up_room()
 	_place_almos_from_the_torch(_spell.draw_range + EDGE_MARGIN)
+	# With no enemy to Pull either: this one stands out of Pull's reach.
+	_enemy.global_position = _almos.global_position + Vector2(0.0, _pull.target_range + EDGE_MARGIN)
 
 	await _cast_and_wait_for_the_fireball()
 

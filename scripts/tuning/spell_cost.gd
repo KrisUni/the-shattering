@@ -8,3 +8,18 @@ extends Resource
 
 ## How much Stamina casting it spends. He cannot cast with less than this much.
 @export var stamina_cost: float
+
+## How far from him, in pixels, the nearest enemy can be for the Spell to act on it with no flame
+## in play. Only Shove and Pull act on enemies, so only their files set it.
+@export var target_range: float
+
+## How wide, in degrees, the cone is that the Spell looks for an enemy in, centred on the way he
+## aims: half of it either side.
+@export var cone_half_angle_degrees: float
+
+## Shove: how far, in pixels, the enemy is slid away from him. Pull: how far from his centre, in
+## pixels, the enemy's centre stops when it is slid towards him.
+@export var distance: float
+
+## How fast the enemy slides, in pixels per second.
+@export var move_speed: float

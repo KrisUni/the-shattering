@@ -151,3 +151,18 @@ extends Resource
 ## His Channelling, the stat that raises Spell damage. A placeholder until Levels can buy it:
 ## the number he starts with.
 @export var channelling: int
+
+## His Strength, the stat that raises the greatest Weight he can move. A placeholder until Levels
+## can buy it: the number he starts with.
+@export var strength: int
+
+## The greatest Weight he can move with no Strength at all.
+@export var weight_limit_base: float
+
+## How much more Weight he can move for each point of Strength.
+@export var weight_limit_per_strength: float
+
+
+## The greatest Weight he can move with Shove and Pull: a target of this Weight or less moves.
+func greatest_weight() -> float:
+	return weight_limit_base + weight_limit_per_strength * strength

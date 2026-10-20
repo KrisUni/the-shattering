@@ -95,8 +95,11 @@ func advance(free: bool, aim: Vector2) -> void:
 		if free and Input.is_action_just_pressed(&"cast_spell") and _selected == Spell.SHOVE and _can_pay(shove_cost):
 			_throw(aim)
 		return
-	if not _winding_up and free and _selected == Spell.PULL and Input.is_action_just_pressed(&"cast_spell"):
-		_begin()
+	if not _winding_up and free and Input.is_action_just_pressed(&"cast_spell"):
+		if _selected == Spell.PULL and _nearest_lit_torch_in_range() != null:
+			_begin()
+		else:
+			_act_on_an_enemy(aim)
 	if not _winding_up:
 		return
 	_frames += 1
@@ -126,6 +129,45 @@ func _begin() -> void:
 	_torch = torch
 	_winding_up = true
 	_frames = 0
+
+
+# Shove or Pull on the nearest enemy in the cone around the aim, if he can pay: the cost is spent
+# whatever comes of it. An enemy within the greatest Weight he can move slides, one beyond it
+# shudders. With no enemy in the cone nothing happens and nothing is spent.
+func _act_on_an_enemy(aim: Vector2) -> void:
+	var pulling := _selected == Spell.PULL
+	var cost := pull_cost if pulling else shove_cost
+	var enemy = _nearest_enemy_in_the_cone(cost, aim)
+	if enemy == null or not _can_pay(cost):
+		return
+	_pay(cost)
+	if enemy.tuning.weight > tuning.greatest_weight():
+		enemy.shudder()
+		return
+	var away: Vector2 = enemy.global_position - body.global_position
+	if pulling:
+		enemy.slide(-away, maxf(away.length() - cost.distance, 0.0), cost.move_speed)
+	else:
+		enemy.slide(away, cost.distance, cost.move_speed)
+
+
+# The nearest living enemy within the cost's range and cone around the aim, or null.
+func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance := cost.target_range
+	for node in get_tree().get_nodes_in_group(&"enemies"):
+		var enemy := node as Node2D
+		if enemy == null or not enemy.has_method(&"slide") or enemy.dead:
+			continue
+		var away := enemy.global_position - body.global_position
+		var distance := away.length()
+		if distance > nearest_distance or distance <= 0.0:
+			continue
+		if rad_to_deg(absf(aim.angle_to(away))) > cost.cone_half_angle_degrees:
+			continue
+		nearest = enemy
+		nearest_distance = distance
+	return nearest
 
 
 # The end of the wind-up: he pays and holds the flame, if the torch is still lit and he can still

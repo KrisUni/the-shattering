@@ -101,6 +101,8 @@ func test_he_is_not_holding_during_the_wind_up() -> void:
 func test_a_tap_that_cannot_draw_spends_nothing_and_holds_nothing() -> void:
 	_set_up_room()
 	_almos.global_position = _torch.global_position + Vector2(0.0, _spell.draw_range + EDGE_MARGIN)
+	# With no enemy to Pull either: this one stands out of Pull's reach.
+	_enemy.global_position = _almos.global_position + Vector2(0.0, _pull.target_range + EDGE_MARGIN)
 
 	await _draw()
 

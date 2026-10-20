@@ -170,6 +170,8 @@ func test_the_selection_is_locked_while_he_holds_the_flame() -> void:
 func test_pull_with_no_lit_torch_in_range_does_nothing_and_spends_nothing() -> void:
 	_set_up_room()
 	_almos.global_position = _torch.global_position + Vector2(0.0, _spell.draw_range + EDGE_MARGIN)
+	# With no enemy to Pull either: this one stands out of Pull's reach.
+	_enemy.global_position = _almos.global_position + Vector2(0.0, _pull.target_range + EDGE_MARGIN)
 
 	await _draw()
 
@@ -185,6 +187,8 @@ func test_pull_with_no_lit_torch_in_range_does_nothing_and_spends_nothing() -> v
 
 func test_shove_with_no_flame_held_does_nothing_and_spends_nothing() -> void:
 	_set_up_room()
+	# With no enemy to Shove: this one stands out of Shove's reach.
+	_enemy.global_position = _almos.global_position + Vector2(0.0, _shove.target_range + EDGE_MARGIN)
 	await _tap(&"switch_spell")
 
 	await _draw()
