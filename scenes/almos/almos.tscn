@@ -24,6 +24,8 @@
 [ext_resource type="Resource" path="res://data/flasks.tres" id="22_flask_tuning"]
 [ext_resource type="Resource" path="res://data/pull.tres" id="23_pull"]
 [ext_resource type="Resource" path="res://data/shove.tres" id="24_shove"]
+[ext_resource type="Script" path="res://scripts/mana.gd" id="25_mana"]
+[ext_resource type="Resource" path="res://data/deep_bolt.tres" id="26_deep_bolt"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -72,6 +74,9 @@ script = ExtResource("3_stamina")
 
 [node name="Health" type="Node" parent="."]
 script = ExtResource("4_health")
+
+[node name="Mana" type="Node" parent="."]
+script = ExtResource("25_mana")
 
 [node name="Experience" type="Node" parent="."]
 script = ExtResource("13_experience")
@@ -143,17 +148,20 @@ body = NodePath("..")
 placeholder = NodePath("../Placeholder")
 shadow = NodePath("../Shadow")
 
-[node name="Spell" type="Node" parent="." node_paths=PackedStringArray("body", "held_flame", "health", "stamina")]
+[node name="Spell" type="Node" parent="." node_paths=PackedStringArray("body", "held_flame", "health", "mana", "stamina")]
 script = ExtResource("16_spell")
 spell_data = ExtResource("17_fireball")
 pull_cost = ExtResource("23_pull")
 shove_cost = ExtResource("24_shove")
+deep_bolt = ExtResource("26_deep_bolt")
 body = NodePath("..")
 held_flame = NodePath("../HeldFlame")
 health = NodePath("../Health")
+mana = NodePath("../Mana")
 stamina = NodePath("../Stamina")
 
-[node name="Flasks" type="Node" parent="." node_paths=PackedStringArray("health")]
+[node name="Flasks" type="Node" parent="." node_paths=PackedStringArray("health", "mana")]
 script = ExtResource("21_flasks")
 tuning = ExtResource("22_flask_tuning")
 health = NodePath("../Health")
+mana = NodePath("../Mana")

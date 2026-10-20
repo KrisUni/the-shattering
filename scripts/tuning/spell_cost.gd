@@ -6,6 +6,10 @@ extends Resource
 ## How much Health casting it spends. He cannot cast unless his Health stays above this much.
 @export var health_cost: float
 
+## How much Mana casting it spends once he has a Mana bar, instead of Health. He cannot cast with
+## less Mana than this.
+@export var mana_cost: float
+
 ## How much Stamina casting it spends. He cannot cast with less than this much.
 @export var stamina_cost: float
 

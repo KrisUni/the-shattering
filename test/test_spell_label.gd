@@ -1,6 +1,6 @@
 extends GutTest
-## The Spell label of the test room's HUD: it names the Spell Almos has selected, "Pull" or
-## "Shove", and follows him as he switches and as the selection changes by itself.
+## The Spell label of the test room's HUD: it names the Spell Almos has selected, "Pull",
+## "Shove" or "Deep bolt", and follows him as he switches and as the selection changes by itself.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
@@ -41,8 +41,10 @@ func test_it_follows_a_switch() -> void:
 	await _tap(&"switch_spell")
 	assert_eq(_label(room).text, "Shove", "after one switch")
 	await _tap(&"switch_spell")
+	assert_eq(_label(room).text, "Deep bolt", "after two")
+	await _tap(&"switch_spell")
 
-	assert_eq(_label(room).text, "Pull", "after two")
+	assert_eq(_label(room).text, "Pull", "after three")
 
 
 func test_it_says_shove_while_he_holds_a_flame_and_pull_when_it_is_out() -> void:
