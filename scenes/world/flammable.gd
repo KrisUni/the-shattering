@@ -27,6 +27,10 @@ signal burned_out
 ## Emitted at each tick, after the damage is dealt.
 signal ticked
 
+## Emitted when it stops burning without burning out: Pull took its flame. It is as it was, and can
+## catch again.
+signal put_out
+
 ## Emitted when it is whole again after a return, having caught before.
 signal restored
 
@@ -106,6 +110,37 @@ func ignite() -> bool:
 	_show()
 	caught.emit()
 	return true
+
+
+## Takes its flame off it: it stops burning at once and is left as it was, not burnt out. Its
+## burn time, its tick clock and a spread still due are forgotten, it gives no light and hurts no
+## one, and it can catch again. Fire that has already spread from it keeps burning. Says whether it
+## was burning.
+func extinguish() -> bool:
+	if not _burning:
+		return false
+	_burning = false
+	_burned_for = 0.0
+	_spread = false
+	_ticks = 0
+	remove_from_group(&"fires")
+	_show()
+	put_out.emit()
+	return true
+
+
+## How far the point (global coordinates) is from the thing's nearest edge, in pixels: zero inside
+## it. The edge is that of its first rectangular collision shape; a thing without one is measured
+## from its centre.
+func distance_to_edge(point: Vector2) -> float:
+	for child in get_children():
+		var shape_node := child as CollisionShape2D
+		if shape_node != null and shape_node.shape is RectangleShape2D:
+			var half := (shape_node.shape as RectangleShape2D).size / 2.0
+			var local := shape_node.global_transform.affine_inverse() * point
+			var outside := Vector2(maxf(absf(local.x) - half.x, 0.0), maxf(absf(local.y) - half.y, 0.0))
+			return outside.length()
+	return global_position.distance_to(point)
 
 
 ## Burns it out at once, whatever state it is in, without it ever catching: it is gone. Says

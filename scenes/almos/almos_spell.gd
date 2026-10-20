@@ -77,6 +77,10 @@ var _health_seen := 0.0
 var _winding_up := false
 var _frames := 0
 var _torch: Torch
+# The Fire whose flame the wind-up is for, and for how many more seconds he holds a flame taken from
+# a Fire (zero for a torch's, which he holds as long as he likes).
+var _fire: Flammable
+var _fire_hold_left := 0.0
 
 
 func _ready() -> void:
@@ -92,12 +96,20 @@ func advance(free: bool, aim: Vector2) -> void:
 	if free and not _holding and not _winding_up and Input.is_action_just_pressed(&"switch_spell"):
 		_select(Spell.SHOVE if _selected == Spell.PULL else Spell.PULL)
 	if _holding:
+		if _fire_hold_left > 0.0:
+			_fire_hold_left -= get_physics_process_delta_time()
+			if _fire_hold_left <= 0.0:
+				# A flame taken from a Fire goes out unthrown: the cost stays spent.
+				reset()
+				return
 		if free and Input.is_action_just_pressed(&"cast_spell") and _selected == Spell.SHOVE and _can_pay(shove_cost):
 			_throw(aim)
 		return
 	if not _winding_up and free and Input.is_action_just_pressed(&"cast_spell"):
 		if _selected == Spell.PULL and _nearest_lit_torch_in_range() != null:
 			_begin()
+		elif _selected == Spell.PULL and _nearest_fire_in_range() != null:
+			_begin_on_a_fire()
 		else:
 			_act_on_an_enemy(aim)
 	if not _winding_up:
@@ -116,6 +128,8 @@ func reset() -> void:
 	_winding_up = false
 	_frames = 0
 	_torch = null
+	_fire = null
+	_fire_hold_left = 0.0
 	_drawn_from = null
 	_holding = false
 	_light_the_way(false)
@@ -170,16 +184,53 @@ func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
 	return nearest
 
 
+# Starts the wind-up on the nearest Fire in range, if he can pay for the Pull. The Fire is chosen now
+# and must still burn at the end of the wind-up.
+func _begin_on_a_fire() -> void:
+	var fire := _nearest_fire_in_range()
+	if fire == null or not _can_pay(pull_cost):
+		return
+	_fire = fire
+	_winding_up = true
+	_frames = 0
+
+
+# The nearest burning flammable thing whose nearest edge is within the Pull's flame_range of him
+# (its edge, not its centre: a bed or a curtain is big), or null.
+func _nearest_fire_in_range() -> Flammable:
+	var nearest: Flammable = null
+	var nearest_distance := pull_cost.flame_range
+	for node in get_tree().get_nodes_in_group(&"fires"):
+		var fire := node as Flammable
+		if fire == null or not fire.burning:
+			continue
+		var distance := fire.distance_to_edge(body.global_position)
+		if distance <= nearest_distance:
+			nearest = fire
+			nearest_distance = distance
+	return nearest
+
+
 # The end of the wind-up: he pays and holds the flame, if the torch is still lit and he can still
 # pay; otherwise it fizzles with nothing spent.
 func _release() -> void:
 	var torch := _torch
+	var fire := _fire
 	reset()
-	if not is_instance_valid(torch) or not torch.lit or not _can_pay(pull_cost):
+	if not _can_pay(pull_cost):
 		return
-	_pay(pull_cost)
-	torch.draw()
-	_drawn_from = torch
+	if fire != null:
+		if not is_instance_valid(fire) or not fire.burning:
+			return
+		_pay(pull_cost)
+		fire.extinguish()
+		_fire_hold_left = pull_cost.fire_flame_hold_time
+	else:
+		if not is_instance_valid(torch) or not torch.lit:
+			return
+		_pay(pull_cost)
+		torch.draw()
+		_drawn_from = torch
 	_holding = true
 	_selected_before_draw = _selected
 	_select(Spell.SHOVE)

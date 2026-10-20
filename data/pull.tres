@@ -10,3 +10,5 @@ target_range = 160.0
 cone_half_angle_degrees = 20.0
 distance = 40.0
 move_speed = 360.0
+flame_range = 64.0
+fire_flame_hold_time = 5.0

@@ -16,6 +16,7 @@ func _ready() -> void:
 		flammable.caught.connect(_on_caught)
 		flammable.burned_out.connect(_on_burned_out)
 		flammable.restored.connect(_on_restored)
+		flammable.put_out.connect(_on_restored)
 
 
 # It is burning: he cannot get into it.

@@ -21,5 +21,11 @@ extends Resource
 ## pixels, the enemy's centre stops when it is slid towards him.
 @export var distance: float
 
+## Pull only: how close to him, in pixels, a Fire's nearest edge must be for Pull to take its flame.
+@export var flame_range: float
+
+## Pull only: for how many seconds he holds a flame taken from a Fire before it goes out unthrown.
+@export var fire_flame_hold_time: float
+
 ## How fast the enemy slides, in pixels per second.
 @export var move_speed: float
