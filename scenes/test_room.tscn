@@ -26,6 +26,9 @@
 [ext_resource type="PackedScene" path="res://scenes/world/path_blocker.tscn" id="21_path_blocker"]
 [ext_resource type="PackedScene" path="res://scenes/world/fungus.tscn" id="22_fungus"]
 
+[ext_resource type="PackedScene" path="res://scenes/world/movable.tscn" id="40_movable"]
+[ext_resource type="Resource" path="res://data/boulder.tres" id="41_boulder"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
 size = Vector2(1152, 16)
 
@@ -269,3 +272,10 @@ text = "Fallen"
 horizontal_alignment = 1
 script = ExtResource("10_fallen_label")
 almos = NodePath("../../Almos")
+
+[node name="Crate" parent="." instance=ExtResource("40_movable")]
+position = Vector2(216, 240)
+
+[node name="Boulder" parent="." instance=ExtResource("40_movable")]
+position = Vector2(680, 230)
+tuning = ExtResource("41_boulder")

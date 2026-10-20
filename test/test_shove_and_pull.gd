@@ -175,8 +175,8 @@ func test_shove_picks_the_nearer_of_two_enemies_in_the_cone() -> void:
 
 
 func test_shove_aims_at_the_lock_on_target_and_not_along_his_facing() -> void:
-	# Up and to the right of him, far outside the cone of his facing (to the right).
-	var offset := Vector2(1.0, -1.0).normalized() * LOCK_ON_DISTANCE
+	# Down and to the right of him, far outside the cone of his facing (to the right).
+	var offset := Vector2(1.0, 1.0).normalized() * LOCK_ON_DISTANCE
 	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + offset)
 	var start: Vector2 = _enemy.global_position
 	await _select(AlmosSpell.Spell.SHOVE)
@@ -191,7 +191,7 @@ func test_shove_aims_at_the_lock_on_target_and_not_along_his_facing() -> void:
 
 
 func test_shove_without_lock_on_does_not_reach_an_enemy_outside_his_facing_cone() -> void:
-	var offset := Vector2(1.0, -1.0).normalized() * LOCK_ON_DISTANCE
+	var offset := Vector2(1.0, 1.0).normalized() * LOCK_ON_DISTANCE
 	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + offset)
 	var start: Vector2 = _enemy.global_position
 	await _select(AlmosSpell.Spell.SHOVE)

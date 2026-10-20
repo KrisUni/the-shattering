@@ -119,6 +119,11 @@ var broken: bool:
 	get:
 		return _broken
 
+## How heavy it is, from its tuning.
+var weight: float:
+	get:
+		return tuning.weight
+
 ## Whether a Shove or a Pull is sliding it: it does not act until the slide is over.
 var sliding: bool:
 	get:

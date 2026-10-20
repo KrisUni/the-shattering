@@ -131,7 +131,7 @@ func _begin() -> void:
 	_frames = 0
 
 
-# Shove or Pull on the nearest enemy in the cone around the aim, if he can pay: the cost is spent
+# Shove or Pull on the nearest enemy or movable object in the cone around the aim, if he can pay: the cost is spent
 # whatever comes of it. An enemy within the greatest Weight he can move slides, one beyond it
 # shudders. With no enemy in the cone nothing happens and nothing is spent.
 func _act_on_an_enemy(aim: Vector2) -> void:
@@ -141,7 +141,7 @@ func _act_on_an_enemy(aim: Vector2) -> void:
 	if enemy == null or not _can_pay(cost):
 		return
 	_pay(cost)
-	if enemy.tuning.weight > tuning.greatest_weight():
+	if enemy.weight > tuning.greatest_weight():
 		enemy.shudder()
 		return
 	var away: Vector2 = enemy.global_position - body.global_position
@@ -151,11 +151,11 @@ func _act_on_an_enemy(aim: Vector2) -> void:
 		enemy.slide(away, cost.distance, cost.move_speed)
 
 
-# The nearest living enemy within the cost's range and cone around the aim, or null.
+# The nearest living enemy or movable object within the cost's range and cone around the aim, or null.
 func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance := cost.target_range
-	for node in get_tree().get_nodes_in_group(&"enemies"):
+	for node in get_tree().get_nodes_in_group(&"enemies") + get_tree().get_nodes_in_group(&"movables"):
 		var enemy := node as Node2D
 		if enemy == null or not enemy.has_method(&"slide") or enemy.dead:
 			continue
