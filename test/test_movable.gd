@@ -130,6 +130,26 @@ func test_a_pull_fetches_the_crate_across_the_gap() -> void:
 	assert_false(_crate.dead, "whole")
 
 
+func test_a_pull_from_flush_against_the_gaps_east_edge_carries_the_crate_out_of_the_gap_and_never_drops_it() -> void:
+	_set_up_room()
+	var gap = _room.get_node("Gap")
+	var east_edge: float = gap.global_position.x + gap.size.x / 2.0
+	var almos_radius := ((_almos.get_node("CollisionShape2D") as CollisionShape2D).shape as CircleShape2D).radius
+	_almos.global_position = Vector2(east_edge + almos_radius, _crate.global_position.y)
+	_almos.facing = Vector2.LEFT
+	assert_lt(_almos.global_position.x - _pull.distance, east_edge, "the plain rest point is inside the Gap")
+	_crate.fell.connect(func() -> void: _fell += 1)
+
+	await _cast()
+	await _wait_for_the_slide(_pull)
+
+	assert_eq(_fell, 0, "fell")
+	assert_true(is_instance_valid(_crate), "whole")
+	assert_gt(_crate.global_position.x, east_edge, "out of the Gap")
+	assert_gt(_crate.global_position.x, _almos.global_position.x, "carried on past him")
+	assert_gte(_crate.global_position.distance_to(_almos.global_position), _pull.distance - DISTANCE_TOLERANCE, "not on top of him")
+
+
 func test_a_shove_slides_the_crate_by_the_shove_distance() -> void:
 	_set_up_room()
 	_place_crate_in_front_of_almos(OPEN_FLOOR, NEAR)

@@ -158,6 +158,27 @@ func test_shove_moves_an_enemy_just_inside_the_range() -> void:
 	assert_gt(_enemy.global_position.x, start.x + _shove.distance - DISTANCE_TOLERANCE)
 
 
+func test_an_enemy_behind_a_wall_is_not_a_target_and_nothing_is_spent() -> void:
+	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + Vector2(NEAR * 2.0, 0.0))
+	var wall := StaticBody2D.new()
+	wall.collision_layer = 1
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = Vector2(8.0, 200.0)
+	shape.shape = rectangle
+	wall.add_child(shape)
+	wall.global_position = OPEN_FLOOR + Vector2(NEAR, 0.0)
+	_room.add_child(wall)
+	var start: Vector2 = _enemy.global_position
+	await _select(AlmosSpell.Spell.SHOVE)
+
+	await _cast()
+	await _wait_for_the_slide(_shove)
+
+	assert_eq(_enemy.global_position, start, "enemy")
+	_assert_nothing_was_spent()
+
+
 func test_shove_picks_the_nearer_of_two_enemies_in_the_cone() -> void:
 	# The room's enemy comes first in the group and is the nearer: the nearer is not simply the last.
 	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + Vector2(NEAR, 0.0))

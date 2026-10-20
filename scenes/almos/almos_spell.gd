@@ -24,6 +24,9 @@ extends Node
 
 enum Spell { PULL, SHOVE }
 
+# The collision layer of the walls, the first, which block the line to a target.
+const WALL_MASK := 1
+
 const FIREBALL_SCENE := preload("res://scenes/almos/fireball.tscn")
 
 ## Emitted when the fireball leaves him, with the fireball and the torch whose flame it is.
@@ -159,7 +162,9 @@ func _act_on_an_enemy(aim: Vector2) -> void:
 		enemy.shudder()
 		return
 	var away: Vector2 = enemy.global_position - body.global_position
-	if pulling:
+	if pulling and enemy.has_method(&"pull_towards"):
+		enemy.pull_towards(body.global_position, cost.distance, cost.move_speed)
+	elif pulling:
 		enemy.slide(-away, maxf(away.length() - cost.distance, 0.0), cost.move_speed)
 	else:
 		enemy.slide(away, cost.distance, cost.move_speed)
@@ -179,9 +184,21 @@ func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
 			continue
 		if rad_to_deg(absf(aim.angle_to(away))) > cost.cone_half_angle_degrees:
 			continue
+		if _wall_between(enemy):
+			continue
 		nearest = enemy
 		nearest_distance = distance
 	return nearest
+
+
+# Whether a wall (the walls layer) stands between him and this target, which a Shove or a Pull needs a
+# straight line to. The target itself is not a wall, though a movable object is on that layer.
+func _wall_between(target: Node2D) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(body.global_position, target.global_position, WALL_MASK)
+	var collider := target as CollisionObject2D
+	if collider != null:
+		query.exclude = [collider.get_rid()]
+	return not body.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 
 # Starts the wind-up on the nearest Fire in range, if he can pay for the Pull. The Fire is chosen now
