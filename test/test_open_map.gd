@@ -89,3 +89,40 @@ func test_open_map_is_bigger_than_the_game_window() -> void:
 	)
 
 	assert_true(map.bounds.size.x > window.x and map.bounds.size.y > window.y, "the map should be bigger than the window both ways, so that it scrolls")
+
+
+func test_camera_view_stays_inside_the_map_at_the_top_right_corner() -> void:
+	var map := _spawn_map()
+	var almos := map.find_child("Almos", true, false) as Almos
+	var camera := map.find_child("Camera", true, false) as Camera2D
+	almos.global_position = Vector2(map.bounds.end.x, map.bounds.position.y) + Vector2(-NEAR_BOTTOM_RIGHT_CORNER.x, NEAR_BOTTOM_RIGHT_CORNER.y)
+
+	await wait_physics_frames(WALK_FRAMES)
+
+	var view := Rect2(camera.get_screen_center_position() - Vector2(VIEW_SIZE) / 2.0, VIEW_SIZE)
+	assert_eq(view.position.y, map.bounds.position.y, "the view should start exactly at the top of the map")
+
+
+func test_camera_view_stays_inside_the_map_at_the_right_edge() -> void:
+	var map := _spawn_map()
+	var almos := map.find_child("Almos", true, false) as Almos
+	var camera := map.find_child("Camera", true, false) as Camera2D
+	almos.global_position = Vector2(map.bounds.end.x - NEAR_LEFT_EDGE, map.bounds.get_center().y)
+
+	await wait_physics_frames(WALK_FRAMES)
+
+	var view_end_x := camera.get_screen_center_position().x + VIEW_SIZE.x / 2.0
+	assert_eq(view_end_x, map.bounds.end.x, "the view should end exactly at the right edge of the map")
+
+
+func test_camera_view_stays_inside_the_map_when_zoomed_in() -> void:
+	var map := _spawn_map()
+	var almos := map.find_child("Almos", true, false) as Almos
+	var camera := map.find_child("Camera", true, false) as Camera2D
+	camera.zoom = Vector2(2.0, 2.0)
+	almos.global_position = Vector2(NEAR_LEFT_EDGE, map.bounds.get_center().y)
+
+	await wait_physics_frames(WALK_FRAMES)
+
+	# Zoomed in twice, the view is half as wide in the map: 576 pixels, so its centre stops 288 from the edge.
+	assert_almost_eq(camera.get_screen_center_position().x, map.bounds.position.x + 288.0, TOLERANCE)
