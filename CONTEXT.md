@@ -51,7 +51,7 @@ A guarded Room deep in the Dungeons, off the direct route out, where Almos's con
 _Avoid_: Armoury, evidence room, stash
 
 **Main entrance**:
-The Dungeons' visible exit, a guarded door that leads out to the Upper tree. It stays locked until Almos takes the Jailer's key. It opens with a tap of Interact beside it while Almos has the key, and a tap without the key does nothing. The opening is not kept: whenever the Lobby is built the door stands shut, so after a Death a tap opens it again. Beyond it a Doorway leads to a placeholder Upper tree space, which has a Doorway back to the Lobby.
+The Dungeons' visible exit, a guarded door that leads out to the Upper tree. It stays locked until Almos takes the Jailer's key. It opens with a tap of Interact beside it while Almos has the key, and a tap without the key does nothing. The opening is not kept: whenever the Lobby is built the door stands shut, so after a Death a tap opens it again.
 _Avoid_: Front door, gate
 
 **Jailer's key**:

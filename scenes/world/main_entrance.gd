@@ -10,8 +10,6 @@ extends StaticBody2D
 @export var key: StringName
 
 var _open := false
-# The physics layer the body was made with, which it has while it is shut.
-var _home_layer := 0
 
 ## Whether it is open: nothing blocks.
 var open: bool:
@@ -23,10 +21,6 @@ var open: bool:
 
 # The colour of the placeholder when the door stands open, a dim shade of its shut one.
 const OPEN_TINT := Color(1.0, 1.0, 1.0, 0.25)
-
-
-func _ready() -> void:
-	_home_layer = collision_layer
 
 
 ## Opens it if Almos has the key, and says whether it is open now. A door that is open stays open.
