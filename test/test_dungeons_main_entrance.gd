@@ -19,6 +19,11 @@ const AGAINST_THE_DOOR := Vector2(576.0, 619.0)
 const FAR_FROM_THE_DOOR := Vector2(576.0, 440.0)
 const CHECKPOINT_PATH := "res://scenes/world/checkpoint.tscn"
 const TAP_FRAMES := 3
+const TUNING_PATH := "res://data/player_tuning.tres"
+# In pixels, in the Lobby's own coordinates. The top edge of the Main entrance: it is at y 640 and 16 thick.
+const DOOR_TOP := 632.0
+# In pixels. How much farther than door_reach from the door's edge Almos stands.
+const BEYOND_REACH := 6.0
 # In pixels. How far from a Checkpoint or a key Almos stands: well inside his reach.
 const BESIDE := 5.0
 # In pixels, in Radio/Officers's own coordinates. Where the key jailer is moved to before he is killed.
@@ -195,6 +200,46 @@ func test_a_checkpoint_in_reach_is_rested_at_before_the_door_is_opened() -> void
 	await _tap(&"interact")
 
 	assert_false(_door(host).open, "the tap should have rested, not opened the door")
+
+
+func test_walking_into_the_shut_door_with_the_key_but_no_tap_does_not_leave_the_dungeons() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	WorldState.record_kept(JAILERS_KEY_ID)
+
+	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
+	await _walk_down_for(WALK_FRAMES)
+
+	assert_eq(WorldState.current_area, &"dungeons", "Almos should still be in the Dungeons")
+
+
+func test_a_tap_of_interact_with_the_key_from_beyond_the_door_reach_leaves_it_shut() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	WorldState.record_kept(JAILERS_KEY_ID)
+	var reach := (load(TUNING_PATH) as PlayerTuning).door_reach
+
+	host.almos.global_position = _in_the_lobby(host, Vector2(576.0, DOOR_TOP - reach - BEYOND_REACH))
+	await _tap(&"interact")
+
+	assert_false(_door(host).open, "the door should still be shut")
+
+
+func test_a_jailers_key_in_reach_is_taken_before_the_door_is_opened() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var room := (host.current_space as DungeonsBuilding).room(&"radio_officers")
+	var jailer := _enemies_in(room)[0] as Node2D
+	jailer.health.take_damage(jailer.health.maximum)
+	await wait_physics_frames(TAP_FRAMES)
+	var key := room.get_node("JailersKey") as Node2D
+	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
+	key.global_position = host.almos.global_position + Vector2(BESIDE, 0.0)
+	WorldState.record_kept(JAILERS_KEY_ID)
+
+	await _tap(&"interact")
+
+	assert_false(_door(host).open, "the tap should have taken the key, not opened the door")
 
 
 func _host_in_the_dungeons() -> AreaHost:
