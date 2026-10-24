@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/path_blocker.tscn" id="3_blocker"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -166,3 +167,11 @@ shape = SubResource("Shape_16x648")
 
 [node name="Entrance" type="Marker2D" parent="Exits/back_entrance"]
 position = Vector2(56, 0)
+
+[node name="BackEntranceSeal" parent="." instance=ExtResource("3_blocker")]
+position = Vector2(24, 324)
+id = &"dungeons/corridor_1/back_entrance_seal"
+size = Vector2(16, 616)
+
+[node name="Placeholder" parent="BackEntranceSeal" index="1"]
+color = Color(0.38, 0.32, 0.36, 1)
