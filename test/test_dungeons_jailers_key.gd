@@ -10,6 +10,8 @@ const WORLD_PATH := "res://scenes/areas/test_world.tscn"
 const DUNGEONS_PATH := "res://scenes/areas/dungeons/dungeons.tscn"
 const JAILERS_KEY_ID := &"dungeons/jailers_key"
 const KEY_JAILER_ID := &"dungeons/radio_officers/key_jailer"
+const CHECKPOINT_PATH := "res://scenes/world/checkpoint.tscn"
+const HIDING_SPOT_PATH := "res://scenes/world/hiding_spot.tscn"
 const SWORD_PATH := "res://data/sword.tres"
 # In pixels. The size of the view the Dungeons is shown in: the project's default window.
 const VIEW_SIZE := Vector2i(1152, 648)
@@ -173,6 +175,44 @@ func test_a_weapon_in_reach_is_taken_before_the_key() -> void:
 	assert_false(is_instance_valid(pickup), "the tap should have taken the Weapon")
 
 
+func test_a_checkpoint_in_reach_rests_and_leaves_the_key() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _kill_the_key_jailer_at(host, PLACE_OF_DEATH)
+	_put_in_the_room(host, CHECKPOINT_PATH, PLACE_OF_DEATH + Vector2(10.0, 0.0))
+	host.almos.global_position = _at(host, PLACE_OF_DEATH + Vector2(BESIDE, 0.0))
+
+	await _tap(&"interact")
+
+	assert_false(WorldState.is_taken(JAILERS_KEY_ID), "the tap should not have taken the key")
+
+
+func test_a_hiding_spot_in_reach_hides_and_leaves_the_key() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _kill_the_key_jailer_at(host, PLACE_OF_DEATH)
+	_put_in_the_room(host, HIDING_SPOT_PATH, PLACE_OF_DEATH + Vector2(10.0, 0.0))
+	host.almos.global_position = _at(host, PLACE_OF_DEATH + Vector2(BESIDE, 0.0))
+
+	await _tap(&"interact")
+
+	assert_false(WorldState.is_taken(JAILERS_KEY_ID), "the tap should not have taken the key")
+
+
+func test_a_key_not_taken_before_a_rest_lies_at_the_key_jailers_post_afterwards() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _kill_the_key_jailer_at(host, PLACE_OF_DEATH)
+	await _rest_at_the_lobby(host)
+
+	var room := _room(host, &"radio_officers")
+	assert_eq(_enemies_in(room).size(), 0, "he should stay dead")
+	var keys := _keys_in(room)
+	assert_eq(keys.size(), 1, "the key should lie in Radio/Officers")
+	if keys.size() == 1:
+		assert_lt(keys[0].global_position.distance_to(_at(host, POST)), NEAR, "it should lie at his post")
+
+
 func _host_in_the_dungeons() -> AreaHost:
 	var view := SubViewport.new()
 	view.size = VIEW_SIZE
@@ -228,6 +268,13 @@ func _take_the_key(host: AreaHost) -> void:
 	var key := _keys_in(_room(host, &"radio_officers"))[0]
 	host.almos.global_position = key.global_position + Vector2(BESIDE, 0.0)
 	await _tap(&"interact")
+
+
+# A scene is put in Radio/Officers at the place, given in the Room's own coordinates.
+func _put_in_the_room(host: AreaHost, path: String, place: Vector2) -> void:
+	var node := (load(path) as PackedScene).instantiate() as Node2D
+	node.position = place
+	_room(host, &"radio_officers").add_child(node)
 
 
 func _tap(action: StringName) -> void:
