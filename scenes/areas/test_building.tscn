@@ -1,0 +1,266 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/rooms/building.gd" id="1_building"]
+[ext_resource type="Script" path="res://scripts/rooms/room.gd" id="2_room"]
+[ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="3_exit"]
+[ext_resource type="PackedScene" path="res://scenes/almos/almos.tscn" id="4_almos"]
+[ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="5_stamina_bar"]
+[ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="6_health_bar"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_across"]
+size = Vector2(1152, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_down"]
+size = Vector2(16, 648)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_seg"]
+size = Vector2(528, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(96, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_strip"]
+size = Vector2(16, 648)
+
+[node name="TestBuilding" type="Node2D" node_paths=PackedStringArray("almos", "start_room")]
+script = ExtResource("1_building")
+almos = NodePath("Almos")
+start_room = NodePath("RoomA")
+
+[node name="RoomA" type="Node2D" parent="."]
+script = ExtResource("2_room")
+position = Vector2(0, 0)
+
+[node name="Floor" type="Polygon2D" parent="RoomA"]
+color = Color(0.16, 0.2, 0.16, 1)
+polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
+
+[node name="Walls" type="Node2D" parent="RoomA"]
+
+[node name="WallTop" type="StaticBody2D" parent="RoomA/Walls"]
+position = Vector2(576, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomA/Walls/WallTop"]
+shape = SubResource("RectangleShape2D_across")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomA/Walls/WallTop"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+
+[node name="WallBottom" type="StaticBody2D" parent="RoomA/Walls"]
+position = Vector2(576, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomA/Walls/WallBottom"]
+shape = SubResource("RectangleShape2D_across")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomA/Walls/WallBottom"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+
+[node name="WallLeft" type="StaticBody2D" parent="RoomA/Walls"]
+position = Vector2(8, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomA/Walls/WallLeft"]
+shape = SubResource("RectangleShape2D_down")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomA/Walls/WallLeft"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+
+[node name="Exits" type="Node2D" parent="RoomA"]
+
+[node name="EastExit" type="Area2D" parent="RoomA/Exits" node_paths=PackedStringArray("target")]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("3_exit")
+position = Vector2(1144, 324)
+target = NodePath("../../../RoomB/Exits/WestExit")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomA/Exits/EastExit"]
+shape = SubResource("RectangleShape2D_strip")
+
+[node name="Entrance" type="Marker2D" parent="RoomA/Exits/EastExit"]
+position = Vector2(-56, 0)
+
+[node name="RoomB" type="Node2D" parent="."]
+script = ExtResource("2_room")
+position = Vector2(1252, 0)
+
+[node name="Floor" type="Polygon2D" parent="RoomB"]
+color = Color(0.16, 0.18, 0.24, 1)
+polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
+
+[node name="Walls" type="Node2D" parent="RoomB"]
+
+[node name="WallTopLeft" type="StaticBody2D" parent="RoomB/Walls"]
+position = Vector2(264, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomB/Walls/WallTopLeft"]
+shape = SubResource("RectangleShape2D_seg")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomB/Walls/WallTopLeft"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-264, -8, 264, -8, 264, 8, -264, 8)
+
+[node name="WallTopRight" type="StaticBody2D" parent="RoomB/Walls"]
+position = Vector2(888, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomB/Walls/WallTopRight"]
+shape = SubResource("RectangleShape2D_seg")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomB/Walls/WallTopRight"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-264, -8, 264, -8, 264, 8, -264, 8)
+
+[node name="WallBottom" type="StaticBody2D" parent="RoomB/Walls"]
+position = Vector2(576, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomB/Walls/WallBottom"]
+shape = SubResource("RectangleShape2D_across")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomB/Walls/WallBottom"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+
+[node name="WallRight" type="StaticBody2D" parent="RoomB/Walls"]
+position = Vector2(1144, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomB/Walls/WallRight"]
+shape = SubResource("RectangleShape2D_down")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomB/Walls/WallRight"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+
+[node name="Exits" type="Node2D" parent="RoomB"]
+
+[node name="WestExit" type="Area2D" parent="RoomB/Exits" node_paths=PackedStringArray("target")]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("3_exit")
+position = Vector2(8, 324)
+target = NodePath("../../../RoomA/Exits/EastExit")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomB/Exits/WestExit"]
+shape = SubResource("RectangleShape2D_strip")
+
+[node name="Entrance" type="Marker2D" parent="RoomB/Exits/WestExit"]
+position = Vector2(56, 0)
+
+[node name="NorthDoor" type="Area2D" parent="RoomB/Exits" node_paths=PackedStringArray("target")]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("3_exit")
+position = Vector2(576, 8)
+target = NodePath("../../../RoomC/Exits/SouthDoor")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomB/Exits/NorthDoor"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Entrance" type="Marker2D" parent="RoomB/Exits/NorthDoor"]
+position = Vector2(0, 56)
+
+[node name="RoomC" type="Node2D" parent="."]
+script = ExtResource("2_room")
+position = Vector2(1252, -748)
+
+[node name="Floor" type="Polygon2D" parent="RoomC"]
+color = Color(0.24, 0.18, 0.16, 1)
+polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
+
+[node name="Walls" type="Node2D" parent="RoomC"]
+
+[node name="WallTop" type="StaticBody2D" parent="RoomC/Walls"]
+position = Vector2(576, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomC/Walls/WallTop"]
+shape = SubResource("RectangleShape2D_across")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomC/Walls/WallTop"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+
+[node name="WallLeft" type="StaticBody2D" parent="RoomC/Walls"]
+position = Vector2(8, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomC/Walls/WallLeft"]
+shape = SubResource("RectangleShape2D_down")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomC/Walls/WallLeft"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+
+[node name="WallRight" type="StaticBody2D" parent="RoomC/Walls"]
+position = Vector2(1144, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomC/Walls/WallRight"]
+shape = SubResource("RectangleShape2D_down")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomC/Walls/WallRight"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+
+[node name="WallBottomLeft" type="StaticBody2D" parent="RoomC/Walls"]
+position = Vector2(264, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomC/Walls/WallBottomLeft"]
+shape = SubResource("RectangleShape2D_seg")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomC/Walls/WallBottomLeft"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-264, -8, 264, -8, 264, 8, -264, 8)
+
+[node name="WallBottomRight" type="StaticBody2D" parent="RoomC/Walls"]
+position = Vector2(888, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomC/Walls/WallBottomRight"]
+shape = SubResource("RectangleShape2D_seg")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomC/Walls/WallBottomRight"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-264, -8, 264, -8, 264, 8, -264, 8)
+
+[node name="Exits" type="Node2D" parent="RoomC"]
+
+[node name="SouthDoor" type="Area2D" parent="RoomC/Exits" node_paths=PackedStringArray("target")]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("3_exit")
+position = Vector2(576, 640)
+target = NodePath("../../../RoomB/Exits/NorthDoor")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomC/Exits/SouthDoor"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Entrance" type="Marker2D" parent="RoomC/Exits/SouthDoor"]
+position = Vector2(0, -56)
+
+[node name="Almos" parent="." instance=ExtResource("4_almos")]
+position = Vector2(576, 324)
+
+[node name="Camera" type="Camera2D" parent="."]
+
+[node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="StaminaBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("stamina")]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 216.0
+offset_bottom = 32.0
+show_percentage = false
+script = ExtResource("5_stamina_bar")
+stamina = NodePath("../../Almos/Stamina")
+
+[node name="HealthBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("health")]
+modulate = Color(0.9, 0.35, 0.35, 1)
+offset_left = 16.0
+offset_top = 40.0
+offset_right = 216.0
+offset_bottom = 56.0
+show_percentage = false
+script = ExtResource("6_health_bar")
+health = NodePath("../../Almos/Health")
