@@ -1,3 +1,4 @@
+class_name StaminaBar
 extends ProgressBar
 ## A placeholder Stamina bar for the HUD. It shows the Stamina it is pointed at and
 ## follows it through its changed signal.

@@ -153,6 +153,20 @@ func test_the_return_after_a_death_refills_the_mana_bar() -> void:
 	assert_almost_eq(_almos.mana.current, _almos.mana.maximum, TOLERANCE)
 
 
+func test_the_mark_stays_taken_through_a_death_with_no_rest() -> void:
+	_set_up_room()
+	await _walk_into_the_mark()
+	assert_true(_almos.flasks.has_mana_bar, "control: he has the bar")
+
+	_almos.health.take_damage(_almos.health.maximum)
+	await wait_seconds(_player.death_pause + 0.5)
+	_room.free()
+	_set_up_room()
+	await wait_physics_frames(TAP_FRAMES)
+
+	assert_null(_room.get_node_or_null(MARK_NAME), "the mark is not there again")
+
+
 func test_the_mana_flask_fills_at_the_next_checkpoint() -> void:
 	_set_up_room()
 	await _walk_into_the_mark()

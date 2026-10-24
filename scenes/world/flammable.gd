@@ -152,10 +152,12 @@ func burn_out_now() -> void:
 
 
 ## Enemies have returned: every Fire goes out. A Hiding spot or fungus, burning or burnt out, is
-## whole again, with its look, its collision and its flammability. A path blocker that has caught is
-## burnt out for good, even if it was still burning; one that has not is left as it is.
+## whole again, with its look, its collision and its flammability. A path blocker that WorldState has
+## recorded as burnt is burnt out, even if it was still burning; one that has not been recorded (it
+## burnt since the last rest, and a Death undid that) is whole again like the rest. A path blocker
+## outside a PathBlocker is taken as recorded once it has caught.
 func come_back() -> void:
-	if kind == Kind.PATH_BLOCKER:
+	if kind == Kind.PATH_BLOCKER and _stays_burnt():
 		if _burning:
 			_burn_out()
 		return
@@ -177,6 +179,14 @@ func come_back() -> void:
 ## radius, the edge included.
 func lights(point: Vector2) -> bool:
 	return _burning and global_position.distance_to(point) <= tuning.light_radius
+
+
+# Whether a path blocker that has caught is to stay burnt out: its id is recorded in WorldState.
+func _stays_burnt() -> bool:
+	var blocker := get_parent() as PathBlocker
+	if blocker == null:
+		return _burning or _burnt_out
+	return WorldState.is_burnt(blocker.id)
 
 
 # Ticks that are due: each hurts whoever stands in the thing, while it has not burnt out.

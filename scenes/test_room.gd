@@ -6,8 +6,9 @@ extends Node2D
 ## When Almos's Health reaches zero he lies limp for a while (see Almos), and when that is over
 ## the room sees to his Death: it takes all his Experience and leaves Remains holding it where he
 ## fell, in place of any it already had, or none if he had none; it brings back every ordinary
-## enemy, as a rest does; and it sends him back to the return point. The Remains stay where they
-## are through a rest.
+## enemy, as a rest does; it undoes the changes made to the world since the last rest (a path blocker
+## that burnt since is closed again); and it sends him back to the return point. The Remains stay
+## where they are through a rest.
 
 const REMAINS_SCENE := preload("res://scenes/world/remains.tscn")
 
@@ -73,15 +74,17 @@ func _remember(enemy: Node) -> void:
 	_ordinary_enemies.append(start)
 
 
-# Almos rested: the Checkpoint is his return point, and every ordinary enemy comes back as new.
+# Almos rested: the Checkpoint is his return point, what has changed in the world is saved, and every
+# ordinary enemy comes back as new.
 func _on_almos_rested(checkpoint: Checkpoint) -> void:
 	_return_point = checkpoint.global_position
+	WorldState.commit()
 	_bring_back_the_ordinary_enemies()
 
 
 # Every torch drawn burns again and every ordinary enemy comes back as new, whether Almos rested
 # or died. Every Fire goes out: a Hiding spot or fungus that burnt is whole again, and a path
-# blocker that caught is open for good. One still alive is taken out
+# blocker that caught is open if WorldState has saved that. One still alive is taken out
 # of the tree at once, so that it leaves the "enemies" group in this frame, and a fresh one is made
 # at its starting place. A named enemy is not in the list, so it is left as it is. A fresh enemy is
 # added last, so that it comes after Almos in the tree: he is processed before enemies, and the
@@ -112,12 +115,13 @@ func _on_almos_fell(place: Vector2) -> void:
 
 
 # The pause of Almos's Death is over. The Experience he carries is the Remains' now, at the place he
-# fell, and he is sent back to the return point with the ordinary enemies back as new. The Remains
-# are made after he is back, and notice him from the next frame, so that a return point close
-# enough to them has him recover them at once. The old Remains, if any, are destroyed, whether or
-# not new ones are left.
+# fell, and he is sent back to the return point with the world as it was at the last rest and the
+# ordinary enemies back as new. The Remains are made after he is back, and notice him from the next
+# frame, so that a return point close enough to them has him recover them at once. The old Remains,
+# if any, are destroyed, whether or not new ones are left.
 func _on_almos_death_pause_over() -> void:
 	var lost := _almos.experience.take_all()
+	WorldState.roll_back()
 	_bring_back_the_ordinary_enemies()
 	_almos.return_to(_return_point)
 	_leave_remains(lost, _fall_place)

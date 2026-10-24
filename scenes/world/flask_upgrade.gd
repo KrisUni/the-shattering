@@ -19,6 +19,6 @@ func _on_body_entered(body: Node2D) -> void:
 	var almos := body as Almos
 	if almos == null or WorldState.is_taken(id):
 		return
-	WorldState.record_taken(id)
+	WorldState.record_kept(id)
 	almos.flasks.add_charges(1)
 	queue_free()

@@ -1,3 +1,4 @@
+class_name HealthBar
 extends ProgressBar
 ## A placeholder Health bar for the HUD. It shows the Health it is pointed at and follows
 ## it through its changed signal.

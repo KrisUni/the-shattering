@@ -64,6 +64,11 @@ signal unblockable_cue_played
 ## new, and a named enemy stays dead.
 @export var named := false
 
+## What a named enemy is called in WorldState, stable across builds of the area. It records itself
+## as defeated under this name when it dies, and an area that is built with the name recorded has
+## no such enemy. Each named enemy needs its own; an ordinary enemy has none.
+@export var id: StringName
+
 ## The way it faces at its post, a unit vector, until it notices Almos. Its Sight points this way.
 ## It faces this way again once it is back at its post.
 @export var post_facing := Vector2.DOWN:
@@ -112,6 +117,16 @@ var striking: bool:
 var attacking: bool:
 	get:
 		return _frame >= 0
+
+## Whether it is on its way to a place it was sent to with begin_follow().
+var following: bool:
+	get:
+		return _following
+
+## Whether, on its way, it has got to the place it was sent to.
+var follow_arrived: bool:
+	get:
+		return _follow_arrived
 
 ## Whether it is broken: its Stagger filled and the Break has neither run out nor been ended by
 ## a Critical hit. It stands still and starts nothing, and no Stagger builds.
@@ -183,6 +198,11 @@ var _drag_spot := Vector2.ZERO
 # Whether the grab of the drag-out has started. Until it has, the lose-time runs on the drag.
 var _grab_started := false
 var _drag_start_frame := -1
+# Whether it is walking to the place it was sent to, instead of acting on its target; the place;
+# and whether it has got there.
+var _following := false
+var _follow_place := Vector2.ZERO
+var _follow_arrived := false
 
 
 func _enter_tree() -> void:
@@ -223,6 +243,9 @@ func _physics_process(_delta: float) -> void:
 		_set_strike(false)
 		_show_look()
 		return
+	if _following:
+		_walk_to_follow_place()
+		return
 	if not is_instance_valid(target):
 		return
 	if not _dead:
@@ -244,6 +267,25 @@ func _physics_process(_delta: float) -> void:
 	_set_strike(current_attack.is_active(_frame))
 	_show_look()
 	_nose.rotation = _facing.angle()
+
+
+## Sends it to walk to this place, such as a Room's exit that Almos went through, instead of acting
+## on its target. An attack under way is broken off. While it walks it neither loses Pursuit nor
+## recovers Health, and its Break runs out as usual. Its state is otherwise left as it is.
+func begin_follow(place: Vector2) -> void:
+	_following = true
+	_follow_place = place
+	_follow_arrived = false
+
+
+## Ends the walk begun with begin_follow(), wherever it has got to, and it acts on its target
+## again. A hit on it ends the walk as well. The place its target was last seen at is this one, and the count of frames without him in
+## its Sight starts again.
+func end_follow(last_seen_at: Vector2) -> void:
+	_following = false
+	_follow_arrived = false
+	_last_seen = last_seen_at
+	_unseen_frames = 0
 
 
 ## A Shove or a Pull slides it this way, a unit vector, for this many pixels at this many pixels
@@ -462,6 +504,20 @@ func _act_freely() -> void:
 		move_and_slide()
 
 
+# One physics frame of the walk to the place it was sent to.
+func _walk_to_follow_place() -> void:
+	_frame = -1
+	_set_strike(false)
+	if _broken and Engine.get_physics_frames() >= _break_end_frame:
+		_broken = false
+	if _broken:
+		velocity = Vector2.ZERO
+	else:
+		_follow_arrived = _walk_to(_follow_place)
+	_show_look()
+	_nose.rotation = _facing.angle()
+
+
 # Walks towards this place, facing the way it goes and stopping on it. Returns whether it is there.
 func _walk_to(place: Vector2) -> bool:
 	var to_place := place - global_position
@@ -516,11 +572,11 @@ func _wind_up_tint() -> Color:
 	return WIND_UP_TINT
 
 
-# A hit of any kind makes it notice the target, whatever its Sight shows.
+# A hit of any kind makes it notice the target, whatever its Sight shows. It also ends a walk to the
+# place it was sent to: a hit puts it in Pursuit again, and it fights.
 func _notice_the_hit(_from := Vector2.ZERO) -> void:
 	_state = State.PURSUIT
-	_last_seen = target.global_position if is_instance_valid(target) else global_position
-	_unseen_frames = 0
+	end_follow(target.global_position if is_instance_valid(target) else global_position)
 
 
 # A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
@@ -581,5 +637,7 @@ func _on_depleted() -> void:
 # land in that frame has landed. Its Hitbox is off by the time it announces its death.
 func _finish_dying() -> void:
 	_set_strike(false)
+	if named and id != &"":
+		WorldState.record_defeated(id)
 	died.emit()
 	queue_free()
