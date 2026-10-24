@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/almos/almos.tscn" id="4_almos"]
 [ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="5_stamina_bar"]
 [ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="6_health_bar"]
+[ext_resource type="Script" path="res://scripts/areas/doorway.gd" id="7_doorway"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_across"]
 size = Vector2(1152, 16)
@@ -22,8 +23,12 @@ size = Vector2(96, 16)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_strip"]
 size = Vector2(16, 648)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_doorway"]
+size = Vector2(48, 96)
+
 [node name="TestBuilding" type="Node2D" node_paths=PackedStringArray("almos", "start_room")]
 script = ExtResource("1_building")
+area_id = &"test_building"
 almos = NodePath("Almos")
 start_room = NodePath("RoomA")
 
@@ -82,6 +87,27 @@ shape = SubResource("RectangleShape2D_strip")
 
 [node name="Entrance" type="Marker2D" parent="RoomA/Exits/EastExit"]
 position = Vector2(-56, 0)
+
+[node name="Doorways" type="Node2D" parent="RoomA"]
+
+[node name="ToMap1" type="Area2D" parent="RoomA/Doorways"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("7_doorway")
+position = Vector2(64, 324)
+destination = "res://scenes/areas/test_open_map.tscn"
+destination_entrance = &"ToBuilding"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RoomA/Doorways/ToMap1"]
+shape = SubResource("RectangleShape2D_doorway")
+
+[node name="Placeholder" type="Polygon2D" parent="RoomA/Doorways/ToMap1"]
+color = Color(0.55, 0.45, 0.25, 1)
+polygon = PackedVector2Array(-24, -48, 24, -48, 24, 48, -24, 48)
+
+[node name="Entrance" type="Marker2D" parent="RoomA/Doorways/ToMap1"]
+position = Vector2(56, 0)
 
 [node name="RoomB" type="Node2D" parent="."]
 script = ExtResource("2_room")

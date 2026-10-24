@@ -1,5 +1,5 @@
 class_name TestOpenMap
-extends Node2D
+extends Space
 ## A placeholder Open map: one continuous area, bigger than the screen, that the camera follows
 ## Almos through. It stands in for a real Open map until there is one, and is where Open maps
 ## are tried out.

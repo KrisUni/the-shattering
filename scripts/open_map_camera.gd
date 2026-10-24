@@ -15,6 +15,12 @@ extends Camera2D
 func _physics_process(_delta: float) -> void:
 	# In the physics step, after Almos has moved (the camera comes after him in the tree), so the
 	# view never lags a frame behind him.
+	snap_to_target()
+
+
+## Puts the view where it belongs for the target's place now, without waiting for the next physics
+## step, such as after the target has been put somewhere else.
+func snap_to_target() -> void:
 	if target == null:
 		return
 	# What the view covers is the viewport as the zoom shows it, so the clamp holds at any zoom.
