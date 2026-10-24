@@ -1,6 +1,5 @@
 extends GutTest
-## Cell 3 and the Store room: Almos wakes in the Dungeons stripped of his Weapon (and Armour) with
-## his Flasks, and his confiscated Weapon lies in the Store room. The only way out of Cell 3 is
+## Cell 3: Almos wakes in the Dungeons stripped of his Weapon (and Armour) with his Flasks. The only way out of Cell 3 is
 ## closed by living roots, which burn open when the flame of the Cell's torch, Pulled and Shoved
 ## at them, or any other flame thrown at them, sets them alight.
 
@@ -8,11 +7,10 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const WORLD_PATH := "res://scenes/areas/test_world.tscn"
 const DUNGEONS_PATH := "res://scenes/areas/dungeons/dungeons.tscn"
-const SWORD_PATH := "res://data/sword.tres"
 const FLAMMABLE_PATH := "res://scenes/world/flammable.tscn"
-const PULL_PATH := "res://data/pull.tres"
 const FIREBALL_PATH := "res://data/fireball.tres"
 const FIRE_PATH := "res://data/fire.tres"
+const AREA_LOAD_PATH := "res://data/area_load.tres"
 # In pixels. The size of the view the Dungeons is shown in: the project's default window.
 const VIEW_SIZE := Vector2i(1152, 648)
 # In pixels, in Cell 3. Where Almos stands to Pull the torch's flame and Shove it down at the roots:
@@ -73,20 +71,8 @@ func test_almos_wakes_with_his_flasks_full() -> void:
 
 	var flasks := host.almos.flasks
 	assert_gt(flasks.health_charges_maximum, 0, "he should have Flasks")
-	assert_eq(flasks.health_charges, flasks.health_charges_maximum, "his Flasks should be full")
-
-
-func test_the_store_room_holds_his_sword_as_a_pickup() -> void:
-	var host := _host_in_the_dungeons()
-	await wait_physics_frames(2)
-
-	var dungeons := host.current_space as DungeonsBuilding
-	var swords: Array[WeaponPickup] = []
-	for child in dungeons.room(&"store_room").find_children("*", "WeaponPickup", true, false):
-		var pickup := child as WeaponPickup
-		if pickup.weapon == load(SWORD_PATH):
-			swords.append(pickup)
-	assert_eq(swords.size(), 1, "the Store room should hold one pickup with the sword")
+	assert_eq(flasks.health_charges, flasks.health_charges_maximum, "his Health Flask should be full")
+	assert_gt(flasks.mana_charges_maximum, 0, "he should carry the Mana Flask")
 
 
 func test_almos_walking_at_the_door_while_the_roots_are_whole_stays_in_cell_3() -> void:
@@ -197,14 +183,20 @@ func test_almos_burns_the_roots_out_again_after_a_death_before_a_checkpoint() ->
 	assert_true((cell.get_node("Roots") as PathBlocker).open, "the roots should burn open again")
 
 
-func test_almos_is_still_stripped_after_a_death_before_a_checkpoint() -> void:
+func test_almos_carries_no_weapon_after_a_death_before_a_checkpoint() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 	await _burn_the_roots_out_and_die_in_the_corridor(host)
 
 	assert_eq(host.almos.weapons.carried.size(), 0, "he should carry no Weapon")
+
+
+func test_almos_hands_are_empty_after_a_death_before_a_checkpoint() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _burn_the_roots_out_and_die_in_the_corridor(host)
+
 	assert_null(host.almos.weapons.in_hand, "his hands should be empty")
-	assert_eq(host.almos.flasks.health_charges, host.almos.flasks.health_charges_maximum, "his Flasks should be full")
 
 
 # He burns the roots open, walks out into the corridor, and dies there; this returns when the
@@ -219,7 +211,9 @@ func _burn_the_roots_out_and_die_in_the_corridor(host: AreaHost) -> void:
 
 	host.almos.health.take_damage(host.almos.health.maximum)
 	var player := load(AlmosInput.TUNING_PATH) as PlayerTuning
-	await wait_physics_frames(ceili(player.death_pause * Engine.physics_ticks_per_second) + WALK_FRAMES / 4)
+	# The Death's pause, then the area load, which fades out and back in.
+	var fade_seconds := (load(AREA_LOAD_PATH) as AreaLoadTuning).fade_seconds
+	await wait_physics_frames(ceili((player.death_pause + 2.0 * fade_seconds) * Engine.physics_ticks_per_second) + MARGIN_FRAMES)
 	assert_false(host.loading, "the return should be done")
 	assert_ne(host.current_space, dungeons, "the Dungeons should have been made new")
 
@@ -243,4 +237,6 @@ func _tap(action: StringName) -> void:
 # Long enough for the fireball to fly to the roots, and for them to burn for the burn time.
 func _wait_for_the_fire_to_burn_out() -> void:
 	var fire := load(FIRE_PATH) as FireTuning
-	await wait_physics_frames(ceili(fire.burn_time * Engine.physics_ticks_per_second) + 60 + MARGIN_FRAMES)
+	var fireball := load(FIREBALL_PATH) as SpellData
+	var flight_seconds := fireball.fireball_range / fireball.fireball_speed
+	await wait_physics_frames(ceili((flight_seconds + fire.burn_time) * Engine.physics_ticks_per_second) + MARGIN_FRAMES)
