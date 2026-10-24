@@ -1,6 +1,6 @@
 class_name AlmosSpell
 extends Node
-## Almos's Spells, made with the Spell button. He has three, Pull, Shove and Deep bolt, and the switch_spell
+## Almos's Spells, made with the Spell button. He has two, Pull and Shove, and the switch_spell
 ## button cycles through them in that order; the one selected starts as Pull. A switch tap is read only when he
 ## is free to act, as a Switch Weapon tap is, and is refused while he winds up or holds a flame.
 ##
@@ -22,13 +22,12 @@ extends Node
 ## when he is not free to act, which Almos decides; it is lost, not kept for after. The wind-up
 ## commits him: Almos treats him as busy while it lasts.
 
-enum Spell { PULL, SHOVE, DEEP_BOLT }
+enum Spell { PULL, SHOVE }
 
 # The collision layer of the walls, the first, which block the line to a target.
 const WALL_MASK := 1
 
 const FIREBALL_SCENE := preload("res://scenes/almos/fireball.tscn")
-const DEEP_BOLT_SCENE := preload("res://scenes/almos/deep_bolt.tscn")
 
 ## Emitted when the fireball leaves him, with the fireball and the torch whose flame it is.
 signal fireball_thrown(fireball: Fireball, torch: Torch)
@@ -42,9 +41,6 @@ signal selection_changed
 ## What each Spell costs.
 @export var pull_cost: SpellCost
 @export var shove_cost: SpellCost
-
-## Deep bolt: its costs, and how its bolt flies and hits.
-@export var deep_bolt: DeepBoltData
 
 ## What the numbers of Channelling come from. Almos gives his own tuning.
 @export var tuning: PlayerTuning
@@ -83,9 +79,6 @@ var _holding := false
 var _drawn_from: Torch
 var _health_seen := 0.0
 var _winding_up := false
-# Whether the wind-up under way is Deep bolt's, and the aim the bolt leaves along at its end.
-var _bolt_winding := false
-var _bolt_aim := Vector2.RIGHT
 var _frames := 0
 var _torch: Torch
 # The Fire whose flame the wind-up is for, and for how many more seconds he holds a flame taken from
@@ -117,9 +110,7 @@ func advance(free: bool, aim: Vector2) -> void:
 			_throw(aim)
 		return
 	if not _winding_up and free and Input.is_action_just_pressed(&"cast_spell"):
-		if _selected == Spell.DEEP_BOLT:
-			_begin_bolt()
-		elif _selected == Spell.PULL and _nearest_lit_torch_in_range() != null:
+		if _selected == Spell.PULL and _nearest_lit_torch_in_range() != null:
 			_begin()
 		elif _selected == Spell.PULL and _nearest_fire_in_range() != null:
 			_begin_on_a_fire()
@@ -128,11 +119,7 @@ func advance(free: bool, aim: Vector2) -> void:
 	if not _winding_up:
 		return
 	_frames += 1
-	if _bolt_winding:
-		_bolt_aim = aim
-		if _frames >= deep_bolt.wind_up_frames:
-			_release_bolt()
-	elif _frames >= spell_data.wind_up_frames:
+	if _frames >= spell_data.wind_up_frames:
 		_release()
 
 
@@ -143,7 +130,6 @@ func reset() -> void:
 	if _holding:
 		_select(_selected_before_draw)
 	_winding_up = false
-	_bolt_winding = false
 	_frames = 0
 	_torch = null
 	_fire = null
@@ -302,36 +288,12 @@ func _light_the_way(on: bool) -> void:
 		held_flame.extinguish()
 
 
-# The Spell the switch button selects after this one: Pull, Shove, Deep bolt, and round again.
+# The Spell the switch button selects after this one: Pull, Shove, and round again.
 func _next_spell() -> Spell:
 	match _selected:
 		Spell.PULL:
 			return Spell.SHOVE
-		Spell.SHOVE:
-			return Spell.DEEP_BOLT
 	return Spell.PULL
-
-
-# Deep bolt's wind-up begins, if he can pay for it now; otherwise nothing happens.
-func _begin_bolt() -> void:
-	if not _can_pay(deep_bolt):
-		return
-	_winding_up = true
-	_bolt_winding = true
-	_frames = 0
-
-
-# The end of Deep bolt's wind-up: he pays and the bolt leaves along the aim, if he can still pay;
-# otherwise it fizzles with nothing spent.
-func _release_bolt() -> void:
-	var aim := _bolt_aim
-	reset()
-	if not _can_pay(deep_bolt):
-		return
-	_pay(deep_bolt)
-	var bolt := DEEP_BOLT_SCENE.instantiate() as Fireball
-	body.get_parent().add_child(bolt)
-	bolt.launch(body.global_position, aim, deep_bolt.bolt_speed, deep_bolt.bolt_range, deep_bolt.damage_for(tuning.channelling))
 
 
 # Whether he could pay this Spell's cost now. Once he has his Mana bar, his Mana covers the Mana
