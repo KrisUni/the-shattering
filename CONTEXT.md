@@ -51,8 +51,12 @@ A guarded Room deep in the Dungeons, off the direct route out, where Almos's con
 _Avoid_: Armoury, evidence room, stash
 
 **Main entrance**:
-The Dungeons' visible exit, a guarded door that leads out to the Upper tree.
+The Dungeons' visible exit, a guarded door that leads out to the Upper tree. It stays locked until Almos takes the Jailer's key.
 _Avoid_: Front door, gate
+
+**Jailer's key**:
+The key to the Main entrance, carried by one Nar jailer. Almos takes it by killing that jailer; it opens the Main entrance and nothing else.
+_Avoid_: Gate key, keycard
 
 **Back entrance**:
 A door at the end of the Dungeons' long corridor, hidden behind something flammable until the player burns it open. It leads down a long corridor to a cave, the first Rooms of the Catacombs.
