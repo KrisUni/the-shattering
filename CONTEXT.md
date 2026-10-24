@@ -43,12 +43,20 @@ How the Base of the tree ends. If the Nar guards bring Almos's Health to zero, o
 _Avoid_: Arrest, forced death
 
 **Dungeons**:
-The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in a cell of living roots and gets out by burning through it with his first Pull and Shove of a torch's flame. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
+The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in Cell 3, a cell of living roots, and gets out by burning through it with his first Pull and Shove of a torch's flame. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
 _Avoid_: Prison, cells, roots
 
 **Store room**:
 A guarded Room deep in the Dungeons, off the direct route out, where Almos's confiscated Weapon and Armour are kept. Recovering them is optional. His gear at this point is modest; nothing in it is precious.
 _Avoid_: Armoury, evidence room, stash
+
+**Main entrance**:
+The Dungeons' visible exit, a guarded door that leads out to the Upper tree.
+_Avoid_: Front door, gate
+
+**Back entrance**:
+A door at the end of the Dungeons' long corridor, hidden behind something flammable until the player burns it open. It leads down a long corridor to a cave, the first Rooms of the Catacombs.
+_Avoid_: Back door, secret door
 
 **Upper tree**:
 The trunk and canopy of the arch tree, reached from the Dungeons by a guarded path. Almos leaves it by climbing down the Great root. The area of Jumps and Deadly falls. Its enemies are Nar guards hunting the fugitive, some attacking from higher branches, and creatures of the canopy. He meets no NPCs here.
