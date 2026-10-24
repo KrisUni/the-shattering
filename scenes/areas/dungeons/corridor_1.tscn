@@ -87,16 +87,6 @@ shape = SubResource("Shape_528x16")
 color = Color(0.35, 0.33, 0.42, 1)
 polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
 
-[node name="WallLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(8, 324)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
-shape = SubResource("Shape_16x648")
-
-[node name="Placeholder" type="Polygon2D" parent="Walls/WallLeft"]
-color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-8.0, -324.0, 8.0, -324.0, 8.0, 324.0, -8.0, 324.0)
-
 [node name="Exits" type="Node2D" parent="."]
 
 [node name="east" type="Area2D" parent="Exits"]
@@ -163,3 +153,16 @@ shape = SubResource("Shape_96x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/to_radio_officers"]
 position = Vector2(0, -56)
+
+[node name="back_entrance" type="Area2D" parent="Exits"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("2_exit")
+position = Vector2(8, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/back_entrance"]
+shape = SubResource("Shape_16x648")
+
+[node name="Entrance" type="Marker2D" parent="Exits/back_entrance"]
+position = Vector2(56, 0)

@@ -26,7 +26,11 @@ rooms = Dictionary[StringName, String]({
 &"chiefs_office": "res://scenes/areas/dungeons/chiefs_office.tscn",
 &"officers": "res://scenes/areas/dungeons/officers.tscn",
 &"reception": "res://scenes/areas/dungeons/reception.tscn",
-&"lobby": "res://scenes/areas/dungeons/lobby.tscn"
+&"lobby": "res://scenes/areas/dungeons/lobby.tscn",
+&"back_corridor_1": "res://scenes/areas/dungeons/back_corridor_1.tscn",
+&"back_corridor_2": "res://scenes/areas/dungeons/back_corridor_2.tscn",
+&"back_corridor_3": "res://scenes/areas/dungeons/back_corridor_3.tscn",
+&"cave": "res://scenes/areas/dungeons/cave.tscn"
 })
 exits = Dictionary[String, String]({
 "corridor_1/east": "corridor_2/west",
@@ -68,5 +72,13 @@ exits = Dictionary[String, String]({
 "archives_evidence/to_store_room": "store_room/door",
 "store_room/door": "archives_evidence/to_store_room",
 "reception/to_lobby": "lobby/to_reception",
-"lobby/to_reception": "reception/to_lobby"
+"lobby/to_reception": "reception/to_lobby",
+"corridor_1/back_entrance": "back_corridor_1/back_entrance",
+"back_corridor_1/back_entrance": "corridor_1/back_entrance",
+"back_corridor_1/west": "back_corridor_2/east",
+"back_corridor_2/east": "back_corridor_1/west",
+"back_corridor_2/west": "back_corridor_3/east",
+"back_corridor_3/east": "back_corridor_2/west",
+"back_corridor_3/west": "cave/east",
+"cave/east": "back_corridor_3/west"
 })

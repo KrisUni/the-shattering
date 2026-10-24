@@ -12,6 +12,7 @@ const DUNGEONS_ROOMS: Array[StringName] = [
 	&"kitchenette_staff_mess", &"archives_evidence", &"store_room",
 	&"meeting_room_1", &"meeting_room_2", &"chiefs_office", &"officers",
 	&"reception", &"lobby",
+	&"back_corridor_1", &"back_corridor_2", &"back_corridor_3", &"cave",
 ]
 
 
@@ -141,3 +142,12 @@ func test_the_lobby_is_through_the_reception() -> void:
 	var graph: RoomGraph = load(GRAPH_PATH)
 
 	assert_eq(graph.destination_of(&"reception", &"to_lobby"), "lobby/to_reception")
+
+
+func test_the_back_entrance_leads_down_a_long_corridor_to_a_cave() -> void:
+	var graph: RoomGraph = load(GRAPH_PATH)
+
+	assert_eq(graph.destination_of(&"corridor_1", &"back_entrance"), "back_corridor_1/back_entrance")
+	assert_eq(graph.destination_of(&"back_corridor_1", &"west"), "back_corridor_2/east")
+	assert_eq(graph.destination_of(&"back_corridor_2", &"west"), "back_corridor_3/east")
+	assert_eq(graph.destination_of(&"back_corridor_3", &"west"), "cave/east")
