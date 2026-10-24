@@ -238,14 +238,18 @@ func test_a_fire_is_taken_before_an_enemy_in_the_cone() -> void:
 # --- set-up ---
 
 
-# The test room as shipped, without the Sound hunter, the training enemy given no target and put
-# well out of the way, and the Curtain alight.
+# The test room as shipped, without the Sound hunter and the Stand torch (whose flame Pull would take
+# before the Curtain's), the training enemy given no target and put well out of the way, and the
+# Curtain alight.
 func _set_up_room() -> void:
 	var scene := load(TEST_ROOM_PATH) as PackedScene
 	_room = scene.instantiate()
 	var hunter := _room.get_node("SoundHunter")
 	_room.remove_child(hunter)
 	hunter.free()
+	var stand_torch := _room.get_node("StandTorch")
+	_room.remove_child(stand_torch)
+	stand_torch.free()
 	add_child_autofree(_room)
 	_almos = _room.get_node("Almos") as Almos
 	_curtain = _room.get_node("Curtain/Flammable") as Flammable
