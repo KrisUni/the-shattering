@@ -1,0 +1,128 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/areas/test_open_map.gd" id="1_map"]
+[ext_resource type="PackedScene" path="res://scenes/almos/almos.tscn" id="2_almos"]
+[ext_resource type="Script" path="res://scripts/open_map_camera.gd" id="3_camera"]
+[ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="4_stamina_bar"]
+[ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="5_health_bar"]
+[ext_resource type="Script" path="res://scripts/areas/doorway.gd" id="6_doorway"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
+size = Vector2(1152, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_down"]
+size = Vector2(16, 648)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_doorway"]
+size = Vector2(48, 96)
+
+[node name="UpperTreePlaceholder" type="Node2D" node_paths=PackedStringArray("almos")]
+script = ExtResource("1_map")
+area_id = &"upper_tree_placeholder"
+almos = NodePath("Almos")
+bounds = Rect2(0, 0, 1152, 648)
+
+[node name="Floor" type="Polygon2D" parent="."]
+color = Color(0.2, 0.26, 0.2, 1)
+polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
+
+[node name="Title" type="Label" parent="."]
+offset_left = 376.0
+offset_top = 40.0
+offset_right = 776.0
+offset_bottom = 70.0
+theme_override_font_sizes/font_size = 20
+text = "Upper tree (placeholder)"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="WallTop" type="StaticBody2D" parent="Walls"]
+position = Vector2(576, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop"]
+shape = SubResource("RectangleShape2D_wall_across")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallTop"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+
+[node name="WallBottom" type="StaticBody2D" parent="Walls"]
+position = Vector2(576, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom"]
+shape = SubResource("RectangleShape2D_wall_across")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+
+[node name="WallLeft" type="StaticBody2D" parent="Walls"]
+position = Vector2(8, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
+shape = SubResource("RectangleShape2D_wall_down")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallLeft"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+
+[node name="WallRight" type="StaticBody2D" parent="Walls"]
+position = Vector2(1144, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallRight"]
+shape = SubResource("RectangleShape2D_wall_down")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallRight"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+
+[node name="Doorways" type="Node2D" parent="."]
+
+[node name="ToDungeons" type="Area2D" parent="Doorways"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("6_doorway")
+position = Vector2(64, 324)
+destination = "res://scenes/areas/dungeons/dungeons.tscn"
+destination_entrance = &"ToUpperTree"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Doorways/ToDungeons"]
+shape = SubResource("RectangleShape2D_doorway")
+
+[node name="Placeholder" type="Polygon2D" parent="Doorways/ToDungeons"]
+color = Color(0.55, 0.45, 0.25, 1)
+polygon = PackedVector2Array(-24, -48, 24, -48, 24, 48, -24, 48)
+
+[node name="Entrance" type="Marker2D" parent="Doorways/ToDungeons"]
+position = Vector2(56, 0)
+
+[node name="Almos" parent="." instance=ExtResource("2_almos")]
+position = Vector2(576, 324)
+
+[node name="Camera" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
+script = ExtResource("3_camera")
+target = NodePath("../Almos")
+
+[node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="StaminaBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("stamina")]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 216.0
+offset_bottom = 32.0
+show_percentage = false
+script = ExtResource("4_stamina_bar")
+stamina = NodePath("../../Almos/Stamina")
+
+[node name="HealthBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("health")]
+modulate = Color(0.9, 0.35, 0.35, 1)
+offset_left = 16.0
+offset_top = 40.0
+offset_right = 216.0
+offset_bottom = 56.0
+show_percentage = false
+script = ExtResource("5_health_bar")
+health = NodePath("../../Almos/Health")

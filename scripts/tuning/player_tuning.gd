@@ -134,6 +134,9 @@ extends Resource
 ## How close to the centre of a Weapon pickup, in pixels, Almos must be to pick it up.
 @export var pickup_reach: float
 
+## How close to the edge of a Main entrance, in pixels, Almos must be to open it with the Jailer's key.
+@export var door_reach: float
+
 ## How close to the centre of a Hiding spot, in pixels, Almos must be to get into it.
 @export var hide_reach: float
 

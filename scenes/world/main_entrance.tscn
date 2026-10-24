@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/main_entrance.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="Shape_door"]
+size = Vector2(96, 16)
+
+[node name="MainEntrance" type="StaticBody2D" groups=["main_entrances"]]
+script = ExtResource("1_script")
+key = &"dungeons/jailers_key"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Shape_door")
+
+[node name="Placeholder" type="Polygon2D" parent="."]
+color = Color(0.45, 0.3, 0.18, 1)
+polygon = PackedVector2Array(-48, -8, 48, -8, 48, 8, -48, 8)
+
+[node name="Label" type="Label" parent="."]
+offset_left = -80.0
+offset_top = -30.0
+offset_right = 80.0
+offset_bottom = -10.0
+pivot_offset = Vector2(80, 10)
+theme_override_font_sizes/font_size = 12
+text = "Main entrance"
+horizontal_alignment = 1
+vertical_alignment = 1
