@@ -136,6 +136,33 @@ func test_a_death_after_a_rest_keeps_the_sword_and_the_armour_and_the_pickups_st
 	assert_eq(_live_pickups(store, &"armour_pickups").size(), 0, "the Armour does not lie there")
 
 
+func test_a_death_keeps_the_sword_rested_on_and_puts_back_the_armour_taken_after_the_rest() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var store := (host.current_space as DungeonsBuilding).room(&"store_room")
+	host.almos.global_position = (_pickups(store, &"weapon_pickups")[0] as Node2D).global_position + Vector2(BESIDE, 0.0)
+	await _tap(&"interact")
+	await _rest_at_a_checkpoint_in_the_store_room(host)
+	store = (host.current_space as DungeonsBuilding).room(&"store_room")
+	host.almos.global_position = (_pickups(store, &"armour_pickups")[0] as Node2D).global_position + Vector2(BESIDE, 0.0)
+	await _tap(&"interact")
+
+	await _die_and_wait_for_the_return(host)
+
+	assert_eq(host.almos.weapons.in_hand, load(SWORD_PATH), "the Sword in his hand")
+	assert_null(host.almos.armour, "no Armour worn")
+	var rebuilt := (host.current_space as DungeonsBuilding).room(&"store_room")
+	assert_eq(_live_pickups(rebuilt, &"weapon_pickups").size(), 0, "the Sword does not lie there")
+	assert_eq(_live_pickups(rebuilt, &"armour_pickups").size(), 1, "the Armour lies there again")
+
+
+func test_the_store_room_built_when_the_gear_was_not_taken_holds_both_pickups() -> void:
+	var room := _store_room()
+	await wait_physics_frames(2)
+
+	assert_eq(_live_pickups(room, &"weapon_pickups").size() + _live_pickups(room, &"armour_pickups").size(), 2)
+
+
 func _host_in_the_dungeons() -> AreaHost:
 	var view := SubViewport.new()
 	view.size = VIEW_SIZE
