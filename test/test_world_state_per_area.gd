@@ -193,6 +193,17 @@ func test_a_door_burnt_before_a_rest_is_still_open_after_a_death() -> void:
 	assert_true(_door_is_open(host))
 
 
+func test_a_door_burnt_before_two_rests_in_a_row_is_still_open_after_a_death() -> void:
+	var host := _spawn_world()
+	await _burn_the_door(host)
+	await _rest(host)
+	await _rest(host)
+
+	await _die(host)
+
+	assert_true(_door_is_open(host))
+
+
 func test_a_death_before_any_rest_sends_almos_back_to_where_he_started() -> void:
 	var host := _spawn_world()
 	host.almos.global_position = MAP_1_START + Vector2(200, 0)
