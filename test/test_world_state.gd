@@ -140,6 +140,33 @@ func test_a_roll_back_drops_only_what_came_after_the_commit() -> void:
 	assert_false(WorldState.is_burnt(OTHER_ID), "later one is undone")
 
 
+func test_a_second_commit_with_nothing_pending_changes_nothing() -> void:
+	WorldState.record_burnt(BLOCKER_ID)
+	WorldState.record_taken(OTHER_ID)
+	WorldState.commit()
+
+	WorldState.commit()
+
+	assert_true(WorldState.is_burnt(BLOCKER_ID), "burnt stays")
+	assert_true(WorldState.is_taken(OTHER_ID), "taken stays")
+	assert_false(WorldState.is_burnt(OTHER_ID), "nothing else burnt")
+	assert_false(WorldState.is_taken(BLOCKER_ID), "nothing else taken")
+
+
+func test_committing_twice_in_a_row_then_rolling_back_leaves_what_one_commit_left() -> void:
+	WorldState.record_burnt(BLOCKER_ID)
+	WorldState.record_taken(OTHER_ID)
+	WorldState.commit()
+	WorldState.commit()
+
+	WorldState.roll_back()
+
+	assert_true(WorldState.is_burnt(BLOCKER_ID), "burnt stays")
+	assert_true(WorldState.is_taken(OTHER_ID), "taken stays")
+	assert_false(WorldState.is_burnt(OTHER_ID), "nothing else burnt")
+	assert_false(WorldState.is_taken(BLOCKER_ID), "nothing else taken")
+
+
 func test_a_pickup_taken_before_a_commit_stays_taken_through_a_roll_back() -> void:
 	WorldState.record_taken(BLOCKER_ID)
 	WorldState.commit()

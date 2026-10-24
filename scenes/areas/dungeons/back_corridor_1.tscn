@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="3_checkpoint"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -65,3 +66,6 @@ shape = SubResource("Shape_16x648")
 
 [node name="Entrance" type="Marker2D" parent="Exits/back_entrance"]
 position = Vector2(-56, 0)
+
+[node name="Checkpoint" parent="." instance=ExtResource("3_checkpoint")]
+position = Vector2(1080, 324)

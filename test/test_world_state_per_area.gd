@@ -97,14 +97,19 @@ func _go_to_map_1(host: AreaHost) -> void:
 	assert_eq(host.current_space.area_id, MAP_1_ID, "control: Almos should be in map 1")
 
 
-# Almos rests at the Checkpoint of the space he is in.
+# Almos rests at the Checkpoint of the space he is in, and the test asserts that he did, once.
 func _rest(host: AreaHost) -> void:
 	var checkpoint := host.current_space.find_child("Checkpoint", true, false) as Node2D
 	host.almos.global_position = checkpoint.global_position + Vector2.RIGHT * BESIDE_THE_CHECKPOINT
+	var rests: Array[int] = [0]
+	var count := func(_rested_at: Checkpoint) -> void: rests[0] += 1
+	host.almos.rested.connect(count)
 	_almos_input.press_action(&"interact")
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"interact")
 	await wait_physics_frames(TAP_FRAMES + MARGIN_FRAMES)
+	host.almos.rested.disconnect(count)
+	assert_eq(rests[0], 1, "control: Almos should have rested once")
 
 
 # Sets the door of map 1 alight and waits for it to burn out.
@@ -186,6 +191,17 @@ func test_a_door_burnt_since_the_last_rest_is_closed_again_after_a_death() -> vo
 func test_a_door_burnt_before_a_rest_is_still_open_after_a_death() -> void:
 	var host := _spawn_world()
 	await _burn_the_door(host)
+	await _rest(host)
+
+	await _die(host)
+
+	assert_true(_door_is_open(host))
+
+
+func test_a_door_burnt_before_two_rests_in_a_row_is_still_open_after_a_death() -> void:
+	var host := _spawn_world()
+	await _burn_the_door(host)
+	await _rest(host)
 	await _rest(host)
 
 	await _die(host)
