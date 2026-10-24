@@ -1,0 +1,142 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
+[ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+
+[sub_resource type="RectangleShape2D" id="Shape_16x648"]
+size = Vector2(16, 648)
+
+[sub_resource type="RectangleShape2D" id="Shape_96x16"]
+size = Vector2(96, 16)
+
+[sub_resource type="RectangleShape2D" id="Shape_240x16"]
+size = Vector2(240, 16)
+
+[sub_resource type="RectangleShape2D" id="Shape_480x16"]
+size = Vector2(480, 16)
+
+[sub_resource type="RectangleShape2D" id="Shape_528x16"]
+size = Vector2(528, 16)
+
+[node name="Corridor4" type="Node2D"]
+script = ExtResource("1_room")
+
+[node name="Floor" type="Polygon2D" parent="."]
+color = Color(0.16, 0.2, 0.16, 1)
+polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="WallTop1" type="StaticBody2D" parent="Walls"]
+position = Vector2(120, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop1"]
+shape = SubResource("Shape_240x16")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallTop1"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-120.0, -8.0, 120.0, -8.0, 120.0, 8.0, -120.0, 8.0)
+
+[node name="WallTop2" type="StaticBody2D" parent="Walls"]
+position = Vector2(576, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop2"]
+shape = SubResource("Shape_480x16")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallTop2"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-240.0, -8.0, 240.0, -8.0, 240.0, 8.0, -240.0, 8.0)
+
+[node name="WallTop3" type="StaticBody2D" parent="Walls"]
+position = Vector2(1032, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop3"]
+shape = SubResource("Shape_240x16")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallTop3"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-120.0, -8.0, 120.0, -8.0, 120.0, 8.0, -120.0, 8.0)
+
+[node name="WallBottom1" type="StaticBody2D" parent="Walls"]
+position = Vector2(264, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom1"]
+shape = SubResource("Shape_528x16")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom1"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
+
+[node name="WallBottom2" type="StaticBody2D" parent="Walls"]
+position = Vector2(888, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom2"]
+shape = SubResource("Shape_528x16")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom2"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
+
+[node name="WallRight" type="StaticBody2D" parent="Walls"]
+position = Vector2(1144, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallRight"]
+shape = SubResource("Shape_16x648")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallRight"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8.0, -324.0, 8.0, -324.0, 8.0, 324.0, -8.0, 324.0)
+
+[node name="Exits" type="Node2D" parent="."]
+
+[node name="west" type="Area2D" parent="Exits"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("2_exit")
+position = Vector2(8, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/west"]
+shape = SubResource("Shape_16x648")
+
+[node name="Entrance" type="Marker2D" parent="Exits/west"]
+position = Vector2(56, 0)
+
+[node name="to_chiefs_office" type="Area2D" parent="Exits"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("2_exit")
+position = Vector2(288, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/to_chiefs_office"]
+shape = SubResource("Shape_96x16")
+
+[node name="Entrance" type="Marker2D" parent="Exits/to_chiefs_office"]
+position = Vector2(0, 56)
+
+[node name="to_officers" type="Area2D" parent="Exits"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("2_exit")
+position = Vector2(864, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/to_officers"]
+shape = SubResource("Shape_96x16")
+
+[node name="Entrance" type="Marker2D" parent="Exits/to_officers"]
+position = Vector2(0, 56)
+
+[node name="to_reception" type="Area2D" parent="Exits"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("2_exit")
+position = Vector2(576, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/to_reception"]
+shape = SubResource("Shape_96x16")
+
+[node name="Entrance" type="Marker2D" parent="Exits/to_reception"]
+position = Vector2(0, -56)
