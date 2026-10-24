@@ -2,8 +2,10 @@ extends GutTest
 ## What comes back after Fire, in the test room with the real Almos, the real enemies and the shipped
 ## numbers, driven through the Interact and move actions: at a rest, a burnt barrel and a burnt
 ## patch of fungus are whole again and the barrel can be hidden in; a burnt door or burnt roots stay
-## open and can be walked through; the same holds when the return is a Death; a door or an enemy's
-## curtain still burning at the rest is dealt with at once, the door open, the curtain out and whole.
+## open and can be walked through; when the return is a Death, a barrel or fungus is whole again and
+## a door or roots burnt since the last rest are closed again, while those burnt before a rest stay
+## open; a door or an enemy's curtain still burning at the rest is dealt with at once, the door open,
+## the curtain out and whole.
 ## Distances and waits are worked from the data files, so nothing here pins a number in them. Each
 ## test resets WorldState first and last.
 
@@ -200,15 +202,65 @@ func test_a_burnt_path_blocker_stays_open_after_a_rest(blocker = use_parameters(
 	assert_true(passed, "and passable")
 
 
-func test_a_burnt_path_blocker_stays_open_after_a_death_and_return(blocker = use_parameters(blocker_params)) -> void:
+func test_a_burnt_path_blocker_is_closed_again_after_a_death_and_return_with_no_rest_between(blocker = use_parameters(blocker_params)) -> void:
 	_set_up_room()
 	await _burn_out(_flammable(blocker))
+
+	await _die_and_return()
+
+	assert_false((_room.get_node(blocker) as PathBlocker).open, "closed")
+	var passed := await _walk_through(blocker)
+	assert_false(passed, "and blocks")
+
+
+func test_a_burnt_path_blocker_closed_again_by_a_death_can_burn_again(blocker = use_parameters(blocker_params)) -> void:
+	_set_up_room()
+	await _burn_out(_flammable(blocker))
+	await _die_and_return()
+
+	await _burn_out(_flammable(blocker))
+
+	assert_true((_room.get_node(blocker) as PathBlocker).open, "open")
+	assert_true(WorldState.is_burnt((_room.get_node(blocker) as PathBlocker).id), "and noted")
+
+
+func test_a_burnt_path_blocker_stays_open_after_a_rest_and_then_a_death(blocker = use_parameters(blocker_params)) -> void:
+	_set_up_room()
+	await _burn_out(_flammable(blocker))
+	await _rest()
 
 	await _die_and_return()
 
 	assert_true((_room.get_node(blocker) as PathBlocker).open, "open")
 	var passed := await _walk_through(blocker)
 	assert_true(passed, "and passable")
+
+
+func test_only_the_path_blocker_burnt_since_the_last_rest_is_closed_by_a_death() -> void:
+	_set_up_room()
+	await _burn_out(_flammable("Door"))
+	await _rest()
+	await _burn_out(_flammable("Roots"))
+
+	await _die_and_return()
+
+	assert_true((_room.get_node("Door") as PathBlocker).open, "the Door, burnt before the rest, is open")
+	assert_false((_room.get_node("Roots") as PathBlocker).open, "the Roots, burnt after it, are closed")
+
+
+func test_a_path_blocker_still_burning_at_a_death_is_closed_and_whole_after_the_return(blocker = use_parameters(blocker_params)) -> void:
+	_set_up_room()
+	var flammable := _flammable(blocker)
+	flammable.ignite()
+	await wait_physics_frames(MARGIN_FRAMES)
+	assert_true(flammable.burning, "control: it burns at the Death")
+
+	await _die_and_return()
+
+	assert_false(flammable.burning, "out")
+	assert_false((_room.get_node(blocker) as PathBlocker).open, "closed")
+	var passed := await _walk_through(blocker)
+	assert_false(passed, "and blocks")
 
 
 func test_a_path_blocker_still_burning_at_a_rest_is_open_after_it(blocker = use_parameters(blocker_params)) -> void:
