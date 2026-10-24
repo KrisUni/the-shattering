@@ -23,6 +23,9 @@ const BREAK_TINT := Color(0.4, 0.6, 1.0)
 # What a Sound hunter is tinted at rest, so that it can be told from the others. A look.
 const SOUND_HUNTER_TINT := Color(0.6, 1.0, 0.6)
 
+# What a Nar jailer is tinted at rest, so that it can be told from the others. A look.
+const JAILER_TINT := Color(0.85, 0.7, 0.55)
+
 # The collision layers a slide is shaped by: the walls it slams into (the first), and the edge of a
 # Gap (the fourth), which does not block it, and the area inside a Gap (the sixth), which kills it.
 const WALL_LAYER := 1
@@ -203,6 +206,12 @@ var _drag_start_frame := -1
 var _following := false
 var _follow_place := Vector2.ZERO
 var _follow_arrived := false
+# How many hits from its front it has taken in a row since its last Parry or Break, while it
+# guards.
+var _front_hits := 0
+# Whether the hit that is landing was Blocked, which the Hurtbox tells it only in passing, as it
+# takes the damage off, so that it is known when the hit's landing is announced.
+var _hit_was_blocked := false
 
 
 func _enter_tree() -> void:
@@ -227,7 +236,10 @@ func _ready() -> void:
 	_low_hitbox.parried.connect(_on_parried)
 	_unblockable_hitbox.parried.connect(_on_parried)
 	_hurtbox.landed.connect(_on_hit_landed)
-	_hurtbox.landed_damage_only.connect(_notice_the_hit)
+	_hurtbox.landed_damage_only.connect(_on_damage_only_hit_landed)
+	if tuning.guards:
+		_hurtbox.is_parried = _parries
+		_hurtbox.damage_through = _damage_through_the_block
 	stagger.changed.connect(_show_stagger)
 	_facing = post_facing.normalized()
 	_post = global_position
@@ -558,7 +570,14 @@ func _show_look() -> void:
 	elif winding_up:
 		modulate = _wind_up_tint()
 	else:
-		modulate = SOUND_HUNTER_TINT if tuning.sound_hunter else Color.WHITE
+		modulate = _resting_tint()
+
+
+# Its tint at rest: a Sound hunter's, a Nar jailer's, or none.
+func _resting_tint() -> Color:
+	if tuning.sound_hunter:
+		return SOUND_HUNTER_TINT
+	return JAILER_TINT if tuning.guards else Color.WHITE
 
 
 # The tint of the wind-up of the attack it is making: an Unblockable attack's flashes white
@@ -582,6 +601,8 @@ func _notice_the_hit(_from := Vector2.ZERO) -> void:
 # A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other
 # builds what the attack builds, and more if the hit came from behind, unless it is broken.
 func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
+	var blocked := _hit_was_blocked
+	_hit_was_blocked = false
 	_notice_the_hit()
 	if critical:
 		_broken = false
@@ -590,7 +611,43 @@ func _on_hit_landed(hit_stagger: float, from: Vector2, critical: bool) -> void:
 	var built := hit_stagger
 	if not FrontArc.covers(from, global_position, _facing, tuning.front_arc_degrees):
 		built += tuning.behind_stagger
+	if blocked:
+		built += tuning.block_stagger
 	_build_stagger(built)
+
+
+# A hit that builds no Stagger landed, such as a fireball. Blocking it builds none either.
+func _on_damage_only_hit_landed(from: Vector2) -> void:
+	_hit_was_blocked = false
+	_notice_the_hit(from)
+
+
+# Whether it guards against a hit from this point: it guards, it is free, and the hit comes from
+# its front, which is the front a hit builds no extra Stagger from.
+func _guards_against(from: Vector2) -> bool:
+	if not tuning.guards or attacking or _broken or _dead:
+		return false
+	return FrontArc.covers(from, global_position, _facing, tuning.front_arc_degrees)
+
+
+# Whether a hit from this point is Parried: every parry_every'th hit it guards against in a row. A
+# Parried hit still makes it notice the target. Asked once for each hit that does not miss.
+func _parries(from: Vector2) -> bool:
+	if not _guards_against(from):
+		return false
+	_front_hits += 1
+	if _front_hits < tuning.parry_every:
+		return false
+	_front_hits = 0
+	_notice_the_hit()
+	return true
+
+
+# How much of a hit's damage gets through: a hit it guards against is Blocked and deals only the
+# share. Asked once for each hit that is not Parried and does not miss.
+func _damage_through_the_block(damage: float, from: Vector2) -> float:
+	_hit_was_blocked = _guards_against(from)
+	return damage * tuning.block_damage_share if _hit_was_blocked else damage
 
 
 # One of its attacks was parried: its Stagger builds what that Parry builds.
@@ -612,6 +669,7 @@ func _build_stagger(amount: float) -> void:
 func _begin_break() -> void:
 	_broken = true
 	_break_end_frame = Engine.get_physics_frames() + tuning.break_frames
+	_front_hits = 0
 	_frame = -1
 	_set_strike(false)
 	stagger.reset()

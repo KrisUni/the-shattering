@@ -108,6 +108,24 @@ enum AttackKind {
 ## How much Stagger a hit from behind builds on top of what the attack builds itself.
 @export var behind_stagger: float
 
+## Whether it guards: a Nar jailer does. While it is free, which it is not in an attack, in a
+## Break or dead, it Blocks every hit from its front, and Parries every parry_every'th of them
+## in a row. A hit from behind is neither Blocked nor Parried. An enemy that does not guard
+## takes every hit as it lands.
+@export var guards := false
+
+## How much of a Blocked hit's damage gets through, as a share of it from 0 to 1.
+@export var block_damage_share: float
+
+## How much Stagger a Blocked hit builds on top of what the hit builds itself, so that even a
+## hit that builds none fills the meter in the end: its Guard break is the Break.
+@export var block_stagger: float
+
+## How many hits from its front, in a row, make the last of them a Parry. Hits from behind do not
+## count, nor do hits that find it busy, and a Break starts the count again. A Parried hit is
+## negated: it takes no Health and builds no Stagger.
+@export var parry_every: int
+
 
 ## How far its Sight reaches when Almos stands in this much light (0 to 1).
 func sight_length_at(light: float) -> float:

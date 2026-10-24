@@ -94,6 +94,11 @@ extends Resource
 ## Roll, attack, Block or Parry, with every hit landing in full.
 @export var parry_recovery_frames: int
 
+## How many physics frames Almos recoils for when a Nar jailer Parries his attack: he stands
+## still and can neither attack, Roll, Block, Parry, Jump, cast a Spell nor Interact, and a press
+## of any of those buttons is lost. Hits on him land in full.
+@export var parried_recoil_frames: int
+
 ## How much Stagger each Parry builds on the attacker whose hit it parries. It is Almos's
 ## number, not the Weapon's.
 @export var parry_stagger: float

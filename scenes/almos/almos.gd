@@ -141,6 +141,14 @@ var guard_broken: bool:
 	get:
 		return _block.guard_broken
 
+## Whether he recoils: a Nar jailer Parried his attack, and for parried_recoil_frames he is left
+## open. He stands still, and can neither attack, Roll, Block, Parry, Jump, cast a Spell nor
+## Interact, and a press of any of those buttons is lost; his Lock-on works as usual. Hits on him
+## land in full. He is free again from the frame after the last of it.
+var recoiling: bool:
+	get:
+		return _recoil_left > 0
+
 ## Whether a Parry is under way: its window or its recovery. He stands still, and can neither
 ## Roll, attack, Block nor Parry again; his Lock-on works as usual. He is free again from the
 ## frame after the last recovery frame, or after a hit was parried.
@@ -241,6 +249,8 @@ var untouchable: bool:
 @onready var _placeholder: Polygon2D = $Placeholder
 
 var _state := State.WALKING
+# For how many more physics frames he recoils from a Parried attack.
+var _recoil_left := 0
 var _dead := false
 var _dead_for := 0.0
 var _pause_announced := false
@@ -322,6 +332,8 @@ func _ready() -> void:
 	_tend_the_carried_torch()
 	# The Critical hit turns him to the enemy it is made at.
 	_attacks.critical_began.connect(_face)
+	# An attack a Nar jailer Parries is over at once, and leaves him recoiling.
+	_attacks.hitbox.parried.connect(_on_attack_parried)
 	# A switch pressed in a swing, or in the frame its recovery ends, is made in that frame, before
 	# the attack kept for it begins, which is then made with the new Weapon.
 	_attacks.kept_press_beginning.connect(_make_the_waiting_switch)
@@ -351,7 +363,11 @@ func _physics_process(delta: float) -> void:
 		return
 	# A Guard break that runs out in this frame is still spent open, though the block clears it
 	# before the frame is over. So it is read once, here, for everything below.
-	var left_open := _block.guard_broken
+	var left_recoiling := _recoil_left > 0
+	if left_recoiling:
+		_recoil_left -= 1
+	# A recoil is spent open in just the same way, and is counted from the frame after the Parry.
+	var left_open := _block.guard_broken or left_recoiling
 	# Likewise a Parry whose last recovery frame this is is still spent standing open.
 	var left_parrying := _parry.parrying
 	_casting = spell.winding_up
@@ -437,7 +453,7 @@ func _physics_process(delta: float) -> void:
 	# He is free to block unless he is in a Roll, an attack or a Parry, which have begun by now
 	# if they were going to this frame, or sprinting, which is as the last frame left it, or in
 	# the air.
-	_block.advance(not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne and not _casting and not _sipping and not spell.holding, delta)
+	_block.advance(not left_recoiling and not rolling and not _attacks.committed and not parry_on and not sprinting and not airborne and not _casting and not _sipping and not spell.holding, delta)
 	# Set every frame, ahead of Stamina's own processing in this frame, so that it never lags.
 	stamina.refill_factor = tuning.block_stamina_refill_factor if blocking else 1.0
 	if airborne:
@@ -502,8 +518,14 @@ func return_to(point: Vector2) -> void:
 	returned.emit()
 
 
+# The attack he made was Parried: it is over at once, with the sword off, and he recoils.
+func _on_attack_parried(_hurtbox: Hurtbox) -> void:
+	_attacks.reset()
+	_recoil_left = tuning.parried_recoil_frames
+
+
 # Ends whatever he is in, at once, and leaves him still: a Hiding spot, a Roll and the Roll kept for its end,
-# a Sprint, a swing, a charge, a Jump, a Block, a Guard break, a Parry and the Lock-on, along with
+# a Sprint, a swing, a charge, a Jump, a Block, a Guard break, a recoil, a Parry and the Lock-on, along with
 # what each of them showed. The Roll button is forgotten, so that a hold begun before does not
 # count after, and so are an Interact press being timed and a switch kept for the end of a swing.
 # What he carries is left as it is.
@@ -519,6 +541,7 @@ func _end_every_action() -> void:
 	if _hiding:
 		_hiding = false
 		_placeholder.modulate = Color.WHITE
+	_recoil_left = 0
 	_attacks.reset()
 	_block.reset()
 	_parry.reset()
