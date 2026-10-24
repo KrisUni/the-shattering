@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/jailers_key.gd" id="1_script"]
+
+[node name="JailersKey" type="Node2D" groups=["key_pickups"]]
+script = ExtResource("1_script")
+
+[node name="Bar" type="Polygon2D" parent="."]
+color = Color(0.85, 0.7, 0.25, 1)
+polygon = PackedVector2Array(-8, -3, 8, -3, 8, 3, -8, 3)

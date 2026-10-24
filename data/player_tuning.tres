@@ -39,6 +39,7 @@ rest_reach = 40.0
 rest_flash_duration = 0.4
 drop_hold_time = 0.5
 pickup_reach = 32.0
+door_reach = 24.0
 hide_reach = 40.0
 death_pause = 2.0
 noise_sprint_radius = 160.0

@@ -2,13 +2,17 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
-[ext_resource type="PackedScene" path="res://scenes/world/placeholder_door.tscn" id="3_door"]
+[ext_resource type="PackedScene" path="res://scenes/world/main_entrance.tscn" id="3_door"]
 [ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="4_checkpoint"]
+[ext_resource type="Script" path="res://scripts/areas/doorway.gd" id="5_doorway"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
 
 [sub_resource type="RectangleShape2D" id="Shape_96x16"]
+size = Vector2(96, 16)
+
+[sub_resource type="RectangleShape2D" id="Shape_doorway"]
 size = Vector2(96, 16)
 
 [sub_resource type="RectangleShape2D" id="Shape_528x16"]
@@ -86,9 +90,6 @@ polygon = PackedVector2Array(-8.0, -324.0, 8.0, -324.0, 8.0, 324.0, -8.0, 324.0)
 [node name="MainEntrance" parent="." instance=ExtResource("3_door")]
 position = Vector2(576, 640)
 
-[node name="Label" parent="MainEntrance" index="2"]
-text = "Main entrance"
-
 [node name="Exits" type="Node2D" parent="."]
 
 [node name="to_reception" type="Area2D" parent="Exits"]
@@ -106,3 +107,24 @@ position = Vector2(0, 56)
 
 [node name="Checkpoint" parent="." instance=ExtResource("4_checkpoint")]
 position = Vector2(576, 324)
+
+[node name="Doorways" type="Node2D" parent="."]
+
+[node name="ToUpperTree" type="Area2D" parent="Doorways"]
+collision_layer = 0
+collision_mask = 256
+monitorable = false
+script = ExtResource("5_doorway")
+position = Vector2(576, 664)
+destination = "res://scenes/areas/upper_tree_placeholder.tscn"
+destination_entrance = &"ToDungeons"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Doorways/ToUpperTree"]
+shape = SubResource("Shape_doorway")
+
+[node name="Placeholder" type="Polygon2D" parent="Doorways/ToUpperTree"]
+color = Color(0.55, 0.45, 0.25, 1)
+polygon = PackedVector2Array(-48, -8, 48, -8, 48, 8, -48, 8)
+
+[node name="Entrance" type="Marker2D" parent="Doorways/ToUpperTree"]
+position = Vector2(0, -56)

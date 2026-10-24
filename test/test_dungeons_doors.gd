@@ -1,7 +1,8 @@
 extends GutTest
 ## The two ways out of the Dungeons, the Main entrance in the Lobby and the door at the end of the
-## Back entrance route in the Cave, are placeholder doors that do nothing: solid and labelled, and
-## walking into one leaves Almos in the Room he was in.
+## Back entrance route in the Cave. Without the Jailer's key the Main entrance is a solid, labelled
+## door that does nothing; the Cave's door is a placeholder that does nothing. Walking into either
+## leaves Almos in the Room he was in.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 

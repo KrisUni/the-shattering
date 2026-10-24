@@ -51,11 +51,11 @@ A guarded Room deep in the Dungeons, off the direct route out, where Almos's con
 _Avoid_: Armoury, evidence room, stash
 
 **Main entrance**:
-The Dungeons' visible exit, a guarded door that leads out to the Upper tree. It stays locked until Almos takes the Jailer's key.
+The Dungeons' visible exit, a guarded door that leads out to the Upper tree. It stays locked until Almos takes the Jailer's key. It opens with a tap of Interact beside it while Almos has the key, and a tap without the key does nothing. The opening is not kept: whenever the Lobby is built the door stands shut, so after a Death a tap opens it again.
 _Avoid_: Front door, gate
 
 **Jailer's key**:
-The key to the Main entrance, carried by one Nar jailer. The jailer is a named enemy: Almos takes the key by killing him, he stays dead, and the key is kept even through a Death. It opens the Main entrance and nothing else.
+The key to the Main entrance, carried by one Nar jailer. The jailer is a named enemy: Almos takes the key by killing him, he stays dead, and the key is kept even through a Death. He drops it where he falls and Almos takes it with a tap of Interact. It opens the Main entrance and nothing else.
 _Avoid_: Gate key, keycard
 
 **Back entrance**:
@@ -161,7 +161,7 @@ The marker left where the player died, holding all the Experience not yet cashed
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Checkpoint, a Hiding spot and a Weapon or Armour are all in reach, the tap rests at the Checkpoint before it hides in the Hiding spot, and hides before it picks the Weapon or Armour up. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting saves the changes the player made to the world since the last rest, such as burnt openings and taken pickups; a Death undoes those not yet saved, and Weapons and Armour picked up since the last rest go back to where they lay (only the Jailer's key is kept). Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Checkpoint, a Hiding spot and a Weapon or Armour are all in reach, the tap rests at the Checkpoint before it hides in the Hiding spot, and hides before it picks the Weapon or Armour up, which it does before it takes the Jailer's key, and that before it opens the Main entrance. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting saves the changes the player made to the world since the last rest, such as burnt openings and taken pickups; a Death undoes those not yet saved, and Weapons and Armour picked up since the last rest go back to where they lay (only the Jailer's key is kept). Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
 _Avoid_: Bonfire, save point, shrine
 
 **Death**:
