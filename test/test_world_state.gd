@@ -9,6 +9,10 @@ const BLOCKER_ID := &"a_blocker"
 const OTHER_ID := &"another_blocker"
 const AREA := &"the_first_area"
 const OTHER_AREA := &"the_second_area"
+const ENEMY_ID := &"a_named_enemy"
+# In Experience, and in pixels. What some Remains hold, and where they lie.
+const REMAINS_AMOUNT := 137
+const REMAINS_PLACE := Vector2(300.0, 200.0)
 # In pixels. Where the blocker is put, and how big.
 const BLOCKER_SIZE := Vector2(16.0, 80.0)
 
@@ -239,3 +243,74 @@ func test_a_reset_returns_to_the_default_area() -> void:
 	WorldState.reset()
 
 	assert_eq(WorldState.current_area, &"")
+
+
+func test_there_are_no_remains_until_some_are_set() -> void:
+	assert_true(WorldState.remains().is_empty())
+
+
+func test_set_remains_are_reported_with_their_area_amount_and_place() -> void:
+	WorldState.set_remains(AREA, REMAINS_AMOUNT, REMAINS_PLACE)
+
+	var remains := WorldState.remains()
+
+	assert_eq(remains, {"area_id": AREA, "amount": REMAINS_AMOUNT, "place": REMAINS_PLACE})
+
+
+func test_new_remains_replace_the_old_even_in_another_area() -> void:
+	WorldState.set_remains(AREA, REMAINS_AMOUNT, REMAINS_PLACE)
+
+	WorldState.set_remains(OTHER_AREA, REMAINS_AMOUNT + 1, REMAINS_PLACE + Vector2.ONE)
+
+	assert_eq(WorldState.remains()["area_id"], OTHER_AREA)
+
+
+func test_remains_of_nothing_clear_the_old() -> void:
+	WorldState.set_remains(AREA, REMAINS_AMOUNT, REMAINS_PLACE)
+
+	WorldState.set_remains(OTHER_AREA, 0, REMAINS_PLACE)
+
+	assert_true(WorldState.remains().is_empty())
+
+
+func test_remains_survive_a_commit_and_a_roll_back() -> void:
+	WorldState.set_remains(AREA, REMAINS_AMOUNT, REMAINS_PLACE)
+
+	WorldState.commit()
+	WorldState.roll_back()
+
+	assert_eq(WorldState.remains()["amount"], REMAINS_AMOUNT)
+
+
+func test_a_reset_forgets_the_remains() -> void:
+	WorldState.set_remains(AREA, REMAINS_AMOUNT, REMAINS_PLACE)
+
+	WorldState.reset()
+
+	assert_true(WorldState.remains().is_empty())
+
+
+func test_a_named_enemy_is_not_defeated_until_it_is_recorded() -> void:
+	assert_false(WorldState.is_defeated(ENEMY_ID))
+
+
+func test_a_recorded_named_enemy_is_defeated_through_a_roll_back() -> void:
+	WorldState.record_defeated(ENEMY_ID)
+
+	WorldState.roll_back()
+
+	assert_true(WorldState.is_defeated(ENEMY_ID))
+
+
+func test_recording_one_named_enemy_does_not_defeat_another() -> void:
+	WorldState.record_defeated(ENEMY_ID)
+
+	assert_false(WorldState.is_defeated(&"another_enemy"))
+
+
+func test_a_reset_forgets_the_defeated_named_enemies() -> void:
+	WorldState.record_defeated(ENEMY_ID)
+
+	WorldState.reset()
+
+	assert_false(WorldState.is_defeated(ENEMY_ID))

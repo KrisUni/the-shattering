@@ -64,6 +64,11 @@ signal unblockable_cue_played
 ## new, and a named enemy stays dead.
 @export var named := false
 
+## What a named enemy is called in WorldState, stable across builds of the area. It records itself
+## as defeated under this name when it dies, and an area that is built with the name recorded has
+## no such enemy. Each named enemy needs its own; an ordinary enemy has none.
+@export var id: StringName
+
 ## The way it faces at its post, a unit vector, until it notices Almos. Its Sight points this way.
 ## It faces this way again once it is back at its post.
 @export var post_facing := Vector2.DOWN:
@@ -632,5 +637,7 @@ func _on_depleted() -> void:
 # land in that frame has landed. Its Hitbox is off by the time it announces its death.
 func _finish_dying() -> void:
 	_set_strike(false)
+	if named and id != &"":
+		WorldState.record_defeated(id)
 	died.emit()
 	queue_free()

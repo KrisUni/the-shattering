@@ -135,3 +135,14 @@ func _on_arrived(arrival: Doorway) -> void:
 	current_room = node as Room
 	_camera.global_position = current_room.get_view_center()
 	room_changed.emit(current_room)
+
+
+## Almos has been put at a place: the Room that has it is the one he is in, which the camera is then
+## fixed to. A place outside every Room leaves the Room he was in.
+func _on_placed() -> void:
+	for child in get_children():
+		var room := child as Room
+		if room != null and room.get_rect().has_point(almos.global_position):
+			current_room = room
+	_camera.global_position = current_room.get_view_center()
+	room_changed.emit(current_room)

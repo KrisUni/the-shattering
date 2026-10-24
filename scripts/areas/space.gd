@@ -23,6 +23,10 @@ func doorway(doorway_name: StringName) -> Doorway:
 func adopt_almos(live: Almos) -> void:
 	if live == almos:
 		return
+	# The enemies that went after the space's own Almos go after the live one.
+	for node in find_children("*", "", true, false):
+		if node.is_in_group(&"enemies") and node.get(&"target") == almos:
+			node.set(&"target", live)
 	var parent := almos.get_parent()
 	var index := almos.get_index()
 	parent.remove_child(almos)
@@ -44,6 +48,20 @@ func adopt_almos(live: Almos) -> void:
 func arrive_at(arrival: Doorway) -> void:
 	almos.global_position = arrival.entrance.global_position
 	_on_arrived(arrival)
+
+
+## Puts Almos at this place, in global coordinates, and the camera on him, as he is when he has been
+## sent back to a Checkpoint or is where he was in a space made again. The space is in the tree.
+func put_almos_at(point: Vector2) -> void:
+	almos.global_position = point
+	_on_placed()
+
+
+## Called when Almos has been put at a place, once he is there: what the space does to show him
+## there. An Open map's camera is put on him.
+func _on_placed() -> void:
+	for camera: OpenMapCamera in find_children("*", "OpenMapCamera", true, false):
+		camera.snap_to_target()
 
 
 ## Called when Almos has arrived at a Doorway, once he is in place: what the space does to show

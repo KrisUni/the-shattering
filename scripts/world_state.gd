@@ -7,6 +7,8 @@ extends Node
 ## since (roll_back). What is asked about the current area is answered from what is saved and what is
 ## pending. A path blocker records itself when it catches Fire, and starts open when the room is built
 ## if its id is recorded.
+## Two things are saved at once and never rolled back: the one set of Remains, wherever it lies, and
+## the named enemies that have been defeated.
 
 ## The area that is asked about and recorded into: the area id of the Space Almos is in.
 var current_area: StringName = &""
@@ -16,6 +18,10 @@ var _saved_burnt: Dictionary = {}
 var _saved_taken: Dictionary = {}
 var _pending_burnt: Dictionary = {}
 var _pending_taken: Dictionary = {}
+# The one set of Remains: the area id, the amount and the place. Empty when there are none.
+var _remains: Dictionary = {}
+# The ids of the named enemies that have been defeated.
+var _defeated: Dictionary = {}
 
 
 ## Notes that the path blocker with this id has burnt, in the current area. It is pending until the
@@ -46,6 +52,32 @@ func is_taken(id: StringName) -> bool:
 	return _ids(_saved_taken).has(id) or _ids(_pending_taken).has(id)
 
 
+## Leaves Remains holding this much Experience at this place (in global coordinates) in this area, in
+## place of any set, wherever it lay. No Experience leaves none. It is saved at once.
+func set_remains(area_id: StringName, amount: int, place: Vector2) -> void:
+	if amount <= 0:
+		_remains = {}
+		return
+	_remains = {"area_id": area_id, "amount": amount, "place": place}
+
+
+## The Remains there are, as a dictionary of "area_id", "amount" and "place", or an empty one if
+## there are none.
+func remains() -> Dictionary:
+	return _remains.duplicate()
+
+
+## Notes that the named enemy with this id has been defeated. It is saved at once: a Death does not
+## bring it back.
+func record_defeated(id: StringName) -> void:
+	_defeated[id] = true
+
+
+## Whether the named enemy with this id has been defeated.
+func is_defeated(id: StringName) -> bool:
+	return _defeated.has(id)
+
+
 ## Saves every pending change, in every area. Almos has rested at a Checkpoint.
 func commit() -> void:
 	for area in _pending_burnt:
@@ -69,6 +101,8 @@ func reset() -> void:
 	_saved_taken.clear()
 	_pending_burnt.clear()
 	_pending_taken.clear()
+	_remains = {}
+	_defeated.clear()
 	current_area = &""
 
 

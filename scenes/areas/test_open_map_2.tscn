@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="4_stamina_bar"]
 [ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="5_health_bar"]
 [ext_resource type="Script" path="res://scripts/areas/doorway.gd" id="6_doorway"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="7_enemy"]
+[ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="8_checkpoint"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
 size = Vector2(1728, 16)
@@ -91,6 +93,19 @@ position = Vector2(56, 0)
 
 [node name="Almos" parent="." instance=ExtResource("2_almos")]
 position = Vector2(1152, 648)
+
+[node name="Checkpoint" parent="." instance=ExtResource("8_checkpoint")]
+position = Vector2(1000, 486)
+
+[node name="Guard" parent="." node_paths=PackedStringArray("target") instance=ExtResource("7_enemy")]
+position = Vector2(900, 300)
+target = NodePath("../Almos")
+named = true
+id = &"test_open_map_2_guard"
+
+[node name="Sentry" parent="." node_paths=PackedStringArray("target") instance=ExtResource("7_enemy")]
+position = Vector2(1100, 700)
+target = NodePath("../Almos")
 
 [node name="Camera" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
 script = ExtResource("3_camera")
