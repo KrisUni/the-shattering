@@ -2,9 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/placeholder_door.tscn" id="3_door"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
+
+[sub_resource type="RectangleShape2D" id="Shape_16x276"]
+size = Vector2(16, 276)
 
 [sub_resource type="RectangleShape2D" id="Shape_1152x16"]
 size = Vector2(1152, 16)
@@ -38,15 +42,33 @@ shape = SubResource("Shape_1152x16")
 color = Color(0.35, 0.33, 0.42, 1)
 polygon = PackedVector2Array(-576.0, -8.0, 576.0, -8.0, 576.0, 8.0, -576.0, 8.0)
 
-[node name="WallLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(8, 324)
+[node name="WallLeft1" type="StaticBody2D" parent="Walls"]
+position = Vector2(8, 138)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
-shape = SubResource("Shape_16x648")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft1"]
+shape = SubResource("Shape_16x276")
 
-[node name="Placeholder" type="Polygon2D" parent="Walls/WallLeft"]
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallLeft1"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-8.0, -324.0, 8.0, -324.0, 8.0, 324.0, -8.0, 324.0)
+polygon = PackedVector2Array(-8.0, -138.0, 8.0, -138.0, 8.0, 138.0, -8.0, 138.0)
+
+[node name="WallLeft2" type="StaticBody2D" parent="Walls"]
+position = Vector2(8, 510)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft2"]
+shape = SubResource("Shape_16x276")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallLeft2"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-8.0, -138.0, 8.0, -138.0, 8.0, 138.0, -8.0, 138.0)
+
+[node name="ToCatacombs" parent="." instance=ExtResource("3_door")]
+position = Vector2(8, 324)
+rotation = 1.5707964
+
+[node name="Label" parent="ToCatacombs" index="2"]
+rotation = -1.5707964
+text = "To the Catacombs"
 
 [node name="Exits" type="Node2D" parent="."]
 

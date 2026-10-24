@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/placeholder_door.tscn" id="3_door"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -11,9 +12,6 @@ size = Vector2(96, 16)
 
 [sub_resource type="RectangleShape2D" id="Shape_528x16"]
 size = Vector2(528, 16)
-
-[sub_resource type="RectangleShape2D" id="Shape_1152x16"]
-size = Vector2(1152, 16)
 
 [node name="Lobby" type="Node2D"]
 script = ExtResource("1_room")
@@ -44,15 +42,25 @@ shape = SubResource("Shape_528x16")
 color = Color(0.35, 0.33, 0.42, 1)
 polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
 
-[node name="WallBottom" type="StaticBody2D" parent="Walls"]
-position = Vector2(576, 640)
+[node name="WallBottom1" type="StaticBody2D" parent="Walls"]
+position = Vector2(264, 640)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom"]
-shape = SubResource("Shape_1152x16")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom1"]
+shape = SubResource("Shape_528x16")
 
-[node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom"]
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom1"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-576.0, -8.0, 576.0, -8.0, 576.0, 8.0, -576.0, 8.0)
+polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
+
+[node name="WallBottom2" type="StaticBody2D" parent="Walls"]
+position = Vector2(888, 640)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom2"]
+shape = SubResource("Shape_528x16")
+
+[node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom2"]
+color = Color(0.35, 0.33, 0.42, 1)
+polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
 
 [node name="WallLeft" type="StaticBody2D" parent="Walls"]
 position = Vector2(8, 324)
@@ -73,6 +81,12 @@ shape = SubResource("Shape_16x648")
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallRight"]
 color = Color(0.35, 0.33, 0.42, 1)
 polygon = PackedVector2Array(-8.0, -324.0, 8.0, -324.0, 8.0, 324.0, -8.0, 324.0)
+
+[node name="MainEntrance" parent="." instance=ExtResource("3_door")]
+position = Vector2(576, 640)
+
+[node name="Label" parent="MainEntrance" index="2"]
+text = "Main entrance"
 
 [node name="Exits" type="Node2D" parent="."]
 
