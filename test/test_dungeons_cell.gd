@@ -150,6 +150,90 @@ func test_a_flame_pulled_from_a_fire_and_shoved_at_the_roots_also_burns_them_ope
 	assert_true(roots.open, "a flame from a Fire should burn the roots open too")
 
 
+func test_a_death_before_a_checkpoint_returns_almos_to_cell_3_alive() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _burn_the_roots_out_and_die_in_the_corridor(host)
+
+	var dungeons := host.current_space as DungeonsBuilding
+	assert_eq(dungeons.current_room, dungeons.room(&"cell_3"), "he should be back in Cell 3")
+	assert_true(dungeons.room(&"cell_3").get_rect().has_point(host.almos.global_position), "he should stand inside Cell 3")
+	assert_false(host.almos.dead, "he should be alive again")
+
+
+func test_a_death_before_a_checkpoint_makes_the_roots_whole_again() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _burn_the_roots_out_and_die_in_the_corridor(host)
+
+	var roots := (host.current_space as DungeonsBuilding).room(&"cell_3").get_node("Roots") as PathBlocker
+	assert_false(roots.open, "the roots should be whole")
+	assert_false(WorldState.is_burnt(&"dungeons/cell_3/roots"), "the roots should not be remembered as burnt")
+
+
+func test_almos_walking_at_the_door_after_a_death_before_a_checkpoint_stays_in_cell_3() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _burn_the_roots_out_and_die_in_the_corridor(host)
+	var dungeons := host.current_space as DungeonsBuilding
+	var cell := dungeons.room(&"cell_3")
+	host.almos.global_position = cell.to_global(STANDING_SPOT)
+
+	_almos_input.press_action(&"move_down")
+	await wait_physics_frames(WALK_FRAMES)
+
+	assert_eq(dungeons.current_room, cell, "the roots should keep him in Cell 3")
+
+
+func test_almos_burns_the_roots_out_again_after_a_death_before_a_checkpoint() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _burn_the_roots_out_and_die_in_the_corridor(host)
+	var cell := (host.current_space as DungeonsBuilding).room(&"cell_3")
+	assert_true((cell.get_node("Torch") as Torch).lit, "the torch should be lit again")
+
+	await _pull_and_shove_the_torchs_flame_at_the_roots(host)
+
+	assert_true((cell.get_node("Roots") as PathBlocker).open, "the roots should burn open again")
+
+
+func test_almos_is_still_stripped_after_a_death_before_a_checkpoint() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _burn_the_roots_out_and_die_in_the_corridor(host)
+
+	assert_eq(host.almos.weapons.carried.size(), 0, "he should carry no Weapon")
+	assert_null(host.almos.weapons.in_hand, "his hands should be empty")
+	assert_eq(host.almos.flasks.health_charges, host.almos.flasks.health_charges_maximum, "his Flasks should be full")
+
+
+# He burns the roots open, walks out into the corridor, and dies there; this returns when the
+# Death's pause is over and he has been sent back.
+func _burn_the_roots_out_and_die_in_the_corridor(host: AreaHost) -> void:
+	await _pull_and_shove_the_torchs_flame_at_the_roots(host)
+	_almos_input.press_action(&"move_down")
+	await wait_physics_frames(WALK_FRAMES)
+	_almos_input.release_action(&"move_down")
+	var dungeons := host.current_space as DungeonsBuilding
+	assert_eq(dungeons.current_room, dungeons.room(&"corridor_1"), "he should have walked out into the corridor")
+
+	host.almos.health.take_damage(host.almos.health.maximum)
+	var player := load(AlmosInput.TUNING_PATH) as PlayerTuning
+	await wait_physics_frames(ceili(player.death_pause * Engine.physics_ticks_per_second) + WALK_FRAMES / 4)
+	assert_false(host.loading, "the return should be done")
+	assert_ne(host.current_space, dungeons, "the Dungeons should have been made new")
+
+
+func _pull_and_shove_the_torchs_flame_at_the_roots(host: AreaHost) -> void:
+	var cell := (host.current_space as DungeonsBuilding).room(&"cell_3")
+	host.almos.global_position = cell.to_global(STANDING_SPOT)
+	host.almos.facing = Vector2.DOWN
+	await _tap(&"cast_spell")
+	await wait_physics_frames((load(FIREBALL_PATH) as SpellData).wind_up_frames + MARGIN_FRAMES)
+	await _tap(&"cast_spell")
+	await _wait_for_the_fire_to_burn_out()
+
+
 func _tap(action: StringName) -> void:
 	_almos_input.press_action(action)
 	await wait_physics_frames(TAP_FRAMES)
