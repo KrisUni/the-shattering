@@ -149,8 +149,10 @@ func test_a_killed_key_jailer_is_not_in_radio_officers_after_a_rest_at_the_lobby
 	await wait_physics_frames(2)
 	await _kill_the_key_jailer(host)
 
+	var before_the_rest := host.current_space
 	await _rest_at(host, &"lobby")
 
+	assert_ne(host.current_space, before_the_rest, "control: the rest rebuilt the space")
 	assert_eq(_enemies_in(_room(host, &"radio_officers")).size(), 0, "he should stay dead")
 
 
@@ -158,7 +160,9 @@ func test_a_killed_key_jailer_is_not_in_radio_officers_after_a_rest_and_then_a_d
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 	await _kill_the_key_jailer(host)
+	var before_the_rest := host.current_space
 	await _rest_at(host, &"lobby")
+	assert_ne(host.current_space, before_the_rest, "control: the rest rebuilt the space")
 
 	await _die_and_wait_for_the_return(host)
 
@@ -181,8 +185,10 @@ func test_a_key_jailer_who_was_not_killed_is_still_in_radio_officers_after_a_res
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 
+	var before_the_rest := host.current_space
 	await _rest_at(host, &"lobby")
 
+	assert_ne(host.current_space, before_the_rest, "control: the rest rebuilt the space")
 	assert_eq(_enemies_in(_room(host, &"radio_officers")).size(), 1, "he should still be there")
 
 

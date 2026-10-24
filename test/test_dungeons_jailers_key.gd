@@ -125,7 +125,9 @@ func test_almos_keeps_the_key_through_a_rest_and_then_a_death() -> void:
 	await wait_physics_frames(2)
 	await _kill_the_key_jailer_at(host, PLACE_OF_DEATH)
 	await _take_the_key(host)
+	var before_the_rest := host.current_space
 	await _rest_at_the_lobby(host)
+	assert_ne(host.current_space, before_the_rest, "control: the rest rebuilt the space")
 
 	await _die_and_wait_for_the_return(host)
 
@@ -203,8 +205,10 @@ func test_a_key_not_taken_before_a_rest_lies_at_the_key_jailers_post_afterwards(
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 	await _kill_the_key_jailer_at(host, PLACE_OF_DEATH)
+	var before_the_rest := host.current_space
 	await _rest_at_the_lobby(host)
 
+	assert_ne(host.current_space, before_the_rest, "control: the rest rebuilt the space")
 	var room := _room(host, &"radio_officers")
 	assert_eq(_enemies_in(room).size(), 0, "he should stay dead")
 	var keys := _keys_in(room)

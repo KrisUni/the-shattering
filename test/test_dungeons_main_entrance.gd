@@ -165,7 +165,9 @@ func test_the_door_is_shut_again_after_a_rest_and_a_death_and_a_tap_opens_it_aga
 	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
 	await _tap(&"interact")
 	assert_true(_door(host).open, "control: the door is open")
+	var before_the_rest := host.current_space
 	await _rest_at_the_lobby(host)
+	assert_ne(host.current_space, before_the_rest, "control: the rest rebuilt the space")
 
 	await _die_and_wait_for_the_return(host)
 
