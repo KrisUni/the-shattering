@@ -67,6 +67,8 @@ position = Vector2(8, 324)
 rotation = 1.5707964
 
 [node name="Label" parent="ToCatacombs" index="2"]
+offset_top = -100.0
+offset_bottom = -80.0
 rotation = -1.5707964
 text = "To the Catacombs"
 

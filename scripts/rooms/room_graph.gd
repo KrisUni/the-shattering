@@ -18,8 +18,8 @@ extends Resource
 func exits_of(room: StringName) -> Array[StringName]:
 	var names: Array[StringName] = []
 	for exit_id in exits:
-		if _room_of(exit_id) == room:
-			names.append(StringName(exit_id.get_slice("/", 1)))
+		if room_of_exit(exit_id) == room:
+			names.append(exit_name_of(exit_id))
 	return names
 
 
@@ -35,7 +35,7 @@ func unmatched_exits() -> Array[String]:
 	var unmatched: Array[String] = []
 	for exit_id in exits:
 		var destination: String = exits[exit_id]
-		var known := rooms.has(_room_of(exit_id)) and rooms.has(_room_of(destination))
+		var known := rooms.has(room_of_exit(exit_id)) and rooms.has(room_of_exit(destination))
 		if not known or exits.get(destination, "") != exit_id:
 			unmatched.append(exit_id)
 	return unmatched
@@ -49,7 +49,7 @@ func unreachable_rooms() -> Array[StringName]:
 	while not to_visit.is_empty():
 		var room: StringName = to_visit.pop_back()
 		for exit_name in exits_of(room):
-			var next := _room_of(destination_of(room, exit_name))
+			var next := room_of_exit(destination_of(room, exit_name))
 			if not reached.has(next):
 				reached[next] = true
 				to_visit.append(next)
@@ -60,6 +60,11 @@ func unreachable_rooms() -> Array[StringName]:
 	return unreachable
 
 
-# The Room an exit named "<room>/<exit>" is in.
-func _room_of(exit_id: String) -> StringName:
+## The Room an exit named "<room>/<exit>" is in.
+static func room_of_exit(exit_id: String) -> StringName:
 	return StringName(exit_id.get_slice("/", 0))
+
+
+## The name an exit named "<room>/<exit>" has in its Room.
+static func exit_name_of(exit_id: String) -> StringName:
+	return StringName(exit_id.get_slice("/", 1))

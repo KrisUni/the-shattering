@@ -37,6 +37,8 @@ func _build() -> void:
 		var new_room := scene.instantiate() as Room
 		new_room.name = id
 		add_child(new_room)
+		# Before Almos, the camera and the HUD, so that the Room's floor is drawn under them.
+		move_child(new_room, index)
 		new_room.position = Vector2(index % COLUMNS, index / COLUMNS) * (new_room.size + Vector2(GAP, GAP))
 		index += 1
 	for id in graph.rooms:
@@ -57,7 +59,7 @@ func _build() -> void:
 
 # The exit named "<room>/<exit>", or null if the Dungeons has none.
 func _exit_at(exit_id: String) -> RoomExit:
-	var built := room(StringName(exit_id.get_slice("/", 0)))
+	var built := room(RoomGraph.room_of_exit(exit_id))
 	if built == null:
 		return null
-	return built.get_node_or_null("Exits/%s" % exit_id.get_slice("/", 1)) as RoomExit
+	return built.get_node_or_null("Exits/%s" % RoomGraph.exit_name_of(exit_id)) as RoomExit

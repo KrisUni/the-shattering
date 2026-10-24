@@ -51,7 +51,7 @@ func _spawn_dungeons() -> DungeonsBuilding:
 
 # The exit "<room>/<exit>" of the Dungeons.
 func _exit(dungeons: DungeonsBuilding, exit_id: String) -> RoomExit:
-	return dungeons.room(StringName(exit_id.get_slice("/", 0))).get_node("Exits/%s" % exit_id.get_slice("/", 1)) as RoomExit
+	return dungeons.room(RoomGraph.room_of_exit(exit_id)).get_node("Exits/%s" % RoomGraph.exit_name_of(exit_id)) as RoomExit
 
 
 # The input action that walks from the Entrance of an exit towards the exit.
@@ -69,6 +69,23 @@ func test_the_dungeons_has_a_room_for_each_room_of_the_graph() -> void:
 		assert_not_null(dungeons.room(id), "there should be a Room '%s'" % id)
 	var rooms := dungeons.get_children().filter(func(child: Node) -> bool: return child is Room)
 	assert_eq(rooms.size(), _graph.rooms.size(), "there should be no Rooms but the graph's")
+
+
+func test_the_rooms_come_before_almos_the_camera_and_the_hud_so_that_they_are_drawn_over() -> void:
+	var dungeons := _spawn_dungeons()
+
+	_assert_rooms_before_the_rest(dungeons)
+
+
+# Every Room's place among the building's children is before Almos's, the camera's and the HUD's.
+func _assert_rooms_before_the_rest(dungeons: DungeonsBuilding) -> void:
+	var rest: Array[Node] = [dungeons.almos, dungeons.find_child("Camera", false, false), dungeons.find_child("Hud", false, false)]
+	for node in rest:
+		assert_not_null(node, "the Dungeons should have its Almos, Camera and Hud")
+		if node == null:
+			continue
+		for id in _graph.rooms:
+			assert_lt(dungeons.room(id).get_index(), node.get_index(), "'%s' should be drawn under %s" % [id, node.name])
 
 
 func test_every_exit_leads_to_the_exit_the_graph_says() -> void:

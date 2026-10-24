@@ -63,7 +63,7 @@ func test_a_live_almos_given_to_the_dungeons_is_the_one_that_walks_through_an_ex
 	var arrivals: Array[Room] = []
 	dungeons.room_changed.connect(func(room: Room) -> void: arrivals.append(room))
 	var exit_id: String = _graph.exits.keys()[0]
-	var room_exit := dungeons.room(StringName(exit_id.get_slice("/", 0))).get_node("Exits/%s" % exit_id.get_slice("/", 1)) as RoomExit
+	var room_exit := dungeons.room(RoomGraph.room_of_exit(exit_id)).get_node("Exits/%s" % RoomGraph.exit_name_of(exit_id)) as RoomExit
 	var way := (room_exit.global_position - room_exit.entrance.global_position).normalized()
 	var action: StringName
 	if absf(way.x) > absf(way.y):
@@ -80,6 +80,23 @@ func test_a_live_almos_given_to_the_dungeons_is_the_one_that_walks_through_an_ex
 	_almos_input.release_action(action)
 
 	assert_almost_eq(live.global_position, room_exit.target.entrance.global_position, Vector2(1.0, 1.0), "the given Almos should be at the Entrance of the next Room")
+
+
+func test_the_rooms_stay_before_the_live_almos_the_camera_and_the_hud() -> void:
+	# A live Almos, as the host has one: already in the tree, from another space.
+	var live := (load(ALMOS_PATH) as PackedScene).instantiate() as Almos
+	_view().add_child(live)
+	await wait_physics_frames(1)
+	live.get_parent().remove_child(live)
+	var dungeons := (load(DUNGEONS_PATH) as PackedScene).instantiate() as DungeonsBuilding
+	dungeons.adopt_almos(live)
+	_view().add_child(dungeons)
+
+	assert_eq(dungeons.almos, live)
+	var rest: Array[Node] = [live, dungeons.find_child("Camera", false, false), dungeons.find_child("Hud", false, false)]
+	for node in rest:
+		for id in _graph.rooms:
+			assert_lt(dungeons.room(id).get_index(), node.get_index(), "'%s' should be drawn under %s" % [id, node.name])
 
 
 func test_putting_almos_in_another_room_makes_it_the_current_room() -> void:

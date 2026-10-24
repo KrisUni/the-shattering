@@ -86,6 +86,21 @@ func test_each_door_is_a_solid_labelled_body_in_its_room() -> void:
 			assert_eq((labels[0] as Label).text, description["label"])
 
 
+func test_each_doors_label_is_wholly_inside_its_room() -> void:
+	var dungeons := _spawn_dungeons()
+
+	for description in DOORS:
+		var door := _door(dungeons, description)
+		if door == null:
+			fail_test("there should be a door '%s'" % description["name"])
+			continue
+		var label := door.find_children("*", "Label", true, false)[0] as Label
+		# The box the label covers on screen, turned with the door as it is.
+		var covered := label.get_global_transform() * Rect2(Vector2.ZERO, label.size)
+		var room_rect := dungeons.room(description["room"]).get_rect()
+		assert_true(room_rect.encloses(covered), "the label of '%s' (%s) should be inside its Room (%s)" % [description["name"], covered, room_rect])
+
+
 func test_a_door_is_neither_a_doorway_nor_an_exit() -> void:
 	var dungeons := _spawn_dungeons()
 
