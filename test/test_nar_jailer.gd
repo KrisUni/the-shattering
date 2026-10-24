@@ -26,6 +26,8 @@ const HIT_STAGGER := 4.0
 # In physics frames. A Break far longer than any test waits, and one short enough to wait out.
 const LONG_BREAK := 100000
 const SHORT_BREAK := 5
+# In physics frames. A Break long enough to land a few hits in.
+const BREAK_WITH_ROOM := 90
 const JAILER_PATH := "res://data/nar_jailer.tres"
 # In pixels. How far from a jailer a target is put for it to notice him and swing: inside its
 # attack range and its Sight, which points down.
@@ -243,6 +245,24 @@ func test_a_break_starts_the_count_toward_the_parry_again() -> void:
 	await _hit(enemy, false, 0.0, enemy.tuning.stagger_capacity)
 	assert_true(enemy.broken, "the setup should have broken it")
 	await _rig.wait_frames(SHORT_BREAK + SETTLE_FRAMES)
+	assert_false(enemy.broken, "the Break should be over")
+	var before: float = enemy.health.current
+
+	await _hit(enemy, true)
+
+	assert_almost_eq(before - enemy.health.current, HIT_DAMAGE * SHARE, TOLERANCE, "the first hit after the Break should be blocked, not parried")
+
+
+func test_hits_that_land_in_a_break_do_not_count_toward_the_parry() -> void:
+	var enemy = _spawn_jailer({"break_frames": BREAK_WITH_ROOM})
+	# It only comes out of a Break while it has a target.
+	_rig.place_target(enemy.global_position + Vector2.DOWN * FAR_AWAY)
+	await _hit(enemy, false, 0.0, enemy.tuning.stagger_capacity)
+	assert_true(enemy.broken, "the setup should have broken it")
+	for i in PARRY_EVERY - 1:
+		await _hit(enemy, true, 0.0, 0.0)
+	assert_true(enemy.broken, "the hits should have landed inside the Break")
+	await _rig.wait_frames(BREAK_WITH_ROOM)
 	assert_false(enemy.broken, "the Break should be over")
 	var before: float = enemy.health.current
 
