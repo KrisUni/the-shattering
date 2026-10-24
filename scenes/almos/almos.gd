@@ -197,6 +197,11 @@ var untouchable: bool:
 ## after that is up to his Weapons, so this is the only one to set.
 @export var weapon: WeaponData
 
+## The Armour he wears, or null for none: a placeholder until Armour and Load is done, so nothing
+## reads it and it has no effect. He wears an Armour at once when he takes it with a tap of
+## Interact.
+@export var armour: ArmourData
+
 ## What he fights with when his hands are empty: Unarmed. It is given to his attacks whenever no
 ## Weapon is in hand, and it is not carried, so it is never in his Weapons.
 @export var unarmed: WeaponData
@@ -444,7 +449,7 @@ func _physics_process(delta: float) -> void:
 	_advance_switch()
 	# Interact is a tap or a hold, read as he is free and not blocking as the last frame left it,
 	# since this comes before Block is advanced. A tap rests at a Checkpoint in reach, or else picks
-	# up a Weapon in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
+	# up a Weapon or Armour in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
 	# against a press made in the same frame, since he is in the air by now.
 	_advance_interact(_free_to_act(left_open, parry_on, airborne) and not blocking and not spell.holding, delta)
 	# Getting into a Hiding spot in this frame leaves him in it, still, whatever else was pressed.
@@ -601,8 +606,8 @@ func _free_to_act(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
 # is free, which is the same as for resting: not in a Roll, an attack, a Guard break, a Parry or
 # the air, and not blocking. One made when he is not free is lost, not kept for after, and so is
 # one he stops being free in the middle of. Let go of before drop_hold_time it is a tap, which
-# rests at a Checkpoint in reach, or picks up a Weapon in reach if there is no Checkpoint. Held
-# to drop_hold_time it drops the Weapon in hand, once, on the frame it gets there, and neither
+# rests at a Checkpoint in reach, or picks up a Weapon or Armour in reach if there is no Checkpoint.
+# Held to drop_hold_time it drops the Weapon in hand, once, on the frame it gets there, and neither
 # picks up nor rests when it is let go of. The time is counted in summed frame lengths compared
 # through TIME_SLACK, as the Roll's hold is. The button is polled, as the Roll button is: a press
 # and release that both land before the same frame never show it down, so the just-pressed check
@@ -634,13 +639,13 @@ func _advance_interact(free: bool, delta: float) -> void:
 
 
 # A tap of Interact: in a Hiding spot he leaves it. Otherwise he rests if a Checkpoint is in reach,
-# or else hides if a Hiding spot is, and picks up a Weapon only if there is neither, so a Weapon
-# lying beside a Checkpoint or a Hiding spot stays where it is.
+# or else hides if a Hiding spot is, and picks up a Weapon or Armour only if there is neither, so
+# a pickup lying beside a Checkpoint or a Hiding spot stays where it is.
 func _on_interact_tapped() -> void:
 	if _hiding:
 		_leave_hiding()
 	elif not _rest_at_a_checkpoint_in_reach() and not _hide_in_a_spot_in_reach():
-		_pick_up_a_weapon_in_reach()
+		_pick_up_a_pickup_in_reach()
 
 
 # One frame in a Hiding spot: he neither moves nor acts, and a tap of Interact leaves. A Roll button
@@ -726,14 +731,17 @@ func _rest_at_a_checkpoint_in_reach() -> bool:
 	return true
 
 
-# Picks up the nearest Weapon lying within pickup_reach of him, if there is one: it is carried
-# from then on, after the others, and the pickup is gone from the ground.
-func _pick_up_a_weapon_in_reach() -> void:
-	var nearest: WeaponPickup = null
+# Takes up the nearest Weapon or Armour lying within pickup_reach of him, if there is one, and
+# only that one. A Weapon is carried from then on, after the others; Armour is worn at once. The
+# pickup is gone from the ground.
+func _pick_up_a_pickup_in_reach() -> void:
+	var nearest: Node2D = null
 	var nearest_distance := tuning.pickup_reach
-	for node in get_tree().get_nodes_in_group(&"weapon_pickups"):
-		var pickup := node as WeaponPickup
-		if pickup == null or pickup.weapon == null or pickup.is_queued_for_deletion():
+	for node in get_tree().get_nodes_in_group(&"weapon_pickups") + get_tree().get_nodes_in_group(&"armour_pickups"):
+		var pickup := node as Node2D
+		if pickup == null or pickup.is_queued_for_deletion():
+			continue
+		if not (pickup is WeaponPickup and pickup.weapon != null) and not (pickup is ArmourPickup and pickup.armour != null):
 			continue
 		var distance := global_position.distance_to(pickup.global_position)
 		if distance <= nearest_distance:
@@ -741,7 +749,10 @@ func _pick_up_a_weapon_in_reach() -> void:
 			nearest_distance = distance
 	if nearest == null:
 		return
-	weapons.pick_up(nearest.weapon)
+	if nearest is WeaponPickup:
+		weapons.pick_up(nearest.weapon)
+	else:
+		armour = nearest.armour
 	nearest.queue_free()
 
 

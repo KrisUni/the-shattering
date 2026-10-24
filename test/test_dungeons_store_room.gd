@@ -2,12 +2,34 @@ extends GutTest
 ## The Store room, off the direct route in the Dungeons, holds Almos's Weapon, a Sword, and his
 ## Armour, which is a placeholder pickup until Armour and Load is done.
 
+const AlmosInput := preload("res://test/helpers/almos_input.gd")
+
+const WORLD_PATH := "res://scenes/areas/test_world.tscn"
+const DUNGEONS_PATH := "res://scenes/areas/dungeons/dungeons.tscn"
 const STORE_ROOM_PATH := "res://scenes/areas/dungeons/store_room.tscn"
 const SWORD_PATH := "res://data/sword.tres"
 const ARMOUR_PATH := "res://data/almos_armour.tres"
 # In pixels. The Room's floor is the project's window; the walls are 16 pixels thick.
 const FLOOR_RECT := Rect2(0.0, 0.0, 1152.0, 648.0)
 const WALL_THICKNESS := 16.0
+# In pixels. The size of the view the Dungeons is shown in: the project's default window.
+const VIEW_SIZE := Vector2i(1152, 648)
+# In pixels. How far from a pickup Almos stands to take it: well inside his reach.
+const BESIDE := 5.0
+const TAP_FRAMES := 3
+
+var _almos_input: AlmosInput
+
+
+func before_each() -> void:
+	WorldState.reset()
+	await get_tree().process_frame
+	_almos_input = AlmosInput.new(self)
+
+
+func after_each() -> void:
+	_almos_input.release_everything()
+	WorldState.reset()
 
 
 func _store_room() -> Room:
@@ -50,3 +72,52 @@ func test_the_store_rooms_pickups_lie_on_the_floor_clear_of_the_walls() -> void:
 
 	for pickup: Node2D in _pickups(room, &"weapon_pickups") + _pickups(room, &"armour_pickups"):
 		assert_true(inside.has_point(pickup.position), "%s should lie inside the walls" % pickup.name)
+
+
+func test_almos_takes_the_sword_with_interact_in_the_store_room_of_the_dungeons() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var store := (host.current_space as DungeonsBuilding).room(&"store_room")
+	var pickup := _pickups(store, &"weapon_pickups")[0] as WeaponPickup
+	host.almos.global_position = pickup.global_position + Vector2(BESIDE, 0.0)
+
+	await _tap(&"interact")
+
+	assert_eq(host.almos.weapons.in_hand, load(SWORD_PATH), "the Sword should be in his hand")
+	assert_true(_is_gone(pickup), "the Sword pickup should be gone")
+
+
+func test_almos_takes_the_armour_with_interact_in_the_store_room_of_the_dungeons() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var store := (host.current_space as DungeonsBuilding).room(&"store_room")
+	var pickup := _pickups(store, &"armour_pickups")[0] as ArmourPickup
+	assert_null(host.almos.armour, "he starts without Armour")
+	host.almos.global_position = pickup.global_position + Vector2(BESIDE, 0.0)
+
+	await _tap(&"interact")
+
+	assert_eq(host.almos.armour, load(ARMOUR_PATH), "the Armour he wears")
+	assert_true(_is_gone(pickup), "the Armour pickup should be gone")
+
+
+func _host_in_the_dungeons() -> AreaHost:
+	var view := SubViewport.new()
+	view.size = VIEW_SIZE
+	add_child_autofree(view)
+	var host := (load(WORLD_PATH) as PackedScene).instantiate() as AreaHost
+	host.start = DUNGEONS_PATH
+	view.add_child(host)
+	return host
+
+
+func _tap(action: StringName) -> void:
+	_almos_input.press_action(action)
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(action)
+	await wait_physics_frames(TAP_FRAMES)
+
+
+# Whether the pickup has been taken: freed, or on its way to being freed.
+func _is_gone(pickup) -> bool:
+	return not is_instance_valid(pickup) or pickup.is_queued_for_deletion()
