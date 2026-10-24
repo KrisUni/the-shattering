@@ -102,9 +102,10 @@ var attack_kind: EnemyTuning.AttackKind:
 		return _kind
 
 ## The attack under way, or the last one it made: the tuning's AttackData for its attack_kind.
+## In a club combo it is the swing under way, or the last one it made.
 var current_attack: AttackData:
 	get:
-		return tuning.attack_of(_kind)
+		return tuning.attack_of(_kind, _swing)
 
 ## Whether it is winding up: the attack's startup frames, before its Hitbox is on.
 var winding_up: bool:
@@ -168,6 +169,9 @@ var _kind := EnemyTuning.AttackKind.STRIKE
 # Where in the tuning's attack_pattern the next attack it makes is. It runs on past the end of
 # the pattern, which is read round and round.
 var _next_in_pattern := 0
+# Which swing of the tuning's combo is under way, or was the last made, counted from 0. Only
+# meant while the kind is COMBO.
+var _swing := 0
 # The frame of the attack it is processing, counted as AttackData counts them, from 0 for its
 # first frame. -1 when there is no attack.
 var _frame := -1
@@ -229,6 +233,10 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	health.depleted.connect(_on_depleted)
 	assert(not tuning.attack_pattern.is_empty(), "attack_pattern in the tuning needs at least one attack")
+	assert(
+		not tuning.attack_pattern.has(EnemyTuning.AttackKind.COMBO) or not tuning.combo.is_empty(),
+		"an attack_pattern with a COMBO in it needs at least one swing in the tuning's combo",
+	)
 	_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.STRIKE))
 	_low_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.LOW))
 	_unblockable_hitbox.set_reach(tuning.reach_of(EnemyTuning.AttackKind.UNBLOCKABLE))
@@ -269,6 +277,11 @@ func _physics_process(_delta: float) -> void:
 		_frame += 1
 		if _frame >= current_attack.total_frames():
 			_frame = -1
+			if not _dead and _chains_on():
+				_swing += 1
+				if not _to_target().is_zero_approx():
+					_facing = _to_target().normalized()
+				_begin_attack()
 	if _broken:
 		velocity = Vector2.ZERO
 	# One that has died in this frame starts nothing new, but the frame is played out all the
@@ -500,20 +513,39 @@ func _act_freely() -> void:
 		else:
 			_kind = tuning.attack_pattern[_next_in_pattern % tuning.attack_pattern.size()]
 			_next_in_pattern += 1
-		_frame = 0
-		var box := _hitbox_of(_kind)
-		box.damage = current_attack.damage
-		# It commits to the swing: it goes where the target was now, wherever it moves to, and
-		# keeps facing that way until the swing is over.
-		box.rotation = _facing.angle()
-		_unblockable_hitbox.grab = _dragging
-		_grab_started = _grab_started or (_dragging and _kind == EnemyTuning.AttackKind.UNBLOCKABLE)
-		if _kind == EnemyTuning.AttackKind.UNBLOCKABLE:
-			_unblockable_cue.play()
-			unblockable_cue_played.emit()
+		# A club combo starts from its first swing.
+		_swing = 0
+		_begin_attack()
 	else:
 		velocity = to_target.normalized() * tuning.move_speed
 		move_and_slide()
+
+
+# Whether the swing of a club combo that has just ended is followed at once by the next: it is not
+# the last, and the target is within attack_range. Otherwise the rest of the combo is dropped.
+func _chains_on() -> bool:
+	if _kind != EnemyTuning.AttackKind.COMBO or _swing + 1 >= tuning.combo.size():
+		return false
+	if _dragging or _state != State.PURSUIT or not is_instance_valid(target):
+		return false
+	return _to_target().length() <= tuning.attack_range
+
+
+# Begins the attack of the kind and swing set, in this frame. It commits to the swing: it goes
+# where it faces now, wherever the target moves to, and keeps facing that way until the swing is
+# over.
+func _begin_attack() -> void:
+	_frame = 0
+	var box := _hitbox_of(_kind)
+	box.damage = current_attack.damage
+	if box == _hitbox:
+		box.set_reach(tuning.reach_of(_kind))
+	box.rotation = _facing.angle()
+	_unblockable_hitbox.grab = _dragging
+	_grab_started = _grab_started or (_dragging and _kind == EnemyTuning.AttackKind.UNBLOCKABLE)
+	if _kind == EnemyTuning.AttackKind.UNBLOCKABLE:
+		_unblockable_cue.play()
+		unblockable_cue_played.emit()
 
 
 # One physics frame of the walk to the place it was sent to.

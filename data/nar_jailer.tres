@@ -17,6 +17,27 @@ active_frames = 8
 recovery_frames = 36
 damage = 12.0
 
+[sub_resource type="Resource" id="Resource_combo_light_1"]
+script = ExtResource("2_attack")
+startup_frames = 20
+active_frames = 6
+recovery_frames = 10
+damage = 8.0
+
+[sub_resource type="Resource" id="Resource_combo_light_2"]
+script = ExtResource("2_attack")
+startup_frames = 18
+active_frames = 6
+recovery_frames = 12
+damage = 8.0
+
+[sub_resource type="Resource" id="Resource_combo_heavy"]
+script = ExtResource("2_attack")
+startup_frames = 34
+active_frames = 8
+recovery_frames = 50
+damage = 20.0
+
 [sub_resource type="Resource" id="Resource_unblockable_attack"]
 script = ExtResource("2_attack")
 startup_frames = 50
@@ -36,13 +57,15 @@ lose_sight_frames = 300
 health_recovery_rate = 6.0
 attack_range = 40.0
 attack_reach = 42.0
-attack_pattern = Array[int]([0, 1, 0, 2])
+attack_pattern = Array[int]([3])
 attack = SubResource("Resource_attack")
 low_attack_reach = 50.0
 low_attack = SubResource("Resource_low_attack")
 unblockable_attack_reach = 46.0
 unblockable_attack = SubResource("Resource_unblockable_attack")
 unblockable_flash_frames = 8
+combo_reach = 42.0
+combo = Array[ExtResource("2_attack")]([SubResource("Resource_combo_light_1"), SubResource("Resource_combo_light_2"), SubResource("Resource_combo_heavy")])
 stagger_capacity = 100.0
 stagger_drain_rate = 20.0
 stagger_drain_pause = 2.0

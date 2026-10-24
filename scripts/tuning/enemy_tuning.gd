@@ -13,6 +13,9 @@ enum AttackKind {
 	## An Unblockable attack, which neither Block nor Parry deals with: unblockable_attack and
 	## unblockable_attack_reach.
 	UNBLOCKABLE,
+	## A club combo: the swings of combo, one after the other, back to back. Together they are one
+	## entry in the attack pattern. Their reach is combo_reach.
+	COMBO,
 }
 
 ## The order it makes its attacks in, over and over. Each time it starts an attack it makes the
@@ -88,6 +91,18 @@ enum AttackKind {
 ## lasts. It must be shorter than the wind-up, whose rest keeps the tint of its own.
 @export var unblockable_flash_frames: int
 
+## How far from its centre, in pixels, the swings of its combo reach: the far edge of the box its
+## Hitbox hurts with, as attack_reach is for the Strike, whose Hitbox they use. The box keeps its
+## width and height from the scene.
+@export var combo_reach: float
+
+## The swings of its club combo, in the order it makes them. When its attack pattern comes to
+## COMBO it makes them all, one after the other: each swing's recovery frames are the gap before
+## the next, which begins at once, with no walk in between, if its target is still within
+## attack_range. If he is not, or a Break comes, the rest of the combo is dropped, and the next
+## COMBO starts from the first swing. Must not be empty if the attack pattern has COMBO in it.
+@export var combo: Array[AttackData]
+
 ## The most Stagger the enemy can have. A full meter is this much.
 @export var stagger_capacity: float
 
@@ -132,9 +147,11 @@ func sight_length_at(light: float) -> float:
 	return lerpf(sight_length_dark, sight_length_full, clampf(light, 0.0, 1.0))
 
 
-## The attack of this kind.
-func attack_of(kind: AttackKind) -> AttackData:
+## The attack of this kind. For COMBO, the swing of this number in combo, counted from 0.
+func attack_of(kind: AttackKind, swing := 0) -> AttackData:
 	match kind:
+		AttackKind.COMBO:
+			return combo[swing]
 		AttackKind.LOW:
 			return low_attack
 		AttackKind.UNBLOCKABLE:
@@ -145,6 +162,8 @@ func attack_of(kind: AttackKind) -> AttackData:
 ## How far from its centre the attack of this kind reaches.
 func reach_of(kind: AttackKind) -> float:
 	match kind:
+		AttackKind.COMBO:
+			return combo_reach
 		AttackKind.LOW:
 			return low_attack_reach
 		AttackKind.UNBLOCKABLE:
