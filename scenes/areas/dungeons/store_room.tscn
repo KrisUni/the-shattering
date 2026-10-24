@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_pickup.tscn" id="3_pickup"]
+[ext_resource type="Resource" path="res://data/sword.tres" id="4_sword"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -21,6 +23,10 @@ script = ExtResource("1_room")
 [node name="Floor" type="Polygon2D" parent="."]
 color = Color(0.16, 0.18, 0.24, 1)
 polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
+
+[node name="Sword" parent="." instance=ExtResource("3_pickup")]
+position = Vector2(576, 324)
+weapon = ExtResource("4_sword")
 
 [node name="Walls" type="Node2D" parent="."]
 
