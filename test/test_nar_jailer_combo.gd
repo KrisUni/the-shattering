@@ -33,6 +33,8 @@ const REACH_MARGIN := 1.0
 const MOVED := 0.5
 # The share of a swing's damage a stand-in Block lets through.
 const BLOCKED_SHARE := 0.5
+# In Stagger points. What a stand-in Parry builds, short of filling the meter.
+const PARRY_STAGGER := 1.0
 
 # The three swings the tests set, each with its own damage and frames: two short ones and a heavy
 # one with a longer wind-up and recovery. In physics frames and Health points.
@@ -167,6 +169,34 @@ func test_a_parry_of_a_swing_does_not_drop_the_combo() -> void:
 	await _rig.wait_frames(_combo_frames() + SETTLE_FRAMES)
 
 	assert_eq(_damages(_rig.hits()).slice(0, 2), [SWING_DAMAGES[1], SWING_DAMAGES[2]] as Array[float], "hits the target took, the first swing having been parried")
+
+
+func test_a_parried_swing_builds_the_parry_stagger_on_the_enemy() -> void:
+	var enemy = _rig.spawn_enemy(_combo_tuning())
+	var target := _rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+	var hurtbox := _hurtbox_of(target)
+	hurtbox.parry_stagger = PARRY_STAGGER
+	hurtbox.is_parried = func(_from: Vector2) -> bool: return true
+
+	await _wait_frames_until_stagger(enemy)
+
+	assert_almost_eq(enemy.stagger.current, PARRY_STAGGER, TOLERANCE)
+
+
+func test_a_parry_that_fills_the_stagger_breaks_it_and_the_next_combo_starts_from_the_first_swing() -> void:
+	var enemy = _rig.spawn_enemy(_combo_tuning({"break_frames": 5}))
+	var target := _rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+	var hurtbox := _hurtbox_of(target)
+	hurtbox.parry_stagger = enemy.tuning.stagger_capacity
+	var parried := [false]
+	hurtbox.is_parried = func(_from: Vector2) -> bool:
+		var parry_this_one: bool = not parried[0]
+		parried[0] = true
+		return parry_this_one
+
+	await _wait_for_hits(2)
+
+	assert_eq(_damages(_rig.hits()).slice(0, 2), [SWING_DAMAGES[0], SWING_DAMAGES[1]] as Array[float], "hits the target took, the first swing having been parried and the combo begun again")
 
 
 # --- The swings as hits ---
@@ -317,6 +347,15 @@ func _hurtbox_of(node: Node) -> Hurtbox:
 			return child
 	fail_test("the stand-in target should have a Hurtbox")
 	return null
+
+
+# Waits until the enemy has Stagger built on it.
+func _wait_frames_until_stagger(enemy) -> void:
+	for i in WAIT_FRAME_LIMIT:
+		if enemy.stagger.current > 0.0:
+			return
+		await get_tree().physics_frame
+	fail_test("the enemy should have Stagger built on it")
 
 
 # Waits until the target has taken this many hits.
