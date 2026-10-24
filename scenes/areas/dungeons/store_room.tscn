@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_pickup.tscn" id="3_weapon_pickup"]
+[ext_resource type="Resource" path="res://data/sword.tres" id="4_sword"]
+[ext_resource type="PackedScene" path="res://scenes/world/armour_pickup.tscn" id="5_armour_pickup"]
+[ext_resource type="Resource" path="res://data/almos_armour.tres" id="6_armour"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -88,3 +92,11 @@ shape = SubResource("Shape_96x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/door"]
 position = Vector2(0, -56)
+
+[node name="AlmosSword" parent="." instance=ExtResource("3_weapon_pickup")]
+position = Vector2(400, 200)
+weapon = ExtResource("4_sword")
+
+[node name="AlmosArmour" parent="." instance=ExtResource("5_armour_pickup")]
+position = Vector2(752, 200)
+armour = ExtResource("6_armour")
