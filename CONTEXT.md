@@ -43,12 +43,24 @@ How the Base of the tree ends. If the Nar guards bring Almos's Health to zero, o
 _Avoid_: Arrest, forced death
 
 **Dungeons**:
-The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in a cell of living roots and gets out by burning through it with his first Pull and Shove of a torch's flame. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
+The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in Cell 3, a cell of living roots, and gets out by burning through it with his first Pull and Shove of a torch's flame. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
 _Avoid_: Prison, cells, roots
 
 **Store room**:
 A guarded Room deep in the Dungeons, off the direct route out, where Almos's confiscated Weapon and Armour are kept. Recovering them is optional. His gear at this point is modest; nothing in it is precious.
 _Avoid_: Armoury, evidence room, stash
+
+**Main entrance**:
+The Dungeons' visible exit, a guarded door that leads out to the Upper tree. It stays locked until Almos takes the Jailer's key.
+_Avoid_: Front door, gate
+
+**Jailer's key**:
+The key to the Main entrance, carried by one Nar jailer. The jailer is a named enemy: Almos takes the key by killing him, he stays dead, and the key is kept even through a Death. It opens the Main entrance and nothing else.
+_Avoid_: Gate key, keycard
+
+**Back entrance**:
+A door at the end of the Dungeons' long corridor, hidden behind something flammable until the player burns it open. It leads down a long corridor to a cave, the first Rooms of the Catacombs.
+_Avoid_: Back door, secret door
 
 **Upper tree**:
 The trunk and canopy of the arch tree, reached from the Dungeons by a guarded path. Almos leaves it by climbing down the Great root. The area of Jumps and Deadly falls. Its enemies are Nar guards hunting the fugitive, some attacking from higher branches, and creatures of the canopy. He meets no NPCs here.
@@ -109,7 +121,7 @@ The player's three bars. Only Stamina refills by itself; Health and Mana come ba
 _Avoid_: HP, energy, FP, mana points
 
 **Shortcut**:
-A way the player opens that links a deeper part of an area back to a Checkpoint, such as a burnt door or a dropped ladder. Once opened, it stays open for good.
+A way the player opens that links a deeper part of an area back to a Checkpoint, such as a burnt door or a dropped ladder. Once opened, it stays open for good, but only from the moment the player next rests at a Checkpoint: dying first closes it again, like every other change the player made to the world.
 _Avoid_: Unlock, back door
 
 **Health Flask**, **Mana Flask**:
@@ -149,7 +161,7 @@ The marker left where the player died, holding all the Experience not yet cashed
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Checkpoint, a Hiding spot and a Weapon are all in reach, the tap rests at the Checkpoint before it hides in the Hiding spot, and hides before it picks the Weapon up. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Checkpoint, a Hiding spot and a Weapon are all in reach, the tap rests at the Checkpoint before it hides in the Hiding spot, and hides before it picks the Weapon up. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Changes the player made to the world since that Checkpoint, such as burnt openings and taken pickups, are undone, and Weapons and Armour picked up since then go back to where they lay (only the Jailer's key is kept); they are only saved by resting at a Checkpoint. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
 _Avoid_: Bonfire, save point, shrine
 
 **Death**:
