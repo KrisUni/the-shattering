@@ -649,13 +649,14 @@ func _advance_interact(free: bool, delta: float) -> void:
 
 
 # A tap of Interact: in a Hiding spot he leaves it. Otherwise he rests if a Checkpoint is in reach,
-# or else hides if a Hiding spot is, and picks up a Weapon or Armour only if there is neither, so
-# a pickup lying beside a Checkpoint or a Hiding spot stays where it is.
+# or else hides if a Hiding spot is, or else picks up a Weapon or Armour, and takes the Jailer's
+# key only if there is none of those, so a pickup lying beside a Checkpoint or a Hiding spot stays
+# where it is.
 func _on_interact_tapped() -> void:
 	if _hiding:
 		_leave_hiding()
-	elif not _rest_at_a_checkpoint_in_reach() and not _hide_in_a_spot_in_reach():
-		_pick_up_a_pickup_in_reach()
+	elif not _rest_at_a_checkpoint_in_reach() and not _hide_in_a_spot_in_reach() and not _pick_up_a_pickup_in_reach():
+		_take_a_key_in_reach()
 
 
 # One frame in a Hiding spot: he neither moves nor acts, and a tap of Interact leaves. A Roll button
@@ -750,9 +751,9 @@ func _save_the_gear(own_weapons: AlmosWeapons) -> void:
 
 
 # Takes up the nearest Weapon or Armour lying within pickup_reach of him, if there is one, and
-# only that one. A Weapon is carried from then on, after the others; Armour is worn at once. The
-# pickup is gone from the ground.
-func _pick_up_a_pickup_in_reach() -> void:
+# only that one, and says whether he did. A Weapon is carried from then on, after the others;
+# Armour is worn at once. The pickup is gone from the ground.
+func _pick_up_a_pickup_in_reach() -> bool:
 	var nearest: Node2D = null
 	var nearest_distance := tuning.pickup_reach
 	for node in get_tree().get_nodes_in_group(&"weapon_pickups") + get_tree().get_nodes_in_group(&"armour_pickups"):
@@ -766,7 +767,7 @@ func _pick_up_a_pickup_in_reach() -> void:
 			nearest = pickup
 			nearest_distance = distance
 	if nearest == null:
-		return
+		return false
 	if nearest is WeaponPickup:
 		weapons.pick_up(nearest.weapon)
 	else:
@@ -774,6 +775,26 @@ func _pick_up_a_pickup_in_reach() -> void:
 	# One with an id is noted taken until the next rest, so that a Death puts it back.
 	if nearest.id != &"":
 		WorldState.record_taken(nearest.id)
+	nearest.queue_free()
+	return true
+
+
+# Takes the nearest Jailer's key lying within pickup_reach of him that can be taken, if there is
+# one. He has it for good: it is kept through a Death, and the key is gone from the ground.
+func _take_a_key_in_reach() -> void:
+	var nearest: JailersKey = null
+	var nearest_distance := tuning.pickup_reach
+	for node in get_tree().get_nodes_in_group(&"key_pickups"):
+		var key := node as JailersKey
+		if key == null or key.is_queued_for_deletion() or not key.takeable:
+			continue
+		var distance := global_position.distance_to(key.global_position)
+		if distance <= nearest_distance:
+			nearest = key
+			nearest_distance = distance
+	if nearest == null:
+		return
+	WorldState.record_kept(nearest.id)
 	nearest.queue_free()
 
 

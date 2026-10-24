@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="3_enemy"]
 [ext_resource type="Resource" path="res://data/nar_key_jailer.tres" id="4_key_jailer"]
+[ext_resource type="PackedScene" path="res://scenes/world/jailers_key.tscn" id="5_key"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -97,3 +98,8 @@ tuning = ExtResource("4_key_jailer")
 post_facing = Vector2(0, -1)
 named = true
 id = &"dungeons/radio_officers/key_jailer"
+
+[node name="JailersKey" parent="." node_paths=PackedStringArray("jailer") instance=ExtResource("5_key")]
+position = Vector2(576, 320)
+jailer = NodePath("../KeyJailer")
+id = &"dungeons/jailers_key"
