@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_spell")
-draw_range = 48.0
+draw_range = 128.0
 wind_up_frames = 12
 fireball_speed = 360.0
 fireball_range = 320.0

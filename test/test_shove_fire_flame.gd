@@ -148,8 +148,10 @@ func _set_up_room() -> void:
 
 
 # Almos below the Curtain, facing it, within Pull's flame range of its lower edge, taps Pull and waits
-# the wind-up out. He then holds the flame.
+# the wind-up out. He then holds the flame. The Stand torch is put out first: from there it is in
+# Pull's torch range, and a torch's flame is taken before a Fire's.
 func _pull_the_curtains_flame() -> void:
+	(_room.get_node("StandTorch") as Torch).extinguish()
 	var bottom := _curtain.global_position.y + (((_curtain.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size.y / 2.0)
 	_almos.global_position = Vector2(_curtain.global_position.x, bottom + _pull.flame_range - EDGE_MARGIN)
 	_almos.facing = Vector2.UP

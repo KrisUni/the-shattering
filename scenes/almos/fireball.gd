@@ -25,10 +25,6 @@ const FLAMMABLE := 1 << 9
 ## that wall does not block its own splash.
 const OFF_THE_WALL := 2.0
 
-## Whether flammable things stop it and catch from it. Off, it flies past them as if they were not
-## there, which Deep bolt's does; it still stops on walls and enemies.
-@export var lights_things := true
-
 ## Emitted when it hits an enemy, with the Hurtbox it hurt.
 signal hit(hurtbox: Hurtbox)
 
@@ -65,7 +61,7 @@ func _physics_process(delta: float) -> void:
 		_started = true
 		_find_what_it_starts_inside()
 	var step := minf(_speed * delta, _range_left)
-	var query := PhysicsRayQueryParameters2D.create(global_position, global_position + _direction * step, WALLS | ENEMY_HURTBOX | (FLAMMABLE if lights_things else 0))
+	var query := PhysicsRayQueryParameters2D.create(global_position, global_position + _direction * step, WALLS | ENEMY_HURTBOX | FLAMMABLE)
 	query.collide_with_areas = true
 	query.hit_from_inside = true
 	query.exclude = _starts_inside
