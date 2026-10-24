@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="ArmourData" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/armour_data.gd" id="1_armour"]
+
+[resource]
+script = ExtResource("1_armour")
+display_name = "Armour"

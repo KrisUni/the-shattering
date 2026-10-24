@@ -13,6 +13,7 @@ const StrikeGeometry := preload("res://test/helpers/strike_geometry.gd")
 
 const UNARMED_PATH := "res://data/unarmed.tres"
 const TORCH_PATH := "res://data/torch.tres"
+const CHECKPOINT_SCENE_PATH := "res://scenes/world/checkpoint.tscn"
 
 # In Health points and Stagger points.
 const TOLERANCE := 0.0001
@@ -26,6 +27,8 @@ const REACH_MARGIN := 2.0
 const ENEMY_HEALTH := 1000000.0
 # In pixels. A Hitbox this wide covers the enemy it is put over, and no other.
 const NARROW_HITBOX_RADIUS := 12.0
+# In pixels. How far from a Checkpoint's centre Almos rests: well inside his reach.
+const BESIDE_THE_CHECKPOINT := 5.0
 # Held this many physics frames, a press is a tap: far shorter than a swing or a charge start.
 const TAP_FRAMES := 3
 # In physics frames. How far past the hold that drops a Weapon the button is held.
@@ -37,7 +40,7 @@ const WAIT_FRAME_LIMIT := 400
 # How his hands came to be empty.
 var empty_params = ParameterFactory.named_parameters(
 	["how"],
-	[["starting with no Weapon"], ["dropping the last Weapon"], ["a Death after dropping the last Weapon"]],
+	[["starting with no Weapon"], ["dropping the last Weapon"], ["a rest and a Death after dropping the last Weapon"]],
 )
 
 # Which Heavy attack, and from which side of the enemy.
@@ -305,7 +308,14 @@ func _empty_handed_almos(how: String) -> Almos:
 	await _rig.wait_frames(SETTLE_FRAMES)
 	if how != "starting with no Weapon":
 		await _hold_interact_to_drop()
-	if how == "a Death after dropping the last Weapon":
+	if how == "a rest and a Death after dropping the last Weapon":
+		var checkpoint := (load(CHECKPOINT_SCENE_PATH) as PackedScene).instantiate() as Node2D
+		_holder.add_child(checkpoint)
+		checkpoint.global_position = almos.global_position + Vector2.RIGHT * BESIDE_THE_CHECKPOINT
+		_almos_input.press_action(&"interact")
+		await _rig.wait_frames(TAP_FRAMES)
+		_almos_input.release_action(&"interact")
+		await _rig.wait_frames(TAP_FRAMES)
 		almos.health.take_damage(almos.health.maximum)
 		assert_true(almos.dead, "he should have fallen")
 		almos.return_to(almos.global_position)

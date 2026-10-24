@@ -161,11 +161,11 @@ The marker left where the player died, holding all the Experience not yet cashed
 _Avoid_: Bloodstain, corpse, grave, souls
 
 **Checkpoint**:
-A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Checkpoint, a Hiding spot and a Weapon are all in reach, the tap rests at the Checkpoint before it hides in the Hiding spot, and hides before it picks the Weapon up. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Changes the player made to the world since that Checkpoint, such as burnt openings and taken pickups, are undone, and Weapons and Armour picked up since then go back to where they lay (only the Jailer's key is kept); they are only saved by resting at a Checkpoint. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
+A resting place that refills all three bars and both Flasks and becomes the player's return point. In the world, each Checkpoint is an arch-tree shoot: a small glowing sapling grown from the arch tree's roots, common in and around the tree and rarer the further Almos travels. Each area has about two: one near where the player enters and one before its hardest stretch, with Shortcuts that link the rest of the area back to them. One more stands beside the Vision's entrance. It is also where Experience is cashed in for Levels and where Armour is changed. The player rests at one with a tap of Interact, within reach of it and while free to act; when a Checkpoint, a Hiding spot and a Weapon or Armour are all in reach, the tap rests at the Checkpoint before it hides in the Hiding spot, and hides before it picks the Weapon or Armour up. Resting is instant, and it brings back every ordinary enemy while Bosses and named enemies stay dead. Changes the player made to the world since that Checkpoint, such as burnt openings and taken pickups, are undone, and Weapons and Armour picked up since then go back to where they lay (only the Jailer's key is kept); they are only saved by resting at a Checkpoint. Resting is not sleep: it works the same after the Lesser god takes Almos's ability to sleep.
 _Avoid_: Bonfire, save point, shrine
 
 **Death**:
-What happens when the player's Health reaches zero. Almos goes limp where he fell, taking no input and unable to be hit, and every action he was in ends. After a pause he returns to his last Checkpoint with full bars and every ordinary enemy back, as after a rest, while Bosses and named enemies stay dead. The Experience he carried is left as Remains where he fell.
+What happens when the player's Health reaches zero. Almos goes limp where he fell, taking no input and unable to be hit, and every action he was in ends. After a pause he returns to his last Checkpoint with full bars and every ordinary enemy back, as after a rest, while Bosses and named enemies stay dead. The Experience he carried is left as Remains where he fell. The Weapons and Armour he took since his last rest go back to where they lay, and he carries and wears what he had at that rest.
 _Avoid_: Game over, respawn
 
 ### Movement and combat
@@ -179,7 +179,7 @@ Anything the player can sensibly fight with, each with its own Light attack and 
 _Avoid_: Blade, arm, gear
 
 **Armour**:
-A single piece of protective gear found in the world that reduces damage taken, at the cost of a slower, shorter Roll as it gets heavier. The player wears one piece at a time and changes it only at a Checkpoint.
+A single piece of protective gear found in the world that reduces damage taken, at the cost of a slower, shorter Roll as it gets heavier. The player wears one piece at a time and changes it only at a Checkpoint. Until Armour and Load is done the Armour is a placeholder with no effect: the one in the Store room is worn at once when Almos takes it with a tap of Interact.
 _Avoid_: Gear, outfit, equipment (for armour alone)
 
 **Load**:

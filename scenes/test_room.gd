@@ -7,10 +7,14 @@ extends Node2D
 ## the room sees to his Death: it takes all his Experience and leaves Remains holding it where he
 ## fell, in place of any it already had, or none if he had none; it brings back every ordinary
 ## enemy, as a rest does; it undoes the changes made to the world since the last rest (a path blocker
-## that burnt since is closed again); and it sends him back to the return point. The Remains stay
-## where they are through a rest.
+## that burnt since is closed again); it puts the Weapon and Armour pickups back as they lay at the
+## last rest, or at the start until the first (one dropped since is gone, one taken since lies where
+## it lay), so that the gear he is given back is not also lying on the floor; and it sends him back
+## to the return point. The Remains stay where they are through a rest.
 
 const REMAINS_SCENE := preload("res://scenes/world/remains.tscn")
+const WEAPON_PICKUP_SCENE := preload("res://scenes/world/weapon_pickup.tscn")
+const ARMOUR_PICKUP_SCENE := preload("res://scenes/world/armour_pickup.tscn")
 
 ## Where Almos goes back to, in global coordinates: the Checkpoint he last rested at, or where he
 ## started in the room until he first rests. Read only.
@@ -28,6 +32,9 @@ var _remains: Remains
 # The ordinary enemies the room started with, each as the place and the numbers it was made
 # with, and the enemy that is alive in its place now.
 var _ordinary_enemies: Array[OrdinaryEnemy] = []
+# The Weapon and Armour pickups lying in the room at the last rest (at the start, until the first),
+# each as the place and the data it lies with.
+var _pickups_at_the_last_rest: Array[PickupSpot] = []
 
 
 # An ordinary enemy as the room first had it, to make it again as new.
@@ -43,6 +50,17 @@ class OrdinaryEnemy:
 	var current: Node
 
 
+# A Weapon or Armour pickup as it lay, to lay it again.
+class PickupSpot:
+	var scene: PackedScene
+	var parent: Node
+	var node_name: StringName
+	var position: Vector2
+	var weapon: WeaponData
+	var armour: ArmourData
+	var id: StringName
+
+
 func _ready() -> void:
 	_return_point = _almos.global_position
 	_almos.rested.connect(_on_almos_rested)
@@ -52,6 +70,7 @@ func _ready() -> void:
 		_watch_enemy(enemy)
 		if not enemy.named:
 			_remember(enemy)
+	_remember_the_pickups()
 
 
 ## Has the enemy give Almos its Experience when it dies. Called for each enemy the room starts
@@ -74,11 +93,61 @@ func _remember(enemy: Node) -> void:
 	_ordinary_enemies.append(start)
 
 
-# Almos rested: the Checkpoint is his return point, what has changed in the world is saved, and every
-# ordinary enemy comes back as new.
+# Notes the Weapon and Armour pickups lying in the room now, in place of those noted before, so
+# that a Death can lay them again. One taken, and so on its way out, is not noted.
+func _remember_the_pickups() -> void:
+	_pickups_at_the_last_rest.clear()
+	for pickup in _pickups_in_the_room():
+		var spot := PickupSpot.new()
+		spot.parent = pickup.get_parent()
+		spot.node_name = pickup.name
+		spot.position = pickup.position
+		spot.id = pickup.id
+		if pickup is WeaponPickup:
+			spot.scene = WEAPON_PICKUP_SCENE
+			spot.weapon = pickup.weapon
+		else:
+			spot.scene = ARMOUR_PICKUP_SCENE
+			spot.armour = pickup.armour
+		_pickups_at_the_last_rest.append(spot)
+
+
+# Every Weapon and Armour pickup in the room that is not on its way out.
+func _pickups_in_the_room() -> Array[Node2D]:
+	var found: Array[Node2D] = []
+	for node in get_tree().get_nodes_in_group("weapon_pickups") + get_tree().get_nodes_in_group("armour_pickups"):
+		if is_ancestor_of(node) and not node.is_queued_for_deletion():
+			found.append(node)
+	return found
+
+
+# Every pickup lying in the room is taken out of the tree at once, so that Almos cannot take it in
+# this frame, and those noted at the last rest are laid again where they lay. A pickup noted
+# with an id is not made again if WorldState has it taken, as it frees itself when it is made.
+func _put_the_pickups_back() -> void:
+	for pickup in _pickups_in_the_room():
+		pickup.get_parent().remove_child(pickup)
+		pickup.queue_free()
+	for spot in _pickups_at_the_last_rest:
+		if not is_instance_valid(spot.parent):
+			continue
+		var pickup = spot.scene.instantiate()
+		pickup.name = spot.node_name
+		pickup.position = spot.position
+		pickup.id = spot.id
+		if spot.weapon != null:
+			pickup.weapon = spot.weapon
+		else:
+			pickup.armour = spot.armour
+		spot.parent.add_child(pickup)
+
+
+# Almos rested: the Checkpoint is his return point, what has changed in the world is saved, the
+# pickups lying in the room are noted, and every ordinary enemy comes back as new.
 func _on_almos_rested(checkpoint: Checkpoint) -> void:
 	_return_point = checkpoint.global_position
 	WorldState.commit()
+	_remember_the_pickups()
 	_bring_back_the_ordinary_enemies()
 
 
@@ -116,13 +185,14 @@ func _on_almos_fell(place: Vector2) -> void:
 
 # The pause of Almos's Death is over. The Experience he carries is the Remains' now, at the place he
 # fell, and he is sent back to the return point with the world as it was at the last rest and the
-# ordinary enemies back as new. The Remains are made after he is back, and notice him from the next
-# frame, so that a return point close enough to them has him recover them at once. The old Remains,
-# if any, are destroyed, whether or not new ones are left.
+# ordinary enemies back as new and the pickups as they lay. The Remains are made after he is back,
+# and notice him from the next frame, so that a return point close enough to them has him recover
+# them at once. The old Remains, if any, are destroyed, whether or not new ones are left.
 func _on_almos_death_pause_over() -> void:
 	var lost := _almos.experience.take_all()
 	WorldState.roll_back()
 	_bring_back_the_ordinary_enemies()
+	_put_the_pickups_back()
 	_almos.return_to(_return_point)
 	_leave_remains(lost, _fall_place)
 

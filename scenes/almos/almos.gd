@@ -197,6 +197,11 @@ var untouchable: bool:
 ## after that is up to his Weapons, so this is the only one to set.
 @export var weapon: WeaponData
 
+## The Armour he wears, or null for none: a placeholder until Armour and Load is done, so nothing
+## reads it and it has no effect. He wears an Armour at once when he takes it with a tap of
+## Interact.
+@export var armour: ArmourData
+
 ## What he fights with when his hands are empty: Unarmed. It is given to his attacks whenever no
 ## Weapon is in hand, and it is not carried, so it is never in his Weapons.
 @export var unarmed: WeaponData
@@ -264,6 +269,11 @@ var _roll_press_lost := false
 # Set once the Weapon he starts with has been put in his hands, so that going into the tree again
 # does not put it in his hands again.
 var _weapons_started := false
+# The gear he is given back by a Death: what he carried, which of it was in hand and what he wore at
+# his last rest, or at the start until he first rests.
+var _saved_weapons: Array[WeaponData] = []
+var _saved_in_hand_index := -1
+var _saved_armour: ArmourData
 # Whether an Interact press that began while he was free is being timed. It ends in a tap or a
 # drop, or is lost if he stops being free.
 var _interact_counted := false
@@ -311,6 +321,7 @@ func _enter_tree() -> void:
 	if not _weapons_started:
 		_weapons_started = true
 		own_weapons.pick_up(weapon)
+		_save_the_gear(own_weapons)
 	# Handing over the weapon in hand or the tuning changes nothing else, so they need no check
 	# first.
 	($Attacks as AlmosAttacks).weapon = own_weapons.in_hand if own_weapons.in_hand != null else unarmed
@@ -444,7 +455,7 @@ func _physics_process(delta: float) -> void:
 	_advance_switch()
 	# Interact is a tap or a hold, read as he is free and not blocking as the last frame left it,
 	# since this comes before Block is advanced. A tap rests at a Checkpoint in reach, or else picks
-	# up a Weapon in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
+	# up a Weapon or Armour in reach; a hold drops the Weapon in hand. A Jump taken off in this frame wins
 	# against a press made in the same frame, since he is in the air by now.
 	_advance_interact(_free_to_act(left_open, parry_on, airborne) and not blocking and not spell.holding, delta)
 	# Getting into a Hiding spot in this frame leaves him in it, still, whatever else was pressed.
@@ -502,8 +513,10 @@ func grant_mana_bar() -> void:
 
 
 ## He is back on his feet at this point, in global coordinates: on the ground level, with full
-## Health, Stamina, Mana and Flask charges, still, and in none of the actions. His Experience, his facing and
-## everything outside him are left as they are; whoever sends him back sees to those.
+## Health, Stamina, Mana and Flask charges, still, and in none of the actions. He carries the Weapons
+## he carried at his last rest, with the same one in hand, and wears the Armour he wore then (what
+## he started with, if he has not rested): what he took since is not his any more. His Experience,
+## his facing and everything outside him are left as they are; whoever sends him back sees to those.
 func return_to(point: Vector2) -> void:
 	_end_every_action()
 	_dead = false
@@ -515,6 +528,8 @@ func return_to(point: Vector2) -> void:
 	stamina.refill()
 	mana.refill()
 	flasks.refill()
+	weapons.restore(_saved_weapons, _saved_in_hand_index)
+	armour = _saved_armour
 	returned.emit()
 
 
@@ -601,8 +616,8 @@ func _free_to_act(left_open: bool, parry_on: bool, in_the_air: bool) -> bool:
 # is free, which is the same as for resting: not in a Roll, an attack, a Guard break, a Parry or
 # the air, and not blocking. One made when he is not free is lost, not kept for after, and so is
 # one he stops being free in the middle of. Let go of before drop_hold_time it is a tap, which
-# rests at a Checkpoint in reach, or picks up a Weapon in reach if there is no Checkpoint. Held
-# to drop_hold_time it drops the Weapon in hand, once, on the frame it gets there, and neither
+# rests at a Checkpoint in reach, or picks up a Weapon or Armour in reach if there is no Checkpoint.
+# Held to drop_hold_time it drops the Weapon in hand, once, on the frame it gets there, and neither
 # picks up nor rests when it is let go of. The time is counted in summed frame lengths compared
 # through TIME_SLACK, as the Roll's hold is. The button is polled, as the Roll button is: a press
 # and release that both land before the same frame never show it down, so the just-pressed check
@@ -634,13 +649,13 @@ func _advance_interact(free: bool, delta: float) -> void:
 
 
 # A tap of Interact: in a Hiding spot he leaves it. Otherwise he rests if a Checkpoint is in reach,
-# or else hides if a Hiding spot is, and picks up a Weapon only if there is neither, so a Weapon
-# lying beside a Checkpoint or a Hiding spot stays where it is.
+# or else hides if a Hiding spot is, and picks up a Weapon or Armour only if there is neither, so
+# a pickup lying beside a Checkpoint or a Hiding spot stays where it is.
 func _on_interact_tapped() -> void:
 	if _hiding:
 		_leave_hiding()
 	elif not _rest_at_a_checkpoint_in_reach() and not _hide_in_a_spot_in_reach():
-		_pick_up_a_weapon_in_reach()
+		_pick_up_a_pickup_in_reach()
 
 
 # One frame in a Hiding spot: he neither moves nor acts, and a tap of Interact leaves. A Roll button
@@ -721,19 +736,30 @@ func _rest_at_a_checkpoint_in_reach() -> bool:
 	stamina.refill()
 	mana.refill()
 	flasks.refill()
+	_save_the_gear(weapons)
 	nearest.rest(tuning.rest_flash_duration)
 	rested.emit(nearest)
 	return true
 
 
-# Picks up the nearest Weapon lying within pickup_reach of him, if there is one: it is carried
-# from then on, after the others, and the pickup is gone from the ground.
-func _pick_up_a_weapon_in_reach() -> void:
-	var nearest: WeaponPickup = null
+# Keeps the Weapons he carries, the one in hand and the Armour he wears, as what a Death gives back.
+func _save_the_gear(own_weapons: AlmosWeapons) -> void:
+	_saved_weapons = own_weapons.carried
+	_saved_in_hand_index = own_weapons.in_hand_index
+	_saved_armour = armour
+
+
+# Takes up the nearest Weapon or Armour lying within pickup_reach of him, if there is one, and
+# only that one. A Weapon is carried from then on, after the others; Armour is worn at once. The
+# pickup is gone from the ground.
+func _pick_up_a_pickup_in_reach() -> void:
+	var nearest: Node2D = null
 	var nearest_distance := tuning.pickup_reach
-	for node in get_tree().get_nodes_in_group(&"weapon_pickups"):
-		var pickup := node as WeaponPickup
-		if pickup == null or pickup.weapon == null or pickup.is_queued_for_deletion():
+	for node in get_tree().get_nodes_in_group(&"weapon_pickups") + get_tree().get_nodes_in_group(&"armour_pickups"):
+		var pickup := node as Node2D
+		if pickup == null or pickup.is_queued_for_deletion():
+			continue
+		if not (pickup is WeaponPickup and pickup.weapon != null) and not (pickup is ArmourPickup and pickup.armour != null):
 			continue
 		var distance := global_position.distance_to(pickup.global_position)
 		if distance <= nearest_distance:
@@ -741,7 +767,13 @@ func _pick_up_a_weapon_in_reach() -> void:
 			nearest_distance = distance
 	if nearest == null:
 		return
-	weapons.pick_up(nearest.weapon)
+	if nearest is WeaponPickup:
+		weapons.pick_up(nearest.weapon)
+	else:
+		armour = nearest.armour
+	# One with an id is noted taken until the next rest, so that a Death puts it back.
+	if nearest.id != &"":
+		WorldState.record_taken(nearest.id)
 	nearest.queue_free()
 
 
