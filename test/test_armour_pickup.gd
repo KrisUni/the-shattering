@@ -9,6 +9,7 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const ARMOUR_PICKUP_SCENE_PATH := "res://scenes/world/armour_pickup.tscn"
 const WEAPON_PICKUP_SCENE_PATH := "res://scenes/world/weapon_pickup.tscn"
 const CHECKPOINT_SCENE_PATH := "res://scenes/world/checkpoint.tscn"
+const HIDING_SPOT_SCENE_PATH := "res://scenes/world/hiding_spot.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
 const ARMOUR_PATH := "res://data/almos_armour.tres"
 const SPEAR_PATH := "res://data/spear.tres"
@@ -104,6 +105,20 @@ func test_a_tap_with_a_checkpoint_and_an_armour_pickup_both_in_reach_rests_and_l
 	await _tap(&"interact")
 
 	assert_signal_emitted(almos, "rested")
+	assert_null(almos.armour, "the Armour should not be worn")
+	assert_false(_is_gone(pickup), "the pickup should lie where it was")
+
+
+func test_a_tap_with_a_hiding_spot_and_an_armour_pickup_both_in_reach_hides_and_leaves_the_armour() -> void:
+	var almos := _almos()
+	var spot := (load(HIDING_SPOT_SCENE_PATH) as PackedScene).instantiate() as Node2D
+	add_child_autofree(spot)
+	spot.global_position = almos.global_position
+	var pickup := _armour_pickup_at(almos.global_position + Vector2(BESIDE, 0.0))
+
+	await _tap(&"interact")
+
+	assert_true(almos.hiding, "he should be hidden")
 	assert_null(almos.armour, "the Armour should not be worn")
 	assert_false(_is_gone(pickup), "the pickup should lie where it was")
 
