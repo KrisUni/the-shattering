@@ -19,6 +19,8 @@ const GREATSWORD_PATH := "res://data/greatsword.tres"
 const TORCH_PATH := "res://data/torch.tres"
 const UNARMED_PATH := "res://data/unarmed.tres"
 const WEAPON_PICKUP_SCENE_PATH := "res://scenes/world/weapon_pickup.tscn"
+const ARMOUR_PICKUP_SCENE_PATH := "res://scenes/world/armour_pickup.tscn"
+const ARMOUR_PATH := "res://data/almos_armour.tres"
 const GAP_SCENE_PATH := "res://scenes/world/gap.tscn"
 
 const PICKUPS_GROUP := &"weapon_pickups"
@@ -1118,7 +1120,7 @@ func test_dropped_pickups_stay_where_they_are_through_a_rest() -> void:
 	assert_eq(dropped.global_position, OPEN_SPOT)
 
 
-func test_dropped_pickups_stay_where_they_are_through_a_death() -> void:
+func test_a_death_before_a_rest_takes_a_dropped_weapon_off_the_floor_and_gives_it_back_to_him() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
 	almos.global_position = OPEN_SPOT
@@ -1128,8 +1130,70 @@ func test_dropped_pickups_stay_where_they_are_through_a_death() -> void:
 	almos.health.take_damage(almos.health.maximum)
 	await _wait_until(func() -> bool: return not almos.dead)
 
-	assert_true(is_instance_valid(dropped), "the dropped Weapon should still lie there")
-	assert_eq(dropped.global_position, OPEN_SPOT)
+	assert_false(is_instance_valid(dropped) and dropped.is_inside_tree(), "the dropped Weapon should be gone from the floor")
+	assert_eq(almos.weapons.in_hand.resource_path, SWORD_PATH, "he holds the Sword again")
+	for pickup in _pickups_in(room):
+		assert_ne(pickup.weapon.resource_path, SWORD_PATH, "no Sword should lie in the room")
+
+
+func test_a_death_before_a_rest_lays_a_weapon_he_took_where_it_lay_and_does_not_leave_it_with_him() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	var spear_pickup := room.find_child("SpearPickup", true, false) as WeaponPickup
+	var lay_at := spear_pickup.global_position
+	_stand_at(room, almos, "SpearPickup")
+	await _tap(&"interact")
+	assert_eq(almos.weapons.carried.size(), 2, "he took the Spear")
+
+	almos.health.take_damage(almos.health.maximum)
+	await _wait_until(func() -> bool: return not almos.dead)
+
+	assert_eq(almos.weapons.carried.size(), 1, "he does not carry the Spear")
+	var lying: Array[WeaponPickup] = []
+	for pickup in _pickups_in(room):
+		if pickup.weapon.resource_path == SPEAR_PATH:
+			lying.append(pickup)
+	assert_eq(lying.size(), 1, "one Spear lies in the room")
+	assert_eq(lying[0].global_position, lay_at, "where it lay")
+
+
+func test_a_death_after_a_rest_keeps_a_weapon_he_took_and_does_not_lay_it_again() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	_stand_at(room, almos, "SpearPickup")
+	await _tap(&"interact")
+	await _rest(room, almos)
+
+	almos.health.take_damage(almos.health.maximum)
+	await _wait_until(func() -> bool: return not almos.dead)
+
+	assert_eq(almos.weapons.carried.size(), 2, "he still carries the Spear")
+	for pickup in _pickups_in(room):
+		assert_ne(pickup.weapon.resource_path, SPEAR_PATH, "no Spear should lie in the room")
+
+
+func test_a_death_before_a_rest_lays_armour_he_took_where_it_lay() -> void:
+	var room := _spawn_room()
+	var almos := _almos(room)
+	var armour_pickup := (load(ARMOUR_PICKUP_SCENE_PATH) as PackedScene).instantiate() as ArmourPickup
+	armour_pickup.armour = load(ARMOUR_PATH) as ArmourData
+	armour_pickup.position = OPEN_SPOT
+	room.add_child(armour_pickup)
+	await _rest(room, almos)
+	almos.global_position = OPEN_SPOT
+	await _tap(&"interact")
+	assert_not_null(almos.armour, "he wears the Armour")
+
+	almos.health.take_damage(almos.health.maximum)
+	await _wait_until(func() -> bool: return not almos.dead)
+
+	assert_null(almos.armour, "he does not wear it")
+	var lying: Array[Node] = []
+	for node in get_tree().get_nodes_in_group(&"armour_pickups"):
+		if room.is_ancestor_of(node) and not node.is_queued_for_deletion():
+			lying.append(node)
+	assert_eq(lying.size(), 1, "one Armour lies in the room")
+	assert_eq((lying[0] as Node2D).global_position, OPEN_SPOT, "where it lay")
 
 
 func test_dropped_pickups_stay_where_they_are_through_a_rest_and_then_a_death() -> void:
@@ -1137,15 +1201,14 @@ func test_dropped_pickups_stay_where_they_are_through_a_rest_and_then_a_death() 
 	var almos := _almos(room)
 	almos.global_position = OPEN_SPOT
 	await _hold_interact_to_drop()
-	var dropped := _dropped_sword(room)
 	almos.global_position = room.find_child("Checkpoint", true, false).global_position
 	await _tap(&"interact")
 
 	almos.health.take_damage(almos.health.maximum)
 	await _wait_until(func() -> bool: return not almos.dead)
 
-	assert_true(is_instance_valid(dropped), "the dropped Weapon should still lie there")
-	assert_eq(dropped.global_position, OPEN_SPOT)
+	assert_eq(almos.weapons.carried.size(), 0, "his hands are empty")
+	assert_eq(_dropped_sword(room).global_position, OPEN_SPOT, "the Sword lies where he dropped it")
 
 
 func test_empty_hands_at_a_rest_stay_empty_through_a_death() -> void:
