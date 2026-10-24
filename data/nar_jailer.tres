@@ -76,5 +76,6 @@ guards = true
 block_damage_share = 0.25
 block_stagger = 15.0
 parry_every = 3
+guard_pause_frames = 90
 weight = 30.0
 wall_stagger = 100.0

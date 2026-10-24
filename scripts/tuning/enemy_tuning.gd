@@ -141,6 +141,13 @@ enum AttackKind {
 ## negated: it takes no Health and builds no Stagger.
 @export var parry_every: int
 
+## For how many physics frames, after a combo has run to its last swing, it makes no attack. It
+## still turns to face its target and walks to him if he is out of attack_range, and being free it
+## guards, so that this is the time to hit it. A combo that was dropped before its last swing is
+## followed by no pause, and a Break ends the pause. Left at 0 it starts the next attack as soon as
+## the last ends.
+@export var guard_pause_frames := 0
+
 
 ## How far its Sight reaches when Almos stands in this much light (0 to 1).
 func sight_length_at(light: float) -> float:

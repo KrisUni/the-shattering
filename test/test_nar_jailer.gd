@@ -271,6 +271,97 @@ func test_hits_that_land_in_a_break_do_not_count_toward_the_parry() -> void:
 	assert_almost_eq(before - enemy.health.current, HIT_DAMAGE * SHARE, TOLERANCE, "the first hit after the Break should be blocked, not parried")
 
 
+# --- Guard pause ---
+
+func test_the_nar_jailers_data_file_gives_it_a_guard_pause() -> void:
+	var loaded := load(JAILER_PATH) as EnemyTuning
+	assert_not_null(loaded, "the Nar jailer's data file should load")
+	if loaded == null:
+		return
+	assert_gt(loaded.guard_pause_frames, 0, "frames it makes no attack for after a combo")
+
+
+func test_in_the_guard_pause_with_its_own_data_the_hits_from_the_front_are_blocked_and_every_nth_parried() -> void:
+	var tuning := load(JAILER_PATH) as EnemyTuning
+	var enemy = _rig.spawn_enemy(tuning)
+	_place_target_in_reach(enemy)
+	await _wait_until_swinging(enemy)
+	await _wait_until_free(enemy)
+	var outcomes: Array[float] = []
+
+	for i in tuning.parry_every:
+		var before: float = enemy.health.current
+		await _hit(enemy, true)
+		outcomes.append(before - enemy.health.current)
+
+	var blocked := HIT_DAMAGE * tuning.block_damage_share
+	var expected: Array[float] = []
+	for i in tuning.parry_every - 1:
+		expected.append(blocked)
+	expected.append(0.0)
+	assert_false(enemy.attacking, "control: it is still in the pause")
+	assert_eq(outcomes.size(), expected.size())
+	for i in mini(outcomes.size(), expected.size()):
+		assert_almost_eq(outcomes[i], expected[i], TOLERANCE, "damage of hit %d" % (i + 1))
+
+
+func test_in_the_guard_pause_with_its_own_data_a_parried_hit_makes_almos_recoil() -> void:
+	var tuning := load(JAILER_PATH) as EnemyTuning
+	var almos = _almos_input.spawn_almos()
+	almos.health.maximum = 100000.0
+	var enemy = _rig.spawn_enemy(tuning, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
+	_rig.set_target(almos, almos.health)
+	_rig.sample_also("recoiling", func() -> bool: return almos.recoiling)
+	await _wait_until_swinging(enemy)
+	await _wait_until_free(enemy)
+
+	# Light swings, one after another, for as long as the pause lasts.
+	for i in tuning.guard_pause_frames / SWING_WAIT_FRAMES:
+		await _tap(&"attack_light")
+		await _rig.wait_frames(SWING_WAIT_FRAMES - TAP_FRAMES)
+
+	assert_ne(_rig.first_sample_where("recoiling"), -1, "he should have been Parried")
+	assert_gt(enemy.stagger.current, 0.0, "the Blocked swings should have built Stagger on it")
+
+
+# --- Damage-only hits ---
+
+func test_a_damage_only_hit_from_the_front_is_blocked_and_builds_no_stagger() -> void:
+	var enemy = _spawn_jailer({"parry_every": NEVER})
+
+	enemy.get_node("Hurtbox").hurt_damage_only(HIT_DAMAGE, enemy.global_position + Vector2.DOWN * HIT_DISTANCE)
+
+	assert_almost_eq(enemy.health.current, enemy.tuning.health_maximum - HIT_DAMAGE * SHARE, TOLERANCE, "Health left")
+	assert_almost_eq(enemy.stagger.current, 0.0, TOLERANCE, "Stagger built")
+
+
+func test_a_damage_only_hit_from_the_front_is_never_parried() -> void:
+	var enemy = _spawn_jailer({"parry_every": 1})
+
+	enemy.get_node("Hurtbox").hurt_damage_only(HIT_DAMAGE, enemy.global_position + Vector2.DOWN * HIT_DISTANCE)
+
+	assert_almost_eq(enemy.health.current, enemy.tuning.health_maximum - HIT_DAMAGE * SHARE, TOLERANCE)
+
+
+func test_damage_only_hits_do_not_count_toward_the_parry() -> void:
+	var enemy = _spawn_jailer()
+	for i in PARRY_EVERY:
+		enemy.get_node("Hurtbox").hurt_damage_only(HIT_DAMAGE, enemy.global_position + Vector2.DOWN * HIT_DISTANCE)
+	var before: float = enemy.health.current
+
+	await _hit(enemy, true)
+
+	assert_almost_eq(before - enemy.health.current, HIT_DAMAGE * SHARE, TOLERANCE, "the first hit that builds Stagger should be blocked, not parried")
+
+
+func test_a_damage_only_hit_from_behind_deals_all_its_damage() -> void:
+	var enemy = _spawn_jailer({"parry_every": NEVER})
+
+	enemy.get_node("Hurtbox").hurt_damage_only(HIT_DAMAGE, enemy.global_position + Vector2.UP * HIT_DISTANCE)
+
+	assert_almost_eq(enemy.health.current, enemy.tuning.health_maximum - HIT_DAMAGE, TOLERANCE)
+
+
 # --- Enemies that do not guard ---
 
 func test_an_enemy_that_does_not_guard_takes_every_hit_as_it_lands() -> void:

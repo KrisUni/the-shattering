@@ -35,6 +35,10 @@ const MOVED := 0.5
 const BLOCKED_SHARE := 0.5
 # In Stagger points. What a stand-in Parry builds, short of filling the meter.
 const PARRY_STAGGER := 1.0
+# In physics frames. The guard pause the tests that want one set, and one far longer than any gap
+# in a fight, which the wait for the next combo is still shorter than.
+const PAUSE_FRAMES := 25
+const LONG_PAUSE_FRAMES := 400
 
 # The three swings the tests set, each with its own damage and frames: two short ones and a heavy
 # one with a longer wind-up and recovery. In physics frames and Health points.
@@ -199,6 +203,101 @@ func test_a_parry_that_fills_the_stagger_breaks_it_and_the_next_combo_starts_fro
 	assert_eq(_damages(_rig.hits()).slice(0, 2), [SWING_DAMAGES[0], SWING_DAMAGES[1]] as Array[float], "hits the target took, the first swing having been parried and the combo begun again")
 
 
+# --- The guard pause ---
+
+func test_after_the_last_swing_it_makes_no_attack_for_the_guard_pause_and_then_starts_the_next_combo() -> void:
+	_rig.spawn_enemy(_combo_tuning({"guard_pause_frames": PAUSE_FRAMES}))
+	_rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+
+	await _rig.wait_frames(_combo_frames() + PAUSE_FRAMES + SETTLE_FRAMES)
+
+	# The samples after the three swings, the first showing the enemy free.
+	var combo_over := _rig.first_sample_where("attacking") + _combo_frames()
+	var free_for := 0
+	while not _rig.samples[combo_over + free_for].attacking:
+		free_for += 1
+	assert_eq(free_for, PAUSE_FRAMES, "frames it makes no attack for")
+
+
+func test_the_combo_after_the_guard_pause_starts_from_the_first_swing() -> void:
+	_rig.spawn_enemy(_combo_tuning({"guard_pause_frames": PAUSE_FRAMES}))
+	_rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+
+	await _rig.wait_frames(_combo_frames() + PAUSE_FRAMES + SWING_STARTUPS[0] + SWING_ACTIVES[0] + SETTLE_FRAMES)
+
+	var expected: Array[float] = [SWING_DAMAGES[0], SWING_DAMAGES[1], SWING_DAMAGES[2], SWING_DAMAGES[0]]
+	assert_eq(_damages(_rig.hits()), expected)
+
+
+func test_without_a_guard_pause_the_next_combo_starts_at_once() -> void:
+	_rig.spawn_enemy(_combo_tuning())
+	_rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+
+	await _rig.wait_frames(2 * _combo_frames() + SETTLE_FRAMES)
+
+	var combo_over := _rig.first_sample_where("attacking") + _combo_frames()
+	assert_true(_rig.samples[combo_over].attacking, "it should be in the next combo in the first frame after the last swing")
+
+
+func test_a_combo_dropped_before_its_last_swing_is_not_followed_by_a_guard_pause() -> void:
+	var tuning := _combo_tuning({"guard_pause_frames": LONG_PAUSE_FRAMES})
+	var enemy = _rig.spawn_enemy(tuning)
+	var target := _rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+	await _wait_for_hits(1)
+
+	target.position += Vector2.RIGHT * (tuning.attack_range + BEYOND_RANGE)
+	await _rig.wait_frames(SWING_ACTIVES[0] + SWING_RECOVERIES[0] + SETTLE_FRAMES)
+	target.global_position = enemy.global_position + Vector2.RIGHT * TARGET_DISTANCE
+	await _wait_for_hits(2)
+
+	var hits := _rig.hits()
+	assert_lt(hits[1].sample - hits[0].sample, LONG_PAUSE_FRAMES, "frames from the first hit to the second")
+
+
+func test_a_break_ends_the_guard_pause() -> void:
+	var enemy = _rig.spawn_enemy(_combo_tuning({"guard_pause_frames": LONG_PAUSE_FRAMES, "break_frames": 5}))
+	_rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+	await _wait_until_the_combo_is_over(enemy)
+	assert_false(enemy.attacking, "control: it is in the pause")
+	var hitbox := _rig.hitbox_over(enemy, 0.0, "enemy_hurtbox")
+	hitbox.stagger = enemy.tuning.stagger_capacity
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	await _rig.swing(hitbox, 1)
+
+	assert_true(enemy.broken, "control: it broke")
+	await _wait_for_hits(4)
+	var hits := _rig.hits()
+	assert_lt(hits[3].sample - hits[2].sample, LONG_PAUSE_FRAMES, "frames from the last hit of the combo to the first of the next")
+
+
+func test_in_the_guard_pause_it_turns_to_face_its_target() -> void:
+	var enemy = _rig.spawn_enemy(_combo_tuning({"guard_pause_frames": LONG_PAUSE_FRAMES}))
+	var target := _rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+	await _wait_until_the_combo_is_over(enemy)
+
+	# Within attack range and its Sight, off to the side of the way it faces (to the right).
+	target.global_position = enemy.global_position + Vector2(TARGET_DISTANCE, TARGET_DISTANCE * 0.5)
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	assert_gt(enemy.facing.y, 0.0, "it should turn to face him")
+	assert_false(enemy.attacking, "and still be in the pause")
+
+
+func test_in_the_guard_pause_it_walks_to_a_target_out_of_attack_range() -> void:
+	var tuning := _combo_tuning({"guard_pause_frames": LONG_PAUSE_FRAMES})
+	var enemy = _rig.spawn_enemy(tuning)
+	var target := _rig.place_target(Vector2.RIGHT * TARGET_DISTANCE)
+	await _wait_until_the_combo_is_over(enemy)
+	var left_at: Vector2 = enemy.position
+
+	target.position += Vector2.RIGHT * (tuning.attack_range + BEYOND_RANGE)
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	assert_gt(enemy.position.distance_to(left_at), MOVED, "it should walk towards him")
+	assert_false(enemy.attacking, "and still be in the pause")
+
+
 # --- The swings as hits ---
 
 func test_a_swing_is_blockable_as_the_strike_is() -> void:
@@ -275,7 +374,7 @@ func test_the_nar_jailer_chains_its_swings_in_a_fight_and_never_grabs() -> void:
 	for swing in jailer.combo:
 		one_combo += swing.total_frames()
 
-	await _rig.wait_frames(rounds * one_combo + SETTLE_FRAMES)
+	await _rig.wait_frames(rounds * one_combo + (rounds - 1) * jailer.guard_pause_frames + SETTLE_FRAMES)
 
 	var expected: Array[float] = []
 	for i in rounds:
@@ -356,6 +455,16 @@ func _wait_frames_until_stagger(enemy) -> void:
 			return
 		await get_tree().physics_frame
 	fail_test("the enemy should have Stagger built on it")
+
+
+# Waits until the enemy has made the three swings and is free again.
+func _wait_until_the_combo_is_over(enemy) -> void:
+	await _wait_for_hits(SWING_DAMAGES.size())
+	for i in WAIT_FRAME_LIMIT:
+		if not enemy.attacking:
+			return
+		await get_tree().physics_frame
+	fail_test("the combo should be over")
 
 
 # Waits until the target has taken this many hits.

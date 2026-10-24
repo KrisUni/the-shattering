@@ -177,6 +177,9 @@ var _swing := 0
 var _frame := -1
 var _dead := false
 var _broken := false
+# The physics frame it may make its next attack in, after a combo that ran to its last swing. The
+# frame the combo ends in counts as the first of the guard_pause_frames.
+var _pause_end_frame := 0
 # The physics frame it is free again in, once broken. The frame the Break begins in counts as the
 # first of its break_frames, whichever of Almos's blow and its own processing comes first in it.
 var _break_end_frame := 0
@@ -247,6 +250,7 @@ func _ready() -> void:
 	_hurtbox.landed_damage_only.connect(_on_damage_only_hit_landed)
 	if tuning.guards:
 		_hurtbox.is_parried = _parries
+		_hurtbox.parries_damage_only = false
 		_hurtbox.damage_through = _damage_through_the_block
 	stagger.changed.connect(_show_stagger)
 	_facing = post_facing.normalized()
@@ -282,6 +286,8 @@ func _physics_process(_delta: float) -> void:
 				if not _to_target().is_zero_approx():
 					_facing = _to_target().normalized()
 				_begin_attack()
+			elif _kind == EnemyTuning.AttackKind.COMBO and _swing + 1 >= tuning.combo.size():
+				_pause_end_frame = Engine.get_physics_frames() + tuning.guard_pause_frames
 	if _broken:
 		velocity = Vector2.ZERO
 	# One that has died in this frame starts nothing new, but the frame is played out all the
@@ -507,6 +513,9 @@ func _act_freely() -> void:
 	if not to_target.is_zero_approx():
 		_facing = to_target.normalized()
 	if to_target.length() <= tuning.attack_range:
+		# Free but not attacking: it guards until the pause after its combo is over.
+		if Engine.get_physics_frames() < _pause_end_frame:
+			return
 		# It makes the next attack in its order, whatever came of the one before.
 		if _dragging:
 			_kind = EnemyTuning.AttackKind.UNBLOCKABLE
@@ -663,7 +672,8 @@ func _guards_against(from: Vector2) -> bool:
 
 
 # Whether a hit from this point is Parried: every parry_every'th hit it guards against in a row. A
-# Parried hit still makes it notice the target. Asked once for each hit that does not miss.
+# Parried hit still makes it notice the target. Asked once for each hit that does not miss, except
+# a hit that is damage only: that is Blocked, never Parried, and does not count.
 func _parries(from: Vector2) -> bool:
 	if not _guards_against(from):
 		return false
@@ -701,6 +711,7 @@ func _build_stagger(amount: float) -> void:
 func _begin_break() -> void:
 	_broken = true
 	_break_end_frame = Engine.get_physics_frames() + tuning.break_frames
+	_pause_end_frame = 0
 	_front_hits = 0
 	_frame = -1
 	_set_strike(false)
