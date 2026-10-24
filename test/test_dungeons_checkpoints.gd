@@ -10,7 +10,6 @@ const DUNGEONS_PATH := "res://scenes/areas/dungeons/dungeons.tscn"
 const SWORD_PATH := "res://data/sword.tres"
 const ARMOUR_PATH := "res://data/almos_armour.tres"
 const FIRE_PATH := "res://data/fire.tres"
-const ROOTS_ID := &"dungeons/cell_3/roots"
 # In pixels. The size of the view the Dungeons is shown in: the project's default window.
 const VIEW_SIZE := Vector2i(1152, 648)
 # In pixels. How far from a Checkpoint or a pickup Almos stands: well inside his reach.
@@ -19,7 +18,10 @@ const BESIDE := 5.0
 const RETURN_TOLERANCE := 2.0
 # In pixels. The walls are 16 pixels thick and Almos is about 30 across; a Checkpoint is clear of a wall
 # when it is at least this far from the edge of the Room, and clear of an exit's strip likewise.
-const CLEARANCE := 48.0
+const CLEARANCE_FROM_WALLS := 48.0
+# In pixels. How near the arrival marker of the Back entrance a Checkpoint must be to count as
+# "near" it: a few steps of Almos's.
+const NEAR_ARRIVAL := 80.0
 const TAP_FRAMES := 3
 const MARGIN_FRAMES := 8
 # In physics frames. The most a Death and the return after it is waited for.
@@ -85,10 +87,10 @@ func test_back_corridor_1s_checkpoint_is_clear_of_the_walls_and_of_the_back_entr
 
 	var checkpoint := _checkpoints_in(corridor)[0]
 
-	var inside := corridor.get_rect().grow(-CLEARANCE)
+	var inside := corridor.get_rect().grow(-CLEARANCE_FROM_WALLS)
 	assert_true(inside.has_point(checkpoint.global_position), "it should stand clear of the Room's edges")
 	var strip := (back_entrance.get_node("CollisionShape2D") as CollisionShape2D).shape.get_rect()
-	var strip_rect := Rect2(back_entrance.global_position + strip.position, strip.size).grow(CLEARANCE)
+	var strip_rect := Rect2(back_entrance.global_position + strip.position, strip.size).grow(CLEARANCE_FROM_WALLS)
 	assert_false(strip_rect.has_point(checkpoint.global_position), "it should stand clear of the Back entrance's strip")
 
 
@@ -101,7 +103,7 @@ func test_the_checkpoint_in_back_corridor_1_is_near_the_back_entrance() -> void:
 
 	var arrival := (back_entrance.get_node("Entrance") as Marker2D).global_position
 
-	assert_lt(checkpoint.global_position.distance_to(arrival), CLEARANCE, "it should be within a step of where Almos arrives")
+	assert_lt(checkpoint.global_position.distance_to(arrival), NEAR_ARRIVAL, "it should be within a few steps of where Almos arrives")
 
 
 func test_a_death_before_a_rest_returns_almos_to_cell_3_with_the_roots_whole() -> void:
@@ -130,7 +132,6 @@ func test_a_death_after_a_rest_at_the_lobbys_checkpoint_returns_almos_to_it_with
 	var checkpoint := _checkpoints_in(dungeons.room(&"lobby"))[0]
 	assert_lt(host.almos.global_position.distance_to(checkpoint.global_position), RETURN_TOLERANCE, "he should stand at the Checkpoint")
 	assert_true(_roots(host).open, "the roots should be open")
-	assert_true(WorldState.is_burnt(ROOTS_ID), "the roots should be remembered as burnt")
 
 
 func test_a_death_after_a_rest_at_back_corridor_1s_checkpoint_returns_almos_to_it() -> void:

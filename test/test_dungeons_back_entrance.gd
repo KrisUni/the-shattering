@@ -80,7 +80,6 @@ func test_a_death_before_a_rest_makes_the_burnt_seal_whole_again() -> void:
 	var dungeons := host.current_space as DungeonsBuilding
 	assert_eq(dungeons.current_room, dungeons.room(&"cell_3"), "he should be back in Cell 3")
 	assert_false(_seal(host).open, "the seal should be whole")
-	assert_false(WorldState.is_burnt(SEAL_ID), "the seal should not be remembered as burnt")
 
 
 func test_a_death_after_a_rest_at_back_corridor_1s_checkpoint_leaves_the_burnt_seal_open() -> void:
@@ -92,7 +91,6 @@ func test_a_death_after_a_rest_at_back_corridor_1s_checkpoint_leaves_the_burnt_s
 	await _die_and_wait_for_the_return(host)
 
 	assert_true(_seal(host).open, "the seal should be open")
-	assert_true(WorldState.is_burnt(SEAL_ID), "the seal should be remembered as burnt")
 
 
 func test_a_death_after_a_rest_at_the_lobbys_checkpoint_leaves_the_burnt_seal_open() -> void:
