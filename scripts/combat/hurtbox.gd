@@ -42,6 +42,11 @@ signal landed_damage_only(from: Vector2)
 ## the Parry. Left as it is, nothing is parried.
 var is_parried: Callable = func(_from: Vector2) -> bool: return false
 
+## Whether a hit that is damage only, such as a fireball's, is asked of is_parried like any other.
+## An owner that guards sets it to false, so that such a hit, which builds no Stagger to wear a
+## guard down with, can be Blocked but never Parried. Left as it is, it can be parried.
+var parries_damage_only := true
+
 ## What became of a hit that reached a Hurtbox.
 enum Outcome {
 	## The owner was untouchable, or in the air under a low hit, so the hit did not land and may
@@ -83,8 +88,8 @@ func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low :
 
 ## A hit that is damage only, such as a fireball's, reaches this Hurtbox, for this much damage,
 ## coming from this point in the world. It builds no Stagger and is neither a Critical hit, low,
-## unblockable nor a grab: it is parried, blocked, missed and dealt with as any hit is, but the
-## owner is told with landed_damage_only, not landed. Returns what became of it, as hurt does.
+## unblockable nor a grab: it is parried (unless parries_damage_only is false), blocked, missed and
+## dealt with as any hit is, but the owner is told with landed_damage_only, not landed. Returns what became of it, as hurt does.
 ## If it is unblockable, as Fire's is, it is neither parried nor blocked, as with hurt.
 func hurt_damage_only(damage: float, from: Vector2, unblockable := false) -> Outcome:
 	return _receive(damage, from, 0.0, false, false, unblockable, false, true)
@@ -102,7 +107,7 @@ func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low:
 		health.take_damage(damage)
 		_announce_landed(stagger, from, critical, damage_only)
 		return Outcome.LANDED
-	if is_parried.call(from):
+	if (parries_damage_only or not damage_only) and is_parried.call(from):
 		return Outcome.PARRIED
 	health.take_damage(damage_through.call(damage, from))
 	_announce_landed(stagger, from, critical, damage_only)

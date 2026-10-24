@@ -13,6 +13,9 @@ enum AttackKind {
 	## An Unblockable attack, which neither Block nor Parry deals with: unblockable_attack and
 	## unblockable_attack_reach.
 	UNBLOCKABLE,
+	## A club combo: the swings of combo, one after the other, back to back. Together they are one
+	## entry in the attack pattern. Their reach is combo_reach.
+	COMBO,
 }
 
 ## The order it makes its attacks in, over and over. Each time it starts an attack it makes the
@@ -88,6 +91,18 @@ enum AttackKind {
 ## lasts. It must be shorter than the wind-up, whose rest keeps the tint of its own.
 @export var unblockable_flash_frames: int
 
+## How far from its centre, in pixels, the swings of its combo reach: the far edge of the box its
+## Hitbox hurts with, as attack_reach is for the Strike, whose Hitbox they use. The box keeps its
+## width and height from the scene.
+@export var combo_reach: float
+
+## The swings of its club combo, in the order it makes them. When its attack pattern comes to
+## COMBO it makes them all, one after the other: each swing's recovery frames are the gap before
+## the next, which begins at once, with no walk in between, if its target is still within
+## attack_range. If he is not, or a Break comes, the rest of the combo is dropped, and the next
+## COMBO starts from the first swing. Must not be empty if the attack pattern has COMBO in it.
+@export var combo: Array[AttackData]
+
 ## The most Stagger the enemy can have. A full meter is this much.
 @export var stagger_capacity: float
 
@@ -108,15 +123,42 @@ enum AttackKind {
 ## How much Stagger a hit from behind builds on top of what the attack builds itself.
 @export var behind_stagger: float
 
+## Whether it guards: a Nar jailer does. While it is free, which it is not in an attack, in a
+## Break or dead, it Blocks every hit from its front, and Parries every parry_every'th of them
+## in a row. A hit from behind is neither Blocked nor Parried. An enemy that does not guard
+## takes every hit as it lands.
+@export var guards := false
+
+## How much of a Blocked hit's damage gets through, as a share of it from 0 to 1.
+@export var block_damage_share: float
+
+## How much Stagger a Blocked hit builds on top of what the hit builds itself, so that even a
+## hit that builds none fills the meter in the end: its Guard break is the Break.
+@export var block_stagger: float
+
+## How many hits from its front, in a row, make the last of them a Parry. Hits from behind do not
+## count, nor do hits that find it busy, and a Break starts the count again. A Parried hit is
+## negated: it takes no Health and builds no Stagger.
+@export var parry_every: int
+
+## For how many physics frames, after a combo has run to its last swing, it makes no attack. It
+## still turns to face its target and walks to him if he is out of attack_range, and being free it
+## guards, so that this is the time to hit it. A combo that was dropped before its last swing is
+## followed by no pause, and a Break ends the pause. Left at 0 it starts the next attack as soon as
+## the last ends.
+@export var guard_pause_frames := 0
+
 
 ## How far its Sight reaches when Almos stands in this much light (0 to 1).
 func sight_length_at(light: float) -> float:
 	return lerpf(sight_length_dark, sight_length_full, clampf(light, 0.0, 1.0))
 
 
-## The attack of this kind.
-func attack_of(kind: AttackKind) -> AttackData:
+## The attack of this kind. For COMBO, the swing of this number in combo, counted from 0.
+func attack_of(kind: AttackKind, swing := 0) -> AttackData:
 	match kind:
+		AttackKind.COMBO:
+			return combo[swing]
 		AttackKind.LOW:
 			return low_attack
 		AttackKind.UNBLOCKABLE:
@@ -127,6 +169,8 @@ func attack_of(kind: AttackKind) -> AttackData:
 ## How far from its centre the attack of this kind reaches.
 func reach_of(kind: AttackKind) -> float:
 	match kind:
+		AttackKind.COMBO:
+			return combo_reach
 		AttackKind.LOW:
 			return low_attack_reach
 		AttackKind.UNBLOCKABLE:
