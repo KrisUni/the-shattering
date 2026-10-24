@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
+[ext_resource type="PackedScene" path="res://scenes/world/path_blocker.tscn" id="3_blocker"]
+[ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="4_torch"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -88,3 +90,14 @@ shape = SubResource("Shape_96x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/door"]
 position = Vector2(0, -56)
+
+[node name="Roots" parent="." instance=ExtResource("3_blocker")]
+position = Vector2(576, 620)
+id = &"dungeons/cell_3/roots"
+size = Vector2(128, 16)
+
+[node name="Placeholder" parent="Roots" index="1"]
+color = Color(0.22, 0.3, 0.12, 1)
+
+[node name="Torch" parent="." instance=ExtResource("4_torch")]
+position = Vector2(480, 626)

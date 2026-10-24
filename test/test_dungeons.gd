@@ -145,6 +145,10 @@ func test_almos_starts_in_the_graphs_start_room_with_the_camera_on_it() -> void:
 
 func test_walking_through_every_exit_comes_to_the_entrance_of_the_exit_it_leads_to() -> void:
 	var dungeons := _spawn_dungeons()
+	# Path blockers (Cell 3's roots) close exits; burn them out so that every exit can be walked through.
+	for blocker in dungeons.find_children("*", "PathBlocker", true, false):
+		(blocker as PathBlocker).flammable.burn_out_now()
+	await wait_physics_frames(2)
 	var tolerance := Vector2(TOLERANCE, TOLERANCE)
 
 	for exit_id in _graph.exits:

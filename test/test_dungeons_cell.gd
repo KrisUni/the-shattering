@@ -1,20 +1,41 @@
 extends GutTest
 ## Cell 3 and the Store room: Almos wakes in the Dungeons stripped of his Weapon (and Armour) with
-## his Flasks, and his confiscated Weapon lies in the Store room.
+## his Flasks, and his confiscated Weapon lies in the Store room. The only way out of Cell 3 is
+## closed by living roots, which burn open when the flame of the Cell's torch, Pulled and Shoved
+## at them, or any other flame thrown at them, sets them alight.
+
+const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const WORLD_PATH := "res://scenes/areas/test_world.tscn"
 const DUNGEONS_PATH := "res://scenes/areas/dungeons/dungeons.tscn"
 const SWORD_PATH := "res://data/sword.tres"
+const FLAMMABLE_PATH := "res://scenes/world/flammable.tscn"
+const PULL_PATH := "res://data/pull.tres"
+const FIREBALL_PATH := "res://data/fireball.tres"
+const FIRE_PATH := "res://data/fire.tres"
 # In pixels. The size of the view the Dungeons is shown in: the project's default window.
 const VIEW_SIZE := Vector2i(1152, 648)
+# In pixels, in Cell 3. Where Almos stands to Pull the torch's flame and Shove it down at the roots:
+# within Pull's flame range of the torch and well clear of the roots.
+const STANDING_SPOT := Vector2(560.0, 548.0)
+# In pixels, in Cell 3. Far enough from the roots that a Fire there does not spread to them.
+const FIRE_SPOT := Vector2(560.0, 440.0)
+const TAP_FRAMES := 2
+const MARGIN_FRAMES := 8
+# In physics frames. Long enough to walk from the standing spot to the door, and to push on after.
+const WALK_FRAMES := 240
+
+var _almos_input: AlmosInput
 
 
 func before_each() -> void:
 	WorldState.reset()
 	await get_tree().process_frame
+	_almos_input = AlmosInput.new(self)
 
 
 func after_each() -> void:
+	_almos_input.release_everything()
 	WorldState.reset()
 
 
@@ -66,3 +87,76 @@ func test_the_store_room_holds_his_sword_as_a_pickup() -> void:
 		if pickup.weapon == load(SWORD_PATH):
 			swords.append(pickup)
 	assert_eq(swords.size(), 1, "the Store room should hold one pickup with the sword")
+
+
+func test_almos_walking_at_the_door_while_the_roots_are_whole_stays_in_cell_3() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var dungeons := host.current_space as DungeonsBuilding
+	var cell := dungeons.room(&"cell_3")
+	host.almos.global_position = cell.to_global(STANDING_SPOT)
+
+	_almos_input.press_action(&"move_down")
+	await wait_physics_frames(WALK_FRAMES)
+
+	assert_eq(dungeons.current_room, cell, "the roots should keep him in Cell 3")
+
+
+func test_almos_pulls_the_torchs_flame_and_shoves_it_at_the_roots_to_burn_them_open_and_walks_out() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var dungeons := host.current_space as DungeonsBuilding
+	var cell := dungeons.room(&"cell_3")
+	var roots := cell.get_node("Roots") as PathBlocker
+	var torch := cell.get_node("Torch") as Torch
+	host.almos.global_position = cell.to_global(STANDING_SPOT)
+	host.almos.facing = Vector2.DOWN
+
+	await _tap(&"cast_spell")
+	await wait_physics_frames((load(FIREBALL_PATH) as SpellData).wind_up_frames + MARGIN_FRAMES)
+	assert_true(host.almos.spell.holding, "he should hold the torch's flame")
+	assert_false(torch.lit, "the torch's flame was taken")
+	assert_false(roots.open, "the roots are whole while he only holds the flame")
+	await _tap(&"cast_spell")
+	await _wait_for_the_fire_to_burn_out()
+
+	assert_true(roots.open, "the roots should have burnt open")
+	_almos_input.press_action(&"move_down")
+	await wait_physics_frames(WALK_FRAMES)
+	assert_eq(dungeons.current_room, dungeons.room(&"corridor_1"), "he should walk out through the door into the corridor")
+
+
+func test_a_flame_pulled_from_a_fire_and_shoved_at_the_roots_also_burns_them_open() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var dungeons := host.current_space as DungeonsBuilding
+	var cell := dungeons.room(&"cell_3")
+	var roots := cell.get_node("Roots") as PathBlocker
+	# The torch is put out: the nearest lit torch's flame is taken before a Fire's.
+	(cell.get_node("Torch") as Torch).extinguish()
+	var fire := (load(FLAMMABLE_PATH) as PackedScene).instantiate() as Flammable
+	cell.add_child(fire)
+	fire.global_position = cell.to_global(FIRE_SPOT)
+	fire.ignite()
+	host.almos.global_position = cell.to_global(STANDING_SPOT)
+	host.almos.facing = Vector2.DOWN
+
+	await _tap(&"cast_spell")
+	await wait_physics_frames((load(FIREBALL_PATH) as SpellData).wind_up_frames + MARGIN_FRAMES)
+	assert_true(host.almos.spell.holding, "he should hold the Fire's flame")
+	await _tap(&"cast_spell")
+	await _wait_for_the_fire_to_burn_out()
+
+	assert_true(roots.open, "a flame from a Fire should burn the roots open too")
+
+
+func _tap(action: StringName) -> void:
+	_almos_input.press_action(action)
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(action)
+
+
+# Long enough for the fireball to fly to the roots, and for them to burn for the burn time.
+func _wait_for_the_fire_to_burn_out() -> void:
+	var fire := load(FIRE_PATH) as FireTuning
+	await wait_physics_frames(ceili(fire.burn_time * Engine.physics_ticks_per_second) + 60 + MARGIN_FRAMES)
