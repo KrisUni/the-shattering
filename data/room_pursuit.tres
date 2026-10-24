@@ -5,3 +5,4 @@
 [resource]
 script = ExtResource("1_tuning")
 follow_delay_seconds = 1.0
+follow_give_up_seconds = 2.0

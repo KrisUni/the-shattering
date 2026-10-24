@@ -36,8 +36,10 @@ var _fade: ColorRect
 # rests, then the Checkpoint he last rested at.
 var _return_scene := ""
 var _return_point := Vector2.ZERO
-# Where Almos's Health last reached zero, which is where the Remains of that Death are left.
+# Where Almos's Health last reached zero, and the area of the space he was in then, which is where
+# the Remains of that Death are left.
 var _fall_place := Vector2.ZERO
+var _fall_area := &""
 
 
 func _ready() -> void:
@@ -94,7 +96,8 @@ func _on_doorway_used(doorway: Doorway) -> void:
 
 
 func _load(doorway: Doorway) -> void:
-	if loading:
+	# A Doorway entered in the frame of his Death leads nowhere: he is on his way back.
+	if loading or almos.dead:
 		return
 	var next := _instantiate(doorway.destination)
 	if next == null:
@@ -152,21 +155,23 @@ func _make_the_space_new() -> void:
 	await _change_space(next, next.put_almos_at.bind(place), false)
 
 
-# Almos fell: the Remains are to be left here, once he is returned.
+# Almos fell: the Remains are to be left here, once he is returned. The space he is in may be
+# another by then, if he fell during a load.
 func _on_almos_fell(place: Vector2) -> void:
 	_fall_place = place
+	_fall_area = current_space.area_id
 
 
-# The pause of Almos's Death is over. The Experience he carries is the Remains' now, at the place he
-# fell, in place of any there were; what has changed in the world since the last rest is undone; and
-# he is sent back to the return point, in a space made new. The Remains are made after he is back,
-# and notice him from the next frame, so that a return point close enough to them has him recover
-# them at once.
+# The pause of Almos's Death is over. The Experience he carries is the Remains' now, at the place and
+# in the area he fell, in place of any there were; what has changed in the world since the last rest
+# is undone; and he is sent back to the return point, in a space made new. The Remains are made after
+# he is back, and notice him from the next frame, so that a return point close enough to them has him
+# recover them at once.
 func _on_almos_death_pause_over() -> void:
 	while loading:
 		await get_tree().physics_frame
 	var lost := almos.experience.take_all()
-	WorldState.set_remains(current_space.area_id, lost, _fall_place)
+	WorldState.set_remains(_fall_area, lost, _fall_place)
 	WorldState.roll_back()
 	var next := _instantiate(_return_scene)
 	if next == null:

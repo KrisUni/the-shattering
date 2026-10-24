@@ -65,7 +65,6 @@ func _on_placed() -> void:
 
 
 ## Called when Almos has arrived at a Doorway, once he is in place: what the space does to show
-## him there. An Open map's camera is put on him.
+## him there. As for when he has been put at a place.
 func _on_arrived(_arrival: Doorway) -> void:
-	for camera: OpenMapCamera in find_children("*", "OpenMapCamera", true, false):
-		camera.snap_to_target()
+	_on_placed()

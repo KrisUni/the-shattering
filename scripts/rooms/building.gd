@@ -16,12 +16,18 @@ signal room_changed(room: Room)
 ## The Room Almos is in.
 var current_room: Room
 
+# The least, in pixels, an enemy on its way to an exit has to come closer to it to have made progress.
+const PROGRESS_DISTANCE := 1.0
+
 # An enemy on its way through an exit after Almos: the exit it goes to, and the physics frames it
-# still has to wait at it, which is -1 until it has got there.
+# still has to wait at it, which is -1 until it has got there. Until then, how close to the exit it
+# has been and for how many physics frames it has not come closer.
 class Follow:
 	var enemy: Node2D
 	var room_exit: RoomExit
 	var frames_left := -1
+	var closest := INF
+	var stalled_frames := 0
 
 var _follows: Array[Follow] = []
 
@@ -73,14 +79,17 @@ func _send_pursuers_after(room_exit: RoomExit, left_room: Room) -> void:
 			_start_following(enemy, room_exit)
 
 
+# Whether the enemy is on its way through an exit. One that was hit on the way is not.
 func _is_following(enemy: Node2D) -> bool:
 	for follow in _follows:
 		if follow.enemy == enemy:
-			return true
+			return enemy.get(&"following")
 	return false
 
 
 func _start_following(enemy: Node2D, room_exit: RoomExit) -> void:
+	for old in _follows.filter(func(other: Follow) -> bool: return other.enemy == enemy):
+		_follows.erase(old)
 	var follow := Follow.new()
 	follow.enemy = enemy
 	follow.room_exit = room_exit
@@ -89,13 +98,17 @@ func _start_following(enemy: Node2D, room_exit: RoomExit) -> void:
 
 
 # One physics frame of an enemy's way through an exit: it walks to it, waits the delay there, and
-# comes out of the paired exit in the next Room.
+# comes out of the paired exit in the next Room. A hit on it ends the way, and so does its not
+# getting any closer to the exit for the tuned time, when it goes on as an enemy in Pursuit does.
 func _advance(follow: Follow) -> void:
-	if not is_instance_valid(follow.enemy) or follow.enemy.get(&"dead"):
+	if not is_instance_valid(follow.enemy) or follow.enemy.get(&"dead") or not follow.enemy.get(&"following"):
 		_follows.erase(follow)
 		return
 	if follow.frames_left < 0:
 		if not follow.enemy.get(&"follow_arrived"):
+			if _is_held_up(follow):
+				_follows.erase(follow)
+				follow.enemy.call(&"end_follow", follow.enemy.global_position)
 			return
 		follow.frames_left = ceili(pursuit_tuning.follow_delay_seconds * Engine.physics_ticks_per_second)
 	else:
@@ -104,6 +117,18 @@ func _advance(follow: Follow) -> void:
 		return
 	_follows.erase(follow)
 	_come_out(follow.enemy, follow.room_exit.target)
+
+
+# Whether the enemy on its way to the exit has gone without coming closer to it for the tuned time.
+# A Break, in which it stands still, does not count.
+func _is_held_up(follow: Follow) -> bool:
+	var distance := follow.enemy.global_position.distance_to(follow.room_exit.global_position)
+	if distance < follow.closest - PROGRESS_DISTANCE:
+		follow.closest = distance
+		follow.stalled_frames = 0
+	elif not follow.enemy.get(&"broken"):
+		follow.stalled_frames += 1
+	return follow.stalled_frames >= ceili(pursuit_tuning.follow_give_up_seconds * Engine.physics_ticks_per_second)
 
 
 # The enemy itself is carried to the Entrance of this exit, in its Room, with all it has. If Almos
@@ -126,13 +151,11 @@ func _come_out(enemy: Node2D, entry: RoomExit) -> void:
 
 ## Almos has come through a Doorway into the Room it is in, which the camera is then fixed to.
 func _on_arrived(arrival: Doorway) -> void:
-	var node := arrival.get_parent()
-	while node != null and not node is Room:
-		node = node.get_parent()
-	if node == null:
+	var room := RoomExit.room_of(arrival)
+	if room == null:
 		push_warning("%s is not in a Room" % arrival.name)
 		return
-	current_room = node as Room
+	current_room = room
 	_camera.global_position = current_room.get_view_center()
 	room_changed.emit(current_room)
 

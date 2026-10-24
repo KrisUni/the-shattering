@@ -21,10 +21,15 @@ func _ready() -> void:
 
 ## The Room this exit leaves.
 func get_room() -> Room:
-	var node := get_parent()
-	while node != null and not node is Room:
-		node = node.get_parent()
-	return node as Room
+	return room_of(self)
+
+
+## The Room this node is in, at whatever depth, or null if it is in none.
+static func room_of(node: Node) -> Room:
+	var ancestor := node.get_parent()
+	while ancestor != null and not ancestor is Room:
+		ancestor = ancestor.get_parent()
+	return ancestor as Room
 
 
 func _on_body_entered(body: Node2D) -> void:

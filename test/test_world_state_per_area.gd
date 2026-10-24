@@ -57,8 +57,8 @@ func after_each() -> void:
 	WorldState.reset()
 
 
-# The host in the test's scene tree, shown in a view of VIEW_SIZE, with loads that do not fade.
-func _spawn_world() -> AreaHost:
+# The host in the test's scene tree, shown in a view of VIEW_SIZE, with loads that fade for this long.
+func _spawn_world(fade_seconds := 0.0) -> AreaHost:
 	var scene := load(WORLD_PATH) as PackedScene
 	assert_not_null(scene, "the world scene should load")
 	var view := SubViewport.new()
@@ -66,7 +66,7 @@ func _spawn_world() -> AreaHost:
 	add_child_autofree(view)
 	var host := scene.instantiate() as AreaHost
 	var tuning := AreaLoadTuning.new()
-	tuning.fade_seconds = 0.0
+	tuning.fade_seconds = fade_seconds
 	host.tuning = tuning
 	view.add_child(host)
 	host.space_entered.connect(func(space: Space) -> void: _entered.append(space))
@@ -418,3 +418,50 @@ func test_almos_put_at_a_place_in_a_room_of_the_building_is_in_that_room_with_th
 
 	assert_eq(building.current_room, room_b)
 	assert_almost_eq((building.find_child("Camera", true, false) as Camera2D).global_position, room_b.get_view_center(), Vector2(TOLERANCE, TOLERANCE))
+
+
+# In seconds. A fade long enough to fall in the middle of.
+const LONG_FADE_SECONDS := 0.3
+
+
+func test_a_death_during_the_load_of_map_2_leaves_remains_in_map_1_where_he_fell() -> void:
+	var host := _spawn_world(LONG_FADE_SECONDS)
+	host.almos.experience.gain(CARRIED)
+	host.almos.global_position = MAP_1_EAST_ENTRANCE - Vector2(FROM_DOORWAY, 0)
+	_almos_input.press_action(&"move_right")
+	var frames := 0
+	while not host.loading and frames < MOST_FRAMES:
+		await wait_physics_frames(1)
+		frames += 1
+	_almos_input.release_action(&"move_right")
+	assert_true(host.loading, "control: the load of map 2 should have started")
+	var fall_place := host.almos.global_position
+
+	host.almos.health.take_damage(host.almos.health.maximum)
+	var tuning := load(PLAYER_TUNING_PATH) as PlayerTuning
+	await wait_physics_frames(ceili((tuning.death_pause + 4.0 * LONG_FADE_SECONDS) * FRAMES_PER_SECOND) + MARGIN_FRAMES)
+
+	assert_eq(host.current_space.area_id, MAP_1_ID, "control: Almos should be back in map 1")
+	var remains := _remains_in(host)
+	assert_eq(remains.size(), 1, "there should be Remains in map 1, where he fell")
+	assert_eq(remains[0].amount, CARRIED)
+	assert_almost_eq(remains[0].global_position, fall_place, Vector2(TOLERANCE, TOLERANCE))
+
+
+func test_a_doorway_entered_in_the_frame_of_a_death_loads_nothing() -> void:
+	var host := _spawn_world()
+	host.almos.experience.gain(CARRIED)
+	var doorway := host.current_space.doorway(&"ToMap2")
+	doorway.used.connect(func(_used: Doorway) -> void:
+		_almos_input.release_action(&"move_right")
+		host.almos.health.take_damage(host.almos.health.maximum))
+	host.almos.global_position = MAP_1_EAST_ENTRANCE - Vector2(FROM_DOORWAY, 0)
+	_almos_input.press_action(&"move_right")
+	var entered_ids: Array[StringName] = []
+	host.space_entered.connect(func(space: Space) -> void: entered_ids.append(space.area_id))
+	var tuning := load(PLAYER_TUNING_PATH) as PlayerTuning
+
+	await wait_physics_frames(ceili(tuning.death_pause * FRAMES_PER_SECOND) + MOST_FRAMES)
+
+	assert_eq(entered_ids[0], MAP_1_ID, "the first space loaded after the Death should be the one he is sent back to, not map 2")
+	assert_eq(WorldState.remains()["area_id"], MAP_1_ID, "the Remains should be in map 1, where he fell")

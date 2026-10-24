@@ -279,7 +279,7 @@ func begin_follow(place: Vector2) -> void:
 
 
 ## Ends the walk begun with begin_follow(), wherever it has got to, and it acts on its target
-## again. The place its target was last seen at is this one, and the count of frames without him in
+## again. A hit on it ends the walk as well. The place its target was last seen at is this one, and the count of frames without him in
 ## its Sight starts again.
 func end_follow(last_seen_at: Vector2) -> void:
 	_following = false
@@ -572,11 +572,11 @@ func _wind_up_tint() -> Color:
 	return WIND_UP_TINT
 
 
-# A hit of any kind makes it notice the target, whatever its Sight shows.
+# A hit of any kind makes it notice the target, whatever its Sight shows. It also ends a walk to the
+# place it was sent to: a hit puts it in Pursuit again, and it fights.
 func _notice_the_hit(_from := Vector2.ZERO) -> void:
 	_state = State.PURSUIT
-	_last_seen = target.global_position if is_instance_valid(target) else global_position
-	_unseen_frames = 0
+	end_follow(target.global_position if is_instance_valid(target) else global_position)
 
 
 # A hit of its own Hurtbox landed. A Critical hit ends a Break and builds no Stagger. Any other

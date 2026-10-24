@@ -47,6 +47,8 @@ const LONGER_DELAY_SECONDS := 1.5
 const LONGER_BY_FRAMES := 60
 # In physics frames. Enough for a pursuer at its post to have gone after Almos, if it were going to.
 const LINGER_FRAMES := 300
+# In seconds. A give-up time that no test but those of the give-up reaches.
+const GENEROUS_GIVE_UP_SECONDS := 20.0
 
 var _almos_input: AlmosInput
 
@@ -72,6 +74,7 @@ func _spawn_building(delay_seconds: float) -> Building:
 	var building := scene.instantiate() as Building
 	var tuning := RoomPursuitTuning.new()
 	tuning.follow_delay_seconds = delay_seconds
+	tuning.follow_give_up_seconds = GENEROUS_GIVE_UP_SECONDS
 	building.pursuit_tuning = tuning
 	view.add_child(building)
 	return building
@@ -280,3 +283,167 @@ func test_a_pursuer_that_follows_almos_back_waits_the_delay_again() -> void:
 	var back_in_a := _first_in(samples.slice(came_out_in_b), _room(building, "RoomA"))
 	assert_gte(back_in_a, 0, "the pursuer should follow Almos back into Room A")
 	assert_gte(back_in_a, DELAY_FRAMES - SLACK_FRAMES)
+
+
+# In physics frames. How long after Almos is back in Room A the pursuer, still on its way to the exit, is hit.
+const HIT_AFTER_FRAMES := 5
+# In seconds, and the physics frames they come to. How long a pursuer that is held up on its way to the exit
+# goes on trying before it gives up the walk.
+const GIVE_UP_SECONDS := 1.0
+const GIVE_UP_FRAMES := 60
+# In physics frames. How far either side of that the giving up may fall, and how long the held-up pursuer
+# may take to get to the obstacle first (70 pixels a second over the ~80 pixels to it).
+const GIVE_UP_SLACK_FRAMES := 5
+const TO_THE_OBSTACLE_FRAMES := 90
+# In pixels. The obstacle that holds a pursuer up: a wall across Room A between it and the east exit.
+const OBSTACLE_POSITION := Vector2(950, 324)
+const OBSTACLE_SIZE := Vector2(20, 648)
+
+
+# A pursuer put behind Almos, who walks out by A's east edge and straight back into A, where he walks on
+# north out of the pursuer's way; returns once he is back in Room A and the pursuer, which has not got to the exit yet, is
+# still on its way to it.
+func _almos_back_in_room_a_while_the_pursuer_follows(building: Building) -> void:
+	await _put_pursuer_behind_almos(building)
+	var rooms_entered := [0]
+	building.room_changed.connect(func(_room: Room) -> void:
+		rooms_entered[0] += 1
+		if rooms_entered[0] == 1:
+			_almos_input.release_action(&"move_right")
+			_almos_input.press_action(&"move_left")
+		elif rooms_entered[0] == 2:
+			_almos_input.release_action(&"move_left")
+			_almos_input.press_action(&"move_up")
+	)
+	_almos_input.press_action(&"move_right")
+	var frames := 0
+	while rooms_entered[0] < 2 and frames < TRIP_FRAMES:
+		await get_tree().physics_frame
+		frames += 1
+	await wait_physics_frames(HIT_AFTER_FRAMES)
+
+
+func test_a_hit_on_a_pursuer_on_its_way_to_the_exit_ends_the_walk() -> void:
+	var building := _spawn_building(DELAY_SECONDS)
+	await _almos_back_in_room_a_while_the_pursuer_follows(building)
+	var enemy = _enemy_of(building)
+	assert_eq(building.current_room, _room(building, "RoomA"), "control: Almos should be back in Room A")
+	assert_true(enemy.following, "control: the pursuer should still be on its way to the exit")
+
+	enemy.get_node("Hurtbox").landed.emit(0.0, building.almos.global_position, false)
+	await wait_physics_frames(1)
+
+	assert_false(enemy.following, "the pursuer should not be following any more")
+	assert_true(enemy.in_pursuit, "the pursuer should be in Pursuit")
+	assert_eq(enemy.target, building.almos, "the pursuer should be after Almos")
+
+
+func test_a_pursuer_hit_on_its_way_to_the_exit_does_not_cross_afterwards() -> void:
+	var building := _spawn_building(DELAY_SECONDS)
+	await _almos_back_in_room_a_while_the_pursuer_follows(building)
+	var enemy = _enemy_of(building)
+
+	enemy.get_node("Hurtbox").landed.emit(0.0, building.almos.global_position, false)
+	var samples := await _watch(enemy, TRIP_FRAMES)
+
+	assert_eq(_first_in(samples, _room(building, "RoomB")), -1, "the pursuer should stay in Room A")
+	assert_eq(_first_at_east_exit(samples), -1, "the pursuer should not go on to the exit")
+
+
+func test_a_hit_on_a_pursuer_waiting_at_the_exit_ends_the_wait() -> void:
+	var building := _spawn_building(LONG_DELAY_SECONDS)
+	var enemy = _enemy_of(building)
+	await _put_pursuer_behind_almos(building)
+	_almos_input.press_action(&"move_right")
+	var waited := 0
+	while not enemy.follow_arrived and waited < TRIP_FRAMES:
+		await get_tree().physics_frame
+		waited += 1
+	assert_true(enemy.follow_arrived, "control: the pursuer should be waiting at the exit")
+
+	enemy.get_node("Hurtbox").landed.emit(0.0, enemy.global_position, false)
+	var samples := await _watch(enemy, LONG_TRIP_FRAMES)
+
+	assert_false(enemy.following, "the pursuer should not be following any more")
+	assert_eq(_first_in(samples, _room(building, "RoomB")), -1, "the pursuer should not cross")
+
+
+# A wall across the whole height of Room A between the pursuer and the east exit, which it cannot get round.
+func _put_obstacle_in_room_a(building: Building) -> void:
+	var wall := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = OBSTACLE_SIZE
+	shape.shape = rect
+	wall.add_child(shape)
+	_room(building, "RoomA").add_child(wall)
+	wall.global_position = OBSTACLE_POSITION
+
+
+# A pursuer held up by a wall on its way to the exit; how many frames after it was sent after Almos it is not
+# following any more, or -1 if it still is after this many frames.
+func _held_up_pursuer_gives_up_at(building: Building, frames: int) -> int:
+	await _put_pursuer_behind_almos(building)
+	_put_obstacle_in_room_a(building)
+	_almos_input.press_action(&"move_right")
+	var enemy = _enemy_of(building)
+	var waited := 0
+	while not enemy.following and waited < TRIP_FRAMES:
+		await get_tree().physics_frame
+		waited += 1
+	assert_true(enemy.following, "control: the pursuer should be sent after Almos")
+	for i in frames:
+		await get_tree().physics_frame
+		if not enemy.following:
+			return i
+	return -1
+
+
+func test_a_pursuer_held_up_on_its_way_to_the_exit_gives_up_the_walk() -> void:
+	var building := _spawn_building(DELAY_SECONDS)
+	building.pursuit_tuning.follow_give_up_seconds = GIVE_UP_SECONDS
+
+	var gave_up_at := await _held_up_pursuer_gives_up_at(building, TO_THE_OBSTACLE_FRAMES + GIVE_UP_FRAMES + GIVE_UP_SLACK_FRAMES)
+
+	assert_gte(gave_up_at, GIVE_UP_FRAMES - GIVE_UP_SLACK_FRAMES, "the pursuer should have tried for the give-up time")
+	assert_eq(_enemy_of(building).get_parent(), _room(building, "RoomA"), "the pursuer should not have crossed")
+
+
+func test_a_pursuer_that_has_given_up_the_walk_is_in_ordinary_pursuit() -> void:
+	var building := _spawn_building(DELAY_SECONDS)
+	building.pursuit_tuning.follow_give_up_seconds = GIVE_UP_SECONDS
+	var enemy = _enemy_of(building)
+
+	await _held_up_pursuer_gives_up_at(building, TO_THE_OBSTACLE_FRAMES + GIVE_UP_FRAMES + GIVE_UP_SLACK_FRAMES)
+
+	assert_false(enemy.following, "control: the pursuer should have given up the walk")
+	assert_true(enemy.in_pursuit, "the pursuer should still be in Pursuit")
+	# Without Almos in its Sight it loses him in time, as it does when it is in Pursuit.
+	await wait_physics_frames(LINGER_FRAMES * 2)
+	assert_false(enemy.in_pursuit, "the pursuer should lose Pursuit in time")
+
+
+func test_a_pursuer_that_gives_up_does_not_cross_later() -> void:
+	var building := _spawn_building(DELAY_SECONDS)
+	building.pursuit_tuning.follow_give_up_seconds = GIVE_UP_SECONDS
+	var enemy = _enemy_of(building)
+	await _held_up_pursuer_gives_up_at(building, TO_THE_OBSTACLE_FRAMES + GIVE_UP_FRAMES + GIVE_UP_SLACK_FRAMES)
+
+	var samples := await _watch(enemy, TRIP_FRAMES)
+
+	assert_eq(_first_in(samples, _room(building, "RoomB")), -1, "the pursuer should stay in Room A")
+
+
+func test_the_give_up_time_is_the_tuned_one() -> void:
+	var building := _spawn_building(DELAY_SECONDS)
+	building.pursuit_tuning.follow_give_up_seconds = GIVE_UP_SECONDS
+	var short_gave_up_at := await _held_up_pursuer_gives_up_at(building, TO_THE_OBSTACLE_FRAMES + GIVE_UP_FRAMES * 2)
+	_almos_input.release_everything()
+	var longer_building := _spawn_building(DELAY_SECONDS)
+	longer_building.pursuit_tuning.follow_give_up_seconds = GIVE_UP_SECONDS * 2
+
+	var longer_gave_up_at := await _held_up_pursuer_gives_up_at(longer_building, TO_THE_OBSTACLE_FRAMES + GIVE_UP_FRAMES * 3)
+
+	assert_gte(short_gave_up_at, 0, "the pursuer should give up")
+	assert_gte(longer_gave_up_at, 0, "the pursuer should give up with the longer time")
+	assert_almost_eq(longer_gave_up_at - short_gave_up_at, GIVE_UP_FRAMES, GIVE_UP_SLACK_FRAMES)
