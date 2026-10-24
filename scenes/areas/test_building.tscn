@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="5_stamina_bar"]
 [ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="6_health_bar"]
 [ext_resource type="Script" path="res://scripts/areas/doorway.gd" id="7_doorway"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="8_enemy"]
+[ext_resource type="Resource" path="res://data/room_pursuit.tres" id="9_pursuit"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_across"]
 size = Vector2(1152, 16)
@@ -31,6 +33,7 @@ script = ExtResource("1_building")
 area_id = &"test_building"
 almos = NodePath("Almos")
 start_room = NodePath("RoomA")
+pursuit_tuning = ExtResource("9_pursuit")
 
 [node name="RoomA" type="Node2D" parent="."]
 script = ExtResource("2_room")
@@ -87,6 +90,10 @@ shape = SubResource("RectangleShape2D_strip")
 
 [node name="Entrance" type="Marker2D" parent="RoomA/Exits/EastExit"]
 position = Vector2(-56, 0)
+
+[node name="TrainingEnemy" parent="RoomA" instance=ExtResource("8_enemy")]
+position = Vector2(900, 150)
+post_facing = Vector2(0, -1)
 
 [node name="Doorways" type="Node2D" parent="RoomA"]
 
