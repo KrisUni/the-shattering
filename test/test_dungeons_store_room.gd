@@ -17,6 +17,9 @@ const VIEW_SIZE := Vector2i(1152, 648)
 # In pixels. How far from a pickup Almos stands to take it: well inside his reach.
 const BESIDE := 5.0
 const TAP_FRAMES := 3
+const CHECKPOINT_SCENE_PATH := "res://scenes/world/checkpoint.tscn"
+# In physics frames. The most a rest, or a Death and the return after it, is waited for.
+const MOST_FRAMES := 600
 
 var _almos_input: AlmosInput
 
@@ -101,6 +104,38 @@ func test_almos_takes_the_armour_with_interact_in_the_store_room_of_the_dungeons
 	assert_true(_is_gone(pickup), "the Armour pickup should be gone")
 
 
+func test_a_death_before_a_rest_puts_the_sword_and_the_armour_back_in_the_store_room() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _take_the_gear(host)
+	assert_eq(host.almos.weapons.in_hand, load(SWORD_PATH), "control: he took the Sword")
+	assert_eq(host.almos.armour, load(ARMOUR_PATH), "control: he took the Armour")
+
+	await _die_and_wait_for_the_return(host)
+
+	assert_null(host.almos.weapons.in_hand, "no Weapon in his hand")
+	assert_true(host.almos.weapons.carried.is_empty(), "no Weapon carried")
+	assert_null(host.almos.armour, "no Armour worn")
+	var store := (host.current_space as DungeonsBuilding).room(&"store_room")
+	assert_eq(_live_pickups(store, &"weapon_pickups").size(), 1, "the Sword lies there again")
+	assert_eq(_live_pickups(store, &"armour_pickups").size(), 1, "the Armour lies there again")
+
+
+func test_a_death_after_a_rest_keeps_the_sword_and_the_armour_and_the_pickups_stay_gone() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _take_the_gear(host)
+	await _rest_at_a_checkpoint_in_the_store_room(host)
+
+	await _die_and_wait_for_the_return(host)
+
+	assert_eq(host.almos.weapons.in_hand, load(SWORD_PATH), "the Sword in his hand")
+	assert_eq(host.almos.armour, load(ARMOUR_PATH), "the Armour he wears")
+	var store := (host.current_space as DungeonsBuilding).room(&"store_room")
+	assert_eq(_live_pickups(store, &"weapon_pickups").size(), 0, "the Sword does not lie there")
+	assert_eq(_live_pickups(store, &"armour_pickups").size(), 0, "the Armour does not lie there")
+
+
 func _host_in_the_dungeons() -> AreaHost:
 	var view := SubViewport.new()
 	view.size = VIEW_SIZE
@@ -121,3 +156,38 @@ func _tap(action: StringName) -> void:
 # Whether the pickup has been taken: freed, or on its way to being freed.
 func _is_gone(pickup) -> bool:
 	return not is_instance_valid(pickup) or pickup.is_queued_for_deletion()
+
+
+# The pickups of the group in the room that are not taken.
+func _live_pickups(room: Room, group: StringName) -> Array[Node]:
+	return _pickups(room, group).filter(func(node: Node) -> bool: return not node.is_queued_for_deletion())
+
+
+# Almos takes the Sword and then the Armour in the store room, each with a tap of Interact.
+func _take_the_gear(host: AreaHost) -> void:
+	var store := (host.current_space as DungeonsBuilding).room(&"store_room")
+	for group: StringName in [&"weapon_pickups", &"armour_pickups"]:
+		var pickup := _pickups(store, group)[0] as Node2D
+		host.almos.global_position = pickup.global_position + Vector2(BESIDE, 0.0)
+		await _tap(&"interact")
+
+
+# A Checkpoint is set down beside Almos in the store room, and he rests at it.
+func _rest_at_a_checkpoint_in_the_store_room(host: AreaHost) -> void:
+	var store := (host.current_space as DungeonsBuilding).room(&"store_room")
+	var checkpoint := (load(CHECKPOINT_SCENE_PATH) as PackedScene).instantiate() as Node2D
+	store.add_child(checkpoint)
+	checkpoint.global_position = host.almos.global_position + Vector2(BESIDE, 0.0)
+	await _tap(&"interact")
+	await wait_physics_frames(TAP_FRAMES)
+
+
+# Almos's Health is taken to zero, and the test waits until he is sent back and the load is over.
+func _die_and_wait_for_the_return(host: AreaHost) -> void:
+	host.almos.health.take_damage(host.almos.health.maximum)
+	var frames := 0
+	while (host.almos.dead or host.loading or frames < TAP_FRAMES) and frames < MOST_FRAMES:
+		await get_tree().physics_frame
+		frames += 1
+	assert_lt(frames, MOST_FRAMES, "he should have been sent back")
+	await wait_physics_frames(TAP_FRAMES)

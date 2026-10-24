@@ -11,7 +11,7 @@ extends Node
 ## and leaves a dropped Weapon on the ground.
 
 ## Emitted when what he carries or what is in hand changes: after a pick-up, a switch to
-## another Weapon, a replacement and a drop.
+## another Weapon, a replacement, a drop and a restore.
 signal changed
 
 ## The Weapons he carries, in the order they were picked up. A copy: changing it changes
@@ -24,6 +24,11 @@ var carried: Array[WeaponData]:
 var in_hand: WeaponData:
 	get:
 		return _carried[_in_hand_index] if _in_hand_index >= 0 else null
+
+## Where the Weapon in hand is in `carried`, or -1 when his hands are empty.
+var in_hand_index: int:
+	get:
+		return _in_hand_index
 
 var _carried: Array[WeaponData] = []
 # Where the Weapon in hand is in the list, or -1 when none is. The same data file can be
@@ -74,4 +79,13 @@ func replace_in_hand(weapon: WeaponData) -> void:
 	if weapon == null or _in_hand_index < 0:
 		return
 	_carried[_in_hand_index] = weapon
+	changed.emit()
+
+
+## Replaces everything he carries with these Weapons, in this order, and puts the one at this
+## place in the list in hand; -1, or a place that is not in the list, leaves his hands empty. It
+## is how he gets back the Weapons he had at his last rest.
+func restore(weapons: Array[WeaponData], in_hand_index: int) -> void:
+	_carried = weapons.duplicate()
+	_in_hand_index = in_hand_index if in_hand_index >= 0 and in_hand_index < _carried.size() else -1
 	changed.emit()

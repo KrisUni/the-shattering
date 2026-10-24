@@ -269,6 +269,11 @@ var _roll_press_lost := false
 # Set once the Weapon he starts with has been put in his hands, so that going into the tree again
 # does not put it in his hands again.
 var _weapons_started := false
+# The gear he is given back by a Death: what he carried, which of it was in hand and what he wore at
+# his last rest, or at the start until he first rests.
+var _saved_weapons: Array[WeaponData] = []
+var _saved_in_hand_index := -1
+var _saved_armour: ArmourData
 # Whether an Interact press that began while he was free is being timed. It ends in a tap or a
 # drop, or is lost if he stops being free.
 var _interact_counted := false
@@ -316,6 +321,7 @@ func _enter_tree() -> void:
 	if not _weapons_started:
 		_weapons_started = true
 		own_weapons.pick_up(weapon)
+		_save_the_gear(own_weapons)
 	# Handing over the weapon in hand or the tuning changes nothing else, so they need no check
 	# first.
 	($Attacks as AlmosAttacks).weapon = own_weapons.in_hand if own_weapons.in_hand != null else unarmed
@@ -507,8 +513,10 @@ func grant_mana_bar() -> void:
 
 
 ## He is back on his feet at this point, in global coordinates: on the ground level, with full
-## Health, Stamina, Mana and Flask charges, still, and in none of the actions. His Experience, his facing and
-## everything outside him are left as they are; whoever sends him back sees to those.
+## Health, Stamina, Mana and Flask charges, still, and in none of the actions. He carries the Weapons
+## he carried at his last rest, with the same one in hand, and wears the Armour he wore then (what
+## he started with, if he has not rested): what he took since is not his any more. His Experience,
+## his facing and everything outside him are left as they are; whoever sends him back sees to those.
 func return_to(point: Vector2) -> void:
 	_end_every_action()
 	_dead = false
@@ -520,6 +528,8 @@ func return_to(point: Vector2) -> void:
 	stamina.refill()
 	mana.refill()
 	flasks.refill()
+	weapons.restore(_saved_weapons, _saved_in_hand_index)
+	armour = _saved_armour
 	returned.emit()
 
 
@@ -726,9 +736,17 @@ func _rest_at_a_checkpoint_in_reach() -> bool:
 	stamina.refill()
 	mana.refill()
 	flasks.refill()
+	_save_the_gear(weapons)
 	nearest.rest(tuning.rest_flash_duration)
 	rested.emit(nearest)
 	return true
+
+
+# Keeps the Weapons he carries, the one in hand and the Armour he wears, as what a Death gives back.
+func _save_the_gear(own_weapons: AlmosWeapons) -> void:
+	_saved_weapons = own_weapons.carried
+	_saved_in_hand_index = own_weapons.in_hand_index
+	_saved_armour = armour
 
 
 # Takes up the nearest Weapon or Armour lying within pickup_reach of him, if there is one, and
@@ -753,6 +771,9 @@ func _pick_up_a_pickup_in_reach() -> void:
 		weapons.pick_up(nearest.weapon)
 	else:
 		armour = nearest.armour
+	# One with an id is noted taken until the next rest, so that a Death puts it back.
+	if nearest.id != &"":
+		WorldState.record_taken(nearest.id)
 	nearest.queue_free()
 
 

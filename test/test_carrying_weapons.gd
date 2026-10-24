@@ -782,11 +782,12 @@ func test_a_switch_waiting_for_a_swing_is_forgotten_if_he_falls() -> void:
 	assert_eq(almos.weapons.in_hand.resource_path, SWORD_PATH)
 
 
-func test_what_he_carries_survives_a_death() -> void:
+func test_what_he_carries_at_a_rest_survives_a_death() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
 	await _pick_up(room, almos, "SpearPickup")
 	await _tap(&"switch_weapon")
+	await _rest(room, almos)
 	almos.health.take_damage(almos.health.maximum)
 
 	await _wait_until(func() -> bool: return not almos.dead)
@@ -1147,10 +1148,11 @@ func test_dropped_pickups_stay_where_they_are_through_a_rest_and_then_a_death() 
 	assert_eq(dropped.global_position, OPEN_SPOT)
 
 
-func test_empty_hands_stay_empty_through_a_death() -> void:
+func test_empty_hands_at_a_rest_stay_empty_through_a_death() -> void:
 	var room := _spawn_room()
 	var almos := _almos(room)
 	await _hold_interact_to_drop()
+	await _rest(room, almos)
 
 	almos.health.take_damage(almos.health.maximum)
 	await _wait_until(func() -> bool: return not almos.dead)
@@ -1211,6 +1213,13 @@ func _spawn_room() -> Node:
 
 func _almos(room: Node) -> Almos:
 	return room.find_child("Almos", true, false)
+
+
+# Almos rests at the test room's Checkpoint, with a tap of Interact beside it.
+func _rest(room: Node, almos: Almos) -> void:
+	var checkpoint := room.find_child("Checkpoint", true, false) as Node2D
+	almos.global_position = checkpoint.global_position + Vector2(BESIDE, 0.0)
+	await _tap(&"interact")
 
 
 # The physics frames a hold lasts to reach drop_hold_time.

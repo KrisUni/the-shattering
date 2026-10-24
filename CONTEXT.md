@@ -165,7 +165,7 @@ A resting place that refills all three bars and both Flasks and becomes the play
 _Avoid_: Bonfire, save point, shrine
 
 **Death**:
-What happens when the player's Health reaches zero. Almos goes limp where he fell, taking no input and unable to be hit, and every action he was in ends. After a pause he returns to his last Checkpoint with full bars and every ordinary enemy back, as after a rest, while Bosses and named enemies stay dead. The Experience he carried is left as Remains where he fell.
+What happens when the player's Health reaches zero. Almos goes limp where he fell, taking no input and unable to be hit, and every action he was in ends. After a pause he returns to his last Checkpoint with full bars and every ordinary enemy back, as after a rest, while Bosses and named enemies stay dead. The Experience he carried is left as Remains where he fell. The Weapons and Armour he took since his last rest go back to where they lay, and he carries and wears what he had at that rest.
 _Avoid_: Game over, respawn
 
 ### Movement and combat

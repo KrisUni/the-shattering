@@ -96,7 +96,9 @@ position = Vector2(0, -56)
 [node name="AlmosSword" parent="." instance=ExtResource("3_weapon_pickup")]
 position = Vector2(400, 200)
 weapon = ExtResource("4_sword")
+id = &"dungeons/store_room/sword"
 
 [node name="AlmosArmour" parent="." instance=ExtResource("5_armour_pickup")]
 position = Vector2(752, 200)
 armour = ExtResource("6_armour")
+id = &"dungeons/store_room/armour"
