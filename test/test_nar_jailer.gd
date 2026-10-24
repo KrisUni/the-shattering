@@ -38,6 +38,8 @@ const FAR_AWAY := 500.0
 const WAIT_FRAME_LIMIT := 400
 # In pixels. How far below Almos the jailer stands: close enough for his sword to reach it.
 const ENEMY_DISTANCE := 30.0
+# In pixels. How far to either side of Almos's line two jailers stand, both inside his sword's reach.
+const TWO_JAILERS_APART := 10.0
 # A tap: held this many physics frames, far shorter than a swing or a charge.
 const TAP_FRAMES := 3
 # In physics frames. Enough for a Light swing to reach the jailer and the Parry to be seen.
@@ -481,6 +483,25 @@ func test_he_can_attack_again_once_the_recoil_is_over() -> void:
 	await _tap(&"attack_light")
 
 	assert_true(almos.attacking)
+
+
+func test_a_parry_ends_the_swing_before_it_hurts_anything_else_in_the_same_frame() -> void:
+	var almos = _almos_input.spawn_almos()
+	for side in [-1.0, 1.0]:
+		# Neither has a target, so they stand where they are and only guard.
+		var jailer = (load(EnemyRig.ENEMY_SCENE_PATH) as PackedScene).instantiate()
+		jailer.tuning = _rig.tuning_with(_guard_numbers({"parry_every": 1}))
+		jailer.position = almos.position + Vector2(side * TWO_JAILERS_APART, ENEMY_DISTANCE)
+		jailer.post_facing = Vector2.UP
+		add_child_autofree(jailer)
+	var parried := [0]
+	almos.get_node("Sword").parried.connect(func(_hurtbox: Hurtbox) -> void: parried[0] += 1)
+
+	await _tap(&"attack_light")
+	await _rig.wait_frames(SWING_WAIT_FRAMES)
+
+	# Whichever of the two the swing reached first Parried it, and so it never reached the other.
+	assert_eq(parried[0], 1, "hits Parried")
 
 
 func test_a_swing_the_jailer_blocks_does_not_make_him_recoil() -> void:

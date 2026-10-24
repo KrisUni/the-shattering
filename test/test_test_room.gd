@@ -5,6 +5,7 @@ const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
 const ENEMY_TUNING_PATH := "res://data/training_enemy.tres"
+const JAILER_TUNING_PATH := "res://data/nar_jailer.tres"
 const TOLERANCE := 0.0001
 # In pixels. How far in front of Almos the enemy is put for a Light attack to reach it.
 const LIGHT_ATTACK_DISTANCE := 30.0
@@ -199,6 +200,19 @@ func test_the_test_room_has_a_training_enemy_going_after_almos_from_a_little_way
 
 	assert_eq(enemy.target, almos, "the training enemy should go after Almos")
 	assert_gt(enemy.global_position.distance_to(almos.global_position), enemy_tuning.attack_range, "it should start out of reach of him")
+
+
+func test_the_test_room_has_a_nar_jailer_with_the_jailers_data() -> void:
+	var room := _spawn_room()
+	if room == null:
+		return
+	var jailer = room.find_child("NarJailer", true, false)
+	assert_not_null(jailer, "the test room should contain a NarJailer")
+	if jailer == null:
+		return
+
+	assert_eq(jailer.tuning.resource_path, JAILER_TUNING_PATH, "the data file it uses")
+	assert_true(jailer.tuning.guards, "it should guard")
 
 
 func test_killing_the_training_enemy_gives_almos_its_tuned_experience_and_the_label_shows_it() -> void:

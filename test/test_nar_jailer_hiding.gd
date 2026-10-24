@@ -19,6 +19,8 @@ const POST := Vector2(700.0, 324.0)
 const FAR_AWAY := Vector2(-10000.0, -10000.0)
 # In pixels. How far from the jailer Almos stands: inside its attack range and its reach, and so is the spot behind him.
 const ALMOS_DISTANCE := 20.0
+# In pixels. How far past the jailer's attack range Almos stands, for a spot out of its reach.
+const BEYOND_ATTACK_RANGE := 40.0
 # In pixels. How far past Almos, away from the jailer, the spot is put.
 const SPOT_BEHIND_ALMOS := 15.0
 # In pixels. How far from Almos the wall that hides him from the jailer stands, towards it.
@@ -66,6 +68,25 @@ func test_a_jailer_that_saw_him_get_in_drags_him_out_with_its_unblockable_grab_f
 	assert_almost_eq(c.almos.health.current, health_before - _tuning.unblockable_attack.damage, TOLERANCE, "and takes the grab's damage")
 
 
+func test_a_jailer_that_saw_him_get_in_a_spot_out_of_its_attack_range_walks_to_it_before_the_grab() -> void:
+	var c := _case(_tuning.attack_range + BEYOND_ATTACK_RANGE)
+	await _frames(SETTLE_FRAMES)
+
+	await _tap_interact(1)
+	assert_true(c.almos.hiding, "control: he is in")
+	var spot: Vector2 = c.spot.global_position
+	var distance_before: float = c.jailer.global_position.distance_to(spot)
+	assert_gt(distance_before, _tuning.attack_range, "control: the spot is out of its attack range")
+	assert_false(c.jailer.attacking, "control: it has not begun an attack")
+	await _until(func() -> bool: return c.jailer.attacking)
+
+	assert_eq(c.jailer.attack_kind, UNBLOCKABLE, "the attack it begins is the grab")
+	assert_lt(c.jailer.global_position.distance_to(spot), distance_before, "it walked towards the spot")
+	assert_lte(c.jailer.global_position.distance_to(spot), _tuning.attack_range, "and begins the grab within its attack range of it")
+	await _until(func() -> bool: return not c.almos.hiding)
+	assert_false(c.almos.hiding, "he is pulled out")
+
+
 func test_the_grab_is_announced_with_its_cue() -> void:
 	var c := _case()
 	await _frames(SETTLE_FRAMES)
@@ -86,7 +107,7 @@ func test_a_combo_under_way_when_he_gets_in_is_finished_without_pulling_him_out_
 	await _tap_interact(1)
 	assert_true(c.almos.hiding, "control: he is in")
 	assert_true(c.jailer.in_pursuit, "control: it saw him get in")
-	var begun := await _attacks_begun_until(func() -> bool: return not c.almos.hiding)
+	var begun := await _attacks_begun_until(c.jailer, func() -> bool: return not c.almos.hiding)
 
 	assert_eq(begun.size(), 1, "after the swing under way, only one attack is begun")
 	assert_eq(begun[0], _tuning.unblockable_attack, "and it is the grab, not the combo's next swing")
@@ -157,7 +178,7 @@ func test_after_the_drag_it_fights_with_its_combo_and_never_the_grab() -> void:
 	for swing in _tuning.combo:
 		combo_frames += swing.total_frames()
 
-	var begun := await _attacks_begun_until(func() -> bool: return false, combo_frames * 2)
+	var begun := await _attacks_begun_until(c.jailer, func() -> bool: return false, combo_frames * 2)
 
 	assert_gt(begun.size(), 0, "control: it fights him")
 	assert_false(begun.has(_tuning.unblockable_attack), "never with the grab")
@@ -168,9 +189,11 @@ func test_after_the_drag_it_fights_with_its_combo_and_never_the_grab() -> void:
 # --- Helpers ---
 
 # The test room with the Nar jailer at its post facing left, Almos where it sees him, close in
-# front of it, with Health enough for several swings, and a spot just behind him. The Sound hunter
-# and the training enemy are far away. Returns {"room", "almos", "jailer", "spot"}. The test frees it.
-func _case() -> Dictionary:
+# front of it (this far, ALMOS_DISTANCE by default), with Health enough for several swings, and a
+# spot just behind him. The jailer is the
+# room's TrainingEnemy given the Nar jailer's data; the room's own Nar jailer and its Sound hunter
+# are far away. Returns {"room", "almos", "jailer", "spot"}. The test frees it.
+func _case(almos_distance := ALMOS_DISTANCE) -> Dictionary:
 	var room := (load(TEST_ROOM_PATH) as PackedScene).instantiate()
 	var almos := room.get_node("Almos") as Node2D
 	var jailer := room.get_node("TrainingEnemy")
@@ -178,7 +201,8 @@ func _case() -> Dictionary:
 	jailer.position = POST
 	jailer.post_facing = Vector2.LEFT
 	room.get_node("SoundHunter").position = FAR_AWAY
-	almos.position = POST + Vector2.LEFT * ALMOS_DISTANCE
+	room.get_node("NarJailer").position = FAR_AWAY
+	almos.position = POST + Vector2.LEFT * almos_distance
 	var spot := (load(SPOT_SCENE_PATH) as PackedScene).instantiate() as Node2D
 	spot.position = almos.position + Vector2.LEFT * SPOT_BEHIND_ALMOS
 	room.add_child(spot)
@@ -225,11 +249,10 @@ func _until(condition: Callable) -> void:
 		await get_tree().physics_frame
 
 
-# Every attack the jailer begins from now until the condition holds, or for this many frames at
+# Every attack this jailer begins from now until the condition holds, or for this many frames at
 # most, as the AttackData of each, in order. An attack under way now is not one of them; a swing
 # that follows another at once is.
-func _attacks_begun_until(condition: Callable, limit := FRAME_LIMIT) -> Array[AttackData]:
-	var jailer := get_tree().get_first_node_in_group("enemies")
+func _attacks_begun_until(jailer: Node, condition: Callable, limit := FRAME_LIMIT) -> Array[AttackData]:
 	var begun: Array[AttackData] = []
 	var last: AttackData = jailer.current_attack if jailer.attacking else null
 	for i in limit:

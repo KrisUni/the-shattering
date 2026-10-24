@@ -181,7 +181,7 @@ func jump_ended(in_a_gap: bool) -> void:
 
 ## Whatever attack he was in is over, at once: a swing or a charge, a Jump attack waiting for
 ## the landing, a press kept for the end of a swing, and the Light combo. The sword is off.
-## Called when Almos falls or is returned.
+## Called when Almos falls or is returned, and when a Parry ends his swing.
 func reset() -> void:
 	_frame = -1
 	_critical = false

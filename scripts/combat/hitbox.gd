@@ -84,6 +84,9 @@ func _physics_process(_delta: float) -> void:
 	# Polled, not listened for, so that a Hurtbox already under the Hitbox when it is
 	# switched on is hit as well as one that walks into it.
 	for area in get_overlapping_areas():
+		# A Parry switches the swing off, such as Almos's, and then it hurts nothing else.
+		if not active:
+			break
 		if ignites and area is Flammable:
 			(area as Flammable).ignite()
 			continue
