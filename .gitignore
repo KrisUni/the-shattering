@@ -13,3 +13,7 @@ mono_crash.*.json
 # GUT editor state
 .gut_editor_config.json
 .gut_editor_shortcuts.cfg
+
+# Candidate art packs (see assets/AGENTS.md); only the .gdignore is kept
+assets/_incoming/*
+!assets/_incoming/.gdignore
