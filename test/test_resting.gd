@@ -610,10 +610,10 @@ func _enemy_tuning() -> EnemyTuning:
 
 
 # These tests count the enemies the room comes with, which they take to be the one Training
-# enemy, so the Sound hunter and the Nar jailer placed in the room are taken out before the room
+# enemy, so the Sound hunter, the Nar jailer and the Root crawlers placed in the room are taken out before the room
 # starts.
 func _drop_the_other_enemies(room: Node) -> void:
-	for other_enemy in ["SoundHunter", "NarJailer"]:
+	for other_enemy in ["SoundHunter", "NarJailer", "RootCrawler1", "RootCrawler2", "RootCrawler3"]:
 		var dropped := room.get_node(other_enemy)
 		room.remove_child(dropped)
 		dropped.free()

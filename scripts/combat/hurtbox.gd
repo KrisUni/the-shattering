@@ -91,12 +91,14 @@ func hurt(damage: float, from: Vector2, stagger := 0.0, critical := false, low :
 ## unblockable nor a grab: it is parried (unless parries_damage_only is false), blocked, missed and
 ## dealt with as any hit is, but the owner is told with landed_damage_only, not landed. Returns what became of it, as hurt does.
 ## If it is unblockable, as Fire's is, it is neither parried nor blocked, as with hurt.
-func hurt_damage_only(damage: float, from: Vector2, unblockable := false) -> Outcome:
-	return _receive(damage, from, 0.0, false, false, unblockable, false, true)
+## If it is unheard, as a creature's own Fire is, it deals its damage as any other does but the
+## owner is not told: neither landed nor landed_damage_only is emitted, so it notices nothing.
+func hurt_damage_only(damage: float, from: Vector2, unblockable := false, unheard := false) -> Outcome:
+	return _receive(damage, from, 0.0, false, false, unblockable, false, true, unheard)
 
 
-# The hit itself, for hurt and hurt_damage_only.
-func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low: bool, unblockable: bool, grab: bool, damage_only: bool) -> Outcome:
+# The hit itself, for hurt and hurt_damage_only. An unheard hit does not announce that it landed.
+func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low: bool, unblockable: bool, grab: bool, damage_only: bool, unheard := false) -> Outcome:
 	if is_untouchable.call():
 		return Outcome.MISSED
 	if not grab and is_hidden.call():
@@ -105,12 +107,14 @@ func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low:
 		return Outcome.MISSED
 	if unblockable:
 		health.take_damage(damage)
-		_announce_landed(stagger, from, critical, damage_only)
+		if not unheard:
+			_announce_landed(stagger, from, critical, damage_only)
 		return Outcome.LANDED
 	if (parries_damage_only or not damage_only) and is_parried.call(from):
 		return Outcome.PARRIED
 	health.take_damage(damage_through.call(damage, from))
-	_announce_landed(stagger, from, critical, damage_only)
+	if not unheard:
+		_announce_landed(stagger, from, critical, damage_only)
 	return Outcome.LANDED
 
 

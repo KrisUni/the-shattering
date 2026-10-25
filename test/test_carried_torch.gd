@@ -268,15 +268,17 @@ func test_dropping_and_picking_up_a_lit_torch_again_leaves_it_lit_and_drawable()
 # --- set-up ---
 
 
-# The test room as shipped, without the Sound hunter, and Almos with his sword in hand at the
-# torch lying on the floor. The test frees it.
+# The test room as shipped, without the Sound hunter and the Root crawlers (one of which would be in
+# the cone of the Pull where Almos stands to try it), and Almos with his sword in hand at the torch
+# lying on the floor. The test frees it.
 func _set_up_room() -> void:
 	var scene := load(TEST_ROOM_PATH) as PackedScene
 	assert_not_null(scene, "the test room scene should load")
 	_room = scene.instantiate()
-	var hunter := _room.get_node("SoundHunter")
-	_room.remove_child(hunter)
-	hunter.free()
+	for dropped_name in ["SoundHunter", "RootCrawler1", "RootCrawler2", "RootCrawler3"]:
+		var dropped := _room.get_node(dropped_name)
+		_room.remove_child(dropped)
+		dropped.free()
 	add_child_autofree(_room)
 	_almos = _room.get_node("Almos") as Almos
 	_zone = _room.get_node("DarkZone") as LightZone

@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="EnemyTuning" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/enemy_tuning.gd" id="1_tuning"]
+[ext_resource type="Script" path="res://scripts/tuning/attack_data.gd" id="2_attack"]
+
+[sub_resource type="Resource" id="Resource_attack"]
+script = ExtResource("2_attack")
+startup_frames = 20
+active_frames = 6
+recovery_frames = 30
+damage = 6.0
+
+[sub_resource type="Resource" id="Resource_low_attack"]
+script = ExtResource("2_attack")
+startup_frames = 20
+active_frames = 8
+recovery_frames = 30
+damage = 5.0
+
+[sub_resource type="Resource" id="Resource_unblockable_attack"]
+script = ExtResource("2_attack")
+startup_frames = 40
+active_frames = 6
+recovery_frames = 30
+damage = 12.0
+
+[resource]
+script = ExtResource("1_tuning")
+experience = 10
+health_maximum = 40.0
+move_speed = 90.0
+sight_arc_degrees = 90.0
+sight_length_full = 220.0
+sight_length_dark = 80.0
+lose_sight_frames = 300
+health_recovery_rate = 6.0
+attack_range = 30.0
+attack_reach = 34.0
+attack_pattern = Array[int]([0, 1])
+attack = SubResource("Resource_attack")
+low_attack_reach = 38.0
+low_attack = SubResource("Resource_low_attack")
+unblockable_attack_reach = 36.0
+unblockable_attack = SubResource("Resource_unblockable_attack")
+unblockable_flash_frames = 8
+stagger_capacity = 40.0
+stagger_drain_rate = 20.0
+stagger_drain_pause = 2.0
+break_frames = 90
+front_arc_degrees = 180.0
+behind_stagger = 15.0
+sound_hunter = true
+separation_radius = 40.0
+separation_strength = 240.0
+weight = 10.0
+wall_stagger = 100.0
