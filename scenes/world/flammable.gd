@@ -16,7 +16,9 @@ extends Area2D
 ## While it burns it hurts, in ticks, every Hurtbox of Almos or an enemy that overlaps it: the tick
 ## damage every tick interval, the first one tick interval after it catches, none once it is burnt
 ## out. The damage is unblockable, builds no Stagger, and misses whoever is untouchable at that
-## moment. Each burning thing ticks on its own clock, so overlapping ones each hurt.
+## moment. Each burning thing ticks on its own clock, so overlapping ones each hurt. A creature's own
+## ticks hurt it but do not alert it: its Hurtbox is not told of them, so only a tick of some other
+## Fire, a fireball or a torch swing makes it notice.
 
 ## Emitted once, when it catches.
 signal caught
@@ -194,7 +196,9 @@ func _stays_burnt() -> bool:
 	return WorldState.is_burnt(blocker.id)
 
 
-# Ticks that are due: each hurts whoever stands in the thing, while it has not burnt out.
+# Ticks that are due: each hurts whoever stands in the thing, while it has not burnt out. A creature's
+# tick hurts its own Hurtbox (a sibling of this Flammable, under the same body) without the creature
+# being told, so its own Fire never alerts it; every other tick alerts as any hit does.
 func _tick() -> void:
 	if tuning.tick_interval <= 0.0:
 		return
@@ -203,7 +207,8 @@ func _tick() -> void:
 		for area in get_overlapping_areas():
 			var hurtbox := area as Hurtbox
 			if hurtbox != null:
-				hurtbox.hurt_damage_only(tuning.damage_per_tick, global_position, true)
+				var own_body := kind == Kind.CREATURE and hurtbox.get_parent() == get_parent()
+				hurtbox.hurt_damage_only(tuning.damage_per_tick, global_position, true, own_body)
 		ticked.emit()
 
 

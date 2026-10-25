@@ -3,13 +3,15 @@ extends GutTest
 ## actions: they are Sound hunters, so a crawler goes after the Noise Almos makes within its reach and
 ## ignores him while he is silent; hiding right after a Roll is heard, hiding after walking is not.
 ## They are flammable too: a fireball or a lit torch sets one alight, Fire spreads to the ones near it,
-## it goes on hunting while it burns, its Fire hurts it in ticks, and when the burn time is over it is
-## alive, no longer burning, and can catch again. Every distance and time is worked from the tuning.
+## it goes on hunting by Noise while it burns, its Fire hurts it in ticks without alerting it (a tick of
+## some other Fire does), and when the burn time is over it is alive, no longer burning, and can catch
+## again; a rest puts out every crawler's Fire. Every distance and time is worked from the tuning.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const SPOT_SCENE_PATH := "res://scenes/world/hiding_spot.tscn"
+const FUNGUS_SCENE_PATH := "res://scenes/world/fungus.tscn"
 const PLAYER_TUNING_PATH := AlmosInput.TUNING_PATH
 const FIRE_PATH := "res://data/fire.tres"
 const FIREBALL_PATH := "res://data/fireball.tres"
@@ -37,6 +39,8 @@ const MARGIN_FRAMES := 6
 const HALF_WIDTH := 8.0
 # In pixels. How far from the stand torch Almos stands to cast, within the Pull's draw range.
 const BESIDE_THE_STAND_TORCH := 20.0
+# In pixels. How far from the Checkpoint's centre Almos is put to rest: within reach.
+const BESIDE_THE_CHECKPOINT := 10.0
 const TOLERANCE := 0.001
 const FAR_AWAY := Vector2(-10000.0, -10000.0)
 # In pixels. Where the Hiding spot is made and how far from it the crawler stands: close by, and
@@ -281,10 +285,11 @@ func test_each_tick_of_its_own_fire_takes_the_tick_damage_off_a_crawler() -> voi
 	flame.ignite()
 	var before: float = c.crawler.health.current
 
-	await _watch(_frames(_fire.tick_interval) + MARGIN_FRAMES)
+	await _until(func() -> bool: return flame.ticks == 1)
 
 	assert_eq(flame.ticks, 1, "control: one tick")
-	assert_almost_eq(c.crawler.health.current, before - _fire.damage_per_tick, TOLERANCE)
+	# Out of Pursuit it recovers Health, so at most a frame's worth has come back since the tick.
+	assert_almost_eq(c.crawler.health.current, before - _fire.damage_per_tick, _crawler_tuning.health_recovery_rate / 60.0 + TOLERANCE)
 
 
 func test_when_the_burn_time_is_over_a_crawler_is_alive_and_no_longer_burning() -> void:
@@ -294,15 +299,19 @@ func test_when_the_burn_time_is_over_a_crawler_is_alive_and_no_longer_burning() 
 	# The ticks that fall before the burn time is over: one every interval, none at its end.
 	var ticks := ceili(_fire.burn_time / _fire.tick_interval - TOLERANCE) - 1
 	assert_lt(float(ticks) * _fire.damage_per_tick, _crawler_tuning.health_maximum, "control: the ticks alone do not kill it")
-
-	await _watch(_frames(_fire.burn_time) + MARGIN_FRAMES)
+	# It recovers Health between ticks, so what shows is the lowest it gets.
+	var lowest: float = c.crawler.health.current
+	for i in _frames(_fire.burn_time) + MARGIN_FRAMES:
+		await _watch(1)
+		lowest = minf(lowest, c.crawler.health.current)
 
 	assert_true(is_instance_valid(c.crawler), "it is not gone")
 	assert_eq(flame.ticks, 0, "its Fire is out")
 	assert_false(flame.burning, "not burning")
 	assert_false(flame.burnt_out, "not burnt out")
 	assert_true(flame.visible and c.crawler.get_node("Placeholder").visible, "it is still there to be seen")
-	assert_almost_eq(c.crawler.health.current, _crawler_tuning.health_maximum - float(ticks) * _fire.damage_per_tick, TOLERANCE, "only the ticks hurt it")
+	assert_lt(lowest, _crawler_tuning.health_maximum, "the ticks hurt it")
+	assert_gte(lowest, _crawler_tuning.health_maximum - float(ticks) * _fire.damage_per_tick - TOLERANCE, "and nothing but the ticks did")
 
 
 func test_a_crawler_whose_burn_time_is_over_catches_again() -> void:
@@ -331,17 +340,53 @@ func test_a_crawler_that_dies_in_its_own_fire_stops_burning() -> void:
 	assert_eq(burning_creatures.size(), 0, "no creature burns")
 
 
-func test_a_burning_crawler_is_put_out_when_enemies_return() -> void:
+func test_a_burning_crawler_hunts_by_noise_only_through_its_whole_burn_time() -> void:
 	var c := _case(Vector2.LEFT * CLOSE_BY * 8.0)
 	var flame := _flame_of(c.crawler)
 	flame.ignite()
+	var start: Vector2 = c.crawler.global_position
+	var health_before: float = c.crawler.health.current
+	var noticed := false
+
+	for i in _frames(_fire.burn_time) - MARGIN_FRAMES:
+		await _watch(1)
+		noticed = noticed or c.crawler.in_pursuit
+
+	assert_gt(flame.ticks, 1, "control: its Fire ticked through the burn time")
+	assert_lt(c.crawler.health.current, health_before, "its ticks still hurt it")
+	assert_false(noticed, "its own Fire never puts it in Pursuit")
+	assert_almost_eq(c.crawler.global_position, start, Vector2.ONE * TOLERANCE, "and it does not close in on a silent Almos")
+
+
+func test_a_tick_of_some_other_fire_alerts_a_crawler_like_any_hit() -> void:
+	var c := _case(Vector2.LEFT * CLOSE_BY * 8.0)
+	var fungus := (load(FUNGUS_SCENE_PATH) as PackedScene).instantiate() as Node2D
+	fungus.position = c.crawler.position
+	c.room.add_child(fungus)
+	var other := fungus.get_node("Flammable") as Flammable
+	other.ignite()
+	var health_before: float = c.crawler.health.current
+
+	await _watch(_frames(_fire.tick_interval) + MARGIN_FRAMES)
+
+	assert_eq(other.ticks, 1, "control: the fungus ticked once")
+	assert_false(_flame_of(c.crawler).burning, "control: the crawler does not burn yet, so it is not its own Fire")
+	assert_lt(c.crawler.health.current, health_before, "control: the tick hurt it")
+	assert_true(c.crawler.in_pursuit, "it is alerted")
+
+
+func test_no_crawler_burns_after_a_rest_brings_the_enemies_back() -> void:
+	var c := _case(Vector2.LEFT * CLOSE_BY * 8.0, true)
+	for crawler_name in CRAWLER_NAMES:
+		_flame_of(c.room.get_node(crawler_name)).ignite()
 	await _watch(MARGIN_FRAMES)
+	assert_eq(_burning_creatures().size(), CRAWLER_NAMES.size(), "control: they all burn")
 
-	flame.come_back()
+	await _rest(c.almos, c.room)
 
-	assert_false(flame.burning)
-	assert_false(flame.burnt_out)
-	assert_true(is_instance_valid(c.crawler))
+	assert_eq(_burning_creatures().size(), 0, "no crawler burns")
+	for crawler_name in CRAWLER_NAMES:
+		assert_false(_flame_of(c.room.get_node(crawler_name)).burning, crawler_name + " is not burning")
 
 
 # A test room with the first crawler at its post facing left, in the dark zone, with Almos at this
@@ -400,6 +445,21 @@ func _room_with_one_crawler(keep_crawlers := false) -> Node:
 
 func _flame_of(crawler: Node) -> Flammable:
 	return crawler.get_node("Flammable") as Flammable
+
+
+# The creatures that burn now, wherever they are.
+func _burning_creatures() -> Array:
+	return get_tree().get_nodes_in_group(&"fires").filter(func(node: Node) -> bool: return node is Flammable and node.kind == Flammable.Kind.CREATURE)
+
+
+# Almos rests at the room's Checkpoint, by a tap of Interact beside it, which brings the ordinary
+# enemies back.
+func _rest(almos: Almos, room: Node) -> void:
+	almos.global_position = room.get_node("Checkpoint").global_position + Vector2.RIGHT * BESIDE_THE_CHECKPOINT
+	await _watch(MARGIN_FRAMES)
+	watch_signals(almos)
+	await _tap(&"interact")
+	assert_signal_emitted(almos, "rested", "control: he rested")
 
 
 # Almos picks the torch up from the floor of the room and puts it in hand.
