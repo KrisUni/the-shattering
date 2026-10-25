@@ -75,11 +75,11 @@ What the Nar and the arch tree are is in `CONTEXT.md` (**Nar**, **Arch tree**). 
 
 ## Look sheets
 
-One sheet per thing that is in the game now. Fill a sheet in when its art is chosen. The test room stays placeholder and gets no sheet.
+One sheet per thing that is in the game now. Fill a sheet in when its art is chosen. The test room stays placeholder and gets no sheet. The Cave's door to the Catacombs stands in until the Catacombs are drawn (out of scope), so it has no sheet yet.
 
 Each sheet has these fields:
 
-- **Thing:** the `CONTEXT.md` term.
+- **Thing:** the `CONTEXT.md` term, or the word `CONTEXT.md` uses for it, with the entry where it appears.
 - **Source pack and files:** where the art comes from.
 - **Size in art px:** width × height.
 - **Palette notes and accents used:** which base colours, and which reserved accents, if any.
@@ -132,7 +132,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 #### Torch
 
-- **Thing:** Torch
+- **Thing:** Torch (see Pull)
 - **Source pack and files:**
 - **Size in art px:**
 - **Palette notes and accents used:**
@@ -195,7 +195,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 #### Crate and Boulder
 
-- **Thing:** Crate, Boulder (objects a Shove or a Pull moves)
+- **Thing:** Crate, Boulder (objects a Shove or a Pull moves; see Shove)
 - **Source pack and files:**
 - **Size in art px:**
 - **Palette notes and accents used:**
@@ -258,7 +258,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 #### Gap
 
-- **Thing:** Gap
+- **Thing:** Gap (see Jump)
 - **Source pack and files:**
 - **Size in art px:**
 - **Palette notes and accents used:**
