@@ -50,5 +50,7 @@ break_frames = 90
 front_arc_degrees = 180.0
 behind_stagger = 15.0
 sound_hunter = true
+separation_radius = 40.0
+separation_strength = 240.0
 weight = 10.0
 wall_stagger = 100.0

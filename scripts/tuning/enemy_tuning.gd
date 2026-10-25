@@ -57,6 +57,16 @@ enum AttackKind {
 ## How close to its target, in pixels, it stops walking and attacks.
 @export var attack_range: float
 
+## Within this distance, in pixels, of another enemy it steers away from it as it walks in Pursuit,
+## so that enemies drawn to the same place do not crowd into one another. 0 = it does not. Make it
+## more than the width of the body, or they touch before they steer.
+@export var separation_radius := 0.0
+
+## How fast, in pixels per second, it steers away from another enemy that is right on top of it. The
+## steering weakens in a straight line to nothing at separation_radius. Make it at least move_speed
+## at the width of the body, or walking on takes it through the other.
+@export var separation_strength := 0.0
+
 ## How far from its centre, in pixels, its Strike reaches: the far edge of the box its Hitbox
 ## hurts with, along the direction it strikes. The box keeps its width and height from the
 ## scene and is placed so that its far edge is this far out. It hurts what its box overlaps, so

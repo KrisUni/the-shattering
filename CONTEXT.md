@@ -356,7 +356,7 @@ A Nar guard of the Dungeons who Blocks and Parries the player's attacks and figh
 _Avoid_: Warden, prison guard
 
 **Root crawler**:
-A Sound hunter that swarms in the dark Rooms of the Dungeons, in groups. Small, quick and frail, it hunts by Noise, not Sight: it ignores a silent Almos and converges on the Noise he makes, each crawler hearing for itself, with no alerting the others. It is flammable: a fireball (a direct hit or its splash), a lit torch swung into it and Fire spreading from a nearby burning thing, another crawler included, set it alight. While it burns it goes on hunting by Noise; its Fire spreads, gives light and hurts anyone in it in ticks, itself included. When its burn time is over it is not gone or killed but stops burning, and can catch again; only the ticks hurt it, besides the fireball or torch.
+A Sound hunter that swarms in the dark Rooms of the Dungeons, in groups. Small, quick and frail, it hunts by Noise, not Sight: it ignores a silent Almos and converges on the Noise he makes, each crawler hearing for itself, with no alerting the others. Crawlers drawn to the same Noise close in on it without crowding into one another. It is flammable: a fireball (a direct hit or its splash), a lit torch swung into it and Fire spreading from a nearby burning thing, another crawler included, set it alight. While it burns it goes on hunting by Noise; its Fire spreads, gives light and hurts anyone in it in ticks, itself included. When its burn time is over it is not gone or killed but stops burning, and can catch again; only the ticks hurt it, besides the fireball or torch.
 _Avoid_: Root bug, swarm
 
 **Branch thrower**:

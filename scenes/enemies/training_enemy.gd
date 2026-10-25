@@ -506,7 +506,7 @@ func _act_freely() -> void:
 		State.POST:
 			return
 	if not _sees_target and not _dragging:
-		_walk_to(_last_seen)
+		_walk_to(_last_seen, true)
 		return
 	# Dragging, it goes for the Hiding spot, not for where he is.
 	var to_target := _drag_spot - global_position if _dragging else _to_target()
@@ -526,7 +526,7 @@ func _act_freely() -> void:
 		_swing = 0
 		_begin_attack()
 	else:
-		velocity = to_target.normalized() * tuning.move_speed
+		velocity = (to_target.normalized() * tuning.move_speed + _separation()).limit_length(tuning.move_speed)
 		move_and_slide()
 
 
@@ -572,7 +572,9 @@ func _walk_to_follow_place() -> void:
 
 
 # Walks towards this place, facing the way it goes and stopping on it. Returns whether it is there.
-func _walk_to(place: Vector2) -> bool:
+# Steered, it is steered away from the other enemies close to it on the way, and so may stand
+# short of the place, or never quite reach it, when others stand on it.
+func _walk_to(place: Vector2, steered := false) -> bool:
 	var to_place := place - global_position
 	if to_place.length() <= ARRIVED_DISTANCE:
 		velocity = Vector2.ZERO
@@ -580,8 +582,31 @@ func _walk_to(place: Vector2) -> bool:
 	_facing = to_place.normalized()
 	# Never faster than it takes to land on the place, so that it does not overshoot it.
 	velocity = _facing * minf(tuning.move_speed, to_place.length() / get_physics_process_delta_time())
+	if steered:
+		velocity = (velocity + _separation()).limit_length(tuning.move_speed)
 	move_and_slide()
 	return false
+
+
+# The velocity that steers it away from the other living enemies within the tuning's
+# separation_radius: from each, straight away from it, as strongly as separation_strength when
+# they are on top of one another and weakening to nothing at the radius. Zero where the tuning
+# has no separation_radius, so that such an enemy is not steered at all.
+func _separation() -> Vector2:
+	if tuning.separation_radius <= 0.0:
+		return Vector2.ZERO
+	var steer := Vector2.ZERO
+	for other: Node2D in get_tree().get_nodes_in_group("enemies"):
+		if other == self or other.get(&"dead") == true:
+			continue
+		var apart := global_position - other.global_position
+		var distance := apart.length()
+		if distance >= tuning.separation_radius:
+			continue
+		# Two on exactly the same spot are told apart by which of them is which, so that they part.
+		var away := apart / distance if distance > 0.0 else (Vector2.RIGHT if get_instance_id() > other.get_instance_id() else Vector2.LEFT)
+		steer += away * (1.0 - distance / tuning.separation_radius)
+	return steer * tuning.separation_strength
 
 
 # The Hitbox the attack of this kind hurts with.
