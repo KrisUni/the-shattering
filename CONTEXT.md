@@ -6,6 +6,14 @@ A top-down 2D action RPG with souls-lite combat, set on a world that stopped spi
 
 ### World
 
+**Nar**:
+The people of the arch tree, near-human and touched by the tree: human in build and face, with bark-grey or pale skin, hair like dry roots, and clothes of woven bark and fibre. Almos is a Nar, as are the guards and jailers. Their craft is pre-industrial and grown from the tree: where a Room of the Dungeons is named for a modern purpose, such as radio, surveillance or showers, it serves that purpose with grown and hand-made means, such as a speaking-root, a listening slit or a root-fed trough.
+_Avoid_: Elves, tree folk, Nar race
+
+**Arch tree**:
+The vast living tree the Nar live in and beneath, city-sized, from its roots (the Dungeons) to its canopy (the Upper tree). Its halls, tunnels, rooms and stairs are carved and grown into the living wood, not built; the Dungeons' floors and walls are root and packed earth, not stone. The wood is veined with the tree's light, and grey, cracked and bleeding sap where Ilion feed. It stands on the night side of the Broken World, not far from the Tempest, where a faint twilight that never moves glows on one horizon; the tree's own living light, which Checkpoint shoots also give, is what lights the Nar's world.
+_Avoid_: World tree, great tree, the Tree
+
 **Marked**:
 A Nar born to the Path of the Deep, required to wear a Seal. Almos is Marked.
 _Avoid_: Marked one, Deep mage
