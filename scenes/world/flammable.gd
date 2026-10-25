@@ -3,7 +3,8 @@ extends Area2D
 ## A flammable thing: it catches Fire when a fireball hits it or a lit torch in Almos's hand is
 ## swung into it. Once it burns it spreads Fire, after the spread delay, to every flammable thing
 ## within the spread radius, and burns for the burn time, then it is burnt out: gone, with no look
-## and no collision. While it burns it gives light, as a lit torch does (it has light and lights), and
+## and no collision. (A creature, such as a Root crawler, is the exception: when its burn time is
+## over it stops burning, as extinguish leaves a thing, and is never burnt out.) While it burns it gives light, as a lit torch does (it has light and lights), and
 ## is in the group "fires" for those that read light. It is never in the group "torches", so Flame
 ## draw never finds it, and Fire never draws, puts out or relights a torch.
 ##
@@ -27,15 +28,16 @@ signal burned_out
 ## Emitted at each tick, after the damage is dealt.
 signal ticked
 
-## Emitted when it stops burning without burning out: Pull took its flame. It is as it was, and can
-## catch again.
+## Emitted when it stops burning without burning out: Pull took its flame, or its burn time is over
+## and it is a creature. It is as it was, and can catch again.
 signal put_out
 
 ## Emitted when it is whole again after a return, having caught before.
 signal restored
 
-## What the thing is, for what Fire does to it afterwards.
-enum Kind { HIDING_SPOT, FUNGUS, PATH_BLOCKER }
+## What the thing is, for what Fire does to it afterwards. A creature is alive: Fire only hurts it,
+## in ticks, as it hurts anyone in it, and when the burn time is over it is as it was.
+enum Kind { HIDING_SPOT, FUNGUS, PATH_BLOCKER, CREATURE }
 
 ## What the thing is.
 @export var kind := Kind.HIDING_SPOT
@@ -95,7 +97,10 @@ func _physics_process(delta: float) -> void:
 		_spread = true
 		_spread_fire()
 	if _burned_for >= tuning.burn_time:
-		_burn_out()
+		if kind == Kind.CREATURE:
+			extinguish()
+		else:
+			_burn_out()
 
 
 ## It is set alight. Says whether it caught: a thing already burning or burnt out is left as it is.
@@ -144,9 +149,9 @@ func distance_to_edge(point: Vector2) -> float:
 
 
 ## Burns it out at once, whatever state it is in, without it ever catching: it is gone. Says
-## nothing if it was gone already.
+## nothing if it was gone already, and does nothing to a creature, which is never burnt out.
 func burn_out_now() -> void:
-	if _burnt_out:
+	if _burnt_out or kind == Kind.CREATURE:
 		return
 	_burn_out()
 

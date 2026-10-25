@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="1_enemy"]
+[ext_resource type="Resource" path="res://data/root_crawler.tres" id="2_tuning"]
+[ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="3_flammable"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
+size = Vector2(16, 16)
+
+[node name="RootCrawler" instance=ExtResource("1_enemy")]
+tuning = ExtResource("2_tuning")
+
+[node name="Flammable" parent="." instance=ExtResource("3_flammable")]
+kind = 3
+
+[node name="CollisionShape2D" parent="Flammable" index="0"]
+shape = SubResource("RectangleShape2D_flammable")
