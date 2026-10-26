@@ -13,6 +13,8 @@ script = ExtResource("1_script")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_flammable")
 
+[node name="Look" type="Node2D" parent="."]
+
 [node name="Flame" type="Polygon2D" parent="."]
 visible = false
 color = Color(1, 0.5, 0.1, 0.85)
