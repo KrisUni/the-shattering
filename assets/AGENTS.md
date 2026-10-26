@@ -37,17 +37,15 @@ File and folder names are snake_case and use the words of `CONTEXT.md` (`checkpo
 
 ## Import settings
 
-Every image shows pixel-exact: Nearest filtering and no mipmaps, so every art pixel stays exactly as drawn. Turn mipmaps off on import. Godot's import settings have no filter, so set Nearest on the node that draws the image (its CanvasItem `texture_filter`) until #73 makes Nearest the project default (`rendering/textures/canvas_textures/default_texture_filter`).
+Every image shows pixel-exact: Nearest filtering and no mipmaps, so every art pixel stays exactly as drawn. Turn mipmaps off on import. Nearest is the project default (`rendering/textures/canvas_textures/default_texture_filter`), so no per-node filter is needed; leave a node's `texture_filter` on Inherit.
 
 ## Attaching art to a Look
 
-Art never changes code or tests. Each thing draws itself inside its `Look` node (#72 turns every `Placeholder` into a `Look`):
+Art never changes code or tests. Each thing draws itself inside its `Look` node (every non-wall `Placeholder` is a `Look`):
 
 - Put an AnimatedSprite2D, or a Sprite2D, inside the `Look`. A Room's floor and walls use a TileMapLayer.
 - Hide the placeholder polygon; do not delete what the code or tests use.
 - Line the art up with the collision body; do not move the body to fit the art.
-
-Until #72 lands, no `Look` exists, so art cannot be attached yet.
 
 ## What an art change may touch
 
