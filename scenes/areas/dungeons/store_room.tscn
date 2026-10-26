@@ -7,17 +7,17 @@
 [ext_resource type="PackedScene" path="res://scenes/world/armour_pickup.tscn" id="5_armour_pickup"]
 [ext_resource type="Resource" path="res://data/almos_armour.tres" id="6_armour"]
 
-[sub_resource type="RectangleShape2D" id="Shape_16x648"]
-size = Vector2(16, 648)
+[sub_resource type="RectangleShape2D" id="Shape_1152x64"]
+size = Vector2(1152, 64)
 
-[sub_resource type="RectangleShape2D" id="Shape_96x16"]
-size = Vector2(96, 16)
+[sub_resource type="RectangleShape2D" id="Shape_128x16"]
+size = Vector2(128, 16)
 
-[sub_resource type="RectangleShape2D" id="Shape_528x16"]
-size = Vector2(528, 16)
+[sub_resource type="RectangleShape2D" id="Shape_32x648"]
+size = Vector2(32, 648)
 
-[sub_resource type="RectangleShape2D" id="Shape_1152x16"]
-size = Vector2(1152, 16)
+[sub_resource type="RectangleShape2D" id="Shape_512x40"]
+size = Vector2(512, 40)
 
 [node name="StoreRoom" type="Node2D"]
 script = ExtResource("1_room")
@@ -29,54 +29,54 @@ polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
 [node name="Walls" type="Node2D" parent="."]
 
 [node name="WallTop" type="StaticBody2D" parent="Walls"]
-position = Vector2(576, 8)
+position = Vector2(576, 32)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop"]
-shape = SubResource("Shape_1152x16")
+shape = SubResource("Shape_1152x64")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallTop"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-576.0, -8.0, 576.0, -8.0, 576.0, 8.0, -576.0, 8.0)
+polygon = PackedVector2Array(-576.0, -32.0, 576.0, -32.0, 576.0, 32.0, -576.0, 32.0)
 
 [node name="WallBottom1" type="StaticBody2D" parent="Walls"]
-position = Vector2(264, 640)
+position = Vector2(256, 628)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom1"]
-shape = SubResource("Shape_528x16")
+shape = SubResource("Shape_512x40")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom1"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
+polygon = PackedVector2Array(-256.0, -20.0, 256.0, -20.0, 256.0, 20.0, -256.0, 20.0)
 
 [node name="WallBottom2" type="StaticBody2D" parent="Walls"]
-position = Vector2(888, 640)
+position = Vector2(896, 628)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom2"]
-shape = SubResource("Shape_528x16")
+shape = SubResource("Shape_512x40")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom2"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
+polygon = PackedVector2Array(-256.0, -20.0, 256.0, -20.0, 256.0, 20.0, -256.0, 20.0)
 
 [node name="WallLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(8, 324)
+position = Vector2(16, 324)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
-shape = SubResource("Shape_16x648")
+shape = SubResource("Shape_32x648")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallLeft"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-8.0, -324.0, 8.0, -324.0, 8.0, 324.0, -8.0, 324.0)
+polygon = PackedVector2Array(-16.0, -324.0, 16.0, -324.0, 16.0, 324.0, -16.0, 324.0)
 
 [node name="WallRight" type="StaticBody2D" parent="Walls"]
-position = Vector2(1144, 324)
+position = Vector2(1136, 324)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallRight"]
-shape = SubResource("Shape_16x648")
+shape = SubResource("Shape_32x648")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallRight"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-8.0, -324.0, 8.0, -324.0, 8.0, 324.0, -8.0, 324.0)
+polygon = PackedVector2Array(-16.0, -324.0, 16.0, -324.0, 16.0, 324.0, -16.0, 324.0)
 
 [node name="Exits" type="Node2D" parent="."]
 
@@ -88,7 +88,7 @@ script = ExtResource("2_exit")
 position = Vector2(576, 640)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/door"]
-shape = SubResource("Shape_96x16")
+shape = SubResource("Shape_128x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/door"]
 position = Vector2(0, -56)
