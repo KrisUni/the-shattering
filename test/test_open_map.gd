@@ -6,8 +6,9 @@ const OPEN_MAP_PATH := "res://scenes/areas/test_open_map.tscn"
 # In physics frames. Long enough for Almos to walk a clear distance, short enough that he stays
 # well away from every edge of the map when he starts at its centre.
 const WALK_FRAMES := 30
-# In pixels. The size of the view the map is shown in: the project's default window. The test
-# sets it, since a headless run has a window of its own, much smaller.
+# In world units. The extent of the view: the map's camera is at zoom 0.5, so the test's SubViewport
+# is half this size (576×324, as the game is drawn). The test sets it, since a headless run has a
+# window of its own, much smaller.
 const VIEW_SIZE := Vector2i(1152, 648)
 # In pixels. How far Almos is put from the map's left edge, close enough that centring the view
 # on him would show beyond it.
@@ -37,7 +38,7 @@ func _spawn_map() -> TestOpenMap:
 	var scene := load(OPEN_MAP_PATH) as PackedScene
 	assert_not_null(scene, "the test Open map scene should load")
 	var view := SubViewport.new()
-	view.size = VIEW_SIZE
+	view.size = VIEW_SIZE / 2
 	add_child_autofree(view)
 	var map := scene.instantiate() as TestOpenMap
 	view.add_child(map)
@@ -119,7 +120,7 @@ func test_camera_view_stays_inside_the_map_when_zoomed_in() -> void:
 	var map := _spawn_map()
 	var almos := map.find_child("Almos", true, false) as Almos
 	var camera := map.find_child("Camera", true, false) as Camera2D
-	camera.zoom = Vector2(2.0, 2.0)
+	camera.zoom = Vector2(1.0, 1.0)
 	almos.global_position = Vector2(NEAR_LEFT_EDGE, map.bounds.get_center().y)
 
 	await wait_physics_frames(WALK_FRAMES)

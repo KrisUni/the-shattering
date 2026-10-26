@@ -18,6 +18,15 @@ config/features=PackedStringArray("4.7")
 
 WorldState="*res://scripts/world_state.gd"
 
+[display]
+
+window/size/viewport_width=576
+window/size/viewport_height=324
+window/size/window_width_override=1152
+window/size/window_height_override=648
+window/stretch/mode="viewport"
+window/stretch/scale_mode="integer"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
@@ -151,3 +160,9 @@ sip_mana={
 2d_physics/layer_8="enemy_body"
 2d_physics/layer_9="player_body"
 2d_physics/layer_10="flammable"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true

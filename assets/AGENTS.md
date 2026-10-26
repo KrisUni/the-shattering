@@ -8,7 +8,7 @@ Sound and the HUD's look are out of scope for now.
 
 - **View:** three-quarter view. Floors are seen from above; wall faces and character fronts are visible. What is lower on screen draws in front (Y-sort).
 - **Scale:** pixel art. One art pixel is 2 world units. A tile is 16 art pixels, so 32 units, and a Room of 1152×648 units is 36 by 20 tiles plus a quarter-tile strip for the south wall. Characters are about 16×24 art pixels, with their feet on the collision body (radius 12 units).
-- **Pixel-exact:** the game is drawn at 576×324 and scaled up by whole numbers, so everything lands on whole art pixels. Gameplay positions stay exact.
+- **Pixel-exact:** the game is drawn at 576×324 and scaled up by whole numbers, so everything lands on whole art pixels. Gameplay positions stay exact. Every camera has zoom 0.5, so it shows 1152×648 units through the 576×324 view, and its position is a multiple of 2 units (one art pixel).
 - **Palette:** one master palette: a muted base of 6 to 12 colours in the spirit of Lospec's Oil 6, plus four reserved accents used nowhere else: Fire amber, Danger red, the arch tree's glow and Ilion violet-magenta. Every asset is recoloured into it. `docs/art.md` says what each accent may mark.
 - **Walls:** walls snap to the 32-unit tile grid (one 16-art-px tile). North-facing walls, seen face-on, get collision as tall as their drawn face, about two tiles (64 units); side and south walls stay thin. So a north wall's drawn face is about two tiles tall and must match its collision. The wall grid is set by #74; changing it needs the owner's say.
 - **Combat cues:** a pose plus a short flash in palette colours, never colour alone.
@@ -37,17 +37,15 @@ File and folder names are snake_case and use the words of `CONTEXT.md` (`checkpo
 
 ## Import settings
 
-Every image shows pixel-exact: Nearest filtering and no mipmaps, so every art pixel stays exactly as drawn. Turn mipmaps off on import. Godot's import settings have no filter, so set Nearest on the node that draws the image (its CanvasItem `texture_filter`) until #73 makes Nearest the project default (`rendering/textures/canvas_textures/default_texture_filter`).
+Every image shows pixel-exact: Nearest filtering and no mipmaps, so every art pixel stays exactly as drawn. Turn mipmaps off on import. Nearest is the project default (`rendering/textures/canvas_textures/default_texture_filter`), so no per-node filter is needed; leave a node's `texture_filter` on Inherit.
 
 ## Attaching art to a Look
 
-Art never changes code or tests. Each thing draws itself inside its `Look` node (#72 turns every `Placeholder` into a `Look`):
+Art never changes code or tests. Each thing draws itself inside its `Look` node (every non-wall `Placeholder` is a `Look`):
 
 - Put an AnimatedSprite2D, or a Sprite2D, inside the `Look`. A Room's floor and walls use a TileMapLayer.
 - Hide the placeholder polygon; do not delete what the code or tests use.
 - Line the art up with the collision body; do not move the body to fit the art.
-
-Until #72 lands, no `Look` exists, so art cannot be attached yet.
 
 ## What an art change may touch
 

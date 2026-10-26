@@ -18,6 +18,7 @@ pursuit_tuning = ExtResource("3_pursuit")
 weapon = null
 
 [node name="Camera" type="Camera2D" parent="."]
+zoom = Vector2(0.5, 0.5)
 
 [node name="Hud" type="CanvasLayer" parent="."]
 

@@ -6,9 +6,10 @@ extends GutTest
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const WORLD_PATH := "res://scenes/areas/test_world.tscn"
-# In pixels. The size of the view the world is shown in: the project's default window. The test
-# sets it, since a headless run has a window of its own, much smaller.
-const VIEW_SIZE := Vector2i(1152, 648)
+# In pixels. The size of the view the world is shown in: the size the game is drawn at (the cameras
+# are at zoom 0.5, so it shows 1152×648 world units). The test sets it, since a headless run has a
+# window of its own, much smaller.
+const VIEW_SIZE := Vector2i(576, 324)
 # In pixels. Where Almos is put on arriving, as the scenes lay out the doorways: 56 inside the
 # space from the doorway he came through. Map 1's east and west doorways, map 2's west doorway
 # and the building's Room A west doorway.
