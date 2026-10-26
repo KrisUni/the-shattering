@@ -76,6 +76,19 @@ func test_a_tap_of_interact_beside_the_door_with_the_key_opens_it() -> void:
 	assert_true(_door(host).open, "the door should be open")
 
 
+func test_the_door_is_drawn_open_after_a_tap_with_the_key_and_not_before() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	WorldState.record_kept(JAILERS_KEY_ID)
+	var look: CanvasItem = _door(host).get_node("Look")
+	assert_eq(look.modulate, Color.WHITE, "the shut door should be drawn plain")
+
+	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
+	await _tap(&"interact")
+
+	assert_ne(look.modulate, Color.WHITE, "the open door should be drawn dimmer")
+
+
 func test_walking_into_the_shut_door_without_the_key_does_not_leave_the_dungeons() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)

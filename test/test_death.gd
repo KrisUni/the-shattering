@@ -458,6 +458,18 @@ func test_a_death_in_the_recovery_of_a_parry_comes_back_with_his_colour_back() -
 	assert_eq(look.modulate, Color.WHITE)
 
 
+func test_a_death_tints_him_while_he_lies_limp_and_not_after_the_return() -> void:
+	var almos := _spawn_almos()
+	var look: CanvasItem = almos.get_node("Look")
+	assert_eq(look.modulate, Color.WHITE, "he starts untinted")
+
+	_kill(almos)
+	assert_ne(look.modulate, Color.WHITE, "lying limp should tint him")
+
+	almos.return_to(RETURN_POINT)
+	assert_eq(look.modulate, Color.WHITE, "the return should clear the tint")
+
+
 func test_a_death_in_the_air_comes_back_on_the_ground() -> void:
 	var almos := _spawn_almos()
 	_almos_input.press_action(&"move_right")
