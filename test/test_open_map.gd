@@ -6,8 +6,9 @@ const OPEN_MAP_PATH := "res://scenes/areas/test_open_map.tscn"
 # In physics frames. Long enough for Almos to walk a clear distance, short enough that he stays
 # well away from every edge of the map when he starts at its centre.
 const WALK_FRAMES := 30
-# In pixels. The size of the view the map is shown in: the project's default window. The test
-# sets it, since a headless run has a window of its own, much smaller.
+# In world units. The extent of the view: the map's camera is at zoom 0.5, so the test's SubViewport
+# is half this size (576×324, as the game is drawn). The test sets it, since a headless run has a
+# window of its own, much smaller.
 const VIEW_SIZE := Vector2i(1152, 648)
 # In pixels. How far Almos is put from the map's left edge, close enough that centring the view
 # on him would show beyond it.
