@@ -57,16 +57,18 @@ polygon = PackedVector2Array(12, 0, 8.49, 4.24, 0, 6, -8.49, 4.24, -12, 0, -8.49
 
 [node name="Look" type="Node2D" parent="."]
 
-[node name="Shape" type="Polygon2D" parent="Look"]
+[node name="Facing" type="Node2D" parent="Look"]
+
+[node name="Shape" type="Polygon2D" parent="Look/Facing"]
 color = Color(0.45, 0.25, 0.7, 1)
 polygon = PackedVector2Array(14, 0, -10, -10, -4, 0, -10, 10)
 
-[node name="BlockShape" type="Polygon2D" parent="Look"]
+[node name="BlockShape" type="Polygon2D" parent="Look/Facing"]
 visible = false
 color = Color(0.6, 0.75, 0.95, 1)
 polygon = PackedVector2Array(11, -19.05, 19.05, -11, 22, 0, 19.05, 11, 11, 19.05, 9.5, 16.45, 16.45, 9.5, 19, 0, 16.45, -9.5, 9.5, -16.45)
 
-[node name="ParryShape" type="Polygon2D" parent="Look"]
+[node name="ParryShape" type="Polygon2D" parent="Look/Facing"]
 visible = false
 color = Color(1, 0.55, 0.1, 1)
 polygon = PackedVector2Array(0, 0, 0, -30, 11.48, -27.72, 21.21, -21.21, 27.72, -11.48, 30, 0, 27.72, 11.48, 21.21, 21.21, 11.48, 27.72, 0, 30)
@@ -141,12 +143,12 @@ marker = NodePath("../LockOnMarker")
 [node name="Block" type="Node" parent="." node_paths=PackedStringArray("stamina", "look", "tinted_look")]
 script = ExtResource("10_block")
 stamina = NodePath("../Stamina")
-look = NodePath("../Look/BlockShape")
+look = NodePath("../Look/Facing/BlockShape")
 tinted_look = NodePath("../Look")
 
 [node name="Parry" type="Node" parent="." node_paths=PackedStringArray("look", "tinted_look")]
 script = ExtResource("11_parry")
-look = NodePath("../Look/ParryShape")
+look = NodePath("../Look/Facing/ParryShape")
 tinted_look = NodePath("../Look")
 
 [node name="Jump" type="Node" parent="." node_paths=PackedStringArray("body", "look", "shadow")]

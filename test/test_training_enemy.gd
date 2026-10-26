@@ -198,6 +198,23 @@ func test_what_is_drawn_of_it_changes_colour_for_as_long_as_it_winds_up() -> voi
 	assert_eq(_rig.samples[winding_up.y].drawn, at_rest, "it should be drawn as at rest as the wind-up ends")
 
 
+func test_its_nose_is_part_of_its_look_and_turns_with_it() -> void:
+	var enemy = _rig.spawn_enemy()
+	var look := enemy.get_node_or_null("Look") as Node2D
+	var nose := enemy.get_node_or_null("Look/Nose") as Node2D
+	assert_not_null(nose, "its Look should hold its Nose")
+	if nose == null:
+		return
+	assert_true(look.is_ancestor_of(nose), "its Nose should be drawn with its Look")
+	enemy.post_facing = Vector2.LEFT
+
+	await _rig.wait_frames(SETTLE_FRAMES)
+
+	assert_almost_eq(nose.rotation, Vector2.LEFT.angle(), TOLERANCE, "the nose turns with it")
+	look.hide()
+	assert_false(nose.is_visible_in_tree(), "hiding its Look should hide its Nose")
+
+
 func test_its_strike_shows_for_as_long_as_its_hitbox_is_on() -> void:
 	var tuning := _rig.tuning_with()
 	var attack := tuning.attack

@@ -102,3 +102,13 @@ func test_a_torch_keeps_its_flame_beside_its_look() -> void:
 	var torch: Node = autofree(load("res://scenes/world/torch.tscn").instantiate())
 
 	assert_true(torch.get_node_or_null("Flame") is Polygon2D, "the Flame stays a direct child")
+
+
+func test_a_flammable_has_a_look_drawn_under_its_flame() -> void:
+	var flammable: Node = autofree(load("res://scenes/world/flammable.tscn").instantiate())
+	var look := flammable.get_node_or_null("Look")
+
+	assert_true(look is Node2D, "the Flammable should have a Look")
+	assert_true(flammable.get_node_or_null("Flame") is Polygon2D, "the Flame stays a direct child")
+	if look != null:
+		assert_lt(look.get_index(), flammable.get_node("Flame").get_index(), "the Flame draws over the Look")

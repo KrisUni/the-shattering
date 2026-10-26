@@ -624,7 +624,7 @@ func test_the_block_shape_turns_with_the_way_he_faces() -> void:
 	_almos_input.press_action(&"move_left")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	var drawn := _almos.get_node("Look/BlockShape") as Node2D
+	var drawn := _almos.get_node("Look/Facing/BlockShape") as Node2D
 	assert_true(drawn.visible, "the Block shape should show")
 	assert_almost_eq(Vector2.from_angle(drawn.global_rotation), _almos.facing, Vector2.ONE * BLOCK_SHAPE_ANGLE_TOLERANCE, "the way the Block shape points, against the way he faces")
 
@@ -644,7 +644,7 @@ func _take_sample() -> void:
 	_samples.append({
 		"position": _almos.position,
 		"blocking": _almos.blocking,
-		"block_shape": _almos.get_node("Look/BlockShape").visible,
+		"block_shape": _almos.get_node("Look/Facing/BlockShape").visible,
 		"rolling": _almos.rolling,
 		"attacking": _almos.attacking,
 		"charging": _almos.charging,

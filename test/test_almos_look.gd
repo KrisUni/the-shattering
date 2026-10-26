@@ -29,8 +29,8 @@ func test_almos_has_a_look_and_no_placeholder() -> void:
 func test_his_block_and_parry_shapes_hang_on_his_look_and_are_hidden_at_first() -> void:
 	var almos = _almos_input.spawn_almos()
 
-	assert_false((almos.get_node("Look/BlockShape") as CanvasItem).visible, "no Block shape")
-	assert_false((almos.get_node("Look/ParryShape") as CanvasItem).visible, "no Parry shape")
+	assert_false((almos.get_node("Look/Facing/BlockShape") as CanvasItem).visible, "no Block shape")
+	assert_false((almos.get_node("Look/Facing/ParryShape") as CanvasItem).visible, "no Parry shape")
 
 
 func test_his_sword_and_his_shadow_hang_on_looks() -> void:
@@ -53,3 +53,19 @@ func test_the_look_of_the_sword_moves_with_the_strike_shift() -> void:
 
 	assert_almost_eq(look.position.x, look_before + 10.0, 0.01, "the Look of the Sword should have moved with the box")
 	assert_almost_eq(StrikeGeometry.drawn_box(sword).end.x, drawn_before + 10.0, 0.01, "and what is drawn is read from the Look")
+
+
+func test_a_sprite_on_his_look_stays_upright_while_the_shapes_turn_with_his_facing() -> void:
+	var almos = _almos_input.spawn_almos()
+	var sprite := Sprite2D.new()
+	(almos.get_node("Look") as Node2D).add_child(sprite)
+	var moves := {&"move_left": Vector2.LEFT, &"move_right": Vector2.RIGHT, &"move_up": Vector2.UP, &"move_down": Vector2.DOWN}
+
+	for action: StringName in moves:
+		_almos_input.press_action(action)
+		await wait_physics_frames(3)
+		_almos_input.release_everything()
+
+		assert_almost_eq(almos.facing, moves[action], Vector2.ONE * 0.0001, "he should face %s" % action)
+		assert_almost_eq(sprite.global_rotation, 0.0, 0.0001, "a sprite on his Look should not turn when he faces %s" % action)
+		assert_almost_eq((almos.get_node("Look/Facing/Shape") as Node2D).global_rotation, almos.facing.angle(), 0.0001, "his shape should turn to face %s" % action)

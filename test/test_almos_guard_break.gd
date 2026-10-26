@@ -582,7 +582,7 @@ func _take_sample() -> void:
 	_samples.append({
 		"position": _almos.position,
 		"blocking": _almos.blocking,
-		"block_shape": _almos.get_node("Look/BlockShape").visible,
+		"block_shape": _almos.get_node("Look/Facing/BlockShape").visible,
 		"guard_broken": _almos.guard_broken,
 		"rolling": _almos.rolling,
 		"attacking": _almos.attacking,

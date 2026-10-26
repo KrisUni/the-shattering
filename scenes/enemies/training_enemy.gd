@@ -160,7 +160,7 @@ var dead: bool:
 @onready var _unblockable_hitbox: Hitbox = $UnblockableHitbox
 @onready var _unblockable_cue: AudioStreamPlayer2D = $UnblockableCue
 @onready var _hurtbox: Hurtbox = $Hurtbox
-@onready var _nose: Node2D = $Nose
+@onready var _nose: Node2D = $Look/Nose
 @onready var _stagger_bar: Node2D = $StaggerBar
 @onready var _look: Node2D = $Look
 

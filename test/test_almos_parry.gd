@@ -606,7 +606,7 @@ func _take_sample() -> void:
 		"position": _almos.position,
 		"parrying": _almos.parrying,
 		"window_open": _almos.parry_window_open,
-		"parry_shape": _almos.get_node("Look/ParryShape").visible,
+		"parry_shape": _almos.get_node("Look/Facing/ParryShape").visible,
 		"blocking": _almos.blocking,
 		"rolling": _almos.rolling,
 		"attacking": _almos.attacking,
