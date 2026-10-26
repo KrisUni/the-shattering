@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-# What the placeholder is tinted while it winds up, so that the player can see the attack
+# What the look is tinted while it winds up, so that the player can see the attack
 # coming. It is a look, not a tuning number.
 const WIND_UP_TINT := Color(1.0, 0.35, 0.35)
 
@@ -9,7 +9,7 @@ const WIND_UP_TINT := Color(1.0, 0.35, 0.35)
 const LOW_WIND_UP_TINT := Color(1.0, 0.9, 0.2)
 
 # What it is tinted for the first unblockable_flash_frames of the wind-up of an Unblockable
-# attack: a white brighter than the placeholder's own colours, which a plain white tint would
+# attack: a white brighter than the look's own colours, which a plain white tint would
 # not be. No other attack flashes. Also a look.
 const UNBLOCKABLE_FLASH_TINT := Color(3.0, 3.0, 3.0)
 
@@ -162,7 +162,7 @@ var dead: bool:
 @onready var _hurtbox: Hurtbox = $Hurtbox
 @onready var _nose: Node2D = $Nose
 @onready var _stagger_bar: Node2D = $StaggerBar
-@onready var _placeholder: Node2D = $Placeholder
+@onready var _look: Node2D = $Look
 
 # The kind of the attack under way, or of the last one made.
 var _kind := EnemyTuning.AttackKind.STRIKE
@@ -385,10 +385,10 @@ func _fall_to_its_death() -> void:
 # Its look jumps from side to side while it shudders.
 func _show_shudder() -> void:
 	if _shudder_left > 0:
-		_placeholder.position.x = SHUDDER_OFFSET if _shudder_left % 2 == 0 else -SHUDDER_OFFSET
+		_look.position.x = SHUDDER_OFFSET if _shudder_left % 2 == 0 else -SHUDDER_OFFSET
 		_shudder_left -= 1
 	else:
-		_placeholder.position.x = 0.0
+		_look.position.x = 0.0
 
 
 func _to_target() -> Vector2:
@@ -619,7 +619,7 @@ func _hitbox_of(kind: EnemyTuning.AttackKind) -> Hitbox:
 	return _hitbox
 
 
-# Switches the strike of the attack under way on or off: its Hitbox, and its placeholder look,
+# Switches the strike of the attack under way on or off: its Hitbox, and the look of its strike,
 # which shows while the Hitbox can hurt. The Hitbox of any other kind of attack is off.
 func _set_strike(on: bool) -> void:
 	var current := _hitbox_of(_kind)

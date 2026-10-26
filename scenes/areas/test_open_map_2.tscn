@@ -84,7 +84,9 @@ destination_entrance = &"ToMap2"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Doorways/ToMap1"]
 shape = SubResource("RectangleShape2D_doorway")
 
-[node name="Placeholder" type="Polygon2D" parent="Doorways/ToMap1"]
+[node name="Look" type="Node2D" parent="Doorways/ToMap1"]
+
+[node name="Shape" type="Polygon2D" parent="Doorways/ToMap1/Look"]
 color = Color(0.55, 0.45, 0.25, 1)
 polygon = PackedVector2Array(-24, -48, 24, -48, 24, 48, -24, 48)
 

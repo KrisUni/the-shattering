@@ -16,14 +16,14 @@ extends Node
 ## parry_arc_degrees wide, centred on the way Almos faces, judged from the Hitbox's position as
 ## Block judges its front. A parried hit ends the Parry at once: he is free from the next frame.
 ## Almos decides what else he cannot do while it lasts. A shape is drawn in front of him while
-## the window is open, and his placeholder is tinted during the recovery.
+## the window is open, and his look is tinted during the recovery.
 ##
 ## Both frame guarantees, that the press frame is the first of the window and that a parried
 ## hit frees him from the next frame, hold only if Almos is processed before the attacker's
 ## Hitbox in each physics frame, as scenes/test_room.tscn orders them. With the Hitbox first, a
 ## hit on the press frame arrives before the window opens and is not parried.
 
-## What his placeholder is tinted during the recovery of a Parry, so that the player can see
+## What his look is tinted during the recovery of a Parry, so that the player can see
 ## him left open. It is a look, not a tuning number, and differs from AlmosBlock.GUARD_BREAK_TINT.
 const RECOVERY_TINT := Color(0.3, 0.9, 1.0)
 
@@ -31,10 +31,10 @@ const RECOVERY_TINT := Color(0.3, 0.9, 1.0)
 @export var tuning: PlayerTuning
 
 ## What is drawn while the window is open. Optional.
-@export var placeholder: CanvasItem
+@export var look: CanvasItem
 
-## What is tinted during the recovery: the placeholder of Almos himself. Optional.
-@export var tinted_placeholder: CanvasItem
+## What is tinted during the recovery: the look of Almos himself. Optional.
+@export var tinted_look: CanvasItem
 
 ## Whether a Parry is under way: its window or its recovery. It is false from the frame after
 ## the last recovery frame, and from the frame after a hit was parried.
@@ -50,7 +50,7 @@ var window_open: bool:
 # The frame of the Parry under way that advance last processed, counted from 0 for the frame of
 # the press. -1 when there is none.
 var _frame := -1
-# Whether the placeholder is tinted by the recovery.
+# Whether the look is tinted by the recovery.
 var _tinted := false
 
 
@@ -95,13 +95,13 @@ func _end() -> void:
 # behind it. Neither this tint nor the Guard break's can begin during the other, since a Parry
 # cannot begin in a Guard break nor a Guard break in a Parry (he is not blocking).
 func _show() -> void:
-	if placeholder != null:
-		placeholder.visible = window_open
-	if tinted_placeholder != null:
+	if look != null:
+		look.visible = window_open
+	if tinted_look != null:
 		var recovering := parrying and not window_open
 		if recovering:
-			tinted_placeholder.modulate = RECOVERY_TINT
+			tinted_look.modulate = RECOVERY_TINT
 		elif _tinted:
-			tinted_placeholder.modulate = Color.WHITE
+			tinted_look.modulate = Color.WHITE
 		_tinted = recovering
 

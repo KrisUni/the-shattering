@@ -276,7 +276,7 @@ func test_a_caught_parry_frees_him_from_the_next_frame_and_its_swing_cannot_hit_
 
 	assert_true(_samples[catch_frame].parrying, "he should be in the Parry up to the catch")
 	assert_false(_samples[catch_frame + 1].parrying, "he should be free from the frame after the catch")
-	assert_false(_samples[catch_frame + 1].parry_placeholder, "the window should not show any more")
+	assert_false(_samples[catch_frame + 1].parry_shape, "the window should not show any more")
 	assert_eq(_samples[catch_frame + 1].position, _samples[p].position, "he stood still up to the catch")
 	assert_gt(_samples[catch_frame + 2].position.x, _samples[catch_frame + 1].position.x, "he should walk again in the frame after the catch")
 	assert_almost_eq(_almos.health.current, tuning.health_maximum, HEALTH_TOLERANCE, "the same swing cannot hit him again")
@@ -577,7 +577,7 @@ func test_the_parry_shape_shows_only_while_the_window_is_open_and_the_recovery_i
 	for i in range(0, p + total + 3):
 		var in_window: bool = i > p and i <= p + tuning.parry_window_frames
 		var recovering: bool = i > p + tuning.parry_window_frames and i < p + total
-		assert_eq(_samples[i].parry_placeholder, in_window, "whether the Parry shape shows in sample %d" % i)
+		assert_eq(_samples[i].parry_shape, in_window, "whether the Parry shape shows in sample %d" % i)
 		assert_eq(_samples[i].window_open, in_window, "whether the window is open in sample %d" % i)
 		if recovering:
 			assert_gte(_difference(_samples[i].look, at_rest), VISIBLE_DIFFERENCE, "what is drawn should be tinted in sample %d" % i)
@@ -606,13 +606,13 @@ func _take_sample() -> void:
 		"position": _almos.position,
 		"parrying": _almos.parrying,
 		"window_open": _almos.parry_window_open,
-		"parry_placeholder": _almos.get_node("Placeholder/ParryPlaceholder").visible,
+		"parry_shape": _almos.get_node("Look/ParryShape").visible,
 		"blocking": _almos.blocking,
 		"rolling": _almos.rolling,
 		"attacking": _almos.attacking,
 		"charging": _almos.charging,
 		"sprinting": _almos.sprinting,
-		"look": (_almos.get_node("Placeholder") as Polygon2D).modulate,
+		"look": (_almos.get_node("Look") as Node2D).modulate,
 	})
 
 

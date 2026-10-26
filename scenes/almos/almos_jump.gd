@@ -44,8 +44,8 @@ signal landed(in_a_gap: bool)
 ## Almos himself, whom the Jump moves.
 @export var body: CharacterBody2D
 
-## What rises along the arc to jump_height and back: the placeholder of Almos himself. Optional.
-@export var placeholder: Node2D
+## What rises along the arc to jump_height and back: the look of Almos himself. Optional.
+@export var look: Node2D
 
 ## What stays at his feet while he is in the air. Optional.
 @export var shadow: CanvasItem
@@ -85,7 +85,7 @@ func begin(at_velocity: Vector2) -> void:
 
 
 ## He is on the ground level, not in the air, at once, where he stands, and his body, his shadow
-## and his placeholder are as on the ground. No landing is announced. Called when Almos falls or
+## and his look are as on the ground. No landing is announced. Called when Almos falls or
 ## is returned.
 func reset() -> void:
 	_airborne = false
@@ -150,10 +150,10 @@ func _apply_height() -> void:
 
 
 # The look follows the state in the moment it changes: the shadow stays at his feet while he
-# is in the air, and his placeholder rises along an arc that peaks at jump_height half way.
+# is in the air, and his look rises along an arc that peaks at jump_height half way.
 func _show() -> void:
 	if shadow != null:
 		shadow.visible = _airborne
-	if placeholder != null:
+	if look != null:
 		var fraction := clampf(_time / tuning.jump_duration, 0.0, 1.0) if _airborne else 0.0
-		placeholder.position = Vector2(0.0, -tuning.jump_height * 4.0 * fraction * (1.0 - fraction))
+		look.position = Vector2(0.0, -tuning.jump_height * 4.0 * fraction * (1.0 - fraction))

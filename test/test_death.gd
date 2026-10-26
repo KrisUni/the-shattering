@@ -449,13 +449,25 @@ func test_a_death_in_the_recovery_of_a_parry_comes_back_with_his_colour_back() -
 	await _tap(&"parry")
 	await wait_physics_frames(tuning.parry_window_frames)
 	assert_true(almos.parrying and not almos.parry_window_open, "he should be in the recovery of a Parry")
-	var placeholder: CanvasItem = almos.find_child("Placeholder", true, false)
-	assert_ne(placeholder.modulate, Color.WHITE, "the recovery should tint him")
+	var look: CanvasItem = almos.get_node("Look")
+	assert_ne(look.modulate, Color.WHITE, "the recovery should tint him")
 
 	_kill(almos)
 	almos.return_to(RETURN_POINT)
 
-	assert_eq(placeholder.modulate, Color.WHITE)
+	assert_eq(look.modulate, Color.WHITE)
+
+
+func test_a_death_tints_him_while_he_lies_limp_and_not_after_the_return() -> void:
+	var almos := _spawn_almos()
+	var look: CanvasItem = almos.get_node("Look")
+	assert_eq(look.modulate, Color.WHITE, "he starts untinted")
+
+	_kill(almos)
+	assert_ne(look.modulate, Color.WHITE, "lying limp should tint him")
+
+	almos.return_to(RETURN_POINT)
+	assert_eq(look.modulate, Color.WHITE, "the return should clear the tint")
 
 
 func test_a_death_in_the_air_comes_back_on_the_ground() -> void:
@@ -1301,10 +1313,10 @@ func _assert_free_and_clean(almos: Almos) -> void:
 	assert_eq(almos.collision_layer, AlmosJump.PLAYER_BODY, "his body is as on the ground")
 	assert_eq(almos.collision_mask, AlmosJump.GROUND_MASK, "his body is blocked as on the ground")
 	assert_false((almos.find_child("Shadow", true, false) as CanvasItem).visible, "no shadow of a Jump")
-	assert_eq((almos.find_child("Placeholder", true, false) as CanvasItem).modulate, Color.WHITE, "no tint")
-	assert_eq((almos.find_child("Placeholder", true, false) as Node2D).position, Vector2.ZERO, "no height")
-	assert_false((almos.find_child("BlockPlaceholder", true, false) as CanvasItem).visible, "no Block shape")
-	assert_false((almos.find_child("ParryPlaceholder", true, false) as CanvasItem).visible, "no Parry shape")
+	assert_eq((almos.get_node("Look") as CanvasItem).modulate, Color.WHITE, "no tint")
+	assert_eq((almos.get_node("Look") as Node2D).position, Vector2.ZERO, "no height")
+	assert_false((almos.find_child("BlockShape", true, false) as CanvasItem).visible, "no Block shape")
+	assert_false((almos.find_child("ParryShape", true, false) as CanvasItem).visible, "no Parry shape")
 	assert_false((almos.find_child("Sword", true, false) as CanvasItem).visible, "no sword")
 
 

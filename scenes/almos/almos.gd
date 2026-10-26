@@ -13,11 +13,11 @@ const FACING_STEP := TAU / 8.0
 # break in AlmosBlock and the pause of a Death are timed with it as well.
 const TIME_SLACK := 0.000001
 
-# What his placeholder is tinted while he lies limp after a Death. It is a look, not a tuning
+# What his look is tinted while he lies limp after a Death. It is a look, not a tuning
 # number.
 const DEATH_TINT := Color(0.35, 0.35, 0.4)
 
-# What his placeholder is tinted while he hides, so that the player can see he is out of sight. A
+# What his look is tinted while he hides, so that the player can see he is out of sight. A
 # look, not a tuning number.
 const HIDDEN_TINT := Color(1.0, 1.0, 1.0, 0.35)
 
@@ -251,7 +251,7 @@ var untouchable: bool:
 @onready var _block: AlmosBlock = $Block
 @onready var _parry: AlmosParry = $Parry
 @onready var _jump: AlmosJump = $Jump
-@onready var _placeholder: Polygon2D = $Placeholder
+@onready var _look: Node2D = $Look
 
 var _state := State.WALKING
 # For how many more physics frames he recoils from a Parried attack.
@@ -478,8 +478,8 @@ func _physics_process(delta: float) -> void:
 	# Under Lock-on he ends every frame facing the target, whatever he did in it. This comes
 	# after the move, so that it is where he has got to that he faces, and not where he was.
 	_face_the_target()
-	# Turning the placeholder shape stands in for the eight facing sprites.
-	_placeholder.rotation = facing.angle()
+	# Turning the look stands in for the eight facing sprites.
+	_look.rotation = facing.angle()
 
 
 # His Health has reached zero: he goes limp where he is. Every action he was in ends at once, and
@@ -491,7 +491,7 @@ func _fall() -> void:
 	_dead_for = 0.0
 	_pause_announced = false
 	_end_every_action()
-	_placeholder.modulate = DEATH_TINT
+	_look.modulate = DEATH_TINT
 	died.emit(global_position)
 
 
@@ -522,7 +522,7 @@ func return_to(point: Vector2) -> void:
 	_dead = false
 	_dead_for = 0.0
 	_roll_press_lost = Input.is_action_pressed(&"roll")
-	_placeholder.modulate = Color.WHITE
+	_look.modulate = Color.WHITE
 	global_position = point
 	health.refill()
 	stamina.refill()
@@ -555,7 +555,7 @@ func _end_every_action() -> void:
 	velocity = Vector2.ZERO
 	if _hiding:
 		_hiding = false
-		_placeholder.modulate = Color.WHITE
+		_look.modulate = Color.WHITE
 	_recoil_left = 0
 	_attacks.reset()
 	_block.reset()
@@ -694,14 +694,14 @@ func _hide_in_a_spot_in_reach() -> bool:
 	_hiding_spot = nearest
 	if nearest.flammable != null and not nearest.flammable.caught.is_connected(_on_hiding_spot_caught):
 		nearest.flammable.caught.connect(_on_hiding_spot_caught)
-	_placeholder.modulate = HIDDEN_TINT
+	_look.modulate = HIDDEN_TINT
 	return true
 
 
 # He leaves the Hiding spot, standing where it is.
 func _leave_hiding() -> void:
 	_hiding = false
-	_placeholder.modulate = Color.WHITE
+	_look.modulate = Color.WHITE
 
 
 # A Hiding spot caught Fire: if it is the one he is in, he is out of it at once, as with a tap, and

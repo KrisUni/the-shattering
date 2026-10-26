@@ -30,7 +30,9 @@ motion_mode = 1
 script = ExtResource("1_script")
 tuning = ExtResource("2_tuning")
 
-[node name="Placeholder" type="Polygon2D" parent="."]
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Shape" type="Polygon2D" parent="Look"]
 color = Color(0.8, 0.65, 0.35, 1)
 polygon = PackedVector2Array(12, 0, 8.5, 8.5, 0, 12, -8.5, 8.5, -12, 0, -8.5, -8.5, 0, -12, 8.5, -8.5)
 
@@ -63,24 +65,26 @@ health = NodePath("../Health")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 shape = SubResource("CircleShape2D_hurtbox")
 
-[node name="Hitbox" type="Area2D" parent="." node_paths=PackedStringArray("strike_shape", "strike_placeholder")]
+[node name="Hitbox" type="Area2D" parent="." node_paths=PackedStringArray("strike_shape", "strike_look")]
 visible = false
 collision_layer = 0
 collision_mask = 2
 monitorable = false
 script = ExtResource("5_hitbox")
 strike_shape = NodePath("CollisionShape2D")
-strike_placeholder = NodePath("Placeholder")
+strike_look = NodePath("Look")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
 position = Vector2(28, 0)
 shape = SubResource("RectangleShape2D_hitbox")
 
-[node name="Placeholder" type="Polygon2D" parent="Hitbox"]
+[node name="Look" type="Node2D" parent="Hitbox"]
+
+[node name="Shape" type="Polygon2D" parent="Hitbox/Look"]
 color = Color(0.95, 0.4, 0.2, 1)
 polygon = PackedVector2Array(14, -14, 42, -14, 42, 14, 14, 14)
 
-[node name="LowHitbox" type="Area2D" parent="." node_paths=PackedStringArray("strike_shape", "strike_placeholder")]
+[node name="LowHitbox" type="Area2D" parent="." node_paths=PackedStringArray("strike_shape", "strike_look")]
 visible = false
 collision_layer = 0
 collision_mask = 2
@@ -88,17 +92,19 @@ monitorable = false
 script = ExtResource("5_hitbox")
 low = true
 strike_shape = NodePath("CollisionShape2D")
-strike_placeholder = NodePath("Placeholder")
+strike_look = NodePath("Look")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LowHitbox"]
 position = Vector2(28, 0)
 shape = SubResource("RectangleShape2D_low_hitbox")
 
-[node name="Placeholder" type="Polygon2D" parent="LowHitbox"]
+[node name="Look" type="Node2D" parent="LowHitbox"]
+
+[node name="Shape" type="Polygon2D" parent="LowHitbox/Look"]
 color = Color(0.95, 0.75, 0.2, 1)
 polygon = PackedVector2Array(14, -32, 42, -32, 42, 32, 14, 32)
 
-[node name="UnblockableHitbox" type="Area2D" parent="." node_paths=PackedStringArray("strike_shape", "strike_placeholder")]
+[node name="UnblockableHitbox" type="Area2D" parent="." node_paths=PackedStringArray("strike_shape", "strike_look")]
 visible = false
 collision_layer = 0
 collision_mask = 2
@@ -106,13 +112,15 @@ monitorable = false
 script = ExtResource("5_hitbox")
 unblockable = true
 strike_shape = NodePath("CollisionShape2D")
-strike_placeholder = NodePath("Placeholder")
+strike_look = NodePath("Look")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="UnblockableHitbox"]
 position = Vector2(28, 0)
 shape = SubResource("RectangleShape2D_unblockable_hitbox")
 
-[node name="Placeholder" type="Polygon2D" parent="UnblockableHitbox"]
+[node name="Look" type="Node2D" parent="UnblockableHitbox"]
+
+[node name="Shape" type="Polygon2D" parent="UnblockableHitbox/Look"]
 color = Color(0.75, 0.3, 0.95, 1)
 polygon = PackedVector2Array(10, -18, 46, -18, 46, 18, 10, 18)
 

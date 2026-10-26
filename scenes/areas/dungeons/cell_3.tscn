@@ -96,7 +96,7 @@ position = Vector2(576, 620)
 id = &"dungeons/cell_3/roots"
 size = Vector2(128, 16)
 
-[node name="Placeholder" parent="Roots" index="1"]
+[node name="Shape" parent="Roots/Look" index="0"]
 color = Color(0.22, 0.3, 0.12, 1)
 
 [node name="Torch" parent="." instance=ExtResource("4_torch")]

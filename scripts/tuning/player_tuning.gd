@@ -112,7 +112,7 @@ extends Resource
 ## far a Jump reaches.
 @export var jump_duration: float
 
-## How high, in pixels, his placeholder rises at the top of a Jump. It is how the Jump looks:
+## How high, in pixels, his Look rises at the top of a Jump. It is how the Jump looks:
 ## the height levels do not depend on it.
 @export var jump_height: float
 

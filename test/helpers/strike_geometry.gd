@@ -1,5 +1,5 @@
 extends RefCounted
-## Where the box of a strike sits and where its placeholder is drawn, for the tests of how far
+## Where the box of a strike sits and where its drawing is, for the tests of how far
 ## a strike reaches. Both are read from a Hitbox as it stands, in its own frame: the frame the
 ## attacker's centre is the origin of, and the direction of the strike is +x, as long as the
 ## Hitbox has not been turned. It lives under test/helpers without the test_ prefix, so GUT
@@ -13,12 +13,13 @@ static func real_box(hitbox: Hitbox) -> Rect2:
 	return Rect2(box.position + shape_node.position, box.size)
 
 
-## The box that is drawn: the bounds of the Hitbox's Placeholder, where it sits.
+## The box that is drawn: the bounds of the Hitbox's Look and its Shape, where they sit.
 static func drawn_box(hitbox: Hitbox) -> Rect2:
-	var placeholder := hitbox.get_node("Placeholder") as Polygon2D
-	var box := Rect2(placeholder.polygon[0] + placeholder.position, Vector2.ZERO)
-	for point in placeholder.polygon:
-		box = box.expand(point + placeholder.position)
+	var shape := hitbox.get_node("Look/Shape") as Polygon2D
+	var offset := (shape.get_parent() as Node2D).position + shape.position
+	var box := Rect2(shape.polygon[0] + offset, Vector2.ZERO)
+	for point in shape.polygon:
+		box = box.expand(point + offset)
 	return box
 
 

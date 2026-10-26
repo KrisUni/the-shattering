@@ -18,9 +18,9 @@ extends Node
 ## physics frames Almos advances after it. The frame in which it runs out is still spent open;
 ## he is free from the next. A hit that is not blocked never starts one, nor does a hit in the
 ## middle of one, since he is not blocking in it. Almos decides what else he cannot do while
-## it lasts. The placeholder of Almos is tinted for as long as it does.
+## it lasts. The look of Almos is tinted for as long as it does.
 
-## What his placeholder is tinted while a Guard break lasts, so that the player can see him
+## What his look is tinted while a Guard break lasts, so that the player can see him
 ## left open. It is a look, not a tuning number.
 const GUARD_BREAK_TINT := Color(1.0, 1.0, 0.1)
 
@@ -31,10 +31,10 @@ const GUARD_BREAK_TINT := Color(1.0, 1.0, 0.1)
 @export var stamina: Stamina
 
 ## What is drawn while he is blocking. Optional.
-@export var placeholder: CanvasItem
+@export var look: CanvasItem
 
-## What is tinted while a Guard break lasts: the placeholder of Almos himself. Optional.
-@export var tinted_placeholder: CanvasItem
+## What is tinted while a Guard break lasts: the look of Almos himself. Optional.
+@export var tinted_look: CanvasItem
 
 ## Whether he is blocking.
 var blocking: bool:
@@ -58,8 +58,8 @@ var _broken_for := 0.0
 ## summed frame lengths compared with its duration through Almos's TIME_SLACK, as the Roll is.
 func advance(free: bool, delta: float) -> void:
 	_blocking = free and not _broken and Input.is_action_pressed(&"block")
-	if placeholder != null:
-		placeholder.visible = _blocking
+	if look != null:
+		look.visible = _blocking
 	if _broken:
 		_broken_for += delta
 		if _broken_for >= tuning.guard_break_duration - Almos.TIME_SLACK:
@@ -72,8 +72,8 @@ func reset() -> void:
 	_blocking = false
 	_broken = false
 	_broken_for = 0.0
-	if placeholder != null:
-		placeholder.visible = false
+	if look != null:
+		look.visible = false
 	_tint(false)
 
 
@@ -110,8 +110,8 @@ func _begin_guard_break() -> void:
 	_broken = true
 	_broken_for = 0.0
 	_blocking = false
-	if placeholder != null:
-		placeholder.visible = false
+	if look != null:
+		look.visible = false
 	_tint(true)
 
 
@@ -123,5 +123,5 @@ func _end_guard_break() -> void:
 # The tint is set in the moment the Guard break begins or ends, not in Almos's next frame, so
 # that what is drawn is never a frame behind it.
 func _tint(on: bool) -> void:
-	if tinted_placeholder != null:
-		tinted_placeholder.modulate = GUARD_BREAK_TINT if on else Color.WHITE
+	if tinted_look != null:
+		tinted_look.modulate = GUARD_BREAK_TINT if on else Color.WHITE

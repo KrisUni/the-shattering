@@ -10,5 +10,5 @@ extends Resource
 ## The width and height of its square body, in pixels.
 @export var size: float
 
-## The colour of its placeholder.
+## The colour of its shape.
 @export var color: Color

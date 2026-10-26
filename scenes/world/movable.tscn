@@ -10,6 +10,8 @@ motion_mode = 1
 script = ExtResource("1_script")
 tuning = ExtResource("2_tuning")
 
-[node name="Placeholder" type="Polygon2D" parent="."]
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Shape" type="Polygon2D" parent="Look"]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
