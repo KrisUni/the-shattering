@@ -13,7 +13,7 @@ const BUILDING_PATH := "res://scenes/areas/test_building.tscn"
 const FIRE_PATH := "res://data/fire.tres"
 const PLAYER_TUNING_PATH := "res://data/player_tuning.tres"
 # In pixels. The size of the view the world is shown in: the project's default window.
-const VIEW_SIZE := Vector2i(1152, 648)
+const VIEW_SIZE := Vector2i(576, 324)
 const MAP_1_ID := &"test_open_map"
 const MAP_2_ID := &"test_open_map_2"
 # In pixels. Where Almos starts in map 1, and where he is put on arriving at each doorway: 56

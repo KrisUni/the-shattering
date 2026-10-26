@@ -106,6 +106,7 @@ position = Vector2(576, 324)
 
 [node name="Camera" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
 script = ExtResource("3_camera")
+zoom = Vector2(0.5, 0.5)
 target = NodePath("../Almos")
 
 [node name="Hud" type="CanvasLayer" parent="."]

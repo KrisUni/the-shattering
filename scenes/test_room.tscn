@@ -45,6 +45,10 @@ size = Vector2(192, 16)
 [node name="TestRoom" type="Node2D"]
 script = ExtResource("4_room")
 
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+zoom = Vector2(0.5, 0.5)
+
 [node name="Floor" type="Polygon2D" parent="."]
 color = Color(0.16, 0.16, 0.2, 1)
 polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)

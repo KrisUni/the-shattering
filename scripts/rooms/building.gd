@@ -42,7 +42,7 @@ func _ready() -> void:
 		for room_exit in child.find_children("*", "RoomExit", true, false):
 			room_exit.used.connect(_on_exit_used)
 	current_room = start_room
-	_camera.global_position = current_room.get_view_center()
+	_show_current_room()
 	for enemy: Node2D in get_tree().get_nodes_in_group(&"enemies"):
 		if is_ancestor_of(enemy) and not is_instance_valid(enemy.get(&"target")):
 			enemy.set(&"target", almos)
@@ -67,7 +67,7 @@ func _travel(room_exit: RoomExit) -> void:
 	_last_exit_from[left_room] = room_exit
 	almos.global_position = target.entrance.global_position
 	current_room = target.get_room()
-	_camera.global_position = current_room.get_view_center()
+	_show_current_room()
 	_send_pursuers_after(room_exit, left_room)
 	room_changed.emit(current_room)
 
@@ -156,7 +156,7 @@ func _on_arrived(arrival: Doorway) -> void:
 		push_warning("%s is not in a Room" % arrival.name)
 		return
 	current_room = room
-	_camera.global_position = current_room.get_view_center()
+	_show_current_room()
 	room_changed.emit(current_room)
 
 
@@ -167,5 +167,10 @@ func _on_placed() -> void:
 		var room := child as Room
 		if room != null and room.get_rect().has_point(almos.global_position):
 			current_room = room
-	_camera.global_position = current_room.get_view_center()
+	_show_current_room()
 	room_changed.emit(current_room)
+
+
+## Fixes the camera to the Room Almos is in, on the art pixel grid.
+func _show_current_room() -> void:
+	_camera.global_position = current_room.get_view_center().snappedf(OpenMapCamera.ART_PIXEL)
