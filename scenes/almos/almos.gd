@@ -252,6 +252,7 @@ var untouchable: bool:
 @onready var _parry: AlmosParry = $Parry
 @onready var _jump: AlmosJump = $Jump
 @onready var _look: Node2D = $Look
+@onready var _facing_shapes: Node2D = $Look/Facing
 
 var _state := State.WALKING
 # For how many more physics frames he recoils from a Parried attack.
@@ -478,8 +479,9 @@ func _physics_process(delta: float) -> void:
 	# Under Lock-on he ends every frame facing the target, whatever he did in it. This comes
 	# after the move, so that it is where he has got to that he faces, and not where he was.
 	_face_the_target()
-	# Turning the look stands in for the eight facing sprites.
-	_look.rotation = facing.angle()
+	# Only the shapes that show his direction turn, as a stand-in for the eight facing sprites;
+	# whatever else hangs on his Look stays upright.
+	_facing_shapes.rotation = facing.angle()
 
 
 # His Health has reached zero: he goes limp where he is. Every action he was in ends at once, and
