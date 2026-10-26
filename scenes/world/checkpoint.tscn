@@ -5,22 +5,24 @@
 [node name="Checkpoint" type="Node2D" groups=["checkpoints"]]
 script = ExtResource("1_script")
 
-[node name="Glow" type="Polygon2D" parent="."]
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Glow" type="Polygon2D" parent="Look"]
 color = Color(0.45, 1, 0.55, 0.3)
 polygon = PackedVector2Array(0, -28, 20, -14, 20, 14, 0, 28, -20, 14, -20, -14)
 
-[node name="Trunk" type="Polygon2D" parent="."]
+[node name="Trunk" type="Polygon2D" parent="Look"]
 color = Color(0.36, 0.25, 0.16, 1)
 polygon = PackedVector2Array(-3, 10, -2, -6, 2, -6, 3, 10)
 
-[node name="LeafLeft" type="Polygon2D" parent="."]
+[node name="LeafLeft" type="Polygon2D" parent="Look"]
 color = Color(0.5, 0.95, 0.55, 1)
 polygon = PackedVector2Array(-2, -4, -12, -10, -8, -16, -1, -9)
 
-[node name="LeafRight" type="Polygon2D" parent="."]
+[node name="LeafRight" type="Polygon2D" parent="Look"]
 color = Color(0.5, 0.95, 0.55, 1)
 polygon = PackedVector2Array(2, -4, 12, -10, 8, -16, 1, -9)
 
-[node name="LeafTop" type="Polygon2D" parent="."]
+[node name="LeafTop" type="Polygon2D" parent="Look"]
 color = Color(0.65, 1, 0.7, 1)
 polygon = PackedVector2Array(0, -7, -4, -15, 0, -22, 4, -15)

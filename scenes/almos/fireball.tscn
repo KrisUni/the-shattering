@@ -5,6 +5,8 @@
 [node name="Fireball" type="Node2D" groups=["fireballs"]]
 script = ExtResource("1_script")
 
-[node name="Placeholder" type="Polygon2D" parent="."]
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Shape" type="Polygon2D" parent="Look"]
 color = Color(1, 0.55, 0.1, 1)
 polygon = PackedVector2Array(8, 0, 4, 5, -4, 5, -8, 0, -4, -5, 4, -5)

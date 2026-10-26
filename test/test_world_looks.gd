@@ -71,3 +71,34 @@ func test_the_roots_and_the_seal_keep_their_colours() -> void:
 
 	assert_eq((cell.get_node("Roots/Look/Shape") as Polygon2D).color, Color(0.22, 0.3, 0.12, 1))
 	assert_eq((corridor.get_node("BackEntranceSeal/Look/Shape") as Polygon2D).color, Color(0.38, 0.32, 0.36, 1))
+
+
+# [scene, the polygons that hang under its Look]
+const DRAWN_PIECES := [
+	["res://scenes/world/torch.tscn", ["Bracket"]],
+	["res://scenes/world/checkpoint.tscn", ["Glow", "Trunk", "LeafLeft", "LeafRight", "LeafTop"]],
+	["res://scenes/world/armour_pickup.tscn", ["Plate"]],
+	["res://scenes/world/weapon_pickup.tscn", ["Bar"]],
+	["res://scenes/world/jailers_key.tscn", ["Bar"]],
+	["res://scenes/world/remains.tscn", ["Glow", "Marker"]],
+	["res://scenes/almos/fireball.tscn", ["Shape"]],
+]
+
+
+func test_torches_checkpoints_pickups_and_the_fireball_hang_their_polygons_on_a_look() -> void:
+	for entry in DRAWN_PIECES:
+		var piece: Node = autofree((load(entry[0] as String) as PackedScene).instantiate())
+		var look := piece.get_node_or_null("Look")
+
+		assert_true(look is Node2D, "%s should have a Look" % entry[0])
+		assert_null(piece.get_node_or_null("Placeholder"), "%s should have no Placeholder" % entry[0])
+		if look != null:
+			for polygon_name in entry[1]:
+				assert_true(look.get_node_or_null(polygon_name as String) is Polygon2D,
+					"%s's Look should hold %s" % [entry[0], polygon_name])
+
+
+func test_a_torch_keeps_its_flame_beside_its_look() -> void:
+	var torch: Node = autofree(load("res://scenes/world/torch.tscn").instantiate())
+
+	assert_true(torch.get_node_or_null("Flame") is Polygon2D, "the Flame stays a direct child")

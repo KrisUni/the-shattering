@@ -5,6 +5,8 @@
 [node name="WeaponPickup" type="Node2D" groups=["weapon_pickups"]]
 script = ExtResource("1_script")
 
-[node name="Bar" type="Polygon2D" parent="."]
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Bar" type="Polygon2D" parent="Look"]
 color = Color(0.75, 0.72, 0.62, 1)
 polygon = PackedVector2Array(-14, -3, 14, -3, 14, 3, -14, 3)
