@@ -47,6 +47,35 @@ func _wall_rects(root: Node) -> Array:
 	return rects
 
 
+# Each wall's drawn rectangle (the bounds of its Placeholder polygon) in its area's coordinates, as
+# [label, Rect2], in the same order as _wall_rects. A wall with no Placeholder polygon gets an empty
+# Rect2.
+func _drawn_rects(root: Node) -> Array:
+	var rects := []
+	for walls in root.find_children("Walls", "Node2D", true, false):
+		for body in walls.get_children():
+			if not body is StaticBody2D:
+				continue
+			var has_shape := false
+			for child in body.get_children():
+				if child is CollisionShape2D and child.shape is RectangleShape2D:
+					has_shape = true
+			if not has_shape:
+				continue
+			var label := "%s/%s" % [walls.get_parent().name, body.name]
+			var face := body.get_node_or_null("Placeholder") as Polygon2D
+			if face == null or face.polygon.is_empty():
+				rects.append([label, Rect2()])
+				continue
+			var low := face.polygon[0]
+			var high := face.polygon[0]
+			for point in face.polygon:
+				low = low.min(point)
+				high = high.max(point)
+			rects.append([label, Rect2(body.position + face.position + low, high - low)])
+	return rects
+
+
 func _on_grid(value: float) -> bool:
 	return is_equal_approx(fposmod(value, TILE), 0.0)
 
@@ -123,6 +152,19 @@ func test_every_south_wall_of_a_test_area_ends_at_the_bottom_of_the_area() -> vo
 					and not is_equal_approx(rect.end.y, SCENES[path].y):
 				wrong.append("%s %s ends at %s" % [path, entry[0], rect.end.y])
 	assert_eq(wrong, [], "south walls not reaching the bottom edge")
+
+
+func test_every_wall_of_a_test_area_is_drawn_where_it_collides() -> void:
+	var mismatched := []
+	for path in SCENES:
+		var root := (load(path) as PackedScene).instantiate()
+		var collides := _wall_rects(root)
+		var drawn := _drawn_rects(root)
+		root.free()
+		for i in collides.size():
+			if not collides[i][1].is_equal_approx(drawn[i][1]):
+				mismatched.append("%s %s collides %s, drawn %s" % [path, collides[i][0], collides[i][1], drawn[i][1]])
+	assert_eq(mismatched, [], "walls drawn somewhere other than where they collide")
 
 
 # Instances the scene in its own viewport (so it has a physics space) and waits for the physics to

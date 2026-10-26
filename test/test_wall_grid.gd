@@ -1,7 +1,8 @@
 extends GutTest
 ## Every Dungeons Room's walls lie on the 32-unit tile grid: north walls are a 64-unit face, south
-## walls 40 thick, side walls 32 wide. Almos (radius 12) cannot walk into a north face, and the
-## openings in Cell 3, Corridor 1 and the Lobby are wide enough for him to walk through.
+## walls 40 thick, side walls 32 wide. Each wall is drawn where it collides. Almos (radius 12) cannot
+## walk into a north face, and the openings in Corridor 1 and the Lobby are wide enough for him to
+## walk through.
 
 const DUNGEONS_DIR := "res://scenes/areas/dungeons/"
 # In pixels. The Room is 1152 x 648 and its tile is 32.
@@ -56,6 +57,30 @@ func _wall_rects(room: Node) -> Array:
 				var size: Vector2 = child.shape.size
 				var centre: Vector2 = body.position + child.position
 				rects.append([str(body.name), Rect2(centre - size / 2.0, size)])
+	return rects
+
+
+# Each wall's drawn rectangle (the bounds of its Placeholder polygon) in the Room's own coordinates,
+# as [name, Rect2]. A wall with no Placeholder polygon gets an empty Rect2.
+func _drawn_rects(room: Node) -> Array:
+	var rects := []
+	var walls := room.get_node_or_null("Walls")
+	if walls == null:
+		return rects
+	for body in walls.get_children():
+		if not body is StaticBody2D:
+			continue
+		var face := body.get_node_or_null("Placeholder") as Polygon2D
+		if face == null or face.polygon.is_empty():
+			rects.append([str(body.name), Rect2()])
+			continue
+		var low := face.polygon[0]
+		var high := face.polygon[0]
+		for point in face.polygon:
+			low = low.min(point)
+			high = high.max(point)
+		var origin: Vector2 = body.position + face.position + low
+		rects.append([str(body.name), Rect2(origin, high - low)])
 	return rects
 
 
@@ -151,6 +176,19 @@ func test_every_wall_on_the_west_or_east_edge_that_runs_down_the_room_is_32_wide
 	assert_eq(wrong, [], "side walls not 32 wide")
 
 
+func test_every_wall_is_drawn_where_it_collides() -> void:
+	var mismatched := []
+	for room_name in _dungeons_room_names():
+		var room := (load(DUNGEONS_DIR + room_name + ".tscn") as PackedScene).instantiate()
+		var collides := _wall_rects(room)
+		var drawn := _drawn_rects(room)
+		room.free()
+		for i in collides.size():
+			if not collides[i][1].is_equal_approx(drawn[i][1]):
+				mismatched.append("%s/%s collides %s, drawn %s" % [room_name, collides[i][0], collides[i][1], drawn[i][1]])
+	assert_eq(mismatched, [], "walls drawn somewhere other than where they collide")
+
+
 # Instances the Room in its own viewport (so it has a physics space) and waits for the physics to
 # register its walls.
 func _room_in_a_viewport(room_name: String) -> Room:
@@ -222,7 +260,7 @@ func test_almos_can_stand_just_below_a_north_face_in_corridor_1() -> void:
 	assert_false(_blocked_at(room, Vector2(64.0, NORTH_FACE + ALMOS_RADIUS + 2.0)), "the floor under the face should be clear")
 
 
-func test_almos_can_pass_through_each_north_opening_in_corridor_1_the_lobby_and_cell_3() -> void:
+func test_almos_can_pass_through_each_north_opening_in_corridor_1_and_the_lobby() -> void:
 	var blocked := []
 	for room_name in NORTH_OPENINGS:
 		var room := await _room_in_a_viewport(room_name)
