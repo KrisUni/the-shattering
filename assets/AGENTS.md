@@ -46,6 +46,8 @@ Art never changes code or tests. Each thing draws itself inside its `Look` node 
 - Put an AnimatedSprite2D, or a Sprite2D, inside the `Look`. A Room's floor and walls use a TileMapLayer.
 - Hide the placeholder polygon; do not delete what the code or tests use.
 - Line the art up with the collision body; do not move the body to fit the art.
+- Draw sprites at scale 2 (one art pixel is 2 world units).
+- Code shows and hides a `Flame` by its visibility, so the `Flame` stays a polygon child of the thing: give the polygon a colour alpha of 0 and put the AnimatedSprite2D under it as a child. (Setting the polygon's `visible` off would hide the sprite too.)
 
 ## What an art change may touch
 

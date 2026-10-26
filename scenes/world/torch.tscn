@@ -1,6 +1,41 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/world/torch.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://blgiwhobp5pyc" path="res://assets/shared/torch/torch.png" id="2_bracket"]
+[ext_resource type="Texture2D" uid="uid://dj76hfb57i4cp" path="res://assets/shared/torch/flame_0.png" id="3_f"]
+[ext_resource type="Texture2D" uid="uid://b6xuiig30ghc" path="res://assets/shared/torch/flame_1.png" id="4_f"]
+[ext_resource type="Texture2D" uid="uid://ydx7cs8l8lo8" path="res://assets/shared/torch/flame_2.png" id="5_f"]
+[ext_resource type="Texture2D" uid="uid://b6qhoc3vsj7ek" path="res://assets/shared/torch/flame_3.png" id="6_f"]
+[ext_resource type="Texture2D" uid="uid://bqbs0xyqonh8i" path="res://assets/shared/torch/flame_4.png" id="7_f"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_flame"]
+animations = [{
+"frames": [
+{
+"duration": 1.0,
+"texture": ExtResource("3_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("4_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("5_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("6_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("7_f")
+}
+],
+"loop": true,
+"name": &"burn",
+"speed": 8.0
+}]
 
 [node name="Torch" type="Node2D" groups=["torches"]]
 script = ExtResource("1_script")
@@ -8,9 +43,24 @@ script = ExtResource("1_script")
 [node name="Look" type="Node2D" parent="."]
 
 [node name="Bracket" type="Polygon2D" parent="Look"]
+visible = false
 color = Color(0.3, 0.26, 0.22, 1)
 polygon = PackedVector2Array(-2, -2, 2, -2, 2, 12, -2, 12)
 
+[node name="Art" type="Sprite2D" parent="Look"]
+position = Vector2(-10, 0)
+scale = Vector2(2, 2)
+texture = ExtResource("2_bracket")
+centered = false
+
 [node name="Flame" type="Polygon2D" parent="."]
-color = Color(1, 0.6, 0.15, 1)
+color = Color(1, 0.6, 0.15, 0)
 polygon = PackedVector2Array(0, -16, 6, -8, 4, -2, -4, -2, -6, -8)
+
+[node name="Art" type="AnimatedSprite2D" parent="Flame"]
+position = Vector2(-16, -46)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_flame")
+animation = &"burn"
+autoplay = "burn"
+centered = false

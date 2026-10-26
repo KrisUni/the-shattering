@@ -144,20 +144,20 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Torch
 
 - **Thing:** Torch (see Pull)
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Bracket: Dead Swamp (Sevarihk / Aurora), `assets/shared/torch/torch.png`. Flame: hand-redrawn after Gigapack `fire_looping_003A`, `assets/shared/torch/flame_0-4.png`. See `assets/CREDITS.md`.
+- **Size in art px:** Bracket 10×37; flame 16×24 (5 frames).
+- **Palette notes and accents used:** Bracket in the base violets and blues. Flame in Fire amber with sand and cream for the body and the core. A small, steady flame, so a lit torch stays apart from Fire.
+- **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Fire
 
 - **Thing:** Fire
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Gigapack (Will Tice / unTied Games) `fire_looping_004B`, `assets/shared/fire/flame_0-14.png`. See `assets/CREDITS.md`.
+- **Size in art px:** 20×32 (15 frames), drawn over the 16×20 body of a Flammable, its foot on the body's foot.
+- **Palette notes and accents used:** Fire amber with sand and cream for the core; the smoke above in the base violets. Larger than a torch flame, with smoke, so a burning thing and a lit torch read apart.
+- **Animations and poses needed:** One looping burn (15 frames, 12 per second), shown only while the thing burns (the Flame node's visibility).
+- **Status:** in the game (first draft; the owner checks the look in the editor). Used by every Flammable; the Root crawler's own burning look is still open.
 
 #### Fireball
 
