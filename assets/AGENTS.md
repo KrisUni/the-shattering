@@ -49,6 +49,10 @@ Art never changes code or tests. Each thing draws itself inside its `Look` node 
 - Draw sprites at scale 2 (one art pixel is 2 world units).
 - Code shows and hides a `Flame` by its visibility, so the `Flame` stays a polygon child of the thing: give the polygon a colour alpha of 0 and put the AnimatedSprite2D under it as a child. (Setting the polygon's `visible` off would hide the sprite too.)
 
+### Enemy sprites
+
+An enemy's sprite is an AnimatedSprite2D named `Art` inside its `Look`. The `EnemyLook` node under `Look` plays the animation named for the enemy's state: `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `hurt`, `death` (a missing name is skipped). It puts `assets/shared/flash/flash.gdshader` on `Art` for the cream and Danger red wind-up flashes; do not give `Art` another material. With an `Art`, the enemy is not tinted; without one, it keeps its old tints.
+
 ## What an art change may touch
 
 An art change changes looks only. It may touch:

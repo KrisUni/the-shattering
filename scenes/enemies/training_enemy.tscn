@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/combat/hurtbox.gd" id="4_hurtbox"]
 [ext_resource type="Script" path="res://scripts/combat/hitbox.gd" id="5_hitbox"]
 [ext_resource type="Script" path="res://scripts/stagger.gd" id="6_stagger"]
+[ext_resource type="Script" path="res://scenes/enemies/enemy_look.gd" id="8_look"]
 [ext_resource type="AudioStream" path="res://assets/placeholder/unblockable_cue.wav" id="7_cue"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
@@ -39,6 +40,9 @@ polygon = PackedVector2Array(12, 0, 8.5, 8.5, 0, 12, -8.5, 8.5, -12, 0, -8.5, -8
 [node name="Nose" type="Polygon2D" parent="Look"]
 color = Color(0.35, 0.22, 0.08, 1)
 polygon = PackedVector2Array(12, -5, 20, 0, 12, 5)
+
+[node name="EnemyLook" type="Node" parent="Look"]
+script = ExtResource("8_look")
 
 [node name="StaggerBar" type="Polygon2D" parent="."]
 visible = false

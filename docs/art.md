@@ -44,6 +44,11 @@ Ilion violet-magenta is clearly more saturated than any violet in the base, so t
 - **Normal wind-up:** the pose, with a cream flash at its start.
 - **Unblockable wind-up:** the pose, a cream flash, then Danger red held to the end of the wind-up, with its own sound.
 
+### How Looks animate
+
+- An enemy with an AnimatedSprite2D named `Art` in its `Look` is driven by `EnemyLook`: it plays `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `hurt` or `death` for what the enemy is doing, and skips a name the sprite lacks.
+- The flash is drawn on the sprite by `assets/shared/flash/flash.gdshader` (cream, then Danger red for an Unblockable), so the enemy itself is never tinted. Without an `Art` sprite the old whole-look tints stay.
+
 ## Darkness
 
 - The dark is a dithered overlay drawn from the gameplay light, so it looks as dark as enemies treat it.

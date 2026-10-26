@@ -112,6 +112,12 @@ var winding_up: bool:
 	get:
 		return current_attack.is_winding_up(_frame)
 
+## How many physics frames into the attack under way it is: 0 on its first frame, or -1 when no
+## attack is under way. A look can tell by it how far into a wind-up it is.
+var attack_frame: int:
+	get:
+		return _frame
+
 ## Whether its Hitbox is on: the attack's active frames.
 var striking: bool:
 	get:
@@ -629,9 +635,13 @@ func _set_strike(on: bool) -> void:
 		box.visible = lit
 
 
-# Its tint: the Break's, or the wind-up's of the attack it is making, or none.
+# Its tint: the Break's, or the wind-up's of the attack it is making, or none; with a sprite, none.
 func _show_look() -> void:
-	if _broken:
+	# With a sprite called Art in its Look, the sprite shows all this (see EnemyLook) and the
+	# whole look is not tinted.
+	if _look.has_node("Art"):
+		modulate = Color.WHITE
+	elif _broken:
 		modulate = BREAK_TINT
 	elif winding_up:
 		modulate = _wind_up_tint()
