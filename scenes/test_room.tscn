@@ -33,14 +33,17 @@
 [ext_resource type="PackedScene" path="res://scenes/world/time_keeper_mark.tscn" id="43_mark"]
 [ext_resource type="Resource" path="res://data/boulder.tres" id="41_boulder"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_across"]
-size = Vector2(1152, 16)
+[sub_resource type="RectangleShape2D" id="Shape_1152x40"]
+size = Vector2(1152, 40)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_down"]
-size = Vector2(16, 648)
+[sub_resource type="RectangleShape2D" id="Shape_1152x64"]
+size = Vector2(1152, 64)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_alcove"]
-size = Vector2(192, 16)
+[sub_resource type="RectangleShape2D" id="Shape_192x32"]
+size = Vector2(192, 32)
+
+[sub_resource type="RectangleShape2D" id="Shape_32x648"]
+size = Vector2(32, 648)
 
 [node name="TestRoom" type="Node2D"]
 script = ExtResource("4_room")
@@ -56,44 +59,44 @@ polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
 [node name="Walls" type="Node2D" parent="."]
 
 [node name="WallTop" type="StaticBody2D" parent="Walls"]
-position = Vector2(576, 8)
+position = Vector2(576, 32)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop"]
-shape = SubResource("RectangleShape2D_wall_across")
+shape = SubResource("Shape_1152x64")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallTop"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+polygon = PackedVector2Array(-576, -32, 576, -32, 576, 32, -576, 32)
 
 [node name="WallBottom" type="StaticBody2D" parent="Walls"]
-position = Vector2(576, 640)
+position = Vector2(576, 628)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom"]
-shape = SubResource("RectangleShape2D_wall_across")
+shape = SubResource("Shape_1152x40")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-576, -8, 576, -8, 576, 8, -576, 8)
+polygon = PackedVector2Array(-576, -20, 576, -20, 576, 20, -576, 20)
 
 [node name="WallLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(8, 324)
+position = Vector2(16, 324)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
-shape = SubResource("RectangleShape2D_wall_down")
+shape = SubResource("Shape_32x648")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallLeft"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+polygon = PackedVector2Array(-16, -324, 16, -324, 16, 324, -16, 324)
 
 [node name="WallRight" type="StaticBody2D" parent="Walls"]
-position = Vector2(1144, 324)
+position = Vector2(1136, 324)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallRight"]
-shape = SubResource("RectangleShape2D_wall_down")
+shape = SubResource("Shape_32x648")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallRight"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-8, -324, 8, -324, 8, 324, -8, 324)
+polygon = PackedVector2Array(-16, -324, 16, -324, 16, 324, -16, 324)
 
 [node name="DarkZone" parent="." instance=ExtResource("17_light_zone")]
 position = Vector2(1000, 480)
@@ -148,34 +151,34 @@ position = Vector2(144, 580)
 modulate = Color(0.85, 0.4, 0.5, 1)
 
 [node name="DoorAlcoveFloor" type="StaticBody2D" parent="Walls"]
-position = Vector2(104, 140)
+position = Vector2(96, 144)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/DoorAlcoveFloor"]
-shape = SubResource("RectangleShape2D_wall_alcove")
+shape = SubResource("Shape_192x32")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/DoorAlcoveFloor"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-96, -8, 96, -8, 96, 8, -96, 8)
+polygon = PackedVector2Array(-96, -16, 96, -16, 96, 16, -96, 16)
 
 [node name="RootsAlcoveTop" type="StaticBody2D" parent="Walls"]
-position = Vector2(104, 304)
+position = Vector2(96, 304)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/RootsAlcoveTop"]
-shape = SubResource("RectangleShape2D_wall_alcove")
+shape = SubResource("Shape_192x32")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/RootsAlcoveTop"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-96, -8, 96, -8, 96, 8, -96, 8)
+polygon = PackedVector2Array(-96, -16, 96, -16, 96, 16, -96, 16)
 
 [node name="RootsAlcoveBottom" type="StaticBody2D" parent="Walls"]
-position = Vector2(104, 456)
+position = Vector2(96, 464)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/RootsAlcoveBottom"]
-shape = SubResource("RectangleShape2D_wall_alcove")
+shape = SubResource("Shape_192x32")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/RootsAlcoveBottom"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-96, -8, 96, -8, 96, 8, -96, 8)
+polygon = PackedVector2Array(-96, -16, 96, -16, 96, 16, -96, 16)
 
 [node name="Door" parent="." instance=ExtResource("21_path_blocker")]
 position = Vector2(196, 74)
@@ -193,7 +196,7 @@ modulate = Color(0.4, 0.7, 0.35, 1)
 position = Vector2(560, 440)
 
 [node name="WallTorch" parent="." instance=ExtResource("20_torch")]
-position = Vector2(812, 30)
+position = Vector2(812, 80)
 
 [node name="StandTorch" parent="." instance=ExtResource("20_torch")]
 position = Vector2(1070, 540)

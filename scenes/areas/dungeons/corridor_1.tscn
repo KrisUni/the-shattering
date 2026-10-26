@@ -7,17 +7,17 @@
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
 
-[sub_resource type="RectangleShape2D" id="Shape_96x16"]
-size = Vector2(96, 16)
+[sub_resource type="RectangleShape2D" id="Shape_128x16"]
+size = Vector2(128, 16)
 
-[sub_resource type="RectangleShape2D" id="Shape_144x16"]
-size = Vector2(144, 16)
+[sub_resource type="RectangleShape2D" id="Shape_128x64"]
+size = Vector2(128, 64)
 
-[sub_resource type="RectangleShape2D" id="Shape_288x16"]
-size = Vector2(288, 16)
+[sub_resource type="RectangleShape2D" id="Shape_256x64"]
+size = Vector2(256, 64)
 
-[sub_resource type="RectangleShape2D" id="Shape_528x16"]
-size = Vector2(528, 16)
+[sub_resource type="RectangleShape2D" id="Shape_512x40"]
+size = Vector2(512, 40)
 
 [node name="Corridor1" type="Node2D"]
 script = ExtResource("1_room")
@@ -29,64 +29,64 @@ polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 648, 0, 648)
 [node name="Walls" type="Node2D" parent="."]
 
 [node name="WallTop1" type="StaticBody2D" parent="Walls"]
-position = Vector2(72, 8)
+position = Vector2(64, 32)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop1"]
-shape = SubResource("Shape_144x16")
+shape = SubResource("Shape_128x64")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallTop1"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-72.0, -8.0, 72.0, -8.0, 72.0, 8.0, -72.0, 8.0)
+polygon = PackedVector2Array(-64.0, -32.0, 64.0, -32.0, 64.0, 32.0, -64.0, 32.0)
 
 [node name="WallTop2" type="StaticBody2D" parent="Walls"]
-position = Vector2(384, 8)
+position = Vector2(384, 32)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop2"]
-shape = SubResource("Shape_288x16")
+shape = SubResource("Shape_256x64")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallTop2"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-144.0, -8.0, 144.0, -8.0, 144.0, 8.0, -144.0, 8.0)
+polygon = PackedVector2Array(-128.0, -32.0, 128.0, -32.0, 128.0, 32.0, -128.0, 32.0)
 
 [node name="WallTop3" type="StaticBody2D" parent="Walls"]
-position = Vector2(768, 8)
+position = Vector2(768, 32)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop3"]
-shape = SubResource("Shape_288x16")
+shape = SubResource("Shape_256x64")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallTop3"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-144.0, -8.0, 144.0, -8.0, 144.0, 8.0, -144.0, 8.0)
+polygon = PackedVector2Array(-128.0, -32.0, 128.0, -32.0, 128.0, 32.0, -128.0, 32.0)
 
 [node name="WallTop4" type="StaticBody2D" parent="Walls"]
-position = Vector2(1080, 8)
+position = Vector2(1088, 32)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallTop4"]
-shape = SubResource("Shape_144x16")
+shape = SubResource("Shape_128x64")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallTop4"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-72.0, -8.0, 72.0, -8.0, 72.0, 8.0, -72.0, 8.0)
+polygon = PackedVector2Array(-64.0, -32.0, 64.0, -32.0, 64.0, 32.0, -64.0, 32.0)
 
 [node name="WallBottom1" type="StaticBody2D" parent="Walls"]
-position = Vector2(264, 640)
+position = Vector2(256, 628)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom1"]
-shape = SubResource("Shape_528x16")
+shape = SubResource("Shape_512x40")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom1"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
+polygon = PackedVector2Array(-256.0, -20.0, 256.0, -20.0, 256.0, 20.0, -256.0, 20.0)
 
 [node name="WallBottom2" type="StaticBody2D" parent="Walls"]
-position = Vector2(888, 640)
+position = Vector2(896, 628)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallBottom2"]
-shape = SubResource("Shape_528x16")
+shape = SubResource("Shape_512x40")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/WallBottom2"]
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-264.0, -8.0, 264.0, -8.0, 264.0, 8.0, -264.0, 8.0)
+polygon = PackedVector2Array(-256.0, -20.0, 256.0, -20.0, 256.0, 20.0, -256.0, 20.0)
 
 [node name="Exits" type="Node2D" parent="."]
 
@@ -111,7 +111,7 @@ script = ExtResource("2_exit")
 position = Vector2(192, 8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/to_cell_1"]
-shape = SubResource("Shape_96x16")
+shape = SubResource("Shape_128x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/to_cell_1"]
 position = Vector2(0, 56)
@@ -124,7 +124,7 @@ script = ExtResource("2_exit")
 position = Vector2(576, 8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/to_cell_2"]
-shape = SubResource("Shape_96x16")
+shape = SubResource("Shape_128x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/to_cell_2"]
 position = Vector2(0, 56)
@@ -137,7 +137,7 @@ script = ExtResource("2_exit")
 position = Vector2(960, 8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/to_cell_3"]
-shape = SubResource("Shape_96x16")
+shape = SubResource("Shape_128x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/to_cell_3"]
 position = Vector2(0, 56)
@@ -150,7 +150,7 @@ script = ExtResource("2_exit")
 position = Vector2(576, 640)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Exits/to_radio_officers"]
-shape = SubResource("Shape_96x16")
+shape = SubResource("Shape_128x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/to_radio_officers"]
 position = Vector2(0, -56)

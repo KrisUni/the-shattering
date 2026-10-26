@@ -14,7 +14,7 @@ const LIGHT_ATTACK_PRESS_LIMIT := 6
 # In physics frames. How long the Light attack button is held for a tap, and left alone after.
 const TAP_FRAMES := 3
 # In pixels. How far from the edge of the floor Almos starts when he is sent at a wall.
-const DISTANCE_FROM_WALL := 150.0
+const DISTANCE_FROM_WALL := 180.0
 # The least, in pixels, he must get towards the wall, so that a test where he never moved
 # cannot pass.
 const LEAST_PROGRESS := 100.0
