@@ -13,17 +13,10 @@ static func real_box(hitbox: Hitbox) -> Rect2:
 	return Rect2(box.position + shape_node.position, box.size)
 
 
-## The box that is drawn: the bounds of the Hitbox's Look and its Shape, where they sit. A
-## Hitbox that has no Look yet (the enemies', until they are given one) is read from its
-## Placeholder.
+## The box that is drawn: the bounds of the Hitbox's Look and its Shape, where they sit.
 static func drawn_box(hitbox: Hitbox) -> Rect2:
-	var shape := hitbox.get_node_or_null("Look/Shape") as Polygon2D
-	var offset := Vector2.ZERO
-	if shape != null:
-		offset = (shape.get_parent() as Node2D).position + shape.position
-	else:
-		shape = hitbox.get_node("Placeholder") as Polygon2D
-		offset = shape.position
+	var shape := hitbox.get_node("Look/Shape") as Polygon2D
+	var offset := (shape.get_parent() as Node2D).position + shape.position
 	var box := Rect2(shape.polygon[0] + offset, Vector2.ZERO)
 	for point in shape.polygon:
 		box = box.expand(point + offset)

@@ -177,12 +177,12 @@ func test_what_is_drawn_of_it_changes_colour_for_as_long_as_it_winds_up() -> voi
 	var tuning := _rig.tuning_with()
 	var attack := tuning.attack
 	var enemy = _rig.spawn_enemy()
-	var placeholder := enemy.get_node_or_null("Placeholder") as Polygon2D
-	assert_not_null(placeholder, "it should have a Placeholder to draw")
-	if placeholder == null:
+	var look := enemy.get_node_or_null("Look") as Node2D
+	assert_not_null(look, "it should have a Look to draw")
+	if look == null:
 		return
-	assert_true(placeholder.is_visible_in_tree(), "its Placeholder should be shown")
-	_rig.sample_also("drawn", func() -> Color: return _drawn_colour(placeholder))
+	assert_true(look.is_visible_in_tree(), "its Look should be shown")
+	_rig.sample_also("drawn", func() -> Color: return _drawn_tint(look))
 	_rig.place_target(Vector2.RIGHT * tuning.attack_range)
 
 	await _rig.wait_frames(attack.startup_frames + attack.active_frames + SETTLE_FRAMES)
@@ -202,8 +202,8 @@ func test_its_strike_shows_for_as_long_as_its_hitbox_is_on() -> void:
 	var tuning := _rig.tuning_with()
 	var attack := tuning.attack
 	var enemy = _rig.spawn_enemy()
-	var strike := enemy.get_node_or_null("Hitbox/Placeholder") as Polygon2D
-	assert_not_null(strike, "its Hitbox should have a Placeholder to show the strike")
+	var strike := enemy.get_node_or_null("Hitbox/Look") as Node2D
+	assert_not_null(strike, "its Hitbox should have a Look to show the strike")
 	if strike == null:
 		return
 	_rig.sample_also("strike_shown", func() -> bool: return strike.is_visible_in_tree())
@@ -415,11 +415,11 @@ func _attack_frames(tuning: EnemyTuning) -> int:
 	return tuning.attack.startup_frames + tuning.attack.active_frames + tuning.attack.recovery_frames
 
 
-# The colour a placeholder is drawn in: its own colour, tinted by the modulate of every node
-# it hangs on, as far up as the nodes pass their modulate down.
-func _drawn_colour(placeholder: Polygon2D) -> Color:
-	var drawn := placeholder.color * placeholder.self_modulate
-	var node: Node = placeholder
+# The tint a Look is drawn in: its own modulate, and that of every node it hangs on, as far up
+# as the nodes pass their modulate down.
+func _drawn_tint(look: Node2D) -> Color:
+	var drawn := Color.WHITE
+	var node: Node = look
 	while node is CanvasItem:
 		var item := node as CanvasItem
 		drawn *= item.modulate

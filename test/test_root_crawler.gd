@@ -309,7 +309,7 @@ func test_when_the_burn_time_is_over_a_crawler_is_alive_and_no_longer_burning() 
 	assert_eq(flame.ticks, 0, "its Fire is out")
 	assert_false(flame.burning, "not burning")
 	assert_false(flame.burnt_out, "not burnt out")
-	assert_true(flame.visible and c.crawler.get_node("Placeholder").visible, "it is still there to be seen")
+	assert_true(flame.visible and c.crawler.get_node("Look").visible, "it is still there to be seen")
 	assert_lt(lowest, _crawler_tuning.health_maximum, "the ticks hurt it")
 	assert_gte(lowest, _crawler_tuning.health_maximum - float(ticks) * _fire.damage_per_tick - TOLERANCE, "and nothing but the ticks did")
 

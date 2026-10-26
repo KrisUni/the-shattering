@@ -607,5 +607,5 @@ func _wait_until(condition: Callable) -> bool:
 
 
 func _watch_the_look() -> void:
-	if is_instance_valid(_enemy) and absf((_enemy.get_node("Placeholder") as Node2D).position.x) > 0.0:
+	if is_instance_valid(_enemy) and absf((_enemy.get_node("Look") as Node2D).position.x) > 0.0:
 		_jitter_seen = true
