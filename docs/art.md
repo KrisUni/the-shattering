@@ -4,9 +4,20 @@ How the game looks: the palette and what each accent means, the references, the 
 
 ## Palette
 
-The master palette is chosen in #76.
+The master palette is chosen. Its base is Lospec's Oil 6 (https://lospec.com/palette-list/oil-6) plus the four reserved accents below.
 
-> **Not chosen yet.** Colours: set in #76. Files: `assets/palette/master.png`, `assets/palette/master.gpl`, `assets/palette/master.hex`.
+| Role | Hex |
+|------|-----|
+| Cream (the white flash) | `#fbf5ef` |
+| Sand | `#f2d3ab` |
+| Dusty rose | `#c69fa5` |
+| Base violet | `#8b6d9c` |
+| Slate indigo | `#494d7e` |
+| Navy (the colour darkness steps toward) | `#272744` |
+
+The heaviest darkness steps (66% or more of the way to navy) bring the two darkest base colours below dE 5 apart, so the overlay (#78) should use at most the lighter steps.
+
+Files: `assets/palette/master.png`, `assets/palette/master.gpl`, `assets/palette/master.hex`.
 
 ### Rules
 
@@ -20,10 +31,10 @@ The master palette is chosen in #76.
 
 | Accent | Marks | Hex |
 |--------|-------|-----|
-| Fire amber | Torches, Fire, the fireball, burning Root crawlers, the rim of every lit circle | set in #76 |
-| Danger red | Only the Unblockable attack | set in #76 |
-| Arch-tree glow, pale gold-green | Checkpoint shoots, glowing fungus, the tree's light | set in #76 |
-| Ilion violet-magenta | Ilion, drained magic, a Seal breaking, Channelling | set in #76 |
+| Fire amber | Torches, Fire, the fireball, burning Root crawlers, the rim of every lit circle | `#f29a2e` |
+| Danger red | Only the Unblockable attack | `#d62839` |
+| Arch-tree glow, pale gold-green | Checkpoint shoots, glowing fungus, the tree's light | `#c9e06b` |
+| Ilion violet-magenta | Ilion, drained magic, a Seal breaking, Channelling | `#d23fd0` |
 
 Ilion violet-magenta is clearly more saturated than any violet in the base, so the two are never mistaken for each other.
 

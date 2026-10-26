@@ -21,6 +21,7 @@ Sound and the HUD's look are out of scope for now.
 2. **Shortlist.** An agent sorts the packs in `assets/_incoming/SHORTLIST.md`: each pack, or file, is *fits*, *needs edit* or *rejected*, with the reason and its licence. The shortlist is not committed either.
 3. **Approve.** The owner approves what is used. A file can be approved only with a confirmed licence that allows using and modifying it in a game. A pack with no licence file, or one that only links to terms nobody has read, is not approved until its source and terms are known. Note any extra terms, such as a ban on AI training, in the shortlist, and in the Licence column of `assets/CREDITS.md` when the file is committed.
 4. **Recolour.** Map every pixel to the master palette: first to the nearest palette colour, then fix by hand what that breaks.
+   Run `python3 -I scripts/recolour_palette.py IN.png OUT.png` (palette: `assets/palette/master.hex`), then `python3 -I scripts/recolour_palette.py --verify OUT.png`; it fails if any opaque pixel is off the palette.
 5. **Place.** Put the file where it belongs (see below) and attach it to the thing's `Look`.
 6. **Credit.** Add a row to `assets/CREDITS.md` in the same commit.
 
