@@ -354,7 +354,7 @@ func test_while_free_and_not_having_noticed_it_keeps_facing_its_post_direction_w
 	await _rig.wait_frames(SETTLE_FRAMES)
 
 	assert_almost_eq(enemy.facing, Vector2.UP, Vector2.ONE * FACING_TOLERANCE)
-	assert_almost_eq(enemy.get_node("Nose").rotation, Vector2.UP.angle(), FACING_TOLERANCE, "the nose turns with it")
+	assert_almost_eq(enemy.get_node("Look/Nose").rotation, Vector2.UP.angle(), FACING_TOLERANCE, "the nose turns with it")
 
 
 func test_while_free_it_turns_to_face_its_target_exactly_wherever_it_goes() -> void:
@@ -370,7 +370,7 @@ func test_while_free_it_turns_to_face_its_target_exactly_wherever_it_goes() -> v
 		target.global_position = direction * (_tuning.sight_length_full + BEYOND_NOTICE)
 		await _rig.wait_frames(SETTLE_FRAMES)
 		assert_almost_eq(enemy.facing, direction, Vector2.ONE * FACING_TOLERANCE, "facing towards the target at %s" % direction)
-		assert_almost_eq(enemy.get_node("Nose").rotation, direction.angle(), FACING_TOLERANCE, "the nose turns with it")
+		assert_almost_eq(enemy.get_node("Look/Nose").rotation, direction.angle(), FACING_TOLERANCE, "the nose turns with it")
 
 
 func test_while_attacking_it_keeps_the_direction_it_committed_the_swing_to() -> void:
