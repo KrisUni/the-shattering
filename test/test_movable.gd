@@ -91,7 +91,7 @@ func test_a_movable_shudders_without_moving() -> void:
 	await wait_physics_frames(2)
 
 	assert_eq(_shuddered, 1, "shuddered")
-	assert_ne((movable.get_node("Placeholder") as Node2D).position.x, 0.0, "its look jittered")
+	assert_ne((movable.get_node("Look") as Node2D).position.x, 0.0, "its look jittered")
 	assert_eq(movable.position, Vector2.ZERO, "position")
 
 
@@ -376,5 +376,5 @@ func _wait_for_the_slide(cost: SpellCost) -> void:
 
 
 func _watch_the_look() -> void:
-	if is_instance_valid(_boulder) and absf((_boulder.get_node("Placeholder") as Node2D).position.x) > 0.0:
+	if is_instance_valid(_boulder) and absf((_boulder.get_node("Look") as Node2D).position.x) > 0.0:
 		_jitter_seen = true

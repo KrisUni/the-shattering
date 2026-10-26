@@ -7,10 +7,12 @@
 script = ExtResource("1_script")
 flammable = NodePath("Flammable")
 
-[node name="Placeholder" type="Polygon2D" parent="."]
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Shape" type="Polygon2D" parent="Look"]
 color = Color(0.45, 0.32, 0.2, 1)
 polygon = PackedVector2Array(-16, -20, 16, -20, 16, 20, -16, 20)
 
 [node name="Flammable" parent="." node_paths=PackedStringArray("look") instance=ExtResource("2_flammable")]
-look = NodePath("../Placeholder")
+look = NodePath("../Look")
 kind = 0

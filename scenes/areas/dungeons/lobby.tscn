@@ -122,7 +122,9 @@ destination_entrance = &"ToDungeons"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Doorways/ToUpperTree"]
 shape = SubResource("Shape_doorway")
 
-[node name="Placeholder" type="Polygon2D" parent="Doorways/ToUpperTree"]
+[node name="Look" type="Node2D" parent="Doorways/ToUpperTree"]
+
+[node name="Shape" type="Polygon2D" parent="Doorways/ToUpperTree/Look"]
 color = Color(0.55, 0.45, 0.25, 1)
 polygon = PackedVector2Array(-48, -8, 48, -8, 48, 8, -48, 8)
 

@@ -5,7 +5,7 @@ extends StaticBody2D
 ## which block whoever the layer is in the mask of: lines, so that a body is blocked from the
 ## side it is on, whether it stands outside the footprint or inside. Its inside is an area on
 ## the footprint's area layer (gap_area or ledge_area), which Almos asks when a Jump comes
-## down. The layers are set in the scene that inherits this, and the look is a placeholder.
+## down. The layers are set in the scene that inherits this, and the look is a Look node holding a placeholder shape.
 
 ## The width and height of the footprint, in pixels.
 @export var size := Vector2(64.0, 64.0):
@@ -16,14 +16,14 @@ extends StaticBody2D
 
 @onready var _edge: CollisionShape2D = $Edge
 @onready var _inside: CollisionShape2D = $Inside/CollisionShape2D
-@onready var _placeholder: Polygon2D = $Placeholder
+@onready var _shape: Polygon2D = $Look/Shape
 
 
 func _ready() -> void:
 	_fit()
 
 
-# Fits the edge, the inside and the placeholder to the size.
+# Fits the edge, the inside and the look's shape to the size.
 func _fit() -> void:
 	var half := size / 2.0
 	var corners := PackedVector2Array([
@@ -39,4 +39,4 @@ func _fit() -> void:
 	var inside := RectangleShape2D.new()
 	inside.size = size
 	_inside.shape = inside
-	_placeholder.polygon = corners
+	_shape.polygon = corners

@@ -17,9 +17,9 @@ var open: bool:
 		return _open
 
 @onready var _body_shape: CollisionShape2D = $CollisionShape2D
-@onready var _placeholder: Polygon2D = $Placeholder
+@onready var _look: Node2D = $Look
 
-# The colour of the placeholder when the door stands open, a dim shade of its shut one.
+# The tint of its look when the door stands open, a dim shade of its shut one.
 const OPEN_TINT := Color(1.0, 1.0, 1.0, 0.25)
 
 
@@ -28,7 +28,7 @@ func open_with_key() -> bool:
 	if not _open and WorldState.is_taken(key):
 		_open = true
 		set_deferred(&"collision_layer", 0)
-		_placeholder.modulate = OPEN_TINT
+		_look.modulate = OPEN_TINT
 	return _open
 
 

@@ -43,7 +43,8 @@ var dead: bool:
 	get:
 		return _fallen
 
-@onready var _placeholder: Polygon2D = $Placeholder
+@onready var _look: Node2D = $Look
+@onready var _shape: Polygon2D = $Look/Shape
 
 var _sliding := false
 var _fallen := false
@@ -60,8 +61,8 @@ var _pulled := false
 func _ready() -> void:
 	_home_layer = collision_layer
 	var half := tuning.size / 2.0
-	_placeholder.polygon = PackedVector2Array([Vector2(-half, -half), Vector2(half, -half), Vector2(half, half), Vector2(-half, half)])
-	_placeholder.color = tuning.color
+	_shape.polygon = PackedVector2Array([Vector2(-half, -half), Vector2(half, -half), Vector2(half, half), Vector2(-half, half)])
+	_shape.color = tuning.color
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(tuning.size, tuning.size)
 	($CollisionShape2D as CollisionShape2D).shape = shape
@@ -69,10 +70,10 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if _shudder_left > 0:
-		_placeholder.position.x = SHUDDER_OFFSET if _shudder_left % 2 == 0 else -SHUDDER_OFFSET
+		_look.position.x = SHUDDER_OFFSET if _shudder_left % 2 == 0 else -SHUDDER_OFFSET
 		_shudder_left -= 1
 	else:
-		_placeholder.position.x = 0.0
+		_look.position.x = 0.0
 	if _sliding:
 		_slide(delta)
 

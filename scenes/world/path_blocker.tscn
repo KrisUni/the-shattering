@@ -9,9 +9,11 @@ flammable = NodePath("Flammable")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 
-[node name="Placeholder" type="Polygon2D" parent="."]
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Shape" type="Polygon2D" parent="Look"]
 color = Color(0.4, 0.28, 0.16, 1)
 
 [node name="Flammable" parent="." node_paths=PackedStringArray("look") instance=ExtResource("2_flammable")]
-look = NodePath("../Placeholder")
+look = NodePath("../Look")
 kind = 2

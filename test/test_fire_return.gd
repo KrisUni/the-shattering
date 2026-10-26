@@ -54,11 +54,11 @@ func test_a_burnt_barrel_is_drawn_again_after_a_rest() -> void:
 	_set_up_room()
 	var barrel := _flammable("Barrel")
 	await _burn_out(barrel)
-	assert_false((_room.get_node("Barrel/Placeholder") as CanvasItem).visible, "control: gone while burnt")
+	assert_false((_room.get_node("Barrel/Look") as CanvasItem).visible, "control: gone while burnt")
 
 	await _rest()
 
-	assert_true((_room.get_node("Barrel/Placeholder") as CanvasItem).visible)
+	assert_true((_room.get_node("Barrel/Look") as CanvasItem).visible)
 
 
 func test_a_burnt_barrel_can_be_hidden_in_after_a_rest() -> void:
@@ -99,7 +99,7 @@ func test_burnt_fungus_is_whole_after_a_rest() -> void:
 	await _rest()
 
 	assert_false(fungus.burnt_out, "not burnt out")
-	assert_true((_room.get_node("Fungus/Placeholder") as CanvasItem).visible, "drawn again")
+	assert_true((_room.get_node("Fungus/Look") as CanvasItem).visible, "drawn again")
 
 
 func test_fungus_brought_back_burns_again() -> void:
@@ -136,7 +136,7 @@ func test_an_enemys_curtain_burning_at_a_rest_goes_out_and_is_whole() -> void:
 
 	assert_false(curtain.burning, "out")
 	assert_false(curtain.burnt_out, "and whole")
-	assert_true((_room.get_node("EnemyCurtain/Placeholder") as CanvasItem).visible, "drawn")
+	assert_true((_room.get_node("EnemyCurtain/Look") as CanvasItem).visible, "drawn")
 	assert_true(_room.get_node("EnemyCurtain").is_in_group(&"hiding_spots"), "a Hiding spot")
 
 

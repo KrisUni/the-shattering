@@ -30,7 +30,7 @@ var open: bool:
 		return _open
 
 @onready var _body_shape: CollisionShape2D = $CollisionShape2D
-@onready var _placeholder: Polygon2D = $Placeholder
+@onready var _shape: Polygon2D = $Look/Shape
 
 
 func _ready() -> void:
@@ -39,7 +39,7 @@ func _ready() -> void:
 	shape.size = size
 	_body_shape.shape = shape
 	var half := size / 2.0
-	_placeholder.polygon = PackedVector2Array([
+	_shape.polygon = PackedVector2Array([
 		Vector2(-half.x, -half.y), Vector2(half.x, -half.y), Vector2(half.x, half.y), Vector2(-half.x, half.y),
 	])
 	var catch_shape := RectangleShape2D.new()
