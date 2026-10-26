@@ -277,7 +277,7 @@ func test_holding_block_does_not_make_him_block_during_a_guard_break() -> void:
 	var span := _span("guard_broken")
 	for i in range(span.x, span.y):
 		assert_false(_samples[i].blocking, "he should not be blocking in sample %d, in the Guard break" % i)
-		assert_false(_samples[i].block_placeholder, "the Block placeholder should not show in sample %d, in the Guard break" % i)
+		assert_false(_samples[i].block_shape, "the Block shape should not show in sample %d, in the Guard break" % i)
 
 
 func test_pushing_a_direction_moves_him_nowhere_and_does_not_turn_him_during_a_guard_break() -> void:
@@ -427,7 +427,7 @@ func test_he_is_blocking_again_from_the_first_frame_after_a_guard_break_if_block
 
 	assert_eq(_span("guard_broken").y, end, "the first sample past the Guard break")
 	assert_true(_samples[end + 1].blocking, "he should be blocking in the first frame after it")
-	assert_true(_samples[end + 1].block_placeholder, "the Block placeholder should show with it")
+	assert_true(_samples[end + 1].block_shape, "the Block shape should show with it")
 
 
 func test_with_no_stamina_back_by_the_end_he_is_blocking_again_but_a_hit_deals_full_damage_and_starts_no_new_guard_break() -> void:
@@ -582,7 +582,7 @@ func _take_sample() -> void:
 	_samples.append({
 		"position": _almos.position,
 		"blocking": _almos.blocking,
-		"block_placeholder": _almos.get_node("Placeholder/BlockPlaceholder").visible,
+		"block_shape": _almos.get_node("Look/BlockShape").visible,
 		"guard_broken": _almos.guard_broken,
 		"rolling": _almos.rolling,
 		"attacking": _almos.attacking,
@@ -590,7 +590,7 @@ func _take_sample() -> void:
 		"sprinting": _almos.sprinting,
 		"stamina": _almos.stamina.current,
 		"facing": _almos.facing,
-		"look": _drawn_colour(_almos.get_node("Placeholder") as Polygon2D),
+		"look": (_almos.get_node("Look") as Node2D).modulate,
 	})
 
 
@@ -723,20 +723,6 @@ func _span(state: String, from := 0) -> Vector2i:
 		elif first != -1 and not _samples[i][state]:
 			return Vector2i(first, i)
 	return Vector2i(first, -1)
-
-
-# The colour a placeholder is drawn in: its own colour, tinted by the modulate of every node
-# it hangs on, as far up as the nodes pass their modulate down.
-func _drawn_colour(placeholder: Polygon2D) -> Color:
-	var drawn := placeholder.color * placeholder.self_modulate
-	var node: Node = placeholder
-	while node is CanvasItem:
-		var item := node as CanvasItem
-		drawn *= item.modulate
-		if item.top_level:
-			break
-		node = item.get_parent()
-	return drawn
 
 
 # How different two colours are: the differences in red, green and blue added up.

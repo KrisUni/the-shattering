@@ -105,6 +105,20 @@ func test_a_second_tap_leaves_the_spot_where_he_is_in_it() -> void:
 	assert_eq(c.almos.global_position, c.spot.global_position, "at the spot's place")
 
 
+func test_his_look_is_tinted_while_he_hides_and_clear_again_when_he_leaves() -> void:
+	var c := _case()
+	var look := c.almos.get_node("Look") as Node2D
+	assert_eq(look.modulate, Color.WHITE, "control: no tint before")
+	c.almos.global_position = c.spot.global_position + Vector2.RIGHT * _player.hide_reach * 0.5
+
+	await _tap_interact()
+	assert_true(c.almos.hiding, "control: he is in")
+	assert_ne(look.modulate, Color.WHITE, "his look should be tinted while he hides")
+
+	await _tap_interact()
+	assert_eq(look.modulate, Color.WHITE, "and clear again when he leaves")
+
+
 func test_he_cannot_move_in_a_spot() -> void:
 	var c := _case()
 	c.almos.global_position = c.spot.global_position

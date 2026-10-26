@@ -321,7 +321,7 @@ func _end_swing() -> void:
 		_light_swing = 0
 
 
-# Switches the sword's Hitbox on or off, and its placeholder look, which shows while it can
+# Switches the sword's Hitbox on or off, and its Look, which shows while it can
 # hurt.
 func _set_sword(on: bool) -> void:
 	hitbox.active = on

@@ -55,8 +55,8 @@ const STRIKE_SETTLE_FRAMES := 10
 # How long, as a multiple of the hold threshold, a test holds the Roll button for to make
 # it a hold and not a tap.
 const HOLD_THRESHOLD_MULTIPLE := 1.5
-# In radians. For the angle the Block placeholder is turned by.
-const BLOCK_PLACEHOLDER_ANGLE_TOLERANCE := 0.0001
+# In radians. For the angle the Block shape is turned by.
+const BLOCK_SHAPE_ANGLE_TOLERANCE := 0.0001
 # A refill pause longer than any wait in these tests, for tests that need Stamina to stay
 # where it was left.
 const LONG_REFILL_PAUSE := 10.0
@@ -597,7 +597,7 @@ func test_block_pressed_in_a_heavy_charge_waits_for_the_swing_that_follows_to_en
 
 # --- What is drawn while he blocks ---
 
-func test_the_block_placeholder_shows_exactly_while_he_is_blocking() -> void:
+func test_the_block_shape_shows_exactly_while_he_is_blocking() -> void:
 	_spawn_almos()
 	await wait_physics_frames(SETTLE_FRAMES)
 	_almos_input.press_action(&"block")
@@ -614,19 +614,19 @@ func test_the_block_placeholder_shows_exactly_while_he_is_blocking() -> void:
 	assert_true(_samples.any(func(sample: Dictionary) -> bool: return sample.blocking), "he should have blocked at some point")
 	assert_true(_samples.any(func(sample: Dictionary) -> bool: return not sample.blocking), "he should have not been blocking at some point")
 	for i in _samples.size():
-		assert_eq(_samples[i].block_placeholder, _samples[i].blocking, "the Block placeholder and blocking in sample %d" % i)
+		assert_eq(_samples[i].block_shape, _samples[i].blocking, "the Block shape and blocking in sample %d" % i)
 
 
-func test_the_block_placeholder_turns_with_the_way_he_faces() -> void:
+func test_the_block_shape_turns_with_the_way_he_faces() -> void:
 	_spawn_almos()
 	_almos_input.press_action(&"block")
 	_almos_input.press_action(&"move_up")
 	_almos_input.press_action(&"move_left")
 	await wait_physics_frames(SETTLE_FRAMES)
 
-	var drawn := _almos.get_node("Placeholder/BlockPlaceholder") as Node2D
-	assert_true(drawn.visible, "the Block placeholder should show")
-	assert_almost_eq(Vector2.from_angle(drawn.global_rotation), _almos.facing, Vector2.ONE * BLOCK_PLACEHOLDER_ANGLE_TOLERANCE, "the way the Block placeholder points, against the way he faces")
+	var drawn := _almos.get_node("Look/BlockShape") as Node2D
+	assert_true(drawn.visible, "the Block shape should show")
+	assert_almost_eq(Vector2.from_angle(drawn.global_rotation), _almos.facing, Vector2.ONE * BLOCK_SHAPE_ANGLE_TOLERANCE, "the way the Block shape points, against the way he faces")
 
 
 func _spawn_almos(tuning: PlayerTuning = null) -> Node2D:
@@ -644,7 +644,7 @@ func _take_sample() -> void:
 	_samples.append({
 		"position": _almos.position,
 		"blocking": _almos.blocking,
-		"block_placeholder": _almos.get_node("Placeholder/BlockPlaceholder").visible,
+		"block_shape": _almos.get_node("Look/BlockShape").visible,
 		"rolling": _almos.rolling,
 		"attacking": _almos.attacking,
 		"charging": _almos.charging,

@@ -40,9 +40,9 @@ var grab := false
 ## The box the strike hurts with, a CollisionShape2D under this Hitbox. set_reach moves it.
 @export var strike_shape: CollisionShape2D
 
-## What is drawn of the strike while it is on, under this Hitbox. set_reach moves it with the
+## What is drawn of the strike while it is on, a Look under this Hitbox. set_reach moves it with the
 ## box, so that it keeps covering it. Optional.
-@export var strike_placeholder: Node2D
+@export var strike_look: Node2D
 
 ## Whether a swing sets alight the flammable things it reaches. Almos sets it while he has a lit
 ## torch in hand. It does not draw the torch's flame.
@@ -64,7 +64,7 @@ var _hit: Array[Hurtbox] = []
 
 
 ## Puts the strike this far out: the far edge of strike_shape lands reach pixels from this
-## Hitbox's origin along its local +x, and strike_placeholder moves the same distance. The box
+## Hitbox's origin along its local +x, and strike_look moves the same distance. The box
 ## keeps its width and height, and the Hitbox itself does not move, so a Hitbox that sits at
 ## the attacker's centre and is turned to aim still turns about that centre. Done once the
 ## scene is ready and again whenever the reach changes; doing it again for the same reach
@@ -74,8 +74,8 @@ func set_reach(reach: float) -> void:
 	var far_edge := strike_shape.position.x + strike_shape.shape.get_rect().end.x
 	var shift := reach - far_edge
 	strike_shape.position.x += shift
-	if strike_placeholder != null:
-		strike_placeholder.position.x += shift
+	if strike_look != null:
+		strike_look.position.x += shift
 
 
 func _physics_process(_delta: float) -> void:

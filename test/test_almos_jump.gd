@@ -646,26 +646,26 @@ func test_a_jump_press_during_a_guard_break_is_lost() -> void:
 
 # The look
 
-func test_a_shadow_stays_at_his_feet_while_his_placeholder_rises_and_falls() -> void:
+func test_a_shadow_stays_at_his_feet_while_his_look_rises_and_falls() -> void:
 	_spawn_almos(Vector2.ZERO)
 	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)
 	var shadow := _almos.get_node("Shadow") as Node2D
-	var placeholder := _almos.get_node("Placeholder") as Node2D
+	var look := _almos.get_node("Look") as Node2D
 	assert_false(shadow.visible, "there should be no shadow on the ground")
 	var rises: Array[float] = []
 	var shadow_offsets: Array[Vector2] = []
 	get_tree().physics_frame.connect(func() -> void:
 		if is_instance_valid(_almos) and _almos.airborne:
-			rises.append(-placeholder.position.y)
+			rises.append(-look.position.y)
 			shadow_offsets.append(shadow.global_position - _almos.global_position))
 
 	await _tap_jump_and_wait_until_down()
 
-	assert_gte(rises.max(), _tuning().jump_height * (1.0 - PEAK_ALLOWANCE), "his placeholder should rise to the tuned height")
+	assert_gte(rises.max(), _tuning().jump_height * (1.0 - PEAK_ALLOWANCE), "his look should rise to the tuned height")
 	assert_lte(rises.max(), _tuning().jump_height + POSITION_TOLERANCE, "and no higher")
 	assert_true(shadow_offsets.all(func(offset: Vector2) -> bool: return offset.is_zero_approx()), "the shadow should stay at his feet")
-	assert_almost_eq(placeholder.position, Vector2.ZERO, Vector2.ONE * POSITION_TOLERANCE, "his placeholder should be back down")
+	assert_almost_eq(look.position, Vector2.ZERO, Vector2.ONE * POSITION_TOLERANCE, "his look should be back down")
 	assert_false(shadow.visible, "the shadow should be gone once he is down")
 
 
