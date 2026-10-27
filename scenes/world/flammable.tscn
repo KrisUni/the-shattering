@@ -1,9 +1,93 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/world/flammable.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b2bhbwkxijv0s" path="res://assets/shared/fire/flame_0.png" id="2_f"]
+[ext_resource type="Texture2D" uid="uid://c7xegh8gugfq3" path="res://assets/shared/fire/flame_1.png" id="3_f"]
+[ext_resource type="Texture2D" uid="uid://c4x18xlx7h5e5" path="res://assets/shared/fire/flame_2.png" id="4_f"]
+[ext_resource type="Texture2D" uid="uid://c6hamns7vgsyo" path="res://assets/shared/fire/flame_3.png" id="5_f"]
+[ext_resource type="Texture2D" uid="uid://bbh21s2q7e0e1" path="res://assets/shared/fire/flame_4.png" id="6_f"]
+[ext_resource type="Texture2D" uid="uid://bkfgq2bpxfpn0" path="res://assets/shared/fire/flame_5.png" id="7_f"]
+[ext_resource type="Texture2D" uid="uid://j4yiqqbuaonn" path="res://assets/shared/fire/flame_6.png" id="8_f"]
+[ext_resource type="Texture2D" uid="uid://cpsc7dhi35r3k" path="res://assets/shared/fire/flame_7.png" id="9_f"]
+[ext_resource type="Texture2D" uid="uid://ej6tigwq1bxf" path="res://assets/shared/fire/flame_8.png" id="10_f"]
+[ext_resource type="Texture2D" uid="uid://c5a48abkbeh0i" path="res://assets/shared/fire/flame_9.png" id="11_f"]
+[ext_resource type="Texture2D" uid="uid://cenp4g84k5wmp" path="res://assets/shared/fire/flame_10.png" id="12_f"]
+[ext_resource type="Texture2D" uid="uid://fckyy5wqf63k" path="res://assets/shared/fire/flame_11.png" id="13_f"]
+[ext_resource type="Texture2D" uid="uid://cjw7v1kjd76pc" path="res://assets/shared/fire/flame_12.png" id="14_f"]
+[ext_resource type="Texture2D" uid="uid://decn3gcyudotk" path="res://assets/shared/fire/flame_13.png" id="15_f"]
+[ext_resource type="Texture2D" uid="uid://e68vnd2bhuq2" path="res://assets/shared/fire/flame_14.png" id="16_f"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(32, 40)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_flame"]
+animations = [{
+"frames": [
+{
+"duration": 1.0,
+"texture": ExtResource("2_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("3_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("4_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("5_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("6_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("7_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("8_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("9_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("10_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("11_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("12_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("13_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("14_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("15_f")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("16_f")
+}
+],
+"loop": true,
+"name": &"burn",
+"speed": 12.0
+}]
 
 [node name="Flammable" type="Area2D"]
 collision_layer = 512
@@ -17,5 +101,13 @@ shape = SubResource("RectangleShape2D_flammable")
 
 [node name="Flame" type="Polygon2D" parent="."]
 visible = false
-color = Color(1, 0.5, 0.1, 0.85)
+color = Color(1, 0.5, 0.1, 0)
 polygon = PackedVector2Array(0, -26, 10, -10, 6, 0, -6, 0, -10, -10)
+
+[node name="Art" type="AnimatedSprite2D" parent="Flame"]
+position = Vector2(-20, -44)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_flame")
+animation = &"burn"
+autoplay = "burn"
+centered = false

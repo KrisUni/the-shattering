@@ -46,6 +46,12 @@ Art never changes code or tests. Each thing draws itself inside its `Look` node 
 - Put an AnimatedSprite2D, or a Sprite2D, inside the `Look`. A Room's floor and walls use a TileMapLayer.
 - Hide the placeholder polygon; do not delete what the code or tests use.
 - Line the art up with the collision body; do not move the body to fit the art.
+- Draw sprites at scale 2 (one art pixel is 2 world units).
+- Code shows and hides a `Flame` by its visibility, so the `Flame` stays a polygon child of the thing: give the polygon a colour alpha of 0 and put the AnimatedSprite2D under it as a child. (Setting the polygon's `visible` off would hide the sprite too.)
+
+### Enemy sprites
+
+An enemy's sprite is an AnimatedSprite2D named `Art` inside its `Look`. The `EnemyLook` node under `Look` plays the animation named for the enemy's state: `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `death` (a missing name is skipped; `hurt` is not played yet, it needs a hurt signal from the enemy, which is still open). It puts `assets/shared/flash/flash.gdshader` on `Art` for the cream and Danger red wind-up flashes; do not give `Art` another material. `Art` turns with the enemy by `flip_h` (left or right only; up and down keep the last side), so draw it facing right. With an `Art`, the enemy is not tinted; without one, it keeps its old tints.
 
 ## What an art change may touch
 
