@@ -138,11 +138,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Root crawler
 
 - **Thing:** Root crawler
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Tiny RPG Character Asset Pack 02, Blood Monster_A (plain strips). `assets/creatures/root_crawler/`. See `assets/CREDITS.md`.
+- **Size in art px:** 32x28 canvas for every frame, body about 20x16, feet on the bottom row of the body (sprite offset puts them on the 12-unit collision body's foot).
+- **Palette notes and accents used:** Base only: navy outline, indigo and violet body, sand and cream teeth. The pack's crimson is mapped away from Danger red and Fire amber. While it burns, the shared Fire flame stands on its feet (Fire amber).
+- **Animations and poses needed:** `idle`, `walk` (loop); `strike` (arm raised, then swing); `low` (crouched flat, maw open, then a low lunge); `unblockable` (reared tall with the arm overhead, held, then the slam); `break` (leaning back and slumped, held); `death`. The sprite faces right and does not turn with the crawler.
+- **Status:** in the game (first draft; the owner checks the look in the editor).
 
 ### Gameplay pieces
 

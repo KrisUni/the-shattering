@@ -3,15 +3,293 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="1_enemy"]
 [ext_resource type="Resource" path="res://data/root_crawler.tres" id="2_tuning"]
 [ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="3_flammable"]
+[ext_resource type="Texture2D" uid="uid://cit1nh6m8gslw" path="res://assets/creatures/root_crawler/break_0.png" id="4_break_0"]
+[ext_resource type="Texture2D" uid="uid://dnrfdjyfo0cur" path="res://assets/creatures/root_crawler/break_1.png" id="5_break_1"]
+[ext_resource type="Texture2D" uid="uid://0p8yv772mn06" path="res://assets/creatures/root_crawler/break_2.png" id="6_break_2"]
+[ext_resource type="Texture2D" uid="uid://dj8dmj6lci1yj" path="res://assets/creatures/root_crawler/death_0.png" id="7_death_0"]
+[ext_resource type="Texture2D" uid="uid://c7aa8qdl2xb7h" path="res://assets/creatures/root_crawler/death_1.png" id="8_death_1"]
+[ext_resource type="Texture2D" uid="uid://dr1016huvwky3" path="res://assets/creatures/root_crawler/death_2.png" id="9_death_2"]
+[ext_resource type="Texture2D" uid="uid://cxidatuh5585g" path="res://assets/creatures/root_crawler/death_3.png" id="10_death_3"]
+[ext_resource type="Texture2D" uid="uid://dcuqwx62wln3c" path="res://assets/creatures/root_crawler/idle_0.png" id="11_idle_0"]
+[ext_resource type="Texture2D" uid="uid://r2gmi1rnea7o" path="res://assets/creatures/root_crawler/idle_1.png" id="12_idle_1"]
+[ext_resource type="Texture2D" uid="uid://c1r7uih03vhrn" path="res://assets/creatures/root_crawler/idle_2.png" id="13_idle_2"]
+[ext_resource type="Texture2D" uid="uid://cu1wylbuo8ovv" path="res://assets/creatures/root_crawler/idle_3.png" id="14_idle_3"]
+[ext_resource type="Texture2D" uid="uid://cci74yh7oto5r" path="res://assets/creatures/root_crawler/idle_4.png" id="15_idle_4"]
+[ext_resource type="Texture2D" uid="uid://c1fwdm4i2nbvs" path="res://assets/creatures/root_crawler/idle_5.png" id="16_idle_5"]
+[ext_resource type="Texture2D" uid="uid://c1sq7tjhho64o" path="res://assets/creatures/root_crawler/low_0.png" id="17_low_0"]
+[ext_resource type="Texture2D" uid="uid://dg62goa3jxh6c" path="res://assets/creatures/root_crawler/low_1.png" id="18_low_1"]
+[ext_resource type="Texture2D" uid="uid://bb5fc0233xbiy" path="res://assets/creatures/root_crawler/low_2.png" id="19_low_2"]
+[ext_resource type="Texture2D" uid="uid://bal1m8prgmjgo" path="res://assets/creatures/root_crawler/low_3.png" id="20_low_3"]
+[ext_resource type="Texture2D" uid="uid://cg5vuryv0kdhl" path="res://assets/creatures/root_crawler/low_4.png" id="21_low_4"]
+[ext_resource type="Texture2D" uid="uid://ckb53wx61t3jq" path="res://assets/creatures/root_crawler/low_5.png" id="22_low_5"]
+[ext_resource type="Texture2D" uid="uid://vbvgngpil28a" path="res://assets/creatures/root_crawler/low_6.png" id="23_low_6"]
+[ext_resource type="Texture2D" uid="uid://d2psetu7t12ld" path="res://assets/creatures/root_crawler/low_7.png" id="24_low_7"]
+[ext_resource type="Texture2D" uid="uid://bkhfkctx5c3kj" path="res://assets/creatures/root_crawler/strike_0.png" id="25_strike_0"]
+[ext_resource type="Texture2D" uid="uid://bwgfe1bu5rxe1" path="res://assets/creatures/root_crawler/strike_1.png" id="26_strike_1"]
+[ext_resource type="Texture2D" uid="uid://cm6ywpu8nhynk" path="res://assets/creatures/root_crawler/strike_2.png" id="27_strike_2"]
+[ext_resource type="Texture2D" uid="uid://1xkndrr5xlbl" path="res://assets/creatures/root_crawler/strike_3.png" id="28_strike_3"]
+[ext_resource type="Texture2D" uid="uid://i5hbu8131pv" path="res://assets/creatures/root_crawler/strike_4.png" id="29_strike_4"]
+[ext_resource type="Texture2D" uid="uid://b01rvcj51u31b" path="res://assets/creatures/root_crawler/strike_5.png" id="30_strike_5"]
+[ext_resource type="Texture2D" uid="uid://clrt7skgt0ggw" path="res://assets/creatures/root_crawler/strike_6.png" id="31_strike_6"]
+[ext_resource type="Texture2D" uid="uid://b0mnios3vrq5l" path="res://assets/creatures/root_crawler/strike_7.png" id="32_strike_7"]
+[ext_resource type="Texture2D" uid="uid://cjbr8dcyep8rd" path="res://assets/creatures/root_crawler/unblockable_0.png" id="33_unblockable_0"]
+[ext_resource type="Texture2D" uid="uid://brtam1mc1vet6" path="res://assets/creatures/root_crawler/unblockable_1.png" id="34_unblockable_1"]
+[ext_resource type="Texture2D" uid="uid://dbj6q66a2ebt2" path="res://assets/creatures/root_crawler/unblockable_2.png" id="35_unblockable_2"]
+[ext_resource type="Texture2D" uid="uid://clt85j3537s3j" path="res://assets/creatures/root_crawler/walk_0.png" id="36_walk_0"]
+[ext_resource type="Texture2D" uid="uid://cebjia7gi0st3" path="res://assets/creatures/root_crawler/walk_1.png" id="37_walk_1"]
+[ext_resource type="Texture2D" uid="uid://cwkq2puxto3vl" path="res://assets/creatures/root_crawler/walk_2.png" id="38_walk_2"]
+[ext_resource type="Texture2D" uid="uid://k4u16e7cid57" path="res://assets/creatures/root_crawler/walk_3.png" id="39_walk_3"]
+[ext_resource type="Texture2D" uid="uid://b0druyjknxfan" path="res://assets/creatures/root_crawler/walk_4.png" id="40_walk_4"]
+[ext_resource type="Texture2D" uid="uid://dmntw0htxs51c" path="res://assets/creatures/root_crawler/walk_5.png" id="41_walk_5"]
+[ext_resource type="Texture2D" uid="uid://d8ruhcv670xj" path="res://assets/creatures/root_crawler/walk_6.png" id="42_walk_6"]
+[ext_resource type="Texture2D" uid="uid://by6opfljgamf7" path="res://assets/creatures/root_crawler/walk_7.png" id="43_walk_7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(16, 16)
 
+[sub_resource type="SpriteFrames" id="SpriteFrames_crawler"]
+animations = [
+{
+"frames": [
+{
+"duration": 1,
+"texture": ExtResource("11_idle_0")
+},
+{
+"duration": 1,
+"texture": ExtResource("12_idle_1")
+},
+{
+"duration": 1,
+"texture": ExtResource("13_idle_2")
+},
+{
+"duration": 1,
+"texture": ExtResource("14_idle_3")
+},
+{
+"duration": 1,
+"texture": ExtResource("15_idle_4")
+},
+{
+"duration": 1,
+"texture": ExtResource("16_idle_5")
+}
+],
+"loop": true,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [
+{
+"duration": 1,
+"texture": ExtResource("36_walk_0")
+},
+{
+"duration": 1,
+"texture": ExtResource("37_walk_1")
+},
+{
+"duration": 1,
+"texture": ExtResource("38_walk_2")
+},
+{
+"duration": 1,
+"texture": ExtResource("39_walk_3")
+},
+{
+"duration": 1,
+"texture": ExtResource("40_walk_4")
+},
+{
+"duration": 1,
+"texture": ExtResource("41_walk_5")
+},
+{
+"duration": 1,
+"texture": ExtResource("42_walk_6")
+},
+{
+"duration": 1,
+"texture": ExtResource("43_walk_7")
+}
+],
+"loop": true,
+"name": &"walk",
+"speed": 12.0
+}, {
+"frames": [
+{
+"duration": 0.8,
+"texture": ExtResource("25_strike_0")
+},
+{
+"duration": 0.8,
+"texture": ExtResource("26_strike_1")
+},
+{
+"duration": 0.9,
+"texture": ExtResource("27_strike_2")
+},
+{
+"duration": 0.8,
+"texture": ExtResource("28_strike_3")
+},
+{
+"duration": 1,
+"texture": ExtResource("29_strike_4")
+},
+{
+"duration": 1.5,
+"texture": ExtResource("30_strike_5")
+},
+{
+"duration": 1.5,
+"texture": ExtResource("31_strike_6")
+},
+{
+"duration": 2.0,
+"texture": ExtResource("32_strike_7")
+}
+],
+"loop": false,
+"name": &"strike",
+"speed": 10.0
+}, {
+"frames": [
+{
+"duration": 0.6,
+"texture": ExtResource("17_low_0")
+},
+{
+"duration": 0.6,
+"texture": ExtResource("18_low_1")
+},
+{
+"duration": 0.6,
+"texture": ExtResource("19_low_2")
+},
+{
+"duration": 0.75,
+"texture": ExtResource("20_low_3")
+},
+{
+"duration": 0.75,
+"texture": ExtResource("21_low_4")
+},
+{
+"duration": 1.3,
+"texture": ExtResource("22_low_5")
+},
+{
+"duration": 2.5,
+"texture": ExtResource("23_low_6")
+},
+{
+"duration": 2.5,
+"texture": ExtResource("24_low_7")
+}
+],
+"loop": false,
+"name": &"low",
+"speed": 10.0
+}, {
+"frames": [
+{
+"duration": 2.0,
+"texture": ExtResource("33_unblockable_0")
+},
+{
+"duration": 2.0,
+"texture": ExtResource("34_unblockable_1")
+},
+{
+"duration": 2.7,
+"texture": ExtResource("35_unblockable_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("29_strike_4")
+},
+{
+"duration": 1.5,
+"texture": ExtResource("30_strike_5")
+},
+{
+"duration": 1.5,
+"texture": ExtResource("31_strike_6")
+},
+{
+"duration": 2.0,
+"texture": ExtResource("32_strike_7")
+}
+],
+"loop": false,
+"name": &"unblockable",
+"speed": 10.0
+}, {
+"frames": [
+{
+"duration": 1,
+"texture": ExtResource("4_break_0")
+},
+{
+"duration": 1,
+"texture": ExtResource("5_break_1")
+},
+{
+"duration": 40,
+"texture": ExtResource("6_break_2")
+}
+],
+"loop": false,
+"name": &"break",
+"speed": 10.0
+}, {
+"frames": [
+{
+"duration": 1,
+"texture": ExtResource("7_death_0")
+},
+{
+"duration": 1,
+"texture": ExtResource("8_death_1")
+},
+{
+"duration": 1,
+"texture": ExtResource("9_death_2")
+},
+{
+"duration": 1,
+"texture": ExtResource("10_death_3")
+}
+],
+"loop": false,
+"name": &"death",
+"speed": 8.0
+}]
+
 [node name="RootCrawler" instance=ExtResource("1_enemy")]
 tuning = ExtResource("2_tuning")
+
+[node name="Shape" parent="Look" index="0"]
+visible = false
+
+[node name="Nose" parent="Look" index="1"]
+visible = false
+
+[node name="Art" type="AnimatedSprite2D" parent="Look" index="2"]
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_crawler")
+animation = &"idle"
+autoplay = "idle"
+offset = Vector2(0, -4)
 
 [node name="Flammable" parent="." instance=ExtResource("3_flammable")]
 kind = 3
 
 [node name="CollisionShape2D" parent="Flammable" index="0"]
 shape = SubResource("RectangleShape2D_flammable")
+
+[node name="Art" parent="Flammable/Flame" index="0"]
+position = Vector2(-20, -52)
