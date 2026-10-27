@@ -312,11 +312,29 @@ The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_til
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
+#### Corridor 1 floor and walls
+
+- **Thing:** Corridor 1 (the floor and walls of the Room)
+- **Source pack and files:** The same tiles as Cell 3 (`assets/shared/dungeon_tiles/dungeon_tiles.tres`, no new tiles). Floor under the whole Room; north walls are two tiles of face (sand lip, navy base) in four runs between the three north doorways; south walls are one tile plus the strip in two runs either side of the south doorway. The east and west edges are exits, so they have no wall tiles.
+- **Size in art px:** 16x16 per tile; the Room is 36x20 tiles plus the strip.
+- **Palette notes and accents used:** As Cell 3. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
+#### Corridor 1 Back entrance seal
+
+- **Thing:** Back entrance seal (a path blocker of living roots across the west end of Corridor 1; see Fire)
+- **Source pack and files:** `assets/shared/dungeon_tiles/root_seal.png`, drawn by hand after CRAWLING DEPTHS `root_vein_column`'s silhouette. Set in `corridor_1.tscn` under `BackEntranceSeal/Look/Art`; the shared `path_blocker.tscn` stays placeholder. See `assets/CREDITS.md`.
+- **Size in art px:** 8x308 (the 16x616 unit footprint; a Sprite2D at scale 2). One 44 row pattern repeated seven times; the joins fall on a narrow neck of the root.
+- **Palette notes and accents used:** Navy body, indigo right edge, a few base violet flecks. No accent; the glowing veins are not drawn.
+- **Animations and poses needed:** One still picture.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
 #### Root wall
 
 - **Thing:** Root wall (the Dungeons' wall of grown roots, in Cell 3 the Roots over the south doorway)
-- **Source pack and files:** CRAWLING DEPTHS `root_vein_column`; so far used only for Cell 3's Roots (`roots_blocker.png`). Vertical root columns for Corridor 1 are not cut yet.
-- **Size in art px:** 64x8 for the Roots.
+- **Source pack and files:** CRAWLING DEPTHS `root_vein_column`: Cell 3's Roots (`roots_blocker.png`); Corridor 1's Back entrance seal (`root_seal.png`, drawn by hand from the column's silhouette); and the two root columns on Corridor 1's north wall (`root_vein_column.png`, the column's top bulge cropped and edged by hand). All in `assets/shared/dungeon_tiles/`. See `assets/CREDITS.md`.
+- **Size in art px:** 64x8 for the Roots; 8x308 for the seal; 20x30 for a column.
 - **Palette notes and accents used:** Navy and indigo with violet flecks. The glowing veins (arch-tree glow) are not drawn yet.
 - **Animations and poses needed:** None yet.
-- **Status:** chosen, partly in the game
+- **Status:** in the game for Cell 3's Roots, Corridor 1's seal and columns (first draft; the owner checks the look in the editor)
