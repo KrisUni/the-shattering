@@ -51,7 +51,7 @@ Art never changes code or tests. Each thing draws itself inside its `Look` node 
 
 ### Enemy sprites
 
-An enemy's sprite is an AnimatedSprite2D named `Art` inside its `Look`. The `EnemyLook` node under `Look` plays the animation named for the enemy's state: `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `hurt`, `death` (a missing name is skipped). It puts `assets/shared/flash/flash.gdshader` on `Art` for the cream and Danger red wind-up flashes; do not give `Art` another material. With an `Art`, the enemy is not tinted; without one, it keeps its old tints.
+An enemy's sprite is an AnimatedSprite2D named `Art` inside its `Look`. The `EnemyLook` node under `Look` plays the animation named for the enemy's state: `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `hurt`, `death` (a missing name is skipped). It puts `assets/shared/flash/flash.gdshader` on `Art` for the cream and Danger red wind-up flashes; do not give `Art` another material. `Art` turns with the enemy by `flip_h` (left or right only; up and down keep the last side), so draw it facing right. With an `Art`, the enemy is not tinted; without one, it keeps its old tints.
 
 ## What an art change may touch
 

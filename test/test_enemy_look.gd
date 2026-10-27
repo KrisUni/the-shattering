@@ -190,3 +190,41 @@ func test_with_no_sprite_the_old_tints_stay() -> void:
 			first_wind_up = enemy.modulate
 			break
 	assert_eq(first_wind_up, enemy.WIND_UP_TINT)
+
+
+func test_the_sprite_turns_left_with_an_enemy_that_faces_left_and_right_with_one_that_faces_right() -> void:
+	var enemy = _rig.spawn_enemy()
+	var art := _give_art(enemy)
+	enemy.post_facing = Vector2.LEFT
+	await _rig.wait_frames(2)
+	assert_true(art.flip_h, "faces left, so the sprite is flipped")
+
+	enemy.post_facing = Vector2.RIGHT
+	await _rig.wait_frames(2)
+	assert_false(art.flip_h, "faces right, so it is not")
+
+
+func test_an_enemy_facing_up_or_down_keeps_the_side_its_sprite_had() -> void:
+	var enemy = _rig.spawn_enemy()
+	var art := _give_art(enemy)
+	enemy.post_facing = Vector2.LEFT
+	await _rig.wait_frames(2)
+	for vertical in [Vector2.UP, Vector2.DOWN]:
+		enemy.post_facing = vertical
+		await _rig.wait_frames(2)
+		assert_true(art.flip_h, "still left after facing %s" % vertical)
+
+	enemy.post_facing = Vector2.RIGHT
+	await _rig.wait_frames(2)
+	for vertical in [Vector2.UP, Vector2.DOWN]:
+		enemy.post_facing = vertical
+		await _rig.wait_frames(2)
+		assert_false(art.flip_h, "still right after facing %s" % vertical)
+
+
+func test_an_enemy_without_an_art_sprite_is_left_alone_when_it_turns() -> void:
+	var enemy = _rig.spawn_enemy()
+	enemy.post_facing = Vector2.LEFT
+	await _rig.wait_frames(2)
+	assert_eq(enemy.get_node("Look").get_node_or_null("Art"), null, "no sprite was made")
+	assert_eq(enemy.modulate, Color.WHITE)

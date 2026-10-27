@@ -46,7 +46,7 @@ Ilion violet-magenta is clearly more saturated than any violet in the base, so t
 
 ### How Looks animate
 
-- An enemy with an AnimatedSprite2D named `Art` in its `Look` is driven by `EnemyLook`: it plays `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `hurt` or `death` for what the enemy is doing, and skips a name the sprite lacks.
+- An enemy with an AnimatedSprite2D named `Art` in its `Look` is driven by `EnemyLook`: it plays `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `hurt` or `death` for what the enemy is doing, and skips a name the sprite lacks. The sprite is flipped left or right with the way the enemy faces, so it is drawn facing right.
 - The flash is drawn on the sprite by `assets/shared/flash/flash.gdshader` (cream, then Danger red for an Unblockable), so the enemy itself is never tinted. Without an `Art` sprite the old whole-look tints stay.
 
 ## Darkness

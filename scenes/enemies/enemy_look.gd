@@ -49,9 +49,18 @@ func update_look() -> void:
 		_material = ShaderMaterial.new()
 		_material.shader = FLASH_SHADER
 		_art.material = _material
+	_turn_with_enemy()
 	_broken_frames = _broken_frames + 1 if _enemy.broken else 0
 	_show_flash()
 	_play(_animation_name())
+
+
+# The sprite faces left or right with the enemy, and only flips: the enemy itself is not turned.
+# Facing straight up or down keeps the side it had.
+func _turn_with_enemy() -> void:
+	var facing: Vector2 = _enemy.facing
+	if not is_zero_approx(facing.x):
+		_art.flip_h = facing.x < 0.0
 
 
 # The animation for what the enemy is doing now.
