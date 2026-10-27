@@ -46,7 +46,7 @@ Ilion violet-magenta is clearly more saturated than any violet in the base, so t
 
 ### How Looks animate
 
-- An enemy with an AnimatedSprite2D named `Art` in its `Look` is driven by `EnemyLook`: it plays `idle`, `walk`, `strike`, `low`, `unblockable`, `break`, `hurt` or `death` for what the enemy is doing, and skips a name the sprite lacks. The sprite is flipped left or right with the way the enemy faces, so it is drawn facing right.
+- An enemy with an AnimatedSprite2D named `Art` in its `Look` is driven by `EnemyLook`: it plays `idle`, `walk`, `strike`, `low`, `unblockable`, `break` or `death` for what the enemy is doing, and skips a name the sprite lacks. `hurt` is not played yet: it needs a hurt signal from the enemy, which is still open. The sprite is flipped left or right with the way the enemy faces, so it is drawn facing right.
 - The flash is drawn on the sprite by `assets/shared/flash/flash.gdshader` (cream, then Danger red for an Unblockable), so the enemy itself is never tinted. Without an `Art` sprite the old whole-look tints stay.
 
 ## Darkness
@@ -141,7 +141,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Source pack and files:** Tiny RPG Character Asset Pack 02, Blood Monster_A (plain strips). `assets/creatures/root_crawler/`. See `assets/CREDITS.md`.
 - **Size in art px:** 32x28 canvas for every frame, body about 20x16, feet on the bottom row of the body (sprite offset puts them on the 12-unit collision body's foot).
 - **Palette notes and accents used:** Base only: navy outline, indigo and violet body, sand and cream teeth. The pack's crimson is mapped away from Danger red and Fire amber. While it burns, the shared Fire flame stands on its feet (Fire amber).
-- **Animations and poses needed:** `idle`, `walk` (loop); `strike` (arm raised, then swing); `low` (crouched flat, maw open, then a low lunge); `unblockable` (reared tall with the arm overhead, held, then the slam); `break` (leaning back and slumped, held); `death`. The sprite faces right and does not turn with the crawler.
+- **Animations and poses needed:** `idle`, `walk` (loop); `strike` (arm raised, then swing); `low` (crouched flat, maw open, then a low lunge); `unblockable` (reared tall with the arm overhead, held, then the slam); `break` (leaning back and slumped, held); `death`. The sprite faces right and turns with the crawler by `flip_h` (left or right).
 - **Status:** in the game (first draft; the owner checks the look in the editor).
 
 ### Gameplay pieces
@@ -162,7 +162,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Size in art px:** 20×32 (15 frames), drawn over the 16×20 body of a Flammable, its foot on the body's foot.
 - **Palette notes and accents used:** Fire amber with sand and cream for the core; the smoke above in the base violets. Larger than a torch flame, with smoke, so a burning thing and a lit torch read apart.
 - **Animations and poses needed:** One looping burn (15 frames, 12 per second), shown only while the thing burns (the Flame node's visibility).
-- **Status:** in the game (first draft; the owner checks the look in the editor). Used by every Flammable; the Root crawler's own burning look is still open.
+- **Status:** in the game (first draft; the owner checks the look in the editor). Used by every Flammable, the Root crawler's burning look included (root_crawler.tscn places the shared flame at `Flammable/Flame/Art`).
 
 #### Fireball
 

@@ -3,7 +3,8 @@ extends Node
 ## Makes an enemy's sprite show what the enemy is doing. It looks for an AnimatedSprite2D named
 ## Art in the enemy's Look; with none it does nothing, and the enemy tints its whole look as it
 ## always did. With one, it plays the animation for the enemy's state (idle, walk, strike, low,
-## unblockable, break, hurt, death; a name the sprite lacks is skipped) and draws the wind-up
+## unblockable, break, death; a name the sprite lacks is skipped; hurt is not played yet, since it
+## needs a hurt signal from the enemy, which is still open) and draws the wind-up
 ## flashes on the sprite itself, in palette colours, with a shader that leaves its alpha alone.
 ## It only reads the enemy and the sprite: no gameplay depends on it.
 
@@ -27,6 +28,7 @@ var _art: AnimatedSprite2D
 var _material: ShaderMaterial
 var _broken_frames := 0
 var _shown_attack_frame := -1
+var _has_played := false
 
 
 func _ready() -> void:
@@ -82,7 +84,8 @@ func _animation_name() -> StringName:
 
 
 # Plays this animation, if the sprite has it. It starts over when it changes and at the first
-# frame of every attack, such as each swing of a combo.
+# frame of every attack, such as each swing of a combo. One that is not a loop and has ended
+# stays on its last frame for as long as the enemy is in that state.
 func _play(animation: StringName) -> void:
 	var frames := _art.sprite_frames
 	if frames == null or not frames.has_animation(animation):
@@ -90,7 +93,8 @@ func _play(animation: StringName) -> void:
 	var attack_frame: int = _enemy.attack_frame
 	var new_swing: bool = attack_frame == 0 and _shown_attack_frame != 0
 	_shown_attack_frame = attack_frame
-	if _art.animation != animation or new_swing or not _art.is_playing():
+	if _art.animation != animation or new_swing or not _has_played:
+		_has_played = true
 		_art.play(animation)
 
 

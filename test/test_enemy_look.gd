@@ -33,15 +33,19 @@ func after_each() -> void:
 	_rig.stop_sampling()
 
 
-# A sprite named Art in the enemy's Look, with 1x1 frames for every animation name.
-func _give_art(enemy: Node) -> AnimatedSprite2D:
+# A sprite named Art in the enemy's Look, with 1x1 frames for every animation name. Each
+# animation has this many frames, run at 30 a second, and loops unless it is told not to.
+func _give_art(enemy: Node, frame_count := 1, looping := true) -> AnimatedSprite2D:
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
 	for animation in ANIMATIONS:
 		frames.add_animation(animation)
+		frames.set_animation_loop(animation, looping)
+		frames.set_animation_speed(animation, 30.0)
 		var image := Image.create(1, 1, false, Image.FORMAT_RGBA8)
 		image.fill(Color.WHITE)
-		frames.add_frame(animation, ImageTexture.create_from_image(image))
+		for i in frame_count:
+			frames.add_frame(animation, ImageTexture.create_from_image(image))
 	var art := AnimatedSprite2D.new()
 	art.name = "Art"
 	art.sprite_frames = frames
@@ -228,3 +232,76 @@ func test_an_enemy_without_an_art_sprite_is_left_alone_when_it_turns() -> void:
 	await _rig.wait_frames(2)
 	assert_eq(enemy.get_node("Look").get_node_or_null("Art"), null, "no sprite was made")
 	assert_eq(enemy.modulate, Color.WHITE)
+
+
+# A finished pose is held on its last frame while the enemy stays in that state.
+func test_a_held_unblockable_pose_stays_on_its_last_frame_after_the_animation_ends() -> void:
+	var enemy = _rig.spawn_enemy()
+	var art := _give_art(enemy, 3, false)
+	_watch(enemy, art)
+	_rig.sample_also("frame", func() -> int: return art.frame)
+	_rig.sample_also("attack_frame", func() -> int: return enemy.attack_frame)
+	_rig.place_target(Vector2.RIGHT * _tuning.attack_range)
+	var round_frames := 0
+	for kind in _tuning.attack_pattern:
+		round_frames += _tuning.attack_of(kind).total_frames()
+	await _rig.wait_frames(round_frames + SETTLE_FRAMES)
+
+	var attack := _tuning.unblockable_attack
+	var held := _rig.samples.filter(func(s: Dictionary) -> bool:
+		return s.kind == UNBLOCKABLE and s.attack_frame >= 20 and s.attack_frame < attack.total_frames() - 5)
+	assert_gt(held.size(), attack.startup_frames / 2, "the unblockable outlasts its three frame animation")
+	for sample in held:
+		assert_eq(sample.animation, &"unblockable")
+		assert_eq(sample.frame, 2, "held on the last frame at attack frame %d" % sample.attack_frame)
+
+
+func test_a_held_break_pose_stays_on_its_last_frame_after_the_animation_ends() -> void:
+	var enemy = _rig.spawn_enemy()
+	var art := _give_art(enemy, 3, false)
+	_watch(enemy, art)
+	_rig.place_target(Vector2.RIGHT * _tuning.attack_range * 4.0)
+	var breaker := _rig.hitbox_over(enemy, NO_DAMAGE, "enemy_hurtbox")
+	breaker.stagger = _tuning.stagger_capacity
+	await _rig.wait_frames(SETTLE_FRAMES)
+	await _rig.swing(breaker, 1)
+	await _rig.wait_frames(_tuning.break_frames / 2)
+
+	assert_true(enemy.broken)
+	assert_eq(art.animation, &"break")
+	assert_eq(art.frame, 2, "held on the last frame")
+	assert_false(art.is_playing(), "and not started over")
+
+
+# A club combo is swing after swing with no walk between, all of them the `strike` animation, so
+# only a new swing tells the driver to start it again, and the flash at its start comes with it.
+func test_a_second_swing_of_a_combo_restarts_the_animation_and_flashes_cream() -> void:
+	var swing := AttackData.new()
+	swing.startup_frames = 12
+	swing.active_frames = 2
+	swing.recovery_frames = 8
+	swing.damage = 1.0
+	var tuning := _rig.tuning_with({
+		"attack_pattern": Array([EnemyTuning.AttackKind.COMBO], TYPE_INT, "", null),
+		"combo": Array([swing, swing], TYPE_OBJECT, "Resource", AttackData),
+	})
+	var enemy = _rig.spawn_enemy(tuning)
+	var art := _give_art(enemy, 2, false)
+	_watch(enemy, art)
+	_rig.sample_also("frame", func() -> int: return art.frame)
+	_rig.sample_also("attack_frame", func() -> int: return enemy.attack_frame)
+	_rig.place_target(Vector2.RIGHT * tuning.attack_range)
+	await _rig.wait_frames(2 * swing.total_frames() + SETTLE_FRAMES)
+
+	var starts: Array[int] = []
+	for i in _rig.samples.size():
+		if _rig.samples[i].attack_frame == 1 and _rig.samples[i].kind == EnemyTuning.AttackKind.COMBO:
+			starts.append(i)
+	assert_gte(starts.size(), 2, "two swings were made")
+	var before_second: Dictionary = _rig.samples[starts[1] - 2]
+	var second: Dictionary = _rig.samples[starts[1]]
+	assert_eq(before_second.animation, &"strike", "no walk between the swings")
+	assert_eq(before_second.frame, 1, "the first swing's animation had finished")
+	assert_eq(second.frame, 0, "the second swing starts it over")
+	assert_eq(second.amount, 1.0, "with its cream flash")
+	assert_eq(second.flash, CREAM)
