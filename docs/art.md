@@ -203,11 +203,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Path blocker
 
 - **Thing:** Path blocker (living roots or a door that close a passage; see Fire)
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Cell 3's Roots only: CRAWLING DEPTHS `root_vein_column`, rotated and squeezed by hand into a horizontal root, `assets/shared/dungeon_tiles/roots_blocker.png`. Set in `cell_3.tscn` under `Roots/Look/Art`; the shared `path_blocker.tscn` and the test room stay placeholder. See `assets/CREDITS.md`.
+- **Size in art px:** 64x8 (the 128x16 unit footprint of Cell 3's Roots; a Sprite2D at scale 2).
+- **Palette notes and accents used:** Navy body, indigo top edge, a few base violet flecks. No accent; the burning shows Fire's own flame.
+- **Animations and poses needed:** One still picture. It goes with the path blocker's Look when the roots burn out.
+- **Status:** in the game for Cell 3 (first draft; the owner checks the look in the editor)
 
 #### Crate and Boulder
 
@@ -289,3 +289,34 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Palette notes and accents used:**
 - **Animations and poses needed:**
 - **Status:** not chosen
+
+### Rooms
+
+The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_tiles.tres`, from one 16x16 art px atlas, `dungeon_tiles.png`. A Room draws its floor and walls with TileMapLayers at scale 2. The floor sits behind Almos, the north and side walls behind him, and the south walls in front of him (by `z_index`).
+
+#### Cell 3 floor
+
+- **Thing:** Cell 3 (the floor of the Room)
+- **Source pack and files:** Hand-drawn packed earth in the palette, guided by CRAWLING DEPTHS `earth_floor` (its violet came out wrong, so the pixels are new). `assets/shared/dungeon_tiles/dungeon_tiles.png`, tiles 0-3 of row 0 (four floor variants) and tile 4 (the 4 art px strip at the south wall). See `assets/CREDITS.md`.
+- **Size in art px:** 16x16 per tile; the Room is 36x20 tiles plus the strip.
+- **Palette notes and accents used:** Dusty rose ground, a few base violet and sand flecks. No accent.
+- **Animations and poses needed:** None; four variants laid in a fixed pattern.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
+#### Cell 3 walls
+
+- **Thing:** Cell 3 (the walls of the Room)
+- **Source pack and files:** Dead Swamp (Sevarihk / Aurora) `woven_wall`, one 16x16 weave cut from it and edged by hand; `assets/shared/dungeon_tiles/dungeon_tiles.png`, row 1: north face top (sand lip), north face base (navy shadow), left side, right side, south wall top, south wall strip. The tiles follow the wall grid: north face 2 tiles, sides 1, south 1 plus the strip. See `assets/CREDITS.md`.
+- **Size in art px:** 16x16 per tile.
+- **Palette notes and accents used:** Woven bark in base violet and indigo with navy shadows; the south wall seen from above is darker. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
+#### Root wall
+
+- **Thing:** Root wall (the Dungeons' wall of grown roots, in Cell 3 the Roots over the south doorway)
+- **Source pack and files:** CRAWLING DEPTHS `root_vein_column`; so far used only for Cell 3's Roots (`roots_blocker.png`). Vertical root columns for Corridor 1 are not cut yet.
+- **Size in art px:** 64x8 for the Roots.
+- **Palette notes and accents used:** Navy and indigo with violet flecks. The glowing veins (arch-tree glow) are not drawn yet.
+- **Animations and poses needed:** None yet.
+- **Status:** chosen, partly in the game
