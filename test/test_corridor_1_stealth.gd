@@ -1,7 +1,7 @@
 extends GutTest
-## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a narrow hall, three
-## tiles wide, that one guard walks from end to end, with alcoves along its south side holding
-## wardrobes and barrels to hide in while he goes by. Here: he patrols the whole length, the route
+## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a lane three
+## Almos-widths wide that one guard walks from end to end, beside a row along the north wall where
+## wardrobes and barrels stand between the cell doors, to hide in while he goes by. Here: he patrols the whole length, the route
 ## and the doorways are clear, and in the real Dungeons he walks his whole round past Almos hidden in
 ## the wardrobe by Cell 3 without noticing him, while he catches him standing in the open.
 
@@ -67,9 +67,20 @@ func test_one_guard_walks_the_hall_from_one_end_to_the_other() -> void:
 	var xs: Array[float] = []
 	for point in guard.patrol:
 		xs.append(point.x)
-		assert_almost_eq(point.y, 112.0, 0.01, "his route runs down the middle of the hall")
+		assert_almost_eq(point.y, 176.0, 0.01, "his route runs down the middle of the lane")
 	assert_lt(xs.min(), 128.0, "it reaches the west end")
 	assert_gt(xs.max(), 1024.0, "and the east end")
+
+
+func test_the_furniture_leaves_every_cell_door_clear() -> void:
+	var room := await _corridor_in_a_viewport()
+	for door in ["to_cell_1", "to_cell_2", "to_cell_3"]:
+		var exit_node := room.get_node("Exits/" + door) as Node2D
+		for node in room.get_node("Furniture").get_children():
+			# Only what stands in the row along the north wall, where the doors are.
+			if (node as Node2D).position.y > 140.0:
+				continue
+			assert_gt(absf((node as Node2D).position.x - exit_node.position.x), 64.0 + 20.0, "%s stands clear of %s" % [node.name, door])
 
 
 func test_there_are_places_to_hide_along_his_path() -> void:
@@ -80,8 +91,9 @@ func test_there_are_places_to_hide_along_his_path() -> void:
 	for spot in spots:
 		assert_true(spot.is_in_group(&"hiding_spots"), "%s can be got into" % spot.name)
 		xs.append((spot as Node2D).position.x)
-		# Each stands in an alcove, off his path, where its walls hide whoever is in it.
-		assert_gt((spot as Node2D).position.y, 160.0, "%s stands back in an alcove, off the hall" % spot.name)
+		# Each stands in the row along the north wall, off his lane.
+		var y: float = (spot as Node2D).position.y
+		assert_true(y > 64.0 and y <= 128.0, "%s stands in the row by the north wall, off his lane" % spot.name)
 	xs.sort()
 	for i in range(1, xs.size()):
 		assert_lt(xs[i] - xs[i - 1], 400.0, "no long stretch of the hall without a place to hide")

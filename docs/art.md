@@ -213,7 +213,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Size in art px:** Wardrobe 20x30; barrel 14x18.
 - **Palette notes and accents used:** Dusty-rose wood with sand highlights, navy outline and seams, indigo shadow at the foot. No accent; a burning one shows the shared Fire flame.
 - **Animations and poses needed:** None; still pictures. Almos inside shows through faintly, as his hidden tint does.
-- **Placement:** In Corridor 1 they stand at the back of alcoves cut into the hall's south side: a wardrobe under Cell 3's door, another at the west end, and barrels between, so no stretch of the hall is far from one.
+- **Placement:** In Corridor 1 they stand in a row along the north wall, between the cell doors, beside the guard's lane: wardrobes at both ends and either side of the doors, one a step from Cell 3's door, and barrels between, so no stretch of the hall is far from one.
 - **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
 #### Furniture and cover

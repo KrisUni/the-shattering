@@ -10,8 +10,11 @@ const TILE := 32.0
 const COLUMNS := 36
 const ROWS := 20
 const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallTop4", "WallBottom1", "WallBottom2"]
-# The solid root that narrows the hall to three tiles, with its alcoves and the passage south.
-const MASS_NAMES := ["MassWestEdge", "MassEastEdge", "MassWestLow", "MassEastLow", "MassWest1", "MassWest2", "MassWest3", "MassEast1", "MassEast2", "MassEast3"]
+# The solid root that narrows the hall, with the passage south between its halves.
+const MASS_NAMES := ["MassWestEdge", "MassEastEdge", "MassWest", "MassEast"]
+# In units. The foot of the north wall, and the row along it where the furniture stands.
+const NORTH_FACE_FOOT := 64.0
+const FURNITURE_ROW := 64.0
 
 var _room: Node2D
 
@@ -150,14 +153,13 @@ func test_the_shared_path_blocker_stays_placeholder() -> void:
 	assert_null(blocker.get_node_or_null("Look/Art"), "the shared path blocker has no art of its own")
 
 
-func test_the_hall_is_three_times_as_wide_as_almos_from_end_to_end() -> void:
-	# Almos's sprite is 16 art px across, 32 units; the hall is three times that, 96 units, from
-	# the foot of the north wall (y 64) to the top of the solid root (y 160).
+func test_the_hall_is_a_furniture_row_and_a_lane_three_times_as_wide_as_almos() -> void:
+	# Almos's sprite is 16 art px across, 32 units. Under the north wall runs a row for the furniture,
+	# then a lane three times his width, then the solid root.
 	var almos := (load("res://scenes/almos/almos.tscn") as PackedScene).instantiate()
 	autofree(almos)
 	var art := almos.get_node("Look/Art") as AnimatedSprite2D
 	var almos_width := art.sprite_frames.get_frame_texture(&"idle_down", 0).get_size().x * art.scale.x
-	var hall_top := 64.0
-	var hall_bottom := ((_room.get_node("Walls/MassWest1") as Node2D).position.y
-		- (((_room.get_node("Walls/MassWest1/CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size.y / 2.0))
-	assert_eq(hall_bottom - hall_top, almos_width * 3.0, "the hall is three Almos-widths wide")
+	var mass := _room.get_node("Walls/MassWest") as Node2D
+	var mass_top := mass.position.y - ((mass.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size.y / 2.0
+	assert_eq(mass_top - NORTH_FACE_FOOT - FURNITURE_ROW, almos_width * 3.0, "the lane is three Almos-widths wide")
