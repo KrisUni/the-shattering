@@ -68,6 +68,22 @@ var holding: bool:
 	get:
 		return _holding
 
+## What the wind-up draws a flame from, the torch or the Fire, or null when he is not winding up.
+## Only read, by his look.
+var drawing_from: Node2D:
+	get:
+		if not _winding_up:
+			return null
+		return _torch if _torch != null else _fire
+
+## How far the wind-up has got, from 0 at the press to 1 at the release; 0 when there is none.
+## Only read, by his look.
+var wind_up_progress: float:
+	get:
+		if not _winding_up or spell_data.wind_up_frames <= 0:
+			return 0.0
+		return clampf(float(_frames) / spell_data.wind_up_frames, 0.0, 1.0)
+
 ## The Spell the Spell button makes now.
 var selected: Spell:
 	get:

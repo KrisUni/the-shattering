@@ -14,6 +14,9 @@ extends Node2D
 ##
 ## It looks ahead along each frame's step, so a thin wall or a small Hurtbox cannot be flown
 ## through however fast it goes.
+##
+## Where it stops on a thing it leaves a FireBurst, the look of it bursting, as wide as its splash.
+## Running out of range leaves none. The burst and its Trail are only looks.
 
 ## The physics layers it is stopped by, as the bits that set them in a collision mask: walls,
 ## enemy_hurtbox and flammable.
@@ -24,6 +27,8 @@ const FLAMMABLE := 1 << 9
 ## In pixels. How far off a wall it stopped on, back the way it came, the splash's lines start, so
 ## that wall does not block its own splash.
 const OFF_THE_WALL := 2.0
+
+const BURST_SCENE := preload("res://scenes/almos/fire_burst.tscn")
 
 ## Emitted when it hits an enemy, with the Hurtbox it hurt.
 signal hit(hurtbox: Hurtbox)
@@ -76,12 +81,25 @@ func _physics_process(delta: float) -> void:
 		if flammable != null:
 			flammable.ignite()
 		_splash(hurtbox, found["collider"] is not Hurtbox and found["collider"] is not Flammable)
+		_burst()
 		queue_free()
 		return
 	global_position += _direction * step
 	_range_left -= step
 	if _range_left <= 0.0:
 		queue_free()
+
+
+# Leaves the look of its bursting where it stopped, beside itself, so it outlives it.
+func _burst() -> void:
+	var parent := get_parent()
+	if parent == null:
+		return
+	# Typed as a plain Node2D, not by its class name, so the fireball still loads before a new
+	# class name has been registered by an import.
+	var burst: Node2D = BURST_SCENE.instantiate()
+	parent.add_child(burst)
+	burst.call(&"burst", global_position, splash_radius)
 
 
 # The splash at the point it stopped at: the other enemy Hurtboxes and the flammable things within
