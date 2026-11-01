@@ -120,20 +120,19 @@ target = NodePath("../Almos")
 [node name="Hud" type="CanvasLayer" parent="."]
 
 [node name="StaminaBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("stamina")]
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 216.0
-offset_bottom = 32.0
+offset_left = 6.0
+offset_top = 15.0
+offset_right = 70.0
+offset_bottom = 20.0
 show_percentage = false
 script = ExtResource("4_stamina_bar")
 stamina = NodePath("../../Almos/Stamina")
 
 [node name="HealthBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("health")]
-modulate = Color(0.9, 0.35, 0.35, 1)
-offset_left = 16.0
-offset_top = 40.0
-offset_right = 216.0
-offset_bottom = 56.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 90.0
+offset_bottom = 13.0
 show_percentage = false
 script = ExtResource("5_health_bar")
 health = NodePath("../../Almos/Health")

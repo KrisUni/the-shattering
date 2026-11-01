@@ -73,6 +73,19 @@ What the Nar and the arch tree are is in `CONTEXT.md` (**Nar**, **Arch tree**). 
 - **Catacombs:** mood decided when it is drawn.
 - **Lands between:** mood decided when it is drawn.
 
+## HUD
+
+The Health, Stamina and Mana bars share `scenes/hud/hud_bar.gd`, a ProgressBar that draws itself pixel-exact in place of the default look:
+- **Frame and fill:** a near-black frame around a recessed background, and the fill with a lit top row and a shaded bottom row.
+- **Loss trail:** a pale trail that a loss leaves where the bar was. It holds for a moment, then drains down to the new value, so a hit reads at a glance.
+- **Colours:**
+  - Health is blood red (`#9b3a46`), kept well apart from Danger red.
+  - Stamina is sage green (`#7f9a5a`).
+  - Mana is steel blue (`#4a6fb5`).
+- **Placement:** top left, in HUD pixels on the 576x324 view. Health is on top and longest (84x7), Stamina under it (64x5), and Mana under that (64x5) once Almos has it.
+
+The text labels in the test room are still placeholders.
+
 ## Look sheets
 
 One sheet per thing that is in the game now. Fill a sheet in when its art is chosen. The test room stays placeholder and gets no sheet. The Cave's door to the Catacombs stands in until the Catacombs are drawn (out of scope), so it has no sheet yet.
