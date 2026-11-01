@@ -5,7 +5,6 @@ extends GutTest
 ## that hang on him (the carried torch and the held flame) show only their flame, never a bracket.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
-const PALETTE_PATH := "res://assets/palette/master.hex"
 const ART_DIR := "res://assets/characters/almos/"
 
 var _almos_input: AlmosInput
@@ -191,23 +190,3 @@ func test_the_old_strike_box_draws_nothing_now_the_sprite_shows_the_swing() -> v
 	var shape := almos.get_node("Sword/Look/Shape") as Polygon2D
 	assert_not_null(shape, "the strike box shape stays for the code and tests that measure it")
 	assert_eq(shape.color.a, 0.0, "it is transparent, so only the smear shows the swing")
-
-
-func test_every_pixel_of_his_art_is_a_palette_colour() -> void:
-	var palette := {}
-	for line in FileAccess.get_file_as_string(PALETTE_PATH).split("\n", false):
-		palette[Color(line.strip_edges()).to_html(false)] = true
-	var checked := 0
-	var off: Array[String] = []
-	for file_name in DirAccess.get_files_at(ART_DIR):
-		if not file_name.ends_with(".png"):
-			continue
-		checked += 1
-		var image := Image.load_from_file(ProjectSettings.globalize_path(ART_DIR + file_name))
-		for y in image.get_height():
-			for x in image.get_width():
-				var pixel := image.get_pixel(x, y)
-				if pixel.a > 0.0 and (pixel.a < 1.0 or not palette.has(pixel.to_html(false))):
-					off.append("%s at %d, %d" % [file_name, x, y])
-	assert_gt(checked, 0, "there is art to check")
-	assert_eq(off, [] as Array[String], "every opaque pixel is a palette colour")

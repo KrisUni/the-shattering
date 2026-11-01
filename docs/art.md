@@ -1,46 +1,30 @@
 # Look bible
 
-How the game looks: the palette and what each accent means, the references, the mood of each area and a look sheet for every character, creature and gameplay piece. It grows as art is chosen. How to bring art in, and what an art change may touch, is in `assets/AGENTS.md`. What things are and do is in `CONTEXT.md`; this file says only how they look.
+How the game looks: colour (now free, with what still holds), the references, the mood of each area and a look sheet for every character, creature and gameplay piece. It grows as art is chosen. How to bring art in, and what an art change may touch, is in `assets/AGENTS.md`. What things are and do is in `CONTEXT.md`; this file says only how they look.
 
-## Palette
+## Colour
 
-The master palette is chosen. Its base is Lospec's Oil 6 (https://lospec.com/palette-list/oil-6) plus the four reserved accents below.
+There is no master palette any more. The owner released the game from it so assets can carry more detail: more shades a material, glow gradients, hue-shifted shading, and packs used as drawn. Choose colours freely.
 
-| Role | Hex |
-|------|-----|
-| Cream (the white flash) | `#fbf5ef` |
-| Sand | `#f2d3ab` |
-| Dusty rose | `#c69fa5` |
-| Base violet | `#8b6d9c` |
-| Slate indigo | `#494d7e` |
-| Navy (the colour darkness steps toward) | `#272744` |
+What still holds:
 
-The heaviest darkness steps (66% or more of the way to navy) bring the two darkest base colours below dE 5 apart, so the overlay (#78) should use at most the lighter steps.
+- **The mood:** muted and dark at heart, with fire warm and bright against it (Hyper Light Drifter's sharp accents on a muted ground; Blasphemous's grim tone). Avoid bright, saturated fantasy colours across the board.
+- **Danger red (`#d62839`) is kept for the Unblockable attack's warning**, and an image under `assets/` may not use it (a test checks). It is a combat cue the player must read at a glance, so nothing else may look like it. Keep other strong reds well away from it.
+- **Cues** stay a pose plus a flash, never colour alone (below). The wind-up flashes stay cream, then Danger red for an Unblockable (`assets/shared/flash/flash.gdshader`).
 
-Files: `assets/palette/master.png`, `assets/palette/master.gpl`, `assets/palette/master.hex`.
+What used to be rules is now guidance. Each colour still marks something well, so keep it in mind:
 
-### Rules
-
-- One master palette for the whole game. Every asset is recoloured into it.
-- A muted base of 6 to 12 colours, in the spirit of Lospec's Oil 6.
-- The lightest colour is the white flash, a cream flash: the start of every wind-up cue.
-- The darkest colour is a navy: the colour darkness steps toward.
-- Four reserved accents sit on top of the base. Each marks only the things listed for it and appears nowhere else.
-
-### Reserved accents
-
-| Accent | Marks | Hex |
-|--------|-------|-----|
-| Fire amber | Torches, Fire, the fireball, burning Root crawlers, the rim of every lit circle | `#f29a2e` |
-| Danger red | Only the Unblockable attack | `#d62839` |
+| Colour | Good for | Hex |
+|--------|----------|-----|
+| Fire amber | Torches, lamps, Fire, the fireball, burning things | `#f29a2e` |
 | Arch-tree glow, pale gold-green | Checkpoint shoots, glowing fungus, the tree's light | `#c9e06b` |
-| Ilion violet-magenta | Ilion, drained magic, a Seal breaking, Channelling | `#d23fd0` |
+| Ilion violet-magenta | Ilion, drained magic, a Seal breaking | `#d23fd0` |
 
-Ilion violet-magenta is clearly more saturated than any violet in the base, so the two are never mistaken for each other.
+The old base, Lospec's Oil 6 (cream `#fbf5ef`, sand `#f2d3ab`, dusty rose `#c69fa5`, base violet `#8b6d9c`, slate indigo `#494d7e`, navy `#272744`), is what the art so far is drawn in. It stays in `assets/palette/` as a starting point, not a limit, and `scripts/recolour_palette.py` can still map an image onto it (or onto any `.hex` palette given with `--palette`) when that helps an asset sit with the rest.
 
 ## Cues
 
-- A cue is a pose plus a brief flash in palette colours, never colour alone.
+- A cue is a pose plus a brief flash, never colour alone.
 - **Normal wind-up:** the pose, with a cream flash at its start.
 - **Unblockable wind-up:** the pose, a cream flash, then Danger red held to the end of the wind-up, with its own sound.
 
@@ -52,7 +36,7 @@ Ilion violet-magenta is clearly more saturated than any violet in the base, so t
 ## Darkness
 
 - The dark is a dithered overlay drawn from the gameplay light, so it looks as dark as enemies treat it.
-- Each dark zone goes two or three steps toward the palette's navy.
+- Each dark zone goes two or three steps toward navy.
 - Each lit torch or Fire cuts a circle of exactly its light radius, rimmed in Fire amber.
 
 ## References
@@ -109,7 +93,7 @@ Each sheet has these fields:
 - **Thing:** Almos
 - **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young wanderer in the spirit the owner asked for (a classic hooded hero with a long cap), not a copy of any existing character.
 - **Size in art px:** 16x24 for every frame but the attacks, which are 32x32 with the body in the middle (feet on row 27) so the swing's smear has room; feet always on the body (sprite offset -8 art px).
-- **Palette notes and accents used:** Base only. Bark-grey skin (base violet lit, slate indigo shade; the palette has no neutral grey) on the face, neck and hands, with pale cream eyes: his mark of being touched by the tree. Pale root hair (cream), one lock across his face. A dark indigo fibre hood with a violet seam and a stitched sand rim, snug to his head. In profile, its short tail kicks up and back and his face is smooth, with no nose bump. A dusty-rose fibre robe with sand highlights and a ragged hem; a navy strap across the chest; a sand rope belt whose end swings; his Flask in cream at the left hip; the right forearm bandaged in sand; indigo trousers and sand foot wraps. The Seal is a navy ring with a cream glint. The swing's smear is sand and cream. No accent.
+- **Palette notes and accents used:** Base only. Bark-grey skin (base violet lit, slate indigo shade, drawn while the palette had no neutral grey; a true grey is now allowed) on the face, neck and hands, with pale cream eyes: his mark of being touched by the tree. Pale root hair (cream), one lock across his face. A dark indigo fibre hood with a violet seam and a stitched sand rim, snug to his head. In profile, its short tail kicks up and back and his face is smooth, with no nose bump. A dusty-rose fibre robe with sand highlights and a ragged hem; a navy strap across the chest; a sand rope belt whose end swings; his Flask in cream at the left hip; the right forearm bandaged in sand; indigo trousers and sand foot wraps. The Seal is a navy ring with a cream glint. The swing's smear is sand and cream. No accent.
 - **Animations and poses needed:** Now, each for `down`, `up` and `side`:
   - `idle` (4 frames: breath, hood tail sway, a blink)
   - `walk` (4 frames; the hood tail and rope end swing against the stride)
@@ -165,7 +149,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Lamp
 
 - **Thing:** Torch (see Pull): the Dungeons' light sources are lamps, which are torches in every way that matters to play (their flame can be Pulled, they light the way, they are in the group "torches"), drawn as lanterns.
-- **Source pack and files:** Drawn by hand for this game, in the style of the owner's lantern reference (harusha's Pixel Lanterns on itch.io, which could not be downloaded here; if its files arrive, its lanterns can be recoloured to the palette and swapped in). `assets/shared/lamp/`:
+- **Source pack and files:** Drawn by hand for this game, in the style of the owner's lantern reference (harusha's Pixel Lanterns on itch.io, which could not be downloaded here; if its files arrive and its licence allows, its lanterns can be swapped in as drawn). `assets/shared/lamp/`:
   - `lamp_wall.png`: a lantern hung on a short chain from a hook, for north walls (`scenes/world/lamp.tscn`)
   - `lamp_standing.png`: the same lantern on a wooden post in a stone base, for floors (`scenes/world/lamp_standing.tscn`)
   - `lamp_lit_0-3.png`: the glowing glass and flame, drawn over the lantern while it burns
@@ -221,11 +205,27 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Hiding spot
 
 - **Thing:** Hiding spot
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+  - `wardrobe.png` (`scenes/world/wardrobe.tscn`): a tall wardrobe of grown wood, two doors with a gap between them, a sand lip on top
+  - `barrel.png` (`scenes/world/barrel.tscn`): a barrel with bark hoops
+
+  Both inherit `hiding_spot.tscn`. The placeholder shape is hidden, and the spot is at the foot of the furniture. The test room's spots stay placeholder.
+- **Size in art px:** Wardrobe 20x30; barrel 14x18.
+- **Palette notes and accents used:** Dusty-rose wood with sand highlights, navy outline and seams, indigo shadow at the foot. No accent; a burning one shows the shared Fire flame.
+- **Animations and poses needed:** None; still pictures. Almos inside shows through faintly, as his hidden tint does.
+- **Placement:** In Corridor 1 they stand in a row along the north wall, between the cell doors, beside the guard's lane: wardrobes at both ends and either side of the doors, one a step from Cell 3's door, and barrels between, so no stretch of the hall is far from one.
+- **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
+
+#### Furniture and cover
+
+- **Thing:** The Dungeons' furniture. Crate stacks are cover: solid, on the walls layer, so they block Sight and movement as a wall does.
+- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+  - `crate_stack.png` (`scenes/world/crate_stack.tscn`, a StaticBody2D in the group "cover", its box on the lower crate's footprint)
+  - `bench.png`, `spear_rack.png`, `sacks.png`: dressing with no collision
+- **Size in art px:** Crate stack 24x26, bench 30x9, spear rack 18x26, sacks 18x11.
+- **Palette notes and accents used:** Dusty-rose wood and cloth with sand highlights, navy outline; spear heads in cream and sand. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
 #### Path blocker
 

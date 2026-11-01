@@ -1,10 +1,12 @@
 extends GutTest
 ## The art drawn inside the Looks of the Torch and the Flammable: each is a sprite under its Look or
 ## under its Flame, the placeholder polygons are still there but not drawn, and the flame still
-## shows and hides with the polygon the code toggles. Also: every drawn pixel of every image under
-## assets/ is a colour of the master palette.
+## shows and hides with the polygon the code toggles. Also: every image under assets/ loads, and
+## none uses Danger red, which is kept for the Unblockable attack's warning. Colours are otherwise
+## free: there is no master palette to keep to any more.
 
-const PALETTE_PATH := "res://assets/palette/master.hex"
+# The one colour no image may use: Danger red, the Unblockable's warning (docs/art.md).
+const DANGER_RED := "d62839"
 const ASSETS_PATH := "res://assets"
 
 
@@ -56,42 +58,31 @@ func test_a_flammable_flame_is_an_animated_sprite_drawn_only_while_it_burns() ->
 	assert_false(art.is_visible_in_tree(), "put out, no flame")
 
 
-func test_every_drawn_pixel_of_every_image_under_assets_is_a_palette_colour() -> void:
-	var palette := _palette()
-	assert_gt(palette.size(), 0, "the palette should load")
+func test_every_image_under_assets_loads_and_none_uses_danger_red() -> void:
 	var files := _pngs(ASSETS_PATH)
 	assert_gt(files.size(), 0, "there should be images to check")
 	for path in files:
+		# The old palette's swatch shows Danger red as a swatch, not on anything drawn.
+		if path.begins_with(ASSETS_PATH + "/palette/"):
+			continue
 		var image := Image.new()
 		var error := image.load_png_from_buffer(FileAccess.get_file_as_bytes(path))
 		assert_eq(error, OK, "%s should load" % path)
 		if error != OK:
 			continue
-		var off := 0
+		var red := 0
 		for y in image.get_height():
 			for x in image.get_width():
 				var pixel := image.get_pixel(x, y)
-				if pixel.a > 0.0 and not palette.has(pixel.to_html(false)):
-					off += 1
-		assert_eq(off, 0, "%s has %d pixels off the palette" % [path, off])
+				if pixel.a > 0.0 and pixel.to_html(false) == DANGER_RED:
+					red += 1
+		assert_eq(red, 0, "%s uses Danger red in %d pixels; it is kept for the Unblockable" % [path, red])
 
 
 func _in_tree(path: String) -> Node:
 	var node: Node = (load(path) as PackedScene).instantiate()
 	add_child_autofree(node)
 	return node
-
-
-func _palette() -> Array:
-	var colours := []
-	var file := FileAccess.open(PALETTE_PATH, FileAccess.READ)
-	if file == null:
-		return colours
-	for line in file.get_as_text().split("\n"):
-		var hex := line.strip_edges().trim_prefix("#").to_lower()
-		if hex != "":
-			colours.append(hex)
-	return colours
 
 
 # Every PNG below dir, except what is waiting in _incoming.
