@@ -26,7 +26,6 @@
 [ext_resource type="Resource" path="res://data/shove.tres" id="24_shove"]
 [ext_resource type="Script" path="res://scripts/mana.gd" id="25_mana"]
 [ext_resource type="Script" path="res://scenes/almos/almos_look.gd" id="26_look"]
-[ext_resource type="Script" path="res://scenes/almos/spell_look.gd" id="28_spell_look"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/idle_down_0.png" id="27_idle_down_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/idle_down_1.png" id="27_idle_down_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/idle_down_2.png" id="27_idle_down_2"]
@@ -35,6 +34,8 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_down_1.png" id="27_walk_down_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_down_2.png" id="27_walk_down_2"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_down_3.png" id="27_walk_down_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_down_4.png" id="27_walk_down_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_down_5.png" id="27_walk_down_5"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_down_0.png" id="27_roll_down_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_down_1.png" id="27_roll_down_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_down_2.png" id="27_roll_down_2"]
@@ -54,6 +55,8 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_up_1.png" id="27_walk_up_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_up_2.png" id="27_walk_up_2"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_up_3.png" id="27_walk_up_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_up_4.png" id="27_walk_up_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_up_5.png" id="27_walk_up_5"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_up_0.png" id="27_roll_up_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_up_1.png" id="27_roll_up_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_up_2.png" id="27_roll_up_2"]
@@ -73,6 +76,8 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_side_1.png" id="27_walk_side_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_side_2.png" id="27_walk_side_2"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/walk_side_3.png" id="27_walk_side_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_side_4.png" id="27_walk_side_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_side_5.png" id="27_walk_side_5"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_side_0.png" id="27_roll_side_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_side_1.png" id="27_roll_side_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/roll_side_2.png" id="27_roll_side_2"]
@@ -84,6 +89,7 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_side_2.png" id="27_attack_side_2"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_side_3.png" id="27_attack_side_3"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_side_4.png" id="27_attack_side_4"]
+[ext_resource type="Script" path="res://scenes/almos/spell_look.gd" id="28_spell_look"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -131,10 +137,18 @@ animations = [{
 {
 "duration": 1.0,
 "texture": ExtResource("27_walk_down_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_down_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_down_5")
 }],
 "loop": true,
 "name": &"walk_down",
-"speed": 8.0
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -223,10 +237,18 @@ animations = [{
 {
 "duration": 1.0,
 "texture": ExtResource("27_walk_up_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_up_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_up_5")
 }],
 "loop": true,
 "name": &"walk_up",
-"speed": 8.0
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -315,10 +337,18 @@ animations = [{
 {
 "duration": 1.0,
 "texture": ExtResource("27_walk_side_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_side_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_side_5")
 }],
 "loop": true,
 "name": &"walk_side",
-"speed": 8.0
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,

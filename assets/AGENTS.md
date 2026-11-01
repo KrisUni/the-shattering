@@ -2,7 +2,7 @@
 
 The working rules for anyone, person or agent, who brings art into the game or changes how something looks. The look bible, `docs/art.md`, holds what still holds about colour, the mood of each area and a look sheet per character, creature and gameplay piece; read it before choosing or editing art. This guide does not repeat it.
 
-Sound and the HUD's look are out of scope for now.
+Sound is out of scope for now. The HUD's bars are drawn in code (`scenes/hud/hud_bar.gd`); `docs/art.md` has their look.
 
 ## Direction in short
 
