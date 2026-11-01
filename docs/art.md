@@ -109,7 +109,7 @@ Each sheet has these fields:
 - **Thing:** Almos
 - **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young wanderer in the spirit the owner asked for (a classic hooded hero with a long cap), not a copy of any existing character.
 - **Size in art px:** 16x24 for every frame but the attacks, which are 32x32 with the body in the middle (feet on row 27) so the swing's smear has room; feet always on the body (sprite offset -8 art px).
-- **Palette notes and accents used:** Base only. Bark-grey skin (base violet lit, slate indigo shade; the palette has no neutral grey) on the face, neck and hands, with pale cream eyes: his mark of being touched by the tree. Pale root hair (cream), one lock across his face. A dark indigo fibre hood with a violet seam, a stitched sand rim and a long tail. A dusty-rose fibre robe with sand highlights and a ragged hem; a navy strap across the chest; a sand rope belt whose end swings; his Flask in cream at the left hip; the right forearm bandaged in sand; indigo trousers and sand foot wraps. The Seal is a navy ring with a cream glint. The swing's smear is sand and cream. No accent.
+- **Palette notes and accents used:** Base only. Bark-grey skin (base violet lit, slate indigo shade; the palette has no neutral grey) on the face, neck and hands, with pale cream eyes: his mark of being touched by the tree. Pale root hair (cream), one lock across his face. A dark indigo fibre hood with a violet seam and a stitched sand rim, snug to his head. In profile, its short tail kicks up and back and his face is smooth, with no nose bump. A dusty-rose fibre robe with sand highlights and a ragged hem; a navy strap across the chest; a sand rope belt whose end swings; his Flask in cream at the left hip; the right forearm bandaged in sand; indigo trousers and sand foot wraps. The Seal is a navy ring with a cream glint. The swing's smear is sand and cream. No accent.
 - **Animations and poses needed:** Now, each for `down`, `up` and `side`:
   - `idle` (4 frames: breath, hood tail sway, a blink)
   - `walk` (4 frames; the hood tail and rope end swing against the stride)
@@ -159,7 +159,20 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Source pack and files:** Bracket: Dead Swamp (Sevarihk / Aurora), `assets/shared/torch/torch.png`. Flame: hand-redrawn after Gigapack `fire_looping_003A`, `assets/shared/torch/flame_0-4.png`. See `assets/CREDITS.md`.
 - **Size in art px:** Bracket 10×37; flame 16×24 (5 frames).
 - **Palette notes and accents used:** Bracket in the base violets and blues. Flame in Fire amber with sand and cream for the body and the core. A small, steady flame, so a lit torch stays apart from Fire.
-- **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted. Placement: the bracket is a standing pole, so a wall torch stands at y 48 in front of a north wall face (flame on the face, pole on the floor); Cell 3's stands on open floor within Pull's reach of the roots. Almos's carried torch and held flame hide the bracket.
+- **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted. The Dungeons no longer use the torch: their light sources are lamps (below). `torch.tscn` stays for the test room and for the flames Almos carries; his carried torch and held flame hide the bracket.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
+#### Lamp
+
+- **Thing:** Torch (see Pull): the Dungeons' light sources are lamps, which are torches in every way that matters to play (their flame can be Pulled, they light the way, they are in the group "torches"), drawn as lanterns.
+- **Source pack and files:** Drawn by hand for this game, in the style of the owner's lantern reference (harusha's Pixel Lanterns on itch.io, which could not be downloaded here; if its files arrive, its lanterns can be recoloured to the palette and swapped in). `assets/shared/lamp/`:
+  - `lamp_wall.png`: a lantern hung on a short chain from a hook, for north walls (`scenes/world/lamp.tscn`)
+  - `lamp_standing.png`: the same lantern on a wooden post in a stone base, for floors (`scenes/world/lamp_standing.tscn`)
+  - `lamp_lit_0-3.png`: the glowing glass and flame, drawn over the lantern while it burns
+- **Size in art px:** The wall lantern is 12x16 and the standing one 12x29, both with the glass in the same place.
+- **Palette notes and accents used:** The frame is navy, with a dusty-rose and sand cap and base. Unlit glass is indigo with a violet glint. Lit glass glows cream at the heart and sand at the edge, around a small Fire-amber flame. The post is dusty rose and the base stones slate and indigo.
+- **Animations and poses needed:** One looping flicker (4 frames, 6 a second) while lit; dark glass when its flame is taken.
+- **Placement:** Wall lanterns hang on north wall faces, the node at y 36 so the lantern sits on the face. In a cell the lamp hangs on the cell's own north face, or stands on its floor. Cell 3's standing lamp keeps the old torch's spot, within Pull's reach of the roots.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Fire
@@ -308,11 +321,20 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_tiles.tres`, from one 16x16 art px atlas, `dungeon_tiles.png`. A Room draws its floor and walls with TileMapLayers at scale 2. The floor sits behind Almos, the north and side walls behind him, and the south walls in front of him (by `z_index`).
 
+#### The cells
+
+All three cells (Cells 1, 2 and 3) are closed in and dressed the same way, from the same pictures in `assets/dungeons/cells/`. Each differs:
+- **Cell 1:** smaller (13 by 10 tiles), older and overgrown. Roots break through its wall and it has no window. Its lamp hangs on its wall, with bones, shackles, a bucket, and the pallet in the far corner.
+- **Cell 2:** wider (14 by 11 tiles) and damp. A window to the left with its shaft of light, a puddle of seep water (`cell_puddle.png`), a cracked bowl (`cell_bowl.png`), three rows of tallies, and a standing lamp in the corner.
+- **Cell 3:** described below.
+
+The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.png` and `cell_bars_96.png`.
+
 #### Cell 3, the cell
 
 - **Thing:** Cell 3 (where Almos wakes; see Dungeons)
-- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/cell_3/`:
-  - `cell_bars.png`: root bars along the front either side of the door, in front of Almos
+- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/cells/`:
+  - `cell_bars_80.png`: root bars along the front either side of the door, in front of Almos
   - `cell_window.png` and `cell_light.png`: a barred window slit high in the north wall, and the pale shaft of light it throws on the floor
   - `cell_pallet.png`, `cell_bucket.png`, `cell_bones.png`, `cell_straw.png`: a straw pallet, a bucket, old bones and scattered straw
   - `cell_shackles.png`, `cell_tally.png`: root shackles and tally marks on the north wall

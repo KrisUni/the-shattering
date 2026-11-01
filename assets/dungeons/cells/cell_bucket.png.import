@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqb4clxmvwwag"
-path="res://.godot/imported/cell_bars.png-e3c2147e05a0a856375ca46e66976e5c.ctex"
+uid="uid://b7uf0obj7m1t5"
+path="res://.godot/imported/cell_bucket.png-99df926c45c131eb5b7d08cac0f71f53.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/dungeons/cell_3/cell_bars.png"
-dest_files=["res://.godot/imported/cell_bars.png-e3c2147e05a0a856375ca46e66976e5c.ctex"]
+source_file="res://assets/dungeons/cells/cell_bucket.png"
+dest_files=["res://.godot/imported/cell_bucket.png-99df926c45c131eb5b7d08cac0f71f53.ctex"]
 
 [params]
 

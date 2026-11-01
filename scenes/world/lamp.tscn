@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="1_torch"]
+[ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_wall.png" id="2_lamp"]
+[ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_lit_0.png" id="l_0"]
+[ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_lit_1.png" id="l_1"]
+[ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_lit_2.png" id="l_2"]
+[ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_lit_3.png" id="l_3"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_lamp"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("l_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("l_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("l_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("l_3")
+}],
+"loop": true,
+"name": &"burn",
+"speed": 6.0
+}]
+
+[node name="Lamp" instance=ExtResource("1_torch")]
+
+[node name="Art" parent="Look" index="1"]
+position = Vector2(-12, -24)
+texture = ExtResource("2_lamp")
+
+[node name="Art" parent="Flame" index="0"]
+position = Vector2(-12, -24)
+sprite_frames = SubResource("SpriteFrames_lamp")

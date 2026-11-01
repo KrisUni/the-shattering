@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2lv0qplea48b"
-path="res://.godot/imported/cell_window.png-acbbe470ca0e585b52a9b9561130b907.ctex"
+uid="uid://c3j1nagl1nb8a"
+path="res://.godot/imported/lamp_lit_0.png-8c213b602e4be3ee2c52d761e0a872db.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/dungeons/cell_3/cell_window.png"
-dest_files=["res://.godot/imported/cell_window.png-acbbe470ca0e585b52a9b9561130b907.ctex"]
+source_file="res://assets/shared/lamp/lamp_lit_0.png"
+dest_files=["res://.godot/imported/lamp_lit_0.png-8c213b602e4be3ee2c52d761e0a872db.ctex"]
 
 [params]
 

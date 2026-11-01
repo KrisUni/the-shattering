@@ -172,8 +172,15 @@ func _draw_hand_flame(at: Vector2) -> void:
 		_pixel(at + Vector2(sin(_time * 5.0) * 3.0, -PIXEL * 5.0 - ember_t * 16.0), PIXEL, AMBER if ember_t < 0.3 else ROSE)
 
 
-# Where the flame of a torch or a Fire burns.
+# Where the flame of a torch, a lamp or a Fire burns: the middle of its flame sprite when it has
+# one, so the tongue leaves a torch's tall flame and a lamp's glass alike.
 func _flame_point(from: Node2D) -> Vector2:
+	var art := from.get_node_or_null("Flame/Art") as AnimatedSprite2D
+	if art != null and art.sprite_frames != null and art.sprite_frames.has_animation(art.animation):
+		var texture := art.sprite_frames.get_frame_texture(art.animation, 0)
+		if texture != null:
+			var size := texture.get_size() * art.scale
+			return art.global_position + (size / 2.0 if not art.centered else Vector2.ZERO)
 	if from is Torch:
 		return from.global_position + TORCH_FLAME
 	return from.global_position
