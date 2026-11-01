@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="1_enemy"]
 [ext_resource type="Resource" path="res://data/nar_jailer.tres" id="2_tuning"]
+[ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="3_flammable"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/idle_0.png" id="t_idle_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/idle_1.png" id="t_idle_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/walk_0.png" id="t_walk_0"]
@@ -22,6 +23,9 @@
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_0.png" id="t_death_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_1.png" id="t_death_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_2.png" id="t_death_2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
+size = Vector2(24, 24)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_jailer"]
 animations = [{
@@ -149,3 +153,12 @@ sprite_frames = SubResource("SpriteFrames_jailer")
 animation = &"idle"
 autoplay = "idle"
 offset = Vector2(0, -8)
+
+[node name="Flammable" parent="." instance=ExtResource("3_flammable")]
+kind = 3
+
+[node name="CollisionShape2D" parent="Flammable" index="0"]
+shape = SubResource("RectangleShape2D_flammable")
+
+[node name="Art" parent="Flammable/Flame" index="0"]
+position = Vector2(-20, -56)

@@ -126,6 +126,7 @@ Each sheet has these fields:
 - **Size in art px:** 24x24 canvas (body 10 wide, centred, so it flips cleanly); feet on the bottom row (sprite offset -8 art px).
 - **Palette notes and accents used:** Base only: cream bone with navy outline and sockets, an indigo bark helmet and collar, base violet rags, an indigo spear with a sand and cream head (indigo, so it reads on the dusty-rose floor). No accent; the flashes come from the shared shader.
 - **Animations and poses needed:** `idle` (2), `walk` (4), `strike` (spear drawn back, thrust, recover), `low` (crouched sweep at the ankles), `unblockable` (spear raised overhead, held, slammed down), `break` (slumped, spear dropped), `death` (collapsing to a heap of bones). Drawn facing right. Not yet: a key at the key jailer's belt, and Block and Parry poses (the Block and Parry still show as the enemy's usual cues).
+- **Burning:** a jailer carries a `Flammable` of the creature kind, as the Root crawler does: a fireball's hit or splash sets it alight, and the shared Fire flame stands on its feet while it burns.
 - **Status:** in the game (first draft; the owner checks the look in the editor). Open: `CONTEXT.md` still calls the jailers Nar; whether they are undead in the story too is the owner's call.
 
 #### Nar guard
@@ -170,14 +171,21 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Animations and poses needed:** One looping burn (15 frames, 12 per second), shown only while the thing burns (the Flame node's visibility).
 - **Status:** in the game (first draft; the owner checks the look in the editor). Used by every Flammable, the Root crawler's burning look included (root_crawler.tscn places the shared flame at `Flammable/Flame/Art`).
 
-#### Fireball
+#### Pull and the fireball
 
-- **Thing:** Fireball (see Shove)
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
+- **Thing:** Pull (taking a torch's or a Fire's flame), the held flame, and the Fireball (see Shove)
+- **Source pack and files:** Drawn in code on the art pixel grid, no image files:
+  - `scenes/almos/spell_look.gd` (`SpellLook` on Almos): the Pull and the held flame
+  - `scenes/almos/fireball_trail.gd` (`FireballTrail`): the fireball in flight
+  - `scenes/almos/fire_burst.gd` (`FireBurst`, left where a fireball hits): the impact
+- **Size in art px:** The stream runs from the flame to Almos's hand. The fireball's head is a blob about 9 art px across, with a 16-step trail. The burst's ring runs out to the fireball's splash radius, so it shows what the splash reaches.
+- **Palette notes and accents used:** Fire amber, sand and cream for the fire; dusty rose and slate for its smoke. Ilion violet-magenta for the magic that draws and throws it: the Pull is Channelling, which the accent table gives that colour. Magenta appears only in these effects.
 - **Animations and poses needed:**
-- **Status:** not chosen
+  - **Pull:** while Almos winds up, a magenta ring tightens around the flame and the flame streams to his hand as two twisting strands, one of fire and one of magic. The stream drains for a moment after the release, and the flame lands with a flash.
+  - **Held flame:** the flame (the torch flame art) hovers above his head, with magenta sparks circling it.
+  - **Fireball:** a round head with a cream heart, and a trail that cools from sand and amber to rose and slate smoke, with magenta sparks spiralling along it. The trail outlives the fireball and fades.
+  - **Burst:** where it hits, a white-hot flash, a ring of fire out to the splash radius, sparks, and rising smoke. Running out of range in open air leaves no burst. The fireball's old hexagon (`Look/Shape`) is transparent and stays for the code and tests.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Checkpoint
 

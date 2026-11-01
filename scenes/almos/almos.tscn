@@ -26,6 +26,7 @@
 [ext_resource type="Resource" path="res://data/shove.tres" id="24_shove"]
 [ext_resource type="Script" path="res://scripts/mana.gd" id="25_mana"]
 [ext_resource type="Script" path="res://scenes/almos/almos_look.gd" id="26_look"]
+[ext_resource type="Script" path="res://scenes/almos/spell_look.gd" id="28_spell_look"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/idle_down_0.png" id="27_idle_down_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/idle_down_1.png" id="27_idle_down_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/idle_down_2.png" id="27_idle_down_2"]
@@ -449,6 +450,9 @@ visible = false
 [node name="Art" parent="HeldFlame/Look" index="1"]
 visible = false
 
+[node name="Art" parent="HeldFlame/Flame" index="0"]
+position = Vector2(-16, -86)
+
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
 collision_layer = 2
 collision_mask = 0
@@ -527,3 +531,7 @@ script = ExtResource("21_flasks")
 tuning = ExtResource("22_flask_tuning")
 health = NodePath("../Health")
 mana = NodePath("../Mana")
+
+[node name="SpellLook" type="Node2D" parent="." node_paths=PackedStringArray("spell")]
+script = ExtResource("28_spell_look")
+spell = NodePath("../Spell")
