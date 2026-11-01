@@ -10,6 +10,57 @@ extends Node2D
 ## spot is no longer one: it leaves the group, so he cannot get in. Optional.
 @export var flammable: Flammable
 
+## Where Almos steps out to when he leaves it, from the spot. A spot with a solid body (a wardrobe,
+## a barrel) puts him in front of it, clear of the body; one without leaves him where it is.
+@export var exit_offset := Vector2.ZERO
+
+## Who last got into it. It is occupied while that one is hiding, standing where it stands.
+var occupant: Node2D
+
+# How a rattle looks: every RATTLE_EVERY seconds or so (each spot on its own rhythm) its look hops and
+# shudders for RATTLE_TIME seconds, RATTLE_OFFSET pixels from side to side. Looks, not tuning: no
+# enemy hears it.
+const RATTLE_EVERY := 3.0
+const RATTLE_TIME := 0.3
+const RATTLE_OFFSET := 2.0
+
+var _rattle_clock := 0.0
+var _rattle_left := 0.0
+
+
+## Whether someone is hiding in it now.
+func occupied() -> bool:
+	return occupant != null and is_instance_valid(occupant) and occupant.get(&"hiding") == true \
+		and occupant.global_position.distance_to(global_position) < 1.0
+
+
+## Whether it is rattling now.
+func rattling() -> bool:
+	return _rattle_left > 0.0
+
+
+func _process(delta: float) -> void:
+	var look := get_node_or_null("Look") as Node2D
+	if look == null:
+		return
+	if not occupied():
+		_rattle_clock = 0.0
+		_rattle_left = 0.0
+		look.position = Vector2.ZERO
+		return
+	_rattle_clock += delta
+	# Each spot keeps its own rhythm, a little off the others', so a row of them does not rattle as one.
+	var every := RATTLE_EVERY + fposmod(global_position.x * 0.013, 1.2)
+	if _rattle_left <= 0.0 and _rattle_clock >= every:
+		_rattle_clock = 0.0
+		_rattle_left = RATTLE_TIME
+	if _rattle_left > 0.0:
+		_rattle_left -= delta
+		var step := int(_rattle_left * 30.0)
+		look.position = Vector2(RATTLE_OFFSET if step % 2 == 0 else -RATTLE_OFFSET, -RATTLE_OFFSET if step % 4 < 2 else 0.0)
+	else:
+		look.position = Vector2.ZERO
+
 
 func _ready() -> void:
 	if flammable != null:

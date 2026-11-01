@@ -17,9 +17,9 @@ const TIME_SLACK := 0.000001
 # number.
 const DEATH_TINT := Color(0.35, 0.35, 0.4)
 
-# What his look is tinted while he hides, so that the player can see he is out of sight. A
-# look, not a tuning number.
-const HIDDEN_TINT := Color(1.0, 1.0, 1.0, 0.35)
+# What his look is tinted while he hides: not drawn at all, as if he were really inside the spot,
+# which rattles now and then to show someone is in it. A look, not a tuning number.
+const HIDDEN_TINT := Color(1.0, 1.0, 1.0, 0.0)
 
 # What he leaves on the ground when he drops the Weapon in hand.
 const WEAPON_PICKUP_SCENE := preload("res://scenes/world/weapon_pickup.tscn")
@@ -557,7 +557,7 @@ func _end_every_action() -> void:
 	velocity = Vector2.ZERO
 	if _hiding:
 		_hiding = false
-		_look.modulate = Color.WHITE
+		_show_hidden(false)
 	_recoil_left = 0
 	_attacks.reset()
 	_block.reset()
@@ -696,14 +696,25 @@ func _hide_in_a_spot_in_reach() -> bool:
 	_hiding_spot = nearest
 	if nearest.flammable != null and not nearest.flammable.caught.is_connected(_on_hiding_spot_caught):
 		nearest.flammable.caught.connect(_on_hiding_spot_caught)
-	_look.modulate = HIDDEN_TINT
+	nearest.occupant = self
+	_show_hidden(true)
 	return true
 
 
-# He leaves the Hiding spot, standing where it is.
+# He leaves the Hiding spot, stepping out where it lets him out: in front of a solid one, where it
+# is otherwise.
 func _leave_hiding() -> void:
 	_hiding = false
-	_look.modulate = Color.WHITE
+	_show_hidden(false)
+	if _hiding_spot != null and is_instance_valid(_hiding_spot):
+		global_position = _hiding_spot.global_position + _hiding_spot.exit_offset
+
+
+# Hidden, nothing of him is drawn: his look, and the torch he may carry. Only the look changes; a
+# carried torch still gives its light.
+func _show_hidden(hidden: bool) -> void:
+	_look.modulate = HIDDEN_TINT if hidden else Color.WHITE
+	carried_torch.visible = not hidden
 
 
 # A Hiding spot caught Fire: if it is the one he is in, he is out of it at once, as with a tap, and

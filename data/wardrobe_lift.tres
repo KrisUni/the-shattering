@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LiftTuning" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/lift_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+weight = 50.0
+damage = 28.0
+knockback = 72.0
