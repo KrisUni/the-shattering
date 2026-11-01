@@ -96,6 +96,41 @@ func test_a_diagonal_shows_the_side_and_up_or_down_shows_itself() -> void:
 	assert_eq(AlmosLook.side_for(Vector2(0.3, -0.9).normalized()), &"up")
 
 
+func test_he_has_a_six_frame_roll_for_every_side_that_plays_once() -> void:
+	var almos = _almos_input.spawn_almos()
+	var frames := _art(almos).sprite_frames
+	for side in ["down", "up", "side"]:
+		var roll := StringName("roll_" + side)
+		assert_true(frames.has_animation(roll), "he has %s" % roll)
+		assert_eq(frames.get_frame_count(roll), 6, "%s has six frames" % roll)
+		assert_false(frames.get_animation_loop(roll), "%s plays once" % roll)
+
+
+func test_a_roll_plays_the_roll_for_the_side_he_rolls_toward_from_its_first_frame() -> void:
+	var almos = _almos_input.spawn_almos()
+	var art := _art(almos)
+	_almos_input.press_action(&"move_down")
+	_almos_input.press_action(&"roll")
+	await wait_physics_frames(2)
+	_almos_input.release_action(&"roll")
+	var seen_rolling := false
+	for i in 10:
+		await wait_physics_frames(1)
+		if almos.rolling:
+			seen_rolling = true
+			break
+	assert_true(seen_rolling, "a tap of roll with a direction starts a roll")
+	assert_eq(art.animation, &"roll_down", "rolling down plays roll_down")
+	assert_lte(art.frame, 1, "the roll starts from its first frames")
+	_almos_input.release_everything()
+	for i in 60:
+		await wait_physics_frames(1)
+		if not almos.rolling:
+			break
+	await wait_physics_frames(2)
+	assert_ne(art.animation, &"roll_down", "after the roll he walks or stands again")
+
+
 func test_every_pixel_of_his_art_is_a_palette_colour() -> void:
 	var palette := {}
 	for line in FileAccess.get_file_as_string(PALETTE_PATH).split("\n", false):

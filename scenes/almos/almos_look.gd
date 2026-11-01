@@ -3,7 +3,8 @@ extends Node
 ## Makes Almos's sprite show what he is doing. It looks for an AnimatedSprite2D named Art in his
 ## Look; with none it does nothing. With one, it plays `walk_<side>` while he moves and
 ## `idle_<side>` while he stands, where the side is `down`, `up` or `side` from the way he faces
-## (a name the sprite lacks is skipped). Facing left plays the side animations flipped, so they
+## (a name the sprite lacks is skipped), and `roll_<side>` once from its first frame each time a
+## roll starts. Facing left plays the side animations flipped, so they
 ## are drawn facing right. It only reads Almos: no gameplay depends on it.
 
 # Below this speed, in units a second, he counts as standing. A look, not tuning.
@@ -11,6 +12,7 @@ const WALK_SPEED := 5.0
 
 var _almos: Node
 var _art: AnimatedSprite2D
+var _was_rolling := false
 
 
 func _ready() -> void:
@@ -32,6 +34,15 @@ func update_look() -> void:
 	var side := side_for(_almos.facing)
 	# Only the side animations flip; up and down are drawn for themselves.
 	_art.flip_h = side == &"side" and (_almos.facing as Vector2).x < 0.0
+	var rolling: bool = _almos.rolling
+	if rolling:
+		# A roll plays once from its first frame, each time one starts.
+		var roll := StringName("roll_" + side)
+		if not _was_rolling or _art.animation != roll:
+			_play(roll, true)
+		_was_rolling = true
+		return
+	_was_rolling = false
 	var moving: bool = not _almos.dead and (_almos as CharacterBody2D).velocity.length() > WALK_SPEED
 	_play(StringName(("walk_" if moving else "idle_") + side))
 
@@ -44,8 +55,11 @@ static func side_for(facing: Vector2) -> StringName:
 	return &"up" if facing.y < 0.0 else &"down"
 
 
-func _play(animation_name: StringName) -> void:
+func _play(animation_name: StringName, from_start := false) -> void:
 	if _art.sprite_frames == null or not _art.sprite_frames.has_animation(animation_name):
 		return
-	if _art.animation != animation_name or not _art.is_playing():
+	if from_start:
+		_art.stop()
+		_art.play(animation_name)
+	elif _art.animation != animation_name or not _art.is_playing():
 		_art.play(animation_name)
