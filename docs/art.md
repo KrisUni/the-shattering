@@ -362,6 +362,15 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 - **Animations and poses needed:** None; all still pictures, decoration with no collision (the walls are their own bodies).
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
+#### Deep root
+
+- **Thing:** The solid root that fills a Room around its walkable space (Corridor 1 and the three cells), made to read as deliberate darkness so the eye stays on the hall or the cell.
+- **Source pack and files:** Drawn by hand, two tiles in `assets/shared/dungeon_tiles/dungeon_tiles.png`: deep root at atlas (0,2), near-black with faint seamless strands; and a blend at (1,2), every other pixel the root tile (5,0) and deep root.
+- **Size in art px:** 16x16 per tile.
+- **Palette notes and accents used:** Deep root `#0e0d16` with strands `#181726`; the blend dithers it with the root tile's indigo. No accent.
+- **Placement:** Graded by distance from walkable floor: the root tile up to two tiles out, the blend at three, deep root beyond. This acts as a vignette. When the darkness overlay (#78) lands, these areas sit in its shadow too.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
 #### Cell 3 floor
 
 - **Thing:** Cell 3 (the floor of the Room)
