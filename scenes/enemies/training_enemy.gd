@@ -82,6 +82,13 @@ signal unblockable_cue_played
 			if is_node_ready():
 				_nose.rotation = _facing.angle()
 
+## The points of its patrol route, in its parent's coordinates (a Room's own, as its position is).
+## With none it stands at its post. With some, until it notices Almos it walks from each point to the
+## next at the tuning's patrol_speed, facing the way it walks so that its Sight sweeps ahead of it,
+## stops at each for the tuning's patrol_pause, and goes round again from the last to the first.
+## Losing him, it walks back to the point it was walking to and goes on with its round.
+@export var patrol: PackedVector2Array = PackedVector2Array()
+
 ## The way it faces, a unit vector. While it is free it turns to face its target exactly; in an
 ## attack it keeps the direction it committed the swing to. Its front is centred on it, and a
 ## hit from outside the front builds extra Stagger.
@@ -201,6 +208,10 @@ var _shudder_left := 0
 var _state := State.POST
 # Where it stands at its post: where it started. It returns here.
 var _post := Vector2.ZERO
+# The point of its patrol route it is walking to or stopped at, and for how many more seconds it
+# stops there.
+var _patrol_index := 0
+var _patrol_wait := 0.0
 # The place its target was when it last had him in Sight, or was hit by him.
 var _last_seen := Vector2.ZERO
 # For how many physics frames in a row it has been in Pursuit without him in its Sight.
@@ -505,11 +516,17 @@ func _target_in_sight() -> bool:
 func _act_freely() -> void:
 	match _state:
 		State.RETURNING:
-			if _walk_to(_post):
+			if not patrol.is_empty():
+				# Back to its round, at the point it was walking to.
+				if _walk_to(_patrol_point(_patrol_index), false, tuning.patrol_speed):
+					_state = State.POST
+			elif _walk_to(_post):
 				_state = State.POST
 				_facing = post_facing.normalized()
 			return
 		State.POST:
+			if not patrol.is_empty():
+				_walk_patrol()
 			return
 	if not _sees_target and not _dragging:
 		_walk_to(_last_seen, true)
@@ -577,19 +594,38 @@ func _walk_to_follow_place() -> void:
 	_nose.rotation = _facing.angle()
 
 
+# One physics frame of its patrol round: stopped at a point for the pause, or walking to the next.
+func _walk_patrol() -> void:
+	if _patrol_wait > 0.0:
+		_patrol_wait -= get_physics_process_delta_time()
+		velocity = Vector2.ZERO
+		return
+	if _walk_to(_patrol_point(_patrol_index), false, tuning.patrol_speed):
+		_patrol_wait = tuning.patrol_pause
+		_patrol_index = (_patrol_index + 1) % patrol.size()
+
+
+# A point of its patrol route, in the world.
+func _patrol_point(index: int) -> Vector2:
+	var parent := get_parent() as Node2D
+	return parent.to_global(patrol[index]) if parent != null else patrol[index]
+
+
 # Walks towards this place, facing the way it goes and stopping on it. Returns whether it is there.
 # Steered, it is steered away from the other enemies close to it on the way, and so may stand
-# short of the place, or never quite reach it, when others stand on it.
-func _walk_to(place: Vector2, steered := false) -> bool:
+# short of the place, or never quite reach it, when others stand on it. It walks at move_speed, or
+# at the speed given.
+func _walk_to(place: Vector2, steered := false, speed := -1.0) -> bool:
 	var to_place := place - global_position
 	if to_place.length() <= ARRIVED_DISTANCE:
 		velocity = Vector2.ZERO
 		return true
+	var pace := tuning.move_speed if speed < 0.0 else speed
 	_facing = to_place.normalized()
 	# Never faster than it takes to land on the place, so that it does not overshoot it.
-	velocity = _facing * minf(tuning.move_speed, to_place.length() / get_physics_process_delta_time())
+	velocity = _facing * minf(pace, to_place.length() / get_physics_process_delta_time())
 	if steered:
-		velocity = (velocity + _separation()).limit_length(tuning.move_speed)
+		velocity = (velocity + _separation()).limit_length(pace)
 	move_and_slide()
 	return false
 

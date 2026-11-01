@@ -8,6 +8,13 @@
 [ext_resource type="Texture2D" uid="uid://dxxo2v0irnrcb" path="res://assets/shared/dungeon_tiles/root_seal.png" id="5_seal"]
 [ext_resource type="Texture2D" uid="uid://c5xpr7merhtfr" path="res://assets/shared/dungeon_tiles/root_vein_column.png" id="6_column"]
 [ext_resource type="PackedScene" path="res://scenes/world/lamp.tscn" id="92_torch"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/nar_jailer.tscn" id="20_jailer"]
+[ext_resource type="PackedScene" path="res://scenes/world/wardrobe.tscn" id="21_wardrobe"]
+[ext_resource type="PackedScene" path="res://scenes/world/barrel.tscn" id="22_barrel"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate_stack.tscn" id="23_crates"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/bench.png" id="24_bench"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/spear_rack.png" id="25_rack"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/sacks.png" id="26_sacks"]
 
 [sub_resource type="RectangleShape2D" id="Shape_16x648"]
 size = Vector2(16, 648)
@@ -235,3 +242,54 @@ position = Vector2(480, 36)
 
 [node name="Lamp3" parent="." instance=ExtResource("92_torch")]
 position = Vector2(864, 36)
+
+[node name="Furniture" type="Node2D" parent="."]
+
+[node name="Wardrobe1" parent="Furniture" instance=ExtResource("21_wardrobe")]
+position = Vector2(1072, 112)
+
+[node name="Wardrobe2" parent="Furniture" instance=ExtResource("21_wardrobe")]
+position = Vector2(700, 112)
+
+[node name="Wardrobe3" parent="Furniture" instance=ExtResource("21_wardrobe")]
+position = Vector2(300, 112)
+
+[node name="Wardrobe4" parent="Furniture" instance=ExtResource("21_wardrobe")]
+position = Vector2(70, 112)
+
+[node name="Barrel1" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(440, 586)
+
+[node name="Barrel2" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(1080, 586)
+
+[node name="Crates1" parent="Furniture" instance=ExtResource("23_crates")]
+position = Vector2(870, 376)
+
+[node name="Crates2" parent="Furniture" instance=ExtResource("23_crates")]
+position = Vector2(330, 470)
+
+[node name="Bench" type="Sprite2D" parent="Furniture"]
+position = Vector2(240, 596)
+scale = Vector2(2, 2)
+texture = ExtResource("24_bench")
+
+[node name="SpearRack" type="Sprite2D" parent="Furniture"]
+position = Vector2(150, 570)
+scale = Vector2(2, 2)
+texture = ExtResource("25_rack")
+
+[node name="Sacks" type="Sprite2D" parent="Furniture"]
+position = Vector2(760, 594)
+scale = Vector2(2, 2)
+texture = ExtResource("26_sacks")
+
+[node name="Guards" type="Node2D" parent="."]
+
+[node name="GuardEast" parent="Guards" instance=ExtResource("20_jailer")]
+position = Vector2(700, 520)
+patrol = PackedVector2Array(700, 200, 1040, 200, 1040, 520, 700, 520)
+
+[node name="GuardWest" parent="Guards" instance=ExtResource("20_jailer")]
+position = Vector2(380, 330)
+patrol = PackedVector2Array(120, 330, 640, 330)

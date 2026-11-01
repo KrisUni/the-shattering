@@ -1,7 +1,8 @@
 extends GutTest
 ## A stronger, named Nar jailer stands at a post in Radio/Officers, the Room nearest the Main entrance.
 ## He stays at his post rather than patrolling, and once killed he stays dead: through a Death and
-## through a rest at a Checkpoint. No other Room of the Dungeons holds an enemy.
+## through a rest at a Checkpoint. Apart from the ordinary guards patrolling Corridor 1 (see
+## test_corridor_1_stealth.gd), no other Room of the Dungeons holds an enemy.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
@@ -46,12 +47,18 @@ func test_radio_officers_holds_exactly_one_enemy() -> void:
 	assert_eq(_enemies_in(_room(host, &"radio_officers")).size(), 1, "Radio/Officers should hold one enemy")
 
 
-func test_no_other_room_of_the_dungeons_holds_an_enemy() -> void:
+func test_no_other_room_of_the_dungeons_holds_an_enemy_but_corridor_1s_patrols() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 
-	var elsewhere := _enemies_in(host.current_space).filter(func(enemy: Node) -> bool: return not _room(host, &"radio_officers").is_ancestor_of(enemy))
-	assert_eq(elsewhere.size(), 0, "no enemy should stand outside Radio/Officers")
+	var radio_officers := _room(host, &"radio_officers")
+	var corridor_1 := _room(host, &"corridor_1")
+	var elsewhere := _enemies_in(host.current_space).filter(func(enemy: Node) -> bool:
+		return not radio_officers.is_ancestor_of(enemy) and not corridor_1.is_ancestor_of(enemy))
+	assert_eq(elsewhere.size(), 0, "no enemy should stand outside Radio/Officers and Corridor 1")
+	for enemy in _enemies_in(corridor_1):
+		assert_false(enemy.named, "Corridor 1's guards are ordinary")
+		assert_gt(enemy.patrol.size(), 0, "Corridor 1's guards patrol")
 
 
 func test_the_enemy_in_radio_officers_is_named_with_the_key_jailers_id() -> void:

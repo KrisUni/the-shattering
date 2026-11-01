@@ -221,11 +221,26 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Hiding spot
 
 - **Thing:** Hiding spot
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+  - `wardrobe.png` (`scenes/world/wardrobe.tscn`): a tall wardrobe of grown wood, two doors with a gap between them, a sand lip on top
+  - `barrel.png` (`scenes/world/barrel.tscn`): a barrel with bark hoops
+
+  Both inherit `hiding_spot.tscn`. The placeholder shape is hidden, and the spot is at the foot of the furniture. The test room's spots stay placeholder.
+- **Size in art px:** Wardrobe 20x30; barrel 14x18.
+- **Palette notes and accents used:** Dusty-rose wood with sand highlights, navy outline and seams, indigo shadow at the foot. No accent; a burning one shows the shared Fire flame.
+- **Animations and poses needed:** None; still pictures. Almos inside shows through faintly, as his hidden tint does.
+- **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
+
+#### Furniture and cover
+
+- **Thing:** The Dungeons' furniture. Crate stacks are cover: solid, on the walls layer, so they block Sight and movement as a wall does.
+- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+  - `crate_stack.png` (`scenes/world/crate_stack.tscn`, a StaticBody2D in the group "cover", its box on the lower crate's footprint)
+  - `bench.png`, `spear_rack.png`, `sacks.png`: dressing with no collision
+- **Size in art px:** Crate stack 24x26, bench 30x9, spear rack 18x26, sacks 18x11.
+- **Palette notes and accents used:** Dusty-rose wood and cloth with sand highlights, navy outline; spear heads in cream and sand. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
 #### Path blocker
 

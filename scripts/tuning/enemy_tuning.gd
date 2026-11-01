@@ -159,6 +159,13 @@ enum AttackKind {
 @export var guard_pause_frames := 0
 
 
+## How fast it walks its patrol route, in pixels per second, while it has not noticed Almos: slower
+## than move_speed, an unhurried round. Only an enemy given a patrol route uses it.
+@export var patrol_speed := 45.0
+
+## For how many seconds it stops at each point of its patrol route before walking on to the next.
+@export var patrol_pause := 1.5
+
 ## How far its Sight reaches when Almos stands in this much light (0 to 1).
 func sight_length_at(light: float) -> float:
 	return lerpf(sight_length_dark, sight_length_full, clampf(light, 0.0, 1.0))
