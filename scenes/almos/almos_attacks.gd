@@ -92,6 +92,17 @@ var committed: bool:
 	get:
 		return attacking or _charging or _jump_pending
 
+## The swing under way, or null when there is none. Only read, by his look, to follow its phases.
+var swing: AttackData:
+	get:
+		return _swing if attacking else null
+
+## The frame of the swing under way, counted from 0 as AttackData counts them, or -1 when there
+## is none. Only read, by his look.
+var swing_frame: int:
+	get:
+		return _frame
+
 ## Which swing of the Light combo is under way, from 1, or 0 when none is.
 var light_swing: int:
 	get:

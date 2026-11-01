@@ -108,10 +108,16 @@ Each sheet has these fields:
 
 - **Thing:** Almos
 - **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young wanderer in the spirit the owner asked for (a classic hooded hero with a long cap), not a copy of any existing character.
-- **Size in art px:** 16x24 for every frame; feet on the bottom row (sprite offset -8 art px puts them on the body).
-- **Palette notes and accents used:** Base only. Bark-grey skin (base violet lit, slate indigo shade; the palette has no neutral grey, so this is the greyest it allows) on the face, neck and hands. Pale root hair (cream) showing under the hood. A dark indigo fibre hood with a violet seam and a long tail trailing behind. A dusty-rose fibre robe with sand highlights, flaring at the hem; a navy strap across the chest; a sand rope belt with a hanging end; his Flask in cream at the left hip; the right forearm bandaged in sand; indigo trousers and sand foot wraps. The Seal is a navy ring with a cream glint, so it reads against the dark skin. No accent.
-- **Animations and poses needed:** Now: `idle_down`, `idle_up`, `idle_side` (2 frames, a slow breath); `walk_down`, `walk_up`, `walk_side` (4 frames); `roll_down`, `roll_up`, `roll_side` (6 frames at 20 a second, played once from the start of each roll: crouch, a tucked ball turning a quarter each frame, rise). The side frames face right and are flipped for left; a diagonal shows the side. Still owed: attacks, Block, Parry, Sip, Jump and the limp Death pose; until then the Block and Parry shapes and the death tint show over the sprite. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
-- **Status:** in the game (third draft; the owner checks the look in the editor)
+- **Size in art px:** 16x24 for every frame but the attacks, which are 32x32 with the body in the middle (feet on row 27) so the swing's smear has room; feet always on the body (sprite offset -8 art px).
+- **Palette notes and accents used:** Base only. Bark-grey skin (base violet lit, slate indigo shade; the palette has no neutral grey) on the face, neck and hands, with pale cream eyes: his mark of being touched by the tree. Pale root hair (cream), one lock across his face. A dark indigo fibre hood with a violet seam, a stitched sand rim and a long tail. A dusty-rose fibre robe with sand highlights and a ragged hem; a navy strap across the chest; a sand rope belt whose end swings; his Flask in cream at the left hip; the right forearm bandaged in sand; indigo trousers and sand foot wraps. The Seal is a navy ring with a cream glint. The swing's smear is sand and cream. No accent.
+- **Animations and poses needed:** Now, each for `down`, `up` and `side`:
+  - `idle` (4 frames: breath, hood tail sway, a blink)
+  - `walk` (4 frames; the hood tail and rope end swing against the stride)
+  - `roll` (6 frames at 20 a second, played once from the start of each roll)
+  - `attack` (5 frames: wind-up, coil, strike with a smear arc, follow-through, recover). These are not played at a frame rate: `AlmosLook` picks the frame from the swing's own startup, active and recovery frames, so it fits every Weapon and every swing of a combo. A charging Heavy attack holds the coil. The smear is drawn without a weapon, so it stands for any Weapon or for a fist.
+
+  The side frames face right and are flipped for left; a diagonal shows the side. Still owed: Block, Parry, Sip, Jump, the limp Death pose, and a weapon drawn in hand; until then the Block and Parry shapes and the death tint show over the sprite. The sword's strike box (`Sword/Look/Shape`) is transparent now that the smear shows the swing; it stays for the code and tests that measure it. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
+- **Status:** in the game (fourth draft; the owner checks the look in the editor)
 
 #### Nar jailer
 

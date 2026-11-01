@@ -51,7 +51,7 @@ Art never changes code or tests. Each thing draws itself inside its `Look` node 
 
 ### Almos's sprite
 
-Almos's sprite is an AnimatedSprite2D named `Art` inside his `Look`. The `AlmosLook` node under `Look` plays `walk_<side>` while he moves and `idle_<side>` while he stands, where the side is `down`, `up` or `side` from his facing (a diagonal shows the side). A roll plays `roll_<side>` once from its first frame each time one starts. Draw the side frames facing right; `Art` is flipped for left. His facing arrow (`Look/Facing/Shape`) is hidden, not deleted; the Block and Parry shapes still show over the sprite.
+Almos's sprite is an AnimatedSprite2D named `Art` inside his `Look`. The `AlmosLook` node under `Look` plays `walk_<side>` while he moves and `idle_<side>` while he stands, where the side is `down`, `up` or `side` from his facing (a diagonal shows the side). A roll plays `roll_<side>` once from its first frame each time one starts. A swing shows `attack_<side>` (5 frames: wind-up, coil, strike, follow-through, recover), with the frame picked from the swing's startup, active and recovery frames rather than a frame rate; attack frames are 32x32 with the body centred and the feet on row 27. Draw the side frames facing right; `Art` is flipped for left. His facing arrow (`Look/Facing/Shape`) is hidden, not deleted; the Block and Parry shapes still show over the sprite.
 
 ### Enemy sprites
 
