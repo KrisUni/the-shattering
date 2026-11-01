@@ -93,15 +93,15 @@ Each sheet has these fields:
 - **Thing:** Almos
 - **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young wanderer in the spirit the owner asked for (a classic hooded hero with a long cap), not a copy of any existing character.
 - **Size in art px:** 16x24 for every frame but the attacks, which are 32x32 with the body in the middle (feet on row 27) so the swing's smear has room; feet always on the body (sprite offset -8 art px).
-- **Palette notes and accents used:** Base only. Bark-grey skin (base violet lit, slate indigo shade, drawn while the palette had no neutral grey; a true grey is now allowed) on the face, neck and hands, with pale cream eyes: his mark of being touched by the tree. Pale root hair (cream), one lock across his face. A dark indigo fibre hood with a violet seam and a stitched sand rim, snug to his head. In profile, its short tail kicks up and back and his face is smooth, with no nose bump. A dusty-rose fibre robe with sand highlights and a ragged hem; a navy strap across the chest; a sand rope belt whose end swings; his Flask in cream at the left hip; the right forearm bandaged in sand; indigo trousers and sand foot wraps. The Seal is a navy ring with a cream glint. The swing's smear is sand and cream. No accent.
+- **Palette notes and accents used:** Free colour, each material shaded from the top left with a lit and a shaded tone, and selective outlines: the silhouette is outlined in near-black, lines inside it take the deep tone of the material they sit on. Bark-grey skin (`#6c6966`, lit `#8a8682`, shade `#4e4b49`), pale cream eyes and root hair; an indigo hood (`#3e4573` with `#59639c` and `#2c3155`), a violet seam and sand stitches; a warm fibre robe (`#b38c76`, lit `#d4b298`, shade `#86634f`); a dark leather strap, a sand rope belt, a pale glass Flask; sand bandage and foot wraps; indigo trousers, the far leg in shadow so a stride reads. The Seal is near-black with a glint. The swing's smear runs from cream to warm sand. No accent.
 - **Animations and poses needed:** Now, each for `down`, `up` and `side`:
   - `idle` (4 frames: breath, hood tail sway, a blink)
-  - `walk` (4 frames; the hood tail and rope end swing against the stride)
+  - `walk` (6 frames at 10 a second: contact, down and passing for each leg; the arms swing against the legs, and the hood tail and rope end follow through)
   - `roll` (6 frames at 20 a second, played once from the start of each roll)
   - `attack` (5 frames: wind-up, coil, strike with a smear arc, follow-through, recover). These are not played at a frame rate: `AlmosLook` picks the frame from the swing's own startup, active and recovery frames, so it fits every Weapon and every swing of a combo. A charging Heavy attack holds the coil. The smear is drawn without a weapon, so it stands for any Weapon or for a fist.
 
   The side frames face right and are flipped for left; a diagonal shows the side. Still owed: Block, Parry, Sip, Jump, the limp Death pose, and a weapon drawn in hand; until then the Block and Parry shapes and the death tint show over the sprite. The sword's strike box (`Sword/Look/Shape`) is transparent now that the smear shows the swing; it stays for the code and tests that measure it. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
-- **Status:** in the game (fourth draft; the owner checks the look in the editor)
+- **Status:** in the game (fifth draft, the first in free colour; the owner checks the look in the editor)
 
 #### Nar jailer
 
