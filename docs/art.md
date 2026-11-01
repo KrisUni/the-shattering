@@ -321,6 +321,15 @@ The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_til
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
+#### The other Rooms' floor and walls
+
+- **Thing:** Every other Room of the Dungeons (Cells 1 and 2, Corridors 2 to 4, the Lobby, Reception, the offices, Interviews, the meeting and staff rooms, the Store room, the back corridors and the Cave)
+- **Source pack and files:** The same tiles as Cell 3 (`assets/shared/dungeon_tiles/dungeon_tiles.tres`, no new tiles), laid by the same rule from each Room's walls: floor under the whole Room (plus the strip under a south doorway), north walls two tiles of face, side walls one tile, south walls one tile plus the strip, every doorway open. Two root columns (`root_vein_column.png`) on each Room's north wall, clear of the doorways.
+- **Size in art px:** 16x16 per tile; each Room is 36x20 tiles plus the strip.
+- **Palette notes and accents used:** As Cell 3. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game (first draft; the owner checks the look in the editor). Not yet: each Room's own props (the speaking-root, listening slit, root-fed trough, woven bins), the Main entrance and Cave door art, and the tree's glow in the veins.
+
 #### Corridor 1 Back entrance seal
 
 - **Thing:** Back entrance seal (a path blocker of living roots across the west end of Corridor 1; see Fire)
