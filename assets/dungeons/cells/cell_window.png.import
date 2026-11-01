@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c4k27fpeouchh"
-path="res://.godot/imported/cell_pallet.png-95efe28ada57c77c3ea46705dd53dd9c.ctex"
+uid="uid://de3wn0331d3g6"
+path="res://.godot/imported/cell_window.png-b88af91ab5a4b4c784cbad1546f5ccbc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/dungeons/cell_3/cell_pallet.png"
-dest_files=["res://.godot/imported/cell_pallet.png-95efe28ada57c77c3ea46705dd53dd9c.ctex"]
+source_file="res://assets/dungeons/cells/cell_window.png"
+dest_files=["res://.godot/imported/cell_window.png-b88af91ab5a4b4c784cbad1546f5ccbc.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://p2vq47h0tuc7"
-path="res://.godot/imported/cell_shackles.png-30e5c18825a7b14d2266f746dd488ae0.ctex"
+uid="uid://brnf3rem6l0bt"
+path="res://.godot/imported/lamp_lit_1.png-ec86a21f0e9081b18bbf86ebdb63a822.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/dungeons/cell_3/cell_shackles.png"
-dest_files=["res://.godot/imported/cell_shackles.png-30e5c18825a7b14d2266f746dd488ae0.ctex"]
+source_file="res://assets/shared/lamp/lamp_lit_1.png"
+dest_files=["res://.godot/imported/lamp_lit_1.png-ec86a21f0e9081b18bbf86ebdb63a822.ctex"]
 
 [params]
 

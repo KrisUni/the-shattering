@@ -8,7 +8,7 @@
 [ext_resource type="Resource" path="res://data/almos_armour.tres" id="6_armour"]
 [ext_resource type="TileSet" path="res://assets/shared/dungeon_tiles/dungeon_tiles.tres" id="90_tiles"]
 [ext_resource type="Texture2D" path="res://assets/shared/dungeon_tiles/root_vein_column.png" id="91_column"]
-[ext_resource type="PackedScene" path="res://scenes/world/torch.tscn" id="92_torch"]
+[ext_resource type="PackedScene" path="res://scenes/world/lamp.tscn" id="92_torch"]
 
 [sub_resource type="RectangleShape2D" id="Shape_1152x64"]
 size = Vector2(1152, 64)
@@ -146,8 +146,8 @@ position = Vector2(752, 200)
 armour = ExtResource("6_armour")
 id = &"dungeons/store_room/armour"
 
-[node name="Torch1" parent="." instance=ExtResource("92_torch")]
-position = Vector2(320, 48)
+[node name="Lamp1" parent="." instance=ExtResource("92_torch")]
+position = Vector2(320, 36)
 
-[node name="Torch2" parent="." instance=ExtResource("92_torch")]
-position = Vector2(832, 48)
+[node name="Lamp2" parent="." instance=ExtResource("92_torch")]
+position = Vector2(832, 36)

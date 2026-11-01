@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://du1wam07varot"
-path="res://.godot/imported/cell_straw.png-f8c2d5a7e7b220760c482c7f28ca7e02.ctex"
+uid="uid://dkbnyge1fux48"
+path="res://.godot/imported/cell_bars_64.png-bc4891e0adfc99da8050005655345163.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/dungeons/cell_3/cell_straw.png"
-dest_files=["res://.godot/imported/cell_straw.png-f8c2d5a7e7b220760c482c7f28ca7e02.ctex"]
+source_file="res://assets/dungeons/cells/cell_bars_64.png"
+dest_files=["res://.godot/imported/cell_bars_64.png-bc4891e0adfc99da8050005655345163.ctex"]
 
 [params]
 
