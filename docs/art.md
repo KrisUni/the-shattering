@@ -115,12 +115,12 @@ Each sheet has these fields:
 
 #### Nar jailer
 
-- **Thing:** Nar jailer
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Thing:** Nar jailer (the key jailer included)
+- **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/nar_jailer/`. The owner chose skeletons for the Dungeons' guards. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite; the key jailer in Radio/Officers is one with its own tuning. The test room's jailers stay placeholder.
+- **Size in art px:** 24x24 canvas (body 10 wide, centred, so it flips cleanly); feet on the bottom row (sprite offset -8 art px).
+- **Palette notes and accents used:** Base only: cream bone with navy outline and sockets, an indigo bark helmet and collar, base violet rags, an indigo spear with a sand and cream head (indigo, so it reads on the dusty-rose floor). No accent; the flashes come from the shared shader.
+- **Animations and poses needed:** `idle` (2), `walk` (4), `strike` (spear drawn back, thrust, recover), `low` (crouched sweep at the ankles), `unblockable` (spear raised overhead, held, slammed down), `break` (slumped, spear dropped), `death` (collapsing to a heap of bones). Drawn facing right. Not yet: a key at the key jailer's belt, and Block and Parry poses (the Block and Parry still show as the enemy's usual cues).
+- **Status:** in the game (first draft; the owner checks the look in the editor). Open: `CONTEXT.md` still calls the jailers Nar; whether they are undead in the story too is the owner's call.
 
 #### Nar guard
 

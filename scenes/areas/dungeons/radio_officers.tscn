@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="3_enemy"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/nar_jailer.tscn" id="3_enemy"]
 [ext_resource type="Resource" path="res://data/nar_key_jailer.tres" id="4_key_jailer"]
 [ext_resource type="PackedScene" path="res://scenes/world/jailers_key.tscn" id="5_key"]
 [ext_resource type="TileSet" path="res://assets/shared/dungeon_tiles/dungeon_tiles.tres" id="90_tiles"]
