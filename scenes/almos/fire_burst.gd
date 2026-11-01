@@ -3,22 +3,24 @@ extends Node2D
 ## The look of a fireball bursting where it hits: a white-hot flash, a ring of fire that runs out to
 ## the splash radius (so it shows how far the splash reaches), sparks thrown outward, and smoke
 ## that rises as it dies down. It frees itself when it is over. It is only a look: the damage and
-## the Fire are the fireball's own.
+## the Fire are the fireball's own. It leaves a scorch on the ground under everything that fades
+## away over a few seconds.
 ##
 ## Palette colours on the art pixel grid: cream, sand and Fire amber for the fire, dusty rose and
-## slate for the smoke, and a few magenta sparks of the magic that threw it.
+## slate for the smoke, navy and slate for the scorch.
 
 const CREAM := Color("fbf5ef")
 const SAND := Color("f2d3ab")
 const AMBER := Color("f29a2e")
 const ROSE := Color("c69fa5")
 const SLATE := Color("494d7e")
-const MAGENTA := Color("d23fd0")
+const NAVY := Color("272744")
 
 # In units. One art pixel.
 const PIXEL := 2.0
-## In seconds. How long the whole burst lasts.
+## In seconds. How long the fire of the burst lasts, and how long its scorch stays on the ground.
 const DURATION := 0.5
+const SCORCH_TIME := 3.0
 ## In seconds. How long the ring takes to reach the splash radius.
 const RING_TIME := 0.22
 const SPARKS := 12
@@ -31,8 +33,17 @@ var _spark_angles: Array[float] = []
 var _spark_speeds: Array[float] = []
 
 
+var _scorch: Node2D
+
+
 func _ready() -> void:
 	z_index = 2
+	# The scorch draws under Almos and everything standing, on the floor.
+	_scorch = Node2D.new()
+	_scorch.z_as_relative = false
+	_scorch.z_index = -1
+	_scorch.draw.connect(_draw_scorch)
+	add_child(_scorch)
 	# The sparks fly at fixed, evenly spread angles with uneven speeds: no randomness, so the burst
 	# looks the same every time and tests are steady.
 	for i in SPARKS:
@@ -47,15 +58,44 @@ func burst(at: Vector2, splash_radius: float) -> void:
 		radius = splash_radius
 
 
+## Whether the fire of the burst is over, leaving only its scorch.
+func burnt_down() -> bool:
+	return _time >= DURATION
+
+
 func _process(delta: float) -> void:
 	_time += delta
-	if _time >= DURATION:
+	if _time >= SCORCH_TIME:
 		queue_free()
 		return
 	queue_redraw()
+	_scorch.queue_redraw()
+
+
+# A blackened patch, its edge ragged, thinning away as it fades.
+func _draw_scorch() -> void:
+	var fade := clampf((_time - DURATION) / (SCORCH_TIME - DURATION), 0.0, 1.0)
+	var reach := radius * 0.45
+	var step := PIXEL
+	var y := -reach
+	while y <= reach:
+		var x := -reach
+		while x <= reach:
+			var d := Vector2(x, y * 1.6).length()
+			var ragged := reach * (0.8 + 0.2 * sin(atan2(y, x) * 5.0))
+			if d <= ragged:
+				var cell := int(x / step) + int(y / step) * 7
+				# Thins out as it fades: more of its pixels drop each moment.
+				if fposmod(cell * 0.618, 1.0) >= fade:
+					var colour := NAVY if d < ragged * 0.6 else SLATE
+					_scorch.draw_rect(Rect2(Vector2(x, y).snapped(Vector2(step, step)), Vector2(step, step)), colour)
+			x += step
+		y += step
 
 
 func _draw() -> void:
+	if _time >= DURATION:
+		return
 	var t := _time / DURATION
 	# The flash: a white-hot core that shrinks fast.
 	if _time < 0.08:
@@ -82,7 +122,7 @@ func _draw() -> void:
 		for i in SPARKS:
 			var travel := radius * 0.9 * _spark_speeds[i] * (1.0 - pow(1.0 - minf(t / 0.8, 1.0), 3.0))
 			var point := Vector2.from_angle(_spark_angles[i]) * travel
-			var colour := CREAM if t < 0.25 else (AMBER if i % 4 else MAGENTA)
+			var colour := CREAM if t < 0.25 or i % 4 == 0 else AMBER
 			_pixel(point, PIXEL, colour)
 	# Smoke rises as it dies down.
 	if t > 0.35:

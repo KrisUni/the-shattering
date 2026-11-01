@@ -451,7 +451,7 @@ visible = false
 visible = false
 
 [node name="Art" parent="HeldFlame/Flame" index="0"]
-position = Vector2(-16, -86)
+visible = false
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
 collision_layer = 2

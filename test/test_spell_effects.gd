@@ -69,7 +69,10 @@ func test_a_fireball_that_hits_an_enemy_bursts_there_as_wide_as_its_splash() -> 
 	assert_lt(bursts[0].global_position.distance_to(jailer.global_position), 20.0, "the burst is at the enemy")
 	assert_eq(bursts[0].radius, 40.0, "its ring runs out to the splash radius")
 	await wait_seconds(FireBurst.DURATION + 0.1)
-	assert_true(_bursts(world).is_empty(), "the burst frees itself when it is over")
+	assert_eq(_bursts(world).size(), 1, "its scorch stays on the ground after the fire")
+	assert_true(bursts[0].burnt_down(), "the fire of the burst is over")
+	await wait_seconds(FireBurst.SCORCH_TIME - FireBurst.DURATION)
+	assert_true(_bursts(world).is_empty(), "the scorch fades and the burst frees itself")
 
 
 func test_a_fireball_that_runs_out_of_range_does_not_burst() -> void:
@@ -147,7 +150,7 @@ func test_a_pull_streams_the_flame_to_his_hand_and_lands_with_a_flash() -> void:
 			break
 	await wait_frames(2)
 	assert_true(spell.holding, "he holds the flame")
-	assert_true(look.flashing(), "it lands with a flash")
+	assert_true(look.flashing(), "it lands in his hand with a splash of embers")
 	assert_null(spell.drawing_from, "nothing is drawn from once he holds it")
 
 
@@ -155,6 +158,26 @@ func test_the_wind_up_progress_runs_from_zero_to_one() -> void:
 	var almos = _almos_input.spawn_almos()
 	var spell := almos.get_node("Spell") as AlmosSpell
 	assert_eq(spell.wind_up_progress, 0.0, "no wind-up, no progress")
+
+
+func test_the_effects_use_no_magic_glow() -> void:
+	var magenta := Color("d23fd0").to_html(false)
+	for script_class in [SpellLook, FireballTrail, FireBurst]:
+		var script := script_class as Script
+		for value in script.get_script_constant_map().values():
+			if value is Color:
+				assert_ne((value as Color).to_html(false), magenta, "%s draws no magenta" % script.resource_path.get_file())
+
+
+func test_the_held_flame_burns_in_his_hand_not_over_his_head() -> void:
+	var almos = _almos_input.spawn_almos()
+	var look := almos.get_node("SpellLook") as SpellLook
+	assert_false((almos.get_node("HeldFlame/Flame/Art") as CanvasItem).visible, "the big torch flame sprite is hidden on him")
+	almos.facing = Vector2.RIGHT
+	assert_gt(look.hand_point().x, almos.global_position.x, "facing right, the flame is in his right hand")
+	almos.facing = Vector2.LEFT
+	assert_lt(look.hand_point().x, almos.global_position.x, "facing left, it is on his left")
+	assert_gt(look.hand_point().y, almos.global_position.y - 24.0, "it is at his hand, not over his head")
 
 
 func test_the_effects_draw_only_palette_colours() -> void:

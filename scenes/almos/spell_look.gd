@@ -1,34 +1,29 @@
 class_name SpellLook
 extends Node2D
-## How Almos's Pull looks. While he winds up a Pull on a torch or a Fire, the flame streams from it
-## to his hand as two twisting strands: one of fire (Fire amber, sand, cream) and one of the magic
-## that draws it (Ilion violet-magenta, the accent of Channelling). The stream keeps flowing a moment
-## after the release, and the flame lands with a flash. While he holds the flame, a few magenta
-## sparks circle it. Everything is drawn on the art pixel grid, in palette colours.
+## How Almos's Pull looks, all in fire and smoke, no magic glow. While he winds up a Pull on a torch
+## or a Fire, the flame is torn from it toward his hand as a tapering tongue of fire, shedding
+## embers. It keeps flowing a moment after the release, the torch it came from is left smoking, and
+## the flame lands in his hand with a splash of embers. While he holds it, a small flame burns in
+## his hand, on the side he faces, with an ember rising now and then. Everything is drawn on the art
+## pixel grid, in palette colours.
 ##
-## It only reads AlmosSpell; no gameplay depends on it. It draws in world space (top_level), so it
-## is not turned or tinted with his Look.
+## It only reads AlmosSpell and Almos's facing; no gameplay depends on it. It draws in world space
+## (top_level), so it is not turned or tinted with his Look. The held flame's own sprite is hidden in
+## the Almos scene, since this draws the flame in his hand instead.
 
 const AMBER := Color("f29a2e")
 const SAND := Color("f2d3ab")
 const CREAM := Color("fbf5ef")
-const MAGENTA := Color("d23fd0")
+const ROSE := Color("c69fa5")
+const SLATE := Color("494d7e")
 
 # In units. One art pixel.
 const PIXEL := 2.0
-# How many motes each strand carries, and how fast a mote crosses the whole way, in crossings a
-# second.
-const MOTES := 13
-const FLOW := 2.6
-# In units. How far the two strands swing apart in the middle of the way.
-const SWING := 16.0
-# In seconds. How long the stream keeps flowing after the release, and how long the landing flash
-# lasts.
-const AFTERFLOW := 0.25
-const FLASH := 0.18
-# In units, from Almos. Where the flame lands: his raised hand, and where a held flame hovers.
-const HAND := Vector2(0, -20)
-const HOVER := Vector2(0, -62)
+# In seconds. How long the stream keeps flowing after the release, how long the landing splash lasts,
+# and how long the torch smokes.
+const AFTERFLOW := 0.2
+const SPLASH := 0.22
+const SMOKE := 0.7
 # In units, from a torch. Where its flame burns.
 const TORCH_FLAME := Vector2(0, -22)
 
@@ -36,7 +31,7 @@ const TORCH_FLAME := Vector2(0, -22)
 @export var spell: AlmosSpell
 
 var _time := 0.0
-# Where the stream comes from, kept after the release so the afterflow knows.
+# Where the stream comes from, kept after the release so the afterflow and the smoke know.
 var _source := Vector2.ZERO
 var _streaming_for := -1.0
 var _since_release := -1.0
@@ -66,7 +61,7 @@ func _process(delta: float) -> void:
 			_streaming_for = -1.0
 	if _since_release >= 0.0:
 		_since_release += delta
-		if _since_release > maxf(AFTERFLOW, FLASH):
+		if _since_release > SMOKE:
 			_since_release = -1.0
 			_streaming_for = -1.0
 	queue_redraw()
@@ -74,90 +69,107 @@ func _process(delta: float) -> void:
 
 ## Whether the stream is showing now: during a wind-up and the afterflow after its release.
 func streaming() -> bool:
-	return _streaming_for >= 0.0
+	return _streaming_for >= 0.0 and (_since_release < 0.0 or _since_release <= AFTERFLOW)
 
 
-## Whether the landing flash is showing now.
+## Whether the landing splash is showing now.
 func flashing() -> bool:
-	return _since_release >= 0.0 and _since_release <= FLASH
+	return _since_release >= 0.0 and _since_release <= SPLASH
+
+
+## Where his hand is, in the world, for the side he faces.
+func hand_point() -> Vector2:
+	var almos := spell.body
+	var facing: Vector2 = almos.get("facing") if almos.get("facing") != null else Vector2.DOWN
+	# The same sides his sprite shows: across when more across than up or down.
+	if absf(facing.x) >= absf(facing.y) and not is_zero_approx(facing.x):
+		return almos.global_position + Vector2(12.0 * signf(facing.x), -16)
+	if facing.y < 0.0:
+		return almos.global_position + Vector2(-10, -18)
+	return almos.global_position + Vector2(10, -14)
 
 
 func _draw() -> void:
-	if spell == null:
+	if spell == null or spell.body == null:
 		return
-	var almos := spell.body
-	if almos == null:
-		return
-	var hand := almos.global_position + HAND
+	var hand := hand_point()
 	if streaming():
-		_draw_stream(_source, hand)
-		if _since_release < 0.0:
-			_draw_grip(_source, spell.wind_up_progress)
+		_draw_tongue(_source, hand)
+	if _since_release >= 0.0:
+		_draw_smoke(_source, _since_release / SMOKE)
 	if flashing():
-		_draw_flash(hand, _since_release / FLASH)
+		_draw_splash(hand, _since_release / SPLASH)
 	if spell.holding:
-		_draw_orbit(almos.global_position + HOVER)
+		_draw_hand_flame(hand)
 
 
-# Two strands of motes from the source to the hand, twisting about each other.
-func _draw_stream(from: Vector2, to: Vector2) -> void:
+# A tongue of fire torn from the source toward the hand: thick at the source, thinning to a thread,
+# wavering, with embers shed along it.
+func _draw_tongue(from: Vector2, to: Vector2) -> void:
 	var along := to - from
 	if along.length() < 1.0:
 		return
 	var across := along.orthogonal().normalized()
-	# While winding up, motes only reach as far as the wind-up has got; in the afterflow, the last
-	# of them drain into the hand.
-	var reach := 1.0 if _since_release >= 0.0 else clampf(_streaming_for * FLOW * 1.5, 0.15, 1.0)
-	for strand in 2:
-		var side := 1.0 if strand == 0 else -1.0
-		for i in MOTES:
-			var t := fposmod(_time * FLOW + float(i) / MOTES + strand * 0.5 / MOTES, 1.0)
-			if t > reach:
-				continue
-			if _since_release >= 0.0 and t < _since_release / AFTERFLOW:
-				continue
-			var swing := sin(t * PI) * SWING * side * cos(_time * 9.0 + t * 6.0)
-			var point := from + along * t + across * swing
-			var colour: Color
-			if strand == 1:
-				colour = MAGENTA if t < 0.85 else CREAM
-			else:
-				colour = AMBER if t < 0.4 else (SAND if t < 0.8 else CREAM)
-			var size := PIXEL * (3.0 if t < 0.3 else (2.0 if t < 0.75 else 1.0))
-			_pixel(point, size, colour)
-			# A faint tail behind each fire mote, every other art pixel.
-			if strand == 0 and t > 0.08:
-				var behind := from + along * (t - 0.05) + across * sin((t - 0.05) * PI) * SWING * side * cos(_time * 9.0 + (t - 0.05) * 6.0)
-				_pixel(behind, PIXEL, AMBER)
+	# While winding up it stretches out as the wind-up goes on; in the afterflow it is drawn into the
+	# hand from its tail.
+	var head := 1.0 if _since_release >= 0.0 else clampf(0.2 + spell.wind_up_progress * 1.1, 0.2, 1.0)
+	var tail := 0.0 if _since_release < 0.0 else clampf(_since_release / AFTERFLOW, 0.0, 1.0)
+	var steps := int(along.length() / PIXEL)
+	for i in steps + 1:
+		var t := float(i) / maxf(steps, 1.0)
+		if t > head or t < tail:
+			continue
+		var waver := sin(t * 9.0 - _time * 22.0) * 4.0 * sin(t * PI)
+		var point := from + along * t + across * waver
+		var radius := lerpf(3.0, 0.6, t)
+		_disc(point, radius, AMBER)
+		if radius > 1.4:
+			_disc(point, radius - 1.2, SAND)
+		if radius > 2.4:
+			_pixel(point, PIXEL, CREAM)
+	# Embers flung off the tongue.
+	for i in 6:
+		var t := fposmod(_time * 1.8 + i / 6.0, 1.0)
+		if t > head or t < tail:
+			continue
+		var drift := across * (sin(i * 2.3) * 10.0) + Vector2(0, -fposmod(_time * 30.0 + i * 7.0, 14.0))
+		_pixel(from + along * t + drift, PIXEL, CREAM if i % 3 == 0 else AMBER)
 
 
-# A ring of magic closing on the flame being drawn, tighter as the wind-up goes on.
-func _draw_grip(at: Vector2, progress: float) -> void:
-	var radius := lerpf(26.0, 10.0, progress)
-	var count := 10
-	for i in count:
-		var angle := TAU * i / count - _time * 6.0
-		_pixel(at + Vector2(cos(angle), sin(angle) * 0.8) * radius, PIXEL * 2.0 if i % 2 == 0 else PIXEL, MAGENTA)
-
-
-# A ring of light bursting out of the hand as the flame lands.
-func _draw_flash(at: Vector2, progress: float) -> void:
-	var radius := lerpf(4.0, 22.0, progress)
-	var count := 12
-	for i in count:
-		var angle := TAU * i / count + progress
-		var colour := CREAM if progress < 0.4 else (MAGENTA if i % 2 == 0 else AMBER)
-		_pixel(at + Vector2.from_angle(angle) * radius, PIXEL * (2.0 if progress < 0.5 else 1.0), colour)
-	if progress < 0.35:
-		_pixel(at, PIXEL * 4.0, CREAM)
-
-
-# A few sparks circling the flame he holds.
-func _draw_orbit(at: Vector2) -> void:
+# A wisp of smoke rising where the flame was torn from.
+func _draw_smoke(at: Vector2, progress: float) -> void:
 	for i in 4:
-		var angle := _time * 4.0 + TAU * i / 4.0
-		var point := at + Vector2(cos(angle) * 20.0, sin(angle) * 9.0)
-		_pixel(point, PIXEL * (2.0 if i % 2 == 0 else 1.0), MAGENTA if i != 0 else CREAM)
+		var rise := progress * 22.0 + i * 5.0
+		var sway := sin(progress * 6.0 + i * 1.7) * 3.0
+		if (i + int(_time * 16.0)) % 3 == 0:
+			continue
+		_pixel(at + Vector2(sway, -rise), PIXEL * (2.0 if progress < 0.5 else 1.0), ROSE if progress < 0.5 else SLATE)
+
+
+# A splash of embers as the flame lands in his hand.
+func _draw_splash(at: Vector2, progress: float) -> void:
+	for i in 8:
+		var angle := TAU * i / 8.0 + 0.4
+		var travel := lerpf(2.0, 12.0, progress) * (0.7 + 0.3 * absf(sin(i * 1.9)))
+		var point := at + Vector2.from_angle(angle) * travel + Vector2(0, progress * progress * 6.0)
+		_pixel(point, PIXEL, CREAM if progress < 0.4 else AMBER)
+	if progress < 0.3:
+		_disc(at, 2.0, SAND)
+
+
+# A small flame burning in his hand, flickering, with an ember rising now and then.
+func _draw_hand_flame(at: Vector2) -> void:
+	var flicker := int(_time * 12.0) % 3
+	var lean: float = [0.0, PIXEL, -PIXEL][flicker]
+	# The body of the flame: a teardrop, widest at the hand.
+	_disc(at, 2.0, AMBER)
+	_disc(at + Vector2(lean * 0.5, -PIXEL * 2.0), 1.5, AMBER)
+	_pixel(at + Vector2(lean, -PIXEL * 4.0), PIXEL, AMBER)
+	_disc(at + Vector2(0, -PIXEL), 1.0, SAND)
+	_pixel(at, PIXEL, CREAM)
+	var ember_t := fposmod(_time * 1.3, 1.0)
+	if ember_t < 0.6:
+		_pixel(at + Vector2(sin(_time * 5.0) * 3.0, -PIXEL * 5.0 - ember_t * 16.0), PIXEL, AMBER if ember_t < 0.3 else ROSE)
 
 
 # Where the flame of a torch or a Fire burns.
@@ -165,6 +177,15 @@ func _flame_point(from: Node2D) -> Vector2:
 	if from is Torch:
 		return from.global_position + TORCH_FLAME
 	return from.global_position
+
+
+# A round blob of art pixels, this many art pixels in radius.
+func _disc(at: Vector2, radius: float, colour: Color) -> void:
+	var reach := ceili(radius)
+	for y in range(-reach, reach + 1):
+		for x in range(-reach, reach + 1):
+			if x * x + y * y <= radius * radius + 0.5:
+				_pixel(at + Vector2(x, y) * PIXEL, PIXEL, colour)
 
 
 # A square of the given size, snapped to the art pixel grid.

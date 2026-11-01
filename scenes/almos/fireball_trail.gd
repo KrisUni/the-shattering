@@ -1,8 +1,8 @@
 class_name FireballTrail
 extends Node2D
 ## How a fireball looks in flight: a bright head (cream heart, sand and Fire amber around it) and a
-## trail of fire that cools to dusty rose and slate smoke behind it, with two magenta sparks of the
-## magic that threw it spiralling along the trail. When the fireball is gone, the trail stays where
+## trail of fire that cools to dusty rose and slate smoke behind it, shedding embers that drift off
+## and fall. When the fireball is gone, the trail stays where
 ## it was and fades out, then frees itself.
 ##
 ## It starts as a child of the fireball and moves itself up beside it, so that it outlives it. It
@@ -14,7 +14,6 @@ const SAND := Color("f2d3ab")
 const AMBER := Color("f29a2e")
 const ROSE := Color("c69fa5")
 const SLATE := Color("494d7e")
-const MAGENTA := Color("d23fd0")
 
 # In units. One art pixel.
 const PIXEL := 2.0
@@ -104,11 +103,11 @@ func _draw() -> void:
 			colour = SLATE
 			size = 1.0
 		_disc(_points[i] + flicker, size, colour)
-		# Two sparks spiral along the trail.
-		if i % 2 == 0 and t < 0.8:
-			for side: float in [-1.0, 1.0]:
-				var spiral: Vector2 = across * sin(_time * 18.0 + i * 0.9) * 7.0 * side
-				_pixel(_points[i] + spiral, PIXEL, MAGENTA)
+		# Embers shed from the trail drift out and fall behind it.
+		if i % 3 == 1 and t < 0.75:
+			var side := 1.0 if posmod(floori(i / 3.0), 2) == 0 else -1.0
+			var drift := across * side * (3.0 + t * 10.0) + Vector2(0, t * t * 14.0)
+			_pixel(_points[i] + drift, PIXEL, CREAM if t < 0.3 else AMBER)
 	if fading():
 		return
 	# The head: an amber rim, sand within, a cream heart.

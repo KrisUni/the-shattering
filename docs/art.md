@@ -175,17 +175,17 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 - **Thing:** Pull (taking a torch's or a Fire's flame), the held flame, and the Fireball (see Shove)
 - **Source pack and files:** Drawn in code on the art pixel grid, no image files:
-  - `scenes/almos/spell_look.gd` (`SpellLook` on Almos): the Pull and the held flame
+  - `scenes/almos/spell_look.gd` (`SpellLook` on Almos): the Pull and the flame in his hand
   - `scenes/almos/fireball_trail.gd` (`FireballTrail`): the fireball in flight
-  - `scenes/almos/fire_burst.gd` (`FireBurst`, left where a fireball hits): the impact
-- **Size in art px:** The stream runs from the flame to Almos's hand. The fireball's head is a blob about 9 art px across, with a 16-step trail. The burst's ring runs out to the fireball's splash radius, so it shows what the splash reaches.
-- **Palette notes and accents used:** Fire amber, sand and cream for the fire; dusty rose and slate for its smoke. Ilion violet-magenta for the magic that draws and throws it: the Pull is Channelling, which the accent table gives that colour. Magenta appears only in these effects.
+  - `scenes/almos/fire_burst.gd` (`FireBurst`, left where a fireball hits): the impact and its scorch
+- **Size in art px:** The tongue runs from the flame to Almos's hand, 6 art px thick at the source, thinning to 1. The flame in his hand is about 5 by 7. The fireball's head is a blob about 9 across, with a 16-step trail. The burst's ring runs out to the fireball's splash radius, so it shows what the splash reaches.
+- **Palette notes and accents used:** Fire amber, sand and cream for the fire; dusty rose and slate for smoke; navy and slate for the scorch. No magic glow: the owner wants it to read as fire, not magic, so no magenta.
 - **Animations and poses needed:**
-  - **Pull:** while Almos winds up, a magenta ring tightens around the flame and the flame streams to his hand as two twisting strands, one of fire and one of magic. The stream drains for a moment after the release, and the flame lands with a flash.
-  - **Held flame:** the flame (the torch flame art) hovers above his head, with magenta sparks circling it.
-  - **Fireball:** a round head with a cream heart, and a trail that cools from sand and amber to rose and slate smoke, with magenta sparks spiralling along it. The trail outlives the fireball and fades.
-  - **Burst:** where it hits, a white-hot flash, a ring of fire out to the splash radius, sparks, and rising smoke. Running out of range in open air leaves no burst. The fireball's old hexagon (`Look/Shape`) is transparent and stays for the code and tests.
-- **Status:** in the game (first draft; the owner checks the look in the editor)
+  - **Pull:** while Almos winds up, the flame is torn from the torch toward his hand as a wavering tongue of fire that stretches out with the wind-up, shedding embers. It is drawn into his hand for a moment after the release, the torch is left smoking, and the flame lands with a splash of embers.
+  - **Held flame:** a small flickering flame in his hand on the side he faces, an ember rising now and then. The torch flame sprite on `HeldFlame` is hidden.
+  - **Fireball:** a round head with a cream heart, and a trail that cools from sand and amber to rose and slate smoke, shedding embers that drift and fall. The trail outlives the fireball and fades.
+  - **Burst:** where it hits, a white-hot flash, a ring of fire out to the splash radius, sparks and rising smoke. It leaves a scorch on the ground that thins away over 3 seconds. Running out of range in open air leaves no burst. The fireball's old hexagon (`Look/Shape`) is transparent and stays for the code and tests.
+- **Status:** in the game (second draft; the owner checks the look in the editor)
 
 #### Checkpoint
 
@@ -307,6 +307,25 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 ### Rooms
 
 The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_tiles.tres`, from one 16x16 art px atlas, `dungeon_tiles.png`. A Room draws its floor and walls with TileMapLayers at scale 2. The floor sits behind Almos, the north and side walls behind him, and the south walls in front of him (by `z_index`).
+
+#### Cell 3, the cell
+
+- **Thing:** Cell 3 (where Almos wakes; see Dungeons)
+- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/cell_3/`:
+  - `cell_bars.png`: root bars along the front either side of the door, in front of Almos
+  - `cell_window.png` and `cell_light.png`: a barred window slit high in the north wall, and the pale shaft of light it throws on the floor
+  - `cell_pallet.png`, `cell_bucket.png`, `cell_bones.png`, `cell_straw.png`: a straw pallet, a bucket, old bones and scattered straw
+  - `cell_shackles.png`, `cell_tally.png`: root shackles and tally marks on the north wall
+
+  The solid root around the cell is a new tile, atlas (5,0) of `assets/shared/dungeon_tiles/dungeon_tiles.png`.
+- **Size in art px:** The cell is 14 by 11 tiles (x 352..800, y 256..608 in units). The owner asked for it to feel like a cell, so walls close it in: `CellWallTop` (a 64-unit north face), `CellWallLeft`, `CellWallRight`, and solid root (`RootMassTop`, `RootMassLeft`, `RootMassRight`) filling the rest of the Room. The door, its Roots, the torch and the spot where he wakes are all inside.
+- **Palette notes and accents used:**
+  - Bars, shackles and the root mass: navy and indigo with violet glints.
+  - Straw and pallet: sand and rose. Bones: cream.
+  - Light shaft: dithered sand. The window shows rose twilight.
+  - Only the torch uses an accent.
+- **Animations and poses needed:** None; all still pictures, decoration with no collision (the walls are their own bodies).
+- **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Cell 3 floor
 
