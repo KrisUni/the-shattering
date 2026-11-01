@@ -107,11 +107,11 @@ Each sheet has these fields:
 #### Almos
 
 - **Thing:** Almos
-- **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`).
-- **Size in art px:** 16x24 for every frame: a pointed hood, the face in shadow, a long cloak; feet on the bottom rows (sprite offset -8 art px puts them on the body).
-- **Palette notes and accents used:** Base only: navy outline and face shadow, indigo and violet hood and cloak, a dusty-rose fold, sand for the eye glint, the hand and the Seal at the neck. No accent.
-- **Animations and poses needed:** Now: `idle` (2 frames, a slow breath) and `walk` (4 frames), drawn facing right and flipped left or right with his facing. Still owed: Roll, attacks, Block, Parry, Sip, Jump and the limp Death pose; until then the Block and Parry shapes and the death tint show over the sprite. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame: their bracket is hidden on him.
-- **Status:** in the game (first draft; the owner checks the look in the editor)
+- **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young adventurer in the spirit the owner asked for (a classic tunic-and-long-cap hero), not a copy of any existing character.
+- **Size in art px:** 16x24 for every frame; feet on the bottom row (sprite offset -8 art px puts them on the body).
+- **Palette notes and accents used:** Base only. Pale skin (cream, sand shading) on the face, neck and forearms; hair like dry roots in dusty rose with violet strands; an indigo long cap with a violet seam, its point trailing behind; a violet tunic with a dusty-rose collar, navy belt and sand buckle; indigo leggings, navy boots. The Seal is a dark navy ring with an indigo glint, set between the pale neck and the light collar so it reads. No accent.
+- **Animations and poses needed:** Now: `idle_down`, `idle_up`, `idle_side` (2 frames each, a slow breath) and `walk_down`, `walk_up`, `walk_side` (4 frames each, legs and arms swinging). The side frames face right and are flipped for left; a diagonal shows the side. Still owed: Roll, attacks, Block, Parry, Sip, Jump and the limp Death pose; until then the Block and Parry shapes and the death tint show over the sprite. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
+- **Status:** in the game (second draft; the owner checks the look in the editor)
 
 #### Nar jailer
 

@@ -1,9 +1,10 @@
 class_name AlmosLook
 extends Node
 ## Makes Almos's sprite show what he is doing. It looks for an AnimatedSprite2D named Art in his
-## Look; with none it does nothing. With one, it plays `walk` while he moves and `idle` while he
-## stands (a name the sprite lacks is skipped), and flips the sprite left or right with the way he
-## faces, so the sprite is drawn facing right. It only reads Almos: no gameplay depends on it.
+## Look; with none it does nothing. With one, it plays `walk_<side>` while he moves and
+## `idle_<side>` while he stands, where the side is `down`, `up` or `side` from the way he faces
+## (a name the sprite lacks is skipped). Facing left plays the side animations flipped, so they
+## are drawn facing right. It only reads Almos: no gameplay depends on it.
 
 # Below this speed, in units a second, he counts as standing. A look, not tuning.
 const WALK_SPEED := 5.0
@@ -28,12 +29,19 @@ func update_look() -> void:
 		_art = get_parent().get_node_or_null("Art") as AnimatedSprite2D
 		if _art == null:
 			return
-	var facing: Vector2 = _almos.facing
-	# Facing straight up or down keeps the side he had.
-	if not is_zero_approx(facing.x):
-		_art.flip_h = facing.x < 0.0
+	var side := side_for(_almos.facing)
+	# Only the side animations flip; up and down are drawn for themselves.
+	_art.flip_h = side == &"side" and (_almos.facing as Vector2).x < 0.0
 	var moving: bool = not _almos.dead and (_almos as CharacterBody2D).velocity.length() > WALK_SPEED
-	_play(&"walk" if moving else &"idle")
+	_play(StringName(("walk_" if moving else "idle_") + side))
+
+
+## Which drawn side shows a facing: `side` when it is more across than up or down (a diagonal
+## shows the side), `up` or `down` otherwise.
+static func side_for(facing: Vector2) -> StringName:
+	if absf(facing.x) >= absf(facing.y) and not is_zero_approx(facing.x):
+		return &"side"
+	return &"up" if facing.y < 0.0 else &"down"
 
 
 func _play(animation_name: StringName) -> void:
