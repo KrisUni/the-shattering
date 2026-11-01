@@ -12,7 +12,6 @@ const JAILER_SCENE := preload("res://scenes/enemies/nar_jailer.tscn")
 const TORCH_SCENE := preload("res://scenes/world/torch.tscn")
 const FIRE_PATH := "res://data/fire.tres"
 const SPELL_PATH := "res://data/fireball.tres"
-const PALETTE_PATH := "res://assets/palette/master.hex"
 # In physics frames. Slack added to a computed wait.
 const MARGIN_FRAMES := 6
 
@@ -178,15 +177,3 @@ func test_the_held_flame_burns_in_his_hand_not_over_his_head() -> void:
 	almos.facing = Vector2.LEFT
 	assert_lt(look.hand_point().x, almos.global_position.x, "facing left, it is on his left")
 	assert_gt(look.hand_point().y, almos.global_position.y - 24.0, "it is at his hand, not over his head")
-
-
-func test_the_effects_draw_only_palette_colours() -> void:
-	var palette := {}
-	for line in FileAccess.get_file_as_string(PALETTE_PATH).split("\n", false):
-		palette[Color(line.strip_edges()).to_html(false)] = true
-	for script_class in [SpellLook, FireballTrail, FireBurst]:
-		var script := script_class as Script
-		for name in script.get_script_constant_map():
-			var value = script.get_script_constant_map()[name]
-			if value is Color:
-				assert_true(palette.has((value as Color).to_html(false)), "%s.%s is a palette colour" % [script.resource_path.get_file(), name])

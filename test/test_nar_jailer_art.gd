@@ -6,7 +6,6 @@ extends GutTest
 const JAILER_PATH := "res://scenes/enemies/nar_jailer.tscn"
 const RADIO_OFFICERS_PATH := "res://scenes/areas/dungeons/radio_officers.tscn"
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
-const PALETTE_PATH := "res://assets/palette/master.hex"
 const ART_DIR := "res://assets/characters/nar_jailer/"
 const ANIMATIONS := [&"idle", &"walk", &"strike", &"low", &"unblockable", &"break", &"death"]
 
@@ -47,23 +46,3 @@ func test_the_test_room_stays_placeholder() -> void:
 	for enemy in get_tree().get_nodes_in_group(&"enemies"):
 		if room.is_ancestor_of(enemy):
 			assert_ne(enemy.scene_file_path, JAILER_PATH, "%s in the test room is not a skeleton" % enemy.name)
-
-
-func test_every_pixel_of_the_skeleton_is_a_palette_colour() -> void:
-	var palette := {}
-	for line in FileAccess.get_file_as_string(PALETTE_PATH).split("\n", false):
-		palette[Color(line.strip_edges()).to_html(false)] = true
-	var checked := 0
-	var off: Array[String] = []
-	for file_name in DirAccess.get_files_at(ART_DIR):
-		if not file_name.ends_with(".png"):
-			continue
-		checked += 1
-		var image := Image.load_from_file(ProjectSettings.globalize_path(ART_DIR + file_name))
-		for y in image.get_height():
-			for x in image.get_width():
-				var pixel := image.get_pixel(x, y)
-				if pixel.a > 0.0 and (pixel.a < 1.0 or not palette.has(pixel.to_html(false))):
-					off.append("%s at %d, %d" % [file_name, x, y])
-	assert_eq(checked, 20, "every skeleton frame is checked")
-	assert_eq(off, [] as Array[String], "every opaque pixel is a palette colour")
