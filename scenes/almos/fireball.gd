@@ -95,9 +95,11 @@ func _burst() -> void:
 	var parent := get_parent()
 	if parent == null:
 		return
-	var burst := BURST_SCENE.instantiate() as FireBurst
+	# Typed as a plain Node2D, not by its class name, so the fireball still loads before a new
+	# class name has been registered by an import.
+	var burst: Node2D = BURST_SCENE.instantiate()
 	parent.add_child(burst)
-	burst.burst(global_position, splash_radius)
+	burst.call(&"burst", global_position, splash_radius)
 
 
 # The splash at the point it stopped at: the other enemy Hurtboxes and the flammable things within
