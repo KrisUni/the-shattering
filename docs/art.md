@@ -107,20 +107,20 @@ Each sheet has these fields:
 #### Almos
 
 - **Thing:** Almos
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young adventurer in the spirit the owner asked for (a classic tunic-and-long-cap hero), not a copy of any existing character.
+- **Size in art px:** 16x24 for every frame; feet on the bottom row (sprite offset -8 art px puts them on the body).
+- **Palette notes and accents used:** Base only. Pale skin (cream, sand shading) on the face, neck and forearms; hair like dry roots in dusty rose with violet strands; an indigo long cap with a violet seam, its point trailing behind; a violet tunic with a dusty-rose collar, navy belt and sand buckle; indigo leggings, navy boots. The Seal is a dark navy ring with an indigo glint, set between the pale neck and the light collar so it reads. No accent.
+- **Animations and poses needed:** Now: `idle_down`, `idle_up`, `idle_side` (2 frames each, a slow breath) and `walk_down`, `walk_up`, `walk_side` (4 frames each, legs and arms swinging). The side frames face right and are flipped for left; a diagonal shows the side. Still owed: Roll, attacks, Block, Parry, Sip, Jump and the limp Death pose; until then the Block and Parry shapes and the death tint show over the sprite. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
+- **Status:** in the game (second draft; the owner checks the look in the editor)
 
 #### Nar jailer
 
-- **Thing:** Nar jailer
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Thing:** Nar jailer (the key jailer included)
+- **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/nar_jailer/`. The owner chose skeletons for the Dungeons' guards. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite; the key jailer in Radio/Officers is one with its own tuning. The test room's jailers stay placeholder.
+- **Size in art px:** 24x24 canvas (body 10 wide, centred, so it flips cleanly); feet on the bottom row (sprite offset -8 art px).
+- **Palette notes and accents used:** Base only: cream bone with navy outline and sockets, an indigo bark helmet and collar, base violet rags, an indigo spear with a sand and cream head (indigo, so it reads on the dusty-rose floor). No accent; the flashes come from the shared shader.
+- **Animations and poses needed:** `idle` (2), `walk` (4), `strike` (spear drawn back, thrust, recover), `low` (crouched sweep at the ankles), `unblockable` (spear raised overhead, held, slammed down), `break` (slumped, spear dropped), `death` (collapsing to a heap of bones). Drawn facing right. Not yet: a key at the key jailer's belt, and Block and Parry poses (the Block and Parry still show as the enemy's usual cues).
+- **Status:** in the game (first draft; the owner checks the look in the editor). Open: `CONTEXT.md` still calls the jailers Nar; whether they are undead in the story too is the owner's call.
 
 #### Nar guard
 
@@ -152,7 +152,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Source pack and files:** Bracket: Dead Swamp (Sevarihk / Aurora), `assets/shared/torch/torch.png`. Flame: hand-redrawn after Gigapack `fire_looping_003A`, `assets/shared/torch/flame_0-4.png`. See `assets/CREDITS.md`.
 - **Size in art px:** Bracket 10×37; flame 16×24 (5 frames).
 - **Palette notes and accents used:** Bracket in the base violets and blues. Flame in Fire amber with sand and cream for the body and the core. A small, steady flame, so a lit torch stays apart from Fire.
-- **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted.
+- **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted. Placement: the bracket is a standing pole, so a wall torch stands at y 48 in front of a north wall face (flame on the face, pole on the floor); Cell 3's stands on open floor within Pull's reach of the roots. Almos's carried torch and held flame hide the bracket.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Fire
@@ -320,6 +320,15 @@ The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_til
 - **Palette notes and accents used:** As Cell 3. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
+
+#### The other Rooms' floor and walls
+
+- **Thing:** Every other Room of the Dungeons (Cells 1 and 2, Corridors 2 to 4, the Lobby, Reception, the offices, Interviews, the meeting and staff rooms, the Store room, the back corridors and the Cave)
+- **Source pack and files:** The same tiles as Cell 3 (`assets/shared/dungeon_tiles/dungeon_tiles.tres`, no new tiles), laid by the same rule from each Room's walls: floor under the whole Room (plus the strip under a south doorway), north walls two tiles of face, side walls one tile, south walls one tile plus the strip, every doorway open. Two root columns (`root_vein_column.png`) on each Room's north wall, clear of the doorways.
+- **Size in art px:** 16x16 per tile; each Room is 36x20 tiles plus the strip.
+- **Palette notes and accents used:** As Cell 3. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game (first draft; the owner checks the look in the editor). Not yet: each Room's own props (the speaking-root, listening slit, root-fed trough, woven bins), the Main entrance and Cave door art, and the tree's glow in the veins.
 
 #### Corridor 1 Back entrance seal
 
