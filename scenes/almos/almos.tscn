@@ -25,6 +25,13 @@
 [ext_resource type="Resource" path="res://data/pull.tres" id="23_pull"]
 [ext_resource type="Resource" path="res://data/shove.tres" id="24_shove"]
 [ext_resource type="Script" path="res://scripts/mana.gd" id="25_mana"]
+[ext_resource type="Script" path="res://scenes/almos/almos_look.gd" id="26_look"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/idle_0.png" id="27_idle_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/idle_1.png" id="27_idle_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_0.png" id="27_walk_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_1.png" id="27_walk_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_2.png" id="27_walk_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/walk_3.png" id="27_walk_3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -34,6 +41,41 @@ radius = 12.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sword"]
 size = Vector2(28, 28)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_almos"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("27_idle_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_idle_1")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 2.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("27_walk_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("27_walk_3")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 8.0
+}]
 
 [node name="Almos" type="CharacterBody2D"]
 collision_layer = 256
@@ -60,6 +102,7 @@ polygon = PackedVector2Array(12, 0, 8.49, 4.24, 0, 6, -8.49, 4.24, -12, 0, -8.49
 [node name="Facing" type="Node2D" parent="Look"]
 
 [node name="Shape" type="Polygon2D" parent="Look/Facing"]
+visible = false
 color = Color(0.45, 0.25, 0.7, 1)
 polygon = PackedVector2Array(14, 0, -10, -10, -4, 0, -10, 10)
 
@@ -72,6 +115,16 @@ polygon = PackedVector2Array(11, -19.05, 19.05, -11, 22, 0, 19.05, 11, 11, 19.05
 visible = false
 color = Color(1, 0.55, 0.1, 1)
 polygon = PackedVector2Array(0, 0, 0, -30, 11.48, -27.72, 21.21, -21.21, 27.72, -11.48, 30, 0, 27.72, 11.48, 21.21, 21.21, 11.48, 27.72, 0, 30)
+
+[node name="Art" type="AnimatedSprite2D" parent="Look"]
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_almos")
+animation = &"idle"
+autoplay = "idle"
+offset = Vector2(0, -8)
+
+[node name="AlmosLook" type="Node" parent="Look"]
+script = ExtResource("26_look")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
@@ -93,7 +146,13 @@ script = ExtResource("14_weapons")
 
 [node name="CarriedTorch" parent="." instance=ExtResource("20_torch")]
 
+[node name="Art" parent="CarriedTorch/Look" index="1"]
+visible = false
+
 [node name="HeldFlame" parent="." instance=ExtResource("20_torch")]
+
+[node name="Art" parent="HeldFlame/Look" index="1"]
+visible = false
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
 collision_layer = 2

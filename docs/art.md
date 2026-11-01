@@ -107,11 +107,11 @@ Each sheet has these fields:
 #### Almos
 
 - **Thing:** Almos
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`).
+- **Size in art px:** 16x24 for every frame: a pointed hood, the face in shadow, a long cloak; feet on the bottom rows (sprite offset -8 art px puts them on the body).
+- **Palette notes and accents used:** Base only: navy outline and face shadow, indigo and violet hood and cloak, a dusty-rose fold, sand for the eye glint, the hand and the Seal at the neck. No accent.
+- **Animations and poses needed:** Now: `idle` (2 frames, a slow breath) and `walk` (4 frames), drawn facing right and flipped left or right with his facing. Still owed: Roll, attacks, Block, Parry, Sip, Jump and the limp Death pose; until then the Block and Parry shapes and the death tint show over the sprite. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame: their bracket is hidden on him.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Nar jailer
 
