@@ -1,22 +1,34 @@
 class_name AlmosLook
 extends Node
 ## Makes Almos's sprite show what he is doing. It looks for an AnimatedSprite2D named Art in his
-## Look; with none it does nothing. With one, it plays `walk_<side>` while he moves and
-## `idle_<side>` while he stands, where the side is `down`, `up` or `side` from the way he faces
-## (a name the sprite lacks is skipped), and `roll_<side>` once from its first frame each time a
-## roll starts. Facing left plays the side animations flipped, so they
+## Look; with none it does nothing. With one, for the side he faces (`down`, `up` or `side`):
+## - while he swings, `attack_<side>` follows the swing's own phases, whatever its length: wind-up
+##   over its startup frames, the strike on its active frames, follow-through and recovery after.
+##   While he charges a Heavy attack it holds the coiled wind-up;
+## - while he rolls, `roll_<side>` plays once from its first frame each time a roll starts;
+## - otherwise `walk_<side>` while he moves and `idle_<side>` while he stands.
+## A name the sprite lacks is skipped. Facing left plays the side animations flipped, so they
 ## are drawn facing right. It only reads Almos: no gameplay depends on it.
 
 # Below this speed, in units a second, he counts as standing. A look, not tuning.
 const WALK_SPEED := 5.0
+# The frames of an attack animation: the wind-up, the coil before the strike, the strike, the
+# follow-through, and the recovery.
+const WIND_UP := 0
+const COIL := 1
+const STRIKE := 2
+const FOLLOW_THROUGH := 3
+const RECOVER := 4
 
 var _almos: Node
+var _attacks: Node
 var _art: AnimatedSprite2D
 var _was_rolling := false
 
 
 func _ready() -> void:
 	_almos = get_parent().get_parent()
+	_attacks = _almos.get_node_or_null("Attacks")
 
 
 func _physics_process(_delta: float) -> void:
@@ -34,8 +46,10 @@ func update_look() -> void:
 	var side := side_for(_almos.facing)
 	# Only the side animations flip; up and down are drawn for themselves.
 	_art.flip_h = side == &"side" and (_almos.facing as Vector2).x < 0.0
-	var rolling: bool = _almos.rolling
-	if rolling:
+	if _show_attack(side):
+		_was_rolling = false
+		return
+	if _almos.rolling:
 		# A roll plays once from its first frame, each time one starts.
 		var roll := StringName("roll_" + side)
 		if not _was_rolling or _art.animation != roll:
@@ -53,6 +67,38 @@ static func side_for(facing: Vector2) -> StringName:
 	if absf(facing.x) >= absf(facing.y) and not is_zero_approx(facing.x):
 		return &"side"
 	return &"up" if facing.y < 0.0 else &"down"
+
+
+## Which frame of an attack animation shows this frame of a swing.
+static func attack_frame_for(swing: AttackData, frame: int) -> int:
+	if swing.is_winding_up(frame):
+		return WIND_UP if frame * 2 < swing.startup_frames else COIL
+	if swing.is_active(frame):
+		return STRIKE
+	var into_recovery := frame - swing.startup_frames - swing.active_frames
+	return FOLLOW_THROUGH if into_recovery * 3 < swing.recovery_frames else RECOVER
+
+
+# Shows a swing or a charge, if one is under way. Whether it did.
+func _show_attack(side: StringName) -> bool:
+	if _attacks == null:
+		return false
+	var attack := StringName("attack_" + side)
+	if _art.sprite_frames == null or not _art.sprite_frames.has_animation(attack):
+		return false
+	var swing: AttackData = _attacks.swing
+	var frame: int
+	if swing != null:
+		frame = attack_frame_for(swing, _attacks.swing_frame)
+	elif _attacks.charging:
+		frame = COIL
+	else:
+		return false
+	if _art.animation != attack:
+		_art.animation = attack
+	_art.pause()
+	_art.frame = frame
+	return true
 
 
 func _play(animation_name: StringName, from_start := false) -> void:

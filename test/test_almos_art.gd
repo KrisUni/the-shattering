@@ -131,6 +131,68 @@ func test_a_roll_plays_the_roll_for_the_side_he_rolls_toward_from_its_first_fram
 	assert_ne(art.animation, &"roll_down", "after the roll he walks or stands again")
 
 
+func test_he_has_an_attack_for_every_side_with_room_for_the_swing() -> void:
+	var almos = _almos_input.spawn_almos()
+	var frames := _art(almos).sprite_frames
+	for side in ["down", "up", "side"]:
+		var attack := StringName("attack_" + side)
+		assert_true(frames.has_animation(attack), "he has %s" % attack)
+		assert_eq(frames.get_frame_count(attack), 5, "%s has five frames" % attack)
+		assert_eq(frames.get_frame_texture(attack, 0).get_size(), Vector2(32, 32), "%s has room for the smear" % attack)
+
+
+func test_an_attack_frame_follows_the_swings_phases_whatever_its_length() -> void:
+	for timing in [[8, 4, 14], [14, 4, 36], [0, 6, 20]]:
+		var swing := AttackData.new()
+		swing.startup_frames = timing[0]
+		swing.active_frames = timing[1]
+		swing.recovery_frames = timing[2]
+		var shown: Array[int] = []
+		for frame in swing.total_frames():
+			shown.append(AlmosLook.attack_frame_for(swing, frame))
+		for frame in swing.total_frames():
+			if swing.is_active(frame):
+				assert_eq(shown[frame], AlmosLook.STRIKE, "%s: the strike shows on active frame %d" % [timing, frame])
+			elif swing.is_winding_up(frame):
+				assert_lt(shown[frame], AlmosLook.STRIKE, "%s: a wind-up shows before the strike at %d" % [timing, frame])
+			else:
+				assert_gt(shown[frame], AlmosLook.STRIKE, "%s: recovery shows after the strike at %d" % [timing, frame])
+		assert_eq(shown[-1], AlmosLook.RECOVER, "%s: it ends recovered" % [timing])
+		var sorted := shown.duplicate()
+		sorted.sort()
+		assert_eq(shown, sorted, "%s: the frames only move forward" % [timing])
+
+
+func test_a_light_attack_plays_the_attack_for_his_side_and_strikes_on_the_active_frames() -> void:
+	var almos = _almos_input.spawn_almos()
+	var art := _art(almos)
+	var attacks: AlmosAttacks = almos.get_node("Attacks")
+	_almos_input.press_action(&"move_up")
+	await wait_physics_frames(3)
+	_almos_input.release_everything()
+	_almos_input.press_action(&"attack_light")
+	await wait_physics_frames(2)
+	_almos_input.release_action(&"attack_light")
+	var seen_strike := false
+	for i in 60:
+		await wait_physics_frames(1)
+		if attacks.swing == null:
+			break
+		assert_eq(art.animation, &"attack_up", "facing up, he swings upward")
+		if attacks.swing.is_active(attacks.swing_frame - 1) or attacks.swing.is_active(attacks.swing_frame):
+			seen_strike = seen_strike or art.frame == AlmosLook.STRIKE
+	assert_true(seen_strike, "the strike frame shows during the swing's active frames")
+	await wait_physics_frames(2)
+	assert_ne(art.animation, &"attack_up", "after the swing he stands again")
+
+
+func test_the_old_strike_box_draws_nothing_now_the_sprite_shows_the_swing() -> void:
+	var almos = _almos_input.spawn_almos()
+	var shape := almos.get_node("Sword/Look/Shape") as Polygon2D
+	assert_not_null(shape, "the strike box shape stays for the code and tests that measure it")
+	assert_eq(shape.color.a, 0.0, "it is transparent, so only the smear shows the swing")
+
+
 func test_every_pixel_of_his_art_is_a_palette_colour() -> void:
 	var palette := {}
 	for line in FileAccess.get_file_as_string(PALETTE_PATH).split("\n", false):
