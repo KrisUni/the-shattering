@@ -1,9 +1,9 @@
 extends GutTest
-## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: too many guards to
-## fight, patrolling on rounds, with wardrobes and barrels to hide in while a patrol goes by and
-## crates that block Sight. Here: the guards patrol, the routes and the doorways are clear, and in
-## the real Dungeons a patrol walks its whole round past Almos hidden in a wardrobe without noticing
-## him, while one catches him standing in the open on its route.
+## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a narrow hall, three
+## tiles wide, that one guard walks from end to end, with alcoves along its south side holding
+## wardrobes and barrels to hide in while he goes by. Here: he patrols the whole length, the route
+## and the doorways are clear, and in the real Dungeons he walks his whole round past Almos hidden in
+## the wardrobe by Cell 3 without noticing him, while he catches him standing in the open.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
@@ -57,26 +57,34 @@ func _path_blocked(room: Room, a: Vector2, b: Vector2) -> bool:
 	return result[0] < 1.0
 
 
-func test_too_many_guards_to_fight_patrol_the_hall() -> void:
+func test_one_guard_walks_the_hall_from_one_end_to_the_other() -> void:
 	var room := await _corridor_in_a_viewport()
 	var guards := _guards(room)
-	assert_gte(guards.size(), 2, "at least two guards")
-	for guard in guards:
-		assert_eq(guard.tuning, load(JAILER_PATH), "%s is a jailer, who Blocks and Parries" % guard.name)
-		assert_gte(guard.patrol.size(), 2, "%s walks a round" % guard.name)
-		assert_false(guard.named, "%s is an ordinary guard, back after a rest" % guard.name)
+	assert_eq(guards.size(), 1, "one guard")
+	var guard = guards[0]
+	assert_eq(guard.tuning, load(JAILER_PATH), "a jailer, who Blocks and Parries")
+	assert_false(guard.named, "an ordinary guard, back after a rest")
+	var xs: Array[float] = []
+	for point in guard.patrol:
+		xs.append(point.x)
+		assert_almost_eq(point.y, 112.0, 0.01, "his route runs down the middle of the hall")
+	assert_lt(xs.min(), 128.0, "it reaches the west end")
+	assert_gt(xs.max(), 1024.0, "and the east end")
 
 
-func test_there_are_places_to_hide_and_cover_that_blocks_sight() -> void:
+func test_there_are_places_to_hide_along_his_path() -> void:
 	var room := await _corridor_in_a_viewport()
 	var spots := room.get_node("Furniture").get_children().filter(func(n: Node) -> bool: return n is HidingSpot)
 	assert_gte(spots.size(), 4, "wardrobes and barrels to hide in")
+	var xs: Array[float] = []
 	for spot in spots:
 		assert_true(spot.is_in_group(&"hiding_spots"), "%s can be got into" % spot.name)
-	var cover := room.get_node("Furniture").get_children().filter(func(n: Node) -> bool: return n.is_in_group(&"cover"))
-	assert_gte(cover.size(), 2, "crates for cover")
-	for crate in cover:
-		assert_ne((crate as StaticBody2D).collision_layer & WALLS_LAYER, 0, "%s blocks Sight and movement as a wall does" % crate.name)
+		xs.append((spot as Node2D).position.x)
+		# Each stands in an alcove, off his path, where its walls hide whoever is in it.
+		assert_gt((spot as Node2D).position.y, 160.0, "%s stands back in an alcove, off the hall" % spot.name)
+	xs.sort()
+	for i in range(1, xs.size()):
+		assert_lt(xs[i] - xs[i - 1], 400.0, "no long stretch of the hall without a place to hide")
 
 
 func test_a_hiding_spot_is_beside_cell_3s_door() -> void:
@@ -132,7 +140,7 @@ func test_hidden_in_the_wardrobe_by_cell_3_a_whole_patrol_round_goes_by_without_
 	_almos_input.release_action(&"interact")
 	await wait_physics_frames(2)
 	assert_true(host.almos.hiding, "he is in the wardrobe")
-	var guard = corridor.get_node("Guards/GuardEast")
+	var guard = corridor.get_node("Guards/Guard")
 	var tuning := load(JAILER_PATH) as EnemyTuning
 	var round_length := 0.0
 	for i in guard.patrol.size():
@@ -155,8 +163,8 @@ func test_standing_in_the_open_on_a_route_he_is_caught() -> void:
 	await wait_physics_frames(2)
 	var dungeons := host.current_space as DungeonsBuilding
 	var corridor := dungeons.room(&"corridor_1")
-	var guard = corridor.get_node("Guards/GuardWest")
-	# Ahead of the west guard on its route, within its Sight.
+	var guard = corridor.get_node("Guards/Guard")
+	# Ahead of the guard on his route, within his Sight.
 	var tuning := load(JAILER_PATH) as EnemyTuning
 	var ahead: Vector2 = guard.global_position + guard.facing * (tuning.sight_length_full - 40.0)
 	host.current_space.put_almos_at(ahead)

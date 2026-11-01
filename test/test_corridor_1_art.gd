@@ -10,6 +10,8 @@ const TILE := 32.0
 const COLUMNS := 36
 const ROWS := 20
 const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallTop4", "WallBottom1", "WallBottom2"]
+# The solid root that narrows the hall to three tiles, with its alcoves and the passage south.
+const MASS_NAMES := ["MassWestEdge", "MassEastEdge", "MassWestLow", "MassEastLow", "MassWest1", "MassWest2", "MassWest3", "MassEast1", "MassEast2", "MassEast3"]
 
 var _room: Node2D
 
@@ -63,7 +65,7 @@ func test_the_floor_stays_inside_the_room_and_its_south_strip() -> void:
 
 
 func test_each_wall_is_drawn_by_tiles_where_it_collides() -> void:
-	for wall_name in WALL_NAMES:
+	for wall_name in WALL_NAMES + MASS_NAMES:
 		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
 		var shape := wall.get_node("CollisionShape2D") as CollisionShape2D
 		var size := (shape.shape as RectangleShape2D).size
@@ -77,7 +79,7 @@ func test_each_wall_is_drawn_by_tiles_where_it_collides() -> void:
 
 func test_no_wall_tile_is_drawn_where_nothing_collides() -> void:
 	var rects: Array[Rect2] = []
-	for wall_name in WALL_NAMES:
+	for wall_name in WALL_NAMES + MASS_NAMES:
 		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
 		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
 		rects.append(Rect2(wall.position - size / 2.0, size))
@@ -113,7 +115,7 @@ func test_the_south_walls_draw_in_front_of_almos_and_the_floor_behind_him() -> v
 
 func test_the_placeholder_floor_and_walls_are_hidden_not_deleted() -> void:
 	assert_false((_room.get_node("Floor") as Polygon2D).visible, "the placeholder floor is hidden")
-	for wall_name in WALL_NAMES:
+	for wall_name in WALL_NAMES + MASS_NAMES:
 		var placeholder := _room.get_node("Walls/%s/Placeholder" % wall_name) as Polygon2D
 		assert_not_null(placeholder, "%s keeps its Placeholder" % wall_name)
 		assert_false(placeholder.visible, "%s Placeholder is hidden" % wall_name)
@@ -146,3 +148,16 @@ func test_the_shared_path_blocker_stays_placeholder() -> void:
 	var blocker := (load("res://scenes/world/path_blocker.tscn") as PackedScene).instantiate()
 	autofree(blocker)
 	assert_null(blocker.get_node_or_null("Look/Art"), "the shared path blocker has no art of its own")
+
+
+func test_the_hall_is_three_times_as_wide_as_almos_from_end_to_end() -> void:
+	# Almos's sprite is 16 art px across, 32 units; the hall is three times that, 96 units, from
+	# the foot of the north wall (y 64) to the top of the solid root (y 160).
+	var almos := (load("res://scenes/almos/almos.tscn") as PackedScene).instantiate()
+	autofree(almos)
+	var art := almos.get_node("Look/Art") as AnimatedSprite2D
+	var almos_width := art.sprite_frames.get_frame_texture(&"idle_down", 0).get_size().x * art.scale.x
+	var hall_top := 64.0
+	var hall_bottom := ((_room.get_node("Walls/MassWest1") as Node2D).position.y
+		- (((_room.get_node("Walls/MassWest1/CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size.y / 2.0))
+	assert_eq(hall_bottom - hall_top, almos_width * 3.0, "the hall is three Almos-widths wide")

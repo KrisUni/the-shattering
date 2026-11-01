@@ -308,7 +308,7 @@ An enemy chasing the player once it has noticed him. A pursuing enemy follows hi
 _Avoid_: Aggro, agro, alert, hunting
 
 **Patrol**:
-An enemy's round: a set route of points in its Room that it walks while it has not noticed the player, unhurried, slower than it chases, facing the way it walks so that its Sight sweeps ahead of it, stopping a moment at each point and going round again. It notices the player as any enemy does; having lost him it walks back to the point it was walking to and goes on with its round. An enemy with no route stands at its post. Corridor 1, the hall outside the cells, is patrolled by more Nar jailers than Almos can fight, so the way through is to hide in its wardrobes and barrels, or behind its crates, until a patrol has gone by.
+An enemy's round: a set route of points in its Room that it walks while it has not noticed the player, unhurried, slower than it chases, facing the way it walks so that its Sight sweeps ahead of it, stopping a moment at each point and going round again. It notices the player as any enemy does; having lost him it walks back to the point it was walking to and goes on with its round. An enemy with no route stands at its post. Corridor 1, the hall outside the cells, is a narrow hall, three Almos-widths across, that one Nar jailer walks from end to end; there is no room to slip past him, so the way through is to step into one of the alcoves along its south side, hide in its wardrobe or barrel, and wait until he has gone by.
 _Avoid_: Route, guard path, waypoint loop
 
 **Sight**:
