@@ -134,4 +134,4 @@ scale = Vector2(2, 2)
 texture = ExtResource("6_roots")
 
 [node name="Torch" parent="." instance=ExtResource("4_torch")]
-position = Vector2(480, 602)
+position = Vector2(480, 470)

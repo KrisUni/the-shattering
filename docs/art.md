@@ -152,7 +152,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Source pack and files:** Bracket: Dead Swamp (Sevarihk / Aurora), `assets/shared/torch/torch.png`. Flame: hand-redrawn after Gigapack `fire_looping_003A`, `assets/shared/torch/flame_0-4.png`. See `assets/CREDITS.md`.
 - **Size in art px:** Bracket 10×37; flame 16×24 (5 frames).
 - **Palette notes and accents used:** Bracket in the base violets and blues. Flame in Fire amber with sand and cream for the body and the core. A small, steady flame, so a lit torch stays apart from Fire.
-- **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted.
+- **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted. Placement: the bracket is a standing pole, so a wall torch stands at y 48 in front of a north wall face (flame on the face, pole on the floor); Cell 3's stands on open floor within Pull's reach of the roots. Almos's carried torch and held flame hide the bracket.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Fire
