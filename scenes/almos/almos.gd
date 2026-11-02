@@ -16,6 +16,11 @@ const TIME_SLACK := 0.000001
 # What his look is tinted while he lies limp after a Death. It is a look, not a tuning
 # number.
 const DEATH_TINT := Color(0.35, 0.35, 0.4)
+# The inside of a Gap or a Drop (layer gap_area). On the ground in one is a Deadly fall: only a Drop's
+# edge lets him walk in, as a Gap's edge blocks him and a Jump that comes down in one puts him back.
+const GAP_AREA_LAYER := 1 << 5
+# In seconds: how long he takes to drop out of sight down a Drop. A look.
+const DROP_FALL_TIME := 0.4
 
 # What his look is tinted while he hides: not drawn at all, as if he were really inside the spot,
 # which rattles now and then to show someone is in it. A look, not a tuning number.
@@ -300,6 +305,12 @@ var _sipping := false
 # Whether he is in a Hiding spot.
 var _hiding := false
 
+# Where he last stood on firm ground, and whether his Death was a fall down a Drop: such a Death
+# leaves his Remains at the edge, where he can reach them, not down the Drop.
+var _last_firm_ground := Vector2.ZERO
+var _fell_down_a_drop := false
+var _drop_tween: Tween
+
 # The Hiding spot he is in, while he is in one.
 var _hiding_spot: HidingSpot
 # The Noise radius he made in the physics frame before this one, read at the start of this frame: it
@@ -482,6 +493,31 @@ func _physics_process(delta: float) -> void:
 	# Only the shapes that show his direction turn, as a stand-in for the eight facing sprites;
 	# whatever else hangs on his Look stays upright.
 	_facing_shapes.rotation = facing.angle()
+	# Walked or rolled off an open edge into a Drop: a Deadly fall.
+	if not airborne and _in_a_drop():
+		_fall_down_a_drop()
+	elif not airborne:
+		_last_firm_ground = global_position
+
+
+## Whether he stands inside a Gap or a Drop.
+func _in_a_drop() -> bool:
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = global_position
+	query.collision_mask = GAP_AREA_LAYER
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	return not get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+
+
+# A Deadly fall down a Drop: he drops out of sight, shrinking and fading, and dies.
+func _fall_down_a_drop() -> void:
+	_fell_down_a_drop = true
+	_drop_tween = create_tween().set_parallel()
+	_drop_tween.tween_property(_look, ^"scale", Vector2(0.3, 0.3), DROP_FALL_TIME).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	_drop_tween.tween_property(_look, ^"position", Vector2(0.0, 24.0), DROP_FALL_TIME).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	_drop_tween.tween_property(_look, ^"modulate:a", 0.0, DROP_FALL_TIME)
+	health.take_damage(health.current)
 
 
 # His Health has reached zero: he goes limp where he is. Every action he was in ends at once, and
@@ -493,6 +529,11 @@ func _fall() -> void:
 	_dead_for = 0.0
 	_pause_announced = false
 	_end_every_action()
+	if _fell_down_a_drop:
+		# Fading down the Drop, he keeps his fade; Remains are left at the edge.
+		_look.modulate = Color(DEATH_TINT, _look.modulate.a)
+		died.emit(_last_firm_ground)
+		return
 	_look.modulate = DEATH_TINT
 	died.emit(global_position)
 
@@ -525,7 +566,14 @@ func return_to(point: Vector2) -> void:
 	_dead_for = 0.0
 	_roll_press_lost = Input.is_action_pressed(&"roll")
 	_look.modulate = Color.WHITE
+	if _drop_tween != null and _drop_tween.is_valid():
+		_drop_tween.kill()
+	_drop_tween = null
+	_fell_down_a_drop = false
+	_look.scale = Vector2.ONE
+	_look.position = Vector2.ZERO
 	global_position = point
+	_last_firm_ground = point
 	health.refill()
 	stamina.refill()
 	mana.refill()

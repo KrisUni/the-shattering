@@ -30,6 +30,8 @@ const JAILER_TINT := Color(0.85, 0.7, 0.55)
 # Gap (the fourth), which does not block it, and the area inside a Gap (the sixth), which kills it.
 const WALL_LAYER := 1
 const GAP_EDGE_LAYER := 8
+# The edge of a Drop (layer drop_edge): it blocks an enemy as a Gap's edge does, but not Almos.
+const DROP_EDGE_LAYER := 1024
 const GAP_AREA_LAYER := 32
 
 # How a shudder looks: for this many physics frames its look jumps this many pixels from side to
@@ -350,7 +352,7 @@ func slide(direction: Vector2, distance: float, speed: float) -> void:
 	_frame = -1
 	_set_strike(false)
 	velocity = Vector2.ZERO
-	collision_mask &= ~GAP_EDGE_LAYER
+	collision_mask &= ~(GAP_EDGE_LAYER | DROP_EDGE_LAYER)
 	_notice_the_hit()
 
 
@@ -381,7 +383,7 @@ func _slide(delta: float) -> void:
 
 func _end_slide() -> void:
 	_sliding = false
-	collision_mask |= GAP_EDGE_LAYER
+	collision_mask |= GAP_EDGE_LAYER | DROP_EDGE_LAYER
 
 
 # Whether its centre is inside a Gap.

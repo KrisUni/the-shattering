@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/nar_jailer.tscn" id="20_jailer"]
 [ext_resource type="PackedScene" path="res://scenes/world/wardrobe.tscn" id="21_wardrobe"]
 [ext_resource type="PackedScene" path="res://scenes/world/barrel.tscn" id="22_barrel"]
+[ext_resource type="PackedScene" path="res://scenes/world/drop.tscn" id="23_drop"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/sacks.png" id="26_sacks"]
 
 [sub_resource type="RectangleShape2D" id="Shape_128x16"]
@@ -24,9 +25,6 @@ size = Vector2(256, 64)
 
 [sub_resource type="RectangleShape2D" id="Shape_512x40"]
 size = Vector2(512, 40)
-
-[sub_resource type="RectangleShape2D" id="Shape_480x384"]
-size = Vector2(480, 384)
 
 [sub_resource type="RectangleShape2D" id="Shape_16x128"]
 size = Vector2(16, 128)
@@ -166,27 +164,15 @@ visible = false
 color = Color(0.35, 0.33, 0.42, 1)
 polygon = PackedVector2Array(-16, -192, 16, -192, 16, 192, -16, 192)
 
-[node name="MassWest" type="StaticBody2D" parent="Walls"]
+[node name="Drops" type="Node2D" parent="."]
+
+[node name="DropWest" parent="Drops" instance=ExtResource("23_drop")]
 position = Vector2(272, 416)
+size = Vector2(480, 384)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/MassWest"]
-shape = SubResource("Shape_480x384")
-
-[node name="Placeholder" type="Polygon2D" parent="Walls/MassWest"]
-visible = false
-color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-240, -192, 240, -192, 240, 192, -240, 192)
-
-[node name="MassEast" type="StaticBody2D" parent="Walls"]
+[node name="DropEast" parent="Drops" instance=ExtResource("23_drop")]
 position = Vector2(880, 416)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/MassEast"]
-shape = SubResource("Shape_480x384")
-
-[node name="Placeholder" type="Polygon2D" parent="Walls/MassEast"]
-visible = false
-color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-240, -192, 240, -192, 240, 192, -240, 192)
+size = Vector2(480, 384)
 
 [node name="Exits" type="Node2D" parent="."]
 
@@ -300,6 +286,7 @@ position = Vector2(96, 112)
 
 [node name="Wardrobe2" parent="Furniture" instance=ExtResource("21_wardrobe")]
 position = Vector2(340, 220)
+exit_offset = Vector2(0, -38)
 
 [node name="Barrel2" parent="Furniture" instance=ExtResource("22_barrel")]
 position = Vector2(410, 104)
@@ -309,9 +296,11 @@ position = Vector2(716, 114)
 
 [node name="Barrel1" parent="Furniture" instance=ExtResource("22_barrel")]
 position = Vector2(862, 214)
+exit_offset = Vector2(0, -34)
 
 [node name="Barrel3" parent="Furniture" instance=ExtResource("22_barrel")]
 position = Vector2(1010, 210)
+exit_offset = Vector2(0, -34)
 
 [node name="Sacks" type="Sprite2D" parent="Furniture"]
 position = Vector2(536, 586)

@@ -10,8 +10,11 @@ const TILE := 32.0
 const COLUMNS := 36
 const ROWS := 20
 const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallTop4", "WallBottom1", "WallBottom2"]
-# The solid root that narrows the hall, with the passage south between its halves.
-const MASS_NAMES := ["MassWestEdge", "MassEastEdge", "MassWest", "MassEast"]
+# The solid root at the Room's west and east edges.
+const MASS_NAMES := ["MassWestEdge", "MassEastEdge"]
+# The Drops that narrow the hall, the dark root falling away below it, with the passage south between
+# them: drawn by the same tiles as the walls, but open to walk off.
+const DROP_NAMES := ["DropWest", "DropEast"]
 # In units. The foot of the north wall, and the row along it where the furniture stands.
 const NORTH_FACE_FOOT := 64.0
 const FURNITURE_ROW := 64.0
@@ -26,6 +29,19 @@ func before_each() -> void:
 
 func _layer(layer_name: String) -> TileMapLayer:
 	return _room.get_node(layer_name) as TileMapLayer
+
+
+# Each wall's and each Drop's rectangle, in the Room's coordinates, as [name, Rect2].
+func _drawn_rects() -> Array:
+	var rects := []
+	for wall_name in WALL_NAMES + MASS_NAMES:
+		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
+		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
+		rects.append([wall_name, Rect2(wall.position - size / 2.0, size)])
+	for drop_name in DROP_NAMES:
+		var drop := _room.get_node("Drops/" + drop_name) as Footprint
+		rects.append([drop_name, Rect2(drop.position - drop.size / 2.0, drop.size)])
+	return rects
 
 
 func _drawn(cell: Vector2i) -> bool:
@@ -67,12 +83,12 @@ func test_the_floor_stays_inside_the_room_and_its_south_strip() -> void:
 		assert_between(cell.y, 0, ROWS, "floor row %d inside the Room or its strip" % cell.y)
 
 
-func test_each_wall_is_drawn_by_tiles_where_it_collides() -> void:
-	for wall_name in WALL_NAMES + MASS_NAMES:
-		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
-		var shape := wall.get_node("CollisionShape2D") as CollisionShape2D
-		var size := (shape.shape as RectangleShape2D).size
-		var top_left := wall.position - size / 2.0
+func test_each_wall_and_drop_is_drawn_by_tiles_where_it_is() -> void:
+	for entry in _drawn_rects():
+		var wall_name: String = entry[0]
+		var rect: Rect2 = entry[1]
+		var size := rect.size
+		var top_left := rect.position
 		var first := Vector2i(floori(top_left.x / TILE), floori(top_left.y / TILE))
 		var last := Vector2i(ceili((top_left.x + size.x) / TILE) - 1, ceili((top_left.y + size.y) / TILE) - 1)
 		for x in range(first.x, last.x + 1):
@@ -80,19 +96,17 @@ func test_each_wall_is_drawn_by_tiles_where_it_collides() -> void:
 				assert_true(_drawn(Vector2i(x, y)), "%s tile at %d, %d" % [wall_name, x, y])
 
 
-func test_no_wall_tile_is_drawn_where_nothing_collides() -> void:
+func test_no_wall_tile_is_drawn_where_there_is_no_wall_or_drop() -> void:
 	var rects: Array[Rect2] = []
-	for wall_name in WALL_NAMES + MASS_NAMES:
-		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
-		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
-		rects.append(Rect2(wall.position - size / 2.0, size))
+	for entry in _drawn_rects():
+		rects.append(entry[1])
 	for layer_name in ["WallTiles", "WallTilesFront"]:
 		for cell in _layer(layer_name).get_used_cells():
 			var tile_rect := Rect2(Vector2(cell) * TILE, Vector2(TILE, TILE))
 			var covered := false
 			for rect in rects:
 				covered = covered or rect.intersects(tile_rect)
-			assert_true(covered, "%s tile at %d, %d sits on a wall" % [layer_name, cell.x, cell.y])
+			assert_true(covered, "%s tile at %d, %d sits on a wall or a Drop" % [layer_name, cell.x, cell.y])
 
 
 func test_every_doorway_cell_is_empty_of_wall_tiles() -> void:
@@ -122,6 +136,9 @@ func test_the_placeholder_floor_and_walls_are_hidden_not_deleted() -> void:
 		var placeholder := _room.get_node("Walls/%s/Placeholder" % wall_name) as Polygon2D
 		assert_not_null(placeholder, "%s keeps its Placeholder" % wall_name)
 		assert_false(placeholder.visible, "%s Placeholder is hidden" % wall_name)
+	for drop_name in DROP_NAMES:
+		var shape := _room.get_node("Drops/%s/Look/Shape" % drop_name) as Polygon2D
+		assert_false(shape.visible, "%s's placeholder shape is hidden: the tiles draw it" % drop_name)
 
 
 func test_the_back_entrance_seal_is_drawn_over_its_footprint_and_keeps_its_hidden_shape() -> void:
@@ -155,11 +172,11 @@ func test_the_shared_path_blocker_stays_placeholder() -> void:
 
 func test_the_hall_is_a_furniture_row_and_a_lane_three_times_as_wide_as_almos() -> void:
 	# Almos's sprite is 16 art px across, 32 units. Under the north wall runs a row for the furniture,
-	# then a lane three times his width, then the solid root.
+	# then a lane three times his width, then the Drop.
 	var almos := (load("res://scenes/almos/almos.tscn") as PackedScene).instantiate()
 	autofree(almos)
 	var art := almos.get_node("Look/Art") as AnimatedSprite2D
 	var almos_width := art.sprite_frames.get_frame_texture(&"idle_down", 0).get_size().x * art.scale.x
-	var mass := _room.get_node("Walls/MassWest") as Node2D
-	var mass_top := mass.position.y - ((mass.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size.y / 2.0
+	var drop := _room.get_node("Drops/DropWest") as Footprint
+	var mass_top := drop.position.y - drop.size.y / 2.0
 	assert_eq(mass_top - NORTH_FACE_FOOT - FURNITURE_ROW, almos_width * 3.0, "the lane is three Almos-widths wide")
