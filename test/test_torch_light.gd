@@ -5,6 +5,7 @@ extends GutTest
 ## Death relights every torch drawn. Distances and waits are worked from the torch's data file,
 ## the fireball's data file and the training enemy's tuning, so nothing here pins a number in them.
 
+const PullReach := preload("res://test/helpers/pull_reach.gd")
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
@@ -140,6 +141,8 @@ func _set_up_room() -> void:
 	_stand_torch = _room.get_node("StandTorch") as Torch
 	_wall_torch = _room.get_node("WallTorch") as Torch
 	_enemy = _room.get_node("TrainingEnemy")
+	# Pull takes the nearest thing all round him: nothing else it could take is left in the room.
+	PullReach.clear(_room, [_enemy])
 	_almos.global_position = _stand_torch.global_position + Vector2(-_spell.draw_range * ALMOS_AT_DRAW_FRACTION, 0.0)
 	_almos.facing = Vector2.RIGHT
 
