@@ -14,16 +14,16 @@ const PIXEL := 2.0
 # The lip and the face, top to bottom, one art pixel each: the floor's rim catching the light, the
 # earth face, and the dark it falls into.
 const FACE := [
-	Color("e2bfae"),
-	Color("8b6d9c"),
-	Color("6b5a85"),
-	Color("494d7e"),
-	Color("343459"),
-	Color("272744"),
+	Color("a5938a"),
+	Color("6f6066"),
+	Color("5c4f57"),
+	Color("4a3f4a"),
+	Color("3a3245"),
+	Color("2b2639"),
 	Color("1b1a2b"),
 	Color("14131f"),
 ]
-const RIM := [Color("8b6d9c"), Color("494d7e"), Color("272744"), Color("1b1a2b")]
+const RIM := [Color("6f6066"), Color("4a3f4a"), Color("2b2639"), Color("1b1a2b")]
 const ROOT := Color("343459")
 const ROOT_TIP := Color("494d7e")
 

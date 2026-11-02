@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_tally.png" id="p_cell_tally"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_window.png" id="p_cell_window"]
 
+[ext_resource type="Script" path="res://scenes/world/ambience.gd" id="95_ambience"]
 [sub_resource type="RectangleShape2D" id="Shape_1152x64"]
 size = Vector2(1152, 64)
 
@@ -288,3 +289,16 @@ texture = ExtResource("p_cell_bars_96")
 position = Vector2(704, 624)
 scale = Vector2(2, 2)
 texture = ExtResource("p_cell_bars_64")
+
+[node name="Ambience" type="Node2D" parent="."]
+script = ExtResource("95_ambience")
+dust_area = Rect2(356, 250, 100, 220)
+dust_count = 22
+drips = PackedVector2Array(560, 258, 740, 258)
+drip_fall = 36.0
+
+[node name="RoomDust" type="Node2D" parent="."]
+script = ExtResource("95_ambience")
+dust_area = Rect2(330, 260, 440, 340)
+dust_count = 14
+

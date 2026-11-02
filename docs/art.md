@@ -61,6 +61,8 @@ What the Nar and the arch tree are is in `CONTEXT.md` (**Nar**, **Arch tree**). 
 
 ### Dungeons
 
+- **Mood (the owner's polish pass):** a damp, dim root-prison. The floor is packed earth in muted mauve-browns with a few pebbles, roots and one short crack among its four tiles; the woven walls are a shade deeper, with faint veins of the tree's pale gold-green light. A cool grade over the whole Dungeons (a CanvasModulate named `Grade`) lets every flame read warm: each lit torch, lamp and Fire throws a flickering, dithered amber pool, added onto what is under it (`scenes/world/lamp_glow.gd`, under the Flame, so it goes out with it). Furniture and cell props are warm, muted wood. Each Room has a little life (`scenes/world/ambience.gd`): dust drifting in the light and the cells' window shafts, water dripping from the north walls with a splash, and pale motes rising out of the hall's chasm. Moss is kept sparse.
+
 - Root and packed earth, not stone.
 - The wood is veined with the tree's glowing light.
 - Where Ilion feed, the wood is grey, cracked and bleeding sap.

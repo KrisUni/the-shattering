@@ -28,6 +28,7 @@
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/fungus_0.png" id="44_fungus0"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/fungus_1.png" id="45_fungus1"]
 
+[ext_resource type="Script" path="res://scenes/world/ambience.gd" id="95_ambience"]
 [sub_resource type="RectangleShape2D" id="Shape_128x16"]
 size = Vector2(128, 16)
 
@@ -313,34 +314,14 @@ position = Vector2(40, 50)
 scale = Vector2(-2, 2)
 texture = ExtResource("43_hang")
 
-[node name="Hanging2" type="Sprite2D" parent="WallGrowth"]
-position = Vector2(212, 46)
-scale = Vector2(2, 2)
-texture = ExtResource("43_hang")
-
 [node name="Hanging3" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(300, 50)
 scale = Vector2(2, 2)
 texture = ExtResource("43_hang")
 
-[node name="Hanging4" type="Sprite2D" parent="WallGrowth"]
-position = Vector2(470, 46)
-scale = Vector2(-2, 2)
-texture = ExtResource("43_hang")
-
 [node name="Hanging5" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(640, 50)
 scale = Vector2(2, 2)
-texture = ExtResource("43_hang")
-
-[node name="Hanging6" type="Sprite2D" parent="WallGrowth"]
-position = Vector2(860, 46)
-scale = Vector2(2, 2)
-texture = ExtResource("43_hang")
-
-[node name="Hanging7" type="Sprite2D" parent="WallGrowth"]
-position = Vector2(1000, 50)
-scale = Vector2(-2, 2)
 texture = ExtResource("43_hang")
 
 [node name="Hanging8" type="Sprite2D" parent="WallGrowth"]
@@ -356,84 +337,39 @@ position = Vector2(122, 120)
 scale = Vector2(2, 2)
 texture = ExtResource("41_moss1")
 
-[node name="Moss2" type="Sprite2D" parent="Growth"]
-position = Vector2(176, 114)
-scale = Vector2(-2, 2)
-texture = ExtResource("40_moss0")
-
-[node name="Moss3" type="Sprite2D" parent="Growth"]
-position = Vector2(40, 96)
-scale = Vector2(2, 2)
-texture = ExtResource("42_moss2")
-
 [node name="Moss4" type="Sprite2D" parent="Growth"]
 position = Vector2(214, 232)
 scale = Vector2(2, 2)
 texture = ExtResource("40_moss0")
-
-[node name="Moss5" type="Sprite2D" parent="Growth"]
-position = Vector2(250, 284)
-scale = Vector2(-2, 2)
-texture = ExtResource("42_moss2")
 
 [node name="Moss6" type="Sprite2D" parent="Growth"]
 position = Vector2(576, 122)
 scale = Vector2(-2, 2)
 texture = ExtResource("41_moss1")
 
-[node name="Moss7" type="Sprite2D" parent="Growth"]
-position = Vector2(530, 112)
-scale = Vector2(2, 2)
-texture = ExtResource("42_moss2")
-
 [node name="Moss8" type="Sprite2D" parent="Growth"]
 position = Vector2(626, 112)
 scale = Vector2(2, 2)
 texture = ExtResource("40_moss0")
-
-[node name="Moss9" type="Sprite2D" parent="Growth"]
-position = Vector2(468, 200)
-scale = Vector2(2, 2)
-texture = ExtResource("42_moss2")
 
 [node name="Moss10" type="Sprite2D" parent="Growth"]
 position = Vector2(700, 206)
 scale = Vector2(-2, 2)
 texture = ExtResource("40_moss0")
 
-[node name="Moss11" type="Sprite2D" parent="Growth"]
-position = Vector2(1062, 120)
-scale = Vector2(2, 2)
-texture = ExtResource("41_moss1")
-
 [node name="Moss12" type="Sprite2D" parent="Growth"]
 position = Vector2(1010, 96)
 scale = Vector2(-2, 2)
 texture = ExtResource("42_moss2")
-
-[node name="Moss13" type="Sprite2D" parent="Growth"]
-position = Vector2(940, 268)
-scale = Vector2(2, 2)
-texture = ExtResource("40_moss0")
 
 [node name="Moss14" type="Sprite2D" parent="Growth"]
 position = Vector2(1120, 196)
 scale = Vector2(2, 2)
 texture = ExtResource("42_moss2")
 
-[node name="Moss15" type="Sprite2D" parent="Growth"]
-position = Vector2(540, 420)
-scale = Vector2(-2, 2)
-texture = ExtResource("40_moss0")
-
 [node name="Moss16" type="Sprite2D" parent="Growth"]
 position = Vector2(610, 470)
 scale = Vector2(2, 2)
-texture = ExtResource("42_moss2")
-
-[node name="Moss17" type="Sprite2D" parent="Growth"]
-position = Vector2(370, 212)
-scale = Vector2(-2, 2)
 texture = ExtResource("42_moss2")
 
 [node name="Moss18" type="Sprite2D" parent="Growth"]
@@ -571,3 +507,13 @@ exit_offset = Vector2(0, -34)
 [node name="Guard" parent="Guards" instance=ExtResource("20_jailer")]
 position = Vector2(80, 176)
 patrol = PackedVector2Array(1072, 176, 80, 176)
+
+[node name="Ambience" type="Node2D" parent="."]
+script = ExtResource("95_ambience")
+dust_area = Rect2(32, 70, 1088, 150)
+dust_count = 30
+drips = PackedVector2Array(212, 66, 520, 66, 868, 66, 1090, 66)
+drip_fall = 40.0
+updraft_area = Rect2(0, 300, 1152, 348)
+updraft_count = 22
+
