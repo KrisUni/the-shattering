@@ -323,3 +323,55 @@ func test_both_cells_are_shut_by_metal_gates() -> void:
 	add_child_autofree(cell)
 	assert_true(cell.get_node_or_null("Gate") is MetalGate, "Cell 3, where he wakes, has a metal gate")
 	assert_false(ResourceLoader.exists("res://scenes/areas/dungeons/cell_1.tscn"), "Cell 1 is gone")
+
+
+func test_in_the_hall_everything_but_plants_and_big_rocks_can_be_lifted_and_thrown() -> void:
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var kinds := {}
+	var clusters := 0
+	for node in room.get_node("Furniture").get_children():
+		if node is BigRock:
+			continue
+		var liftable := node.get_node_or_null("Liftable")
+		assert_not_null(liftable, "%s can be lifted and thrown" % node.name)
+		if liftable != null:
+			kinds[liftable.tuning.resource_path] = true
+	assert_gte(kinds.size(), 6, "barrels, small rocks, skulls, bones, bone piles, pots and sacks")
+	for node in room.get_node("Growth").get_children():
+		assert_true(node is Sprite2D, "%s is a plant, only a look" % node.name)
+		assert_null(node.get_node_or_null("Liftable"), "a plant cannot be lifted")
+	# Barrels stand alone and in threes.
+	var barrels: Array[Vector2] = []
+	for node in room.get_node("Furniture").get_children():
+		if node.scene_file_path == "res://scenes/world/barrel.tscn":
+			barrels.append((node as Node2D).position)
+	for b in barrels:
+		var near := barrels.filter(func(o: Vector2) -> bool: return o != b and o.distance_to(b) < 32.0)
+		if near.size() == 2:
+			clusters += 1
+	assert_gte(clusters, 6, "two clusters of three barrels together")
+
+
+func test_a_skull_is_lifted_and_thrown_and_a_thrown_pot_breaks() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	var skull := _place(preload("res://scenes/world/skull.tscn"), almos, Vector2(50, 0))
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up())
+	var spell := almos.get_node("Spell") as AlmosSpell
+	assert_eq(spell.held_object, skull.get_node("Liftable"), "he lifts the skull")
+	await wait_seconds(0.3)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(2)
+	assert_eq(skull.get_node("Liftable").state, Liftable.State.FLYING, "and throws it")
+	await wait_seconds(1.0)
+	var pot := _place(preload("res://scenes/world/clay_pot.tscn"), almos, Vector2(50, 0))
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up())
+	await wait_seconds(0.3)
+	await _tap(&"cast_spell")
+	await wait_seconds(1.2)
+	assert_eq(pot.get_node("Liftable").state, Liftable.State.BROKEN, "a thrown pot breaks where it lands")

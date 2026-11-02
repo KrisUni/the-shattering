@@ -156,6 +156,9 @@ func test_hidden_in_the_barrel_by_cell_3_a_whole_patrol_round_goes_by_without_no
 		var spot := node as HidingSpot
 		if spot != null and (barrel == null or spot.global_position.distance_to(entrance.global_position) < barrel.global_position.distance_to(entrance.global_position)):
 			barrel = spot
+	# The guard starts his round at the far end, so that he is not looking as Almos gets in.
+	var walker = corridor.get_node("Guards/Guard")
+	walker.global_position = corridor.to_global(walker.patrol[0])
 	host.current_space.put_almos_at(barrel.global_position + Vector2(0, 8))
 	await wait_physics_frames(2)
 	_almos_input.press_action(&"interact")
