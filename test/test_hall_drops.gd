@@ -1,7 +1,7 @@
 extends GutTest
-## Corridor 1's lane runs above a chasm, crossed by one bridge to the south exit: the chasm is made of
-## Drops, open edges Almos can walk off, mirrored either side of the bridge with a ragged lip, and it
-## runs off the Room's west, east and south edges with no wall around it. Walking or rolling off one is a Deadly fall (he drops out of sight and dies,
+## Corridor 1's lane runs above a chasm, crossed by one winding bridge (narrow spans either side of a
+## landing) to the south exit: the chasm is made of Drops, open edges Almos can walk off, with a ragged
+## lip mirrored along the lane, and it runs off the Room's west, east and south edges with no wall. Walking or rolling off one is a Deadly fall (he drops out of sight and dies,
 ## and his Remains are left at the edge); an enemy Shoved or Pulled into one falls to its death and
 ## no enemy walks into one by itself; a barrel knocked into one is gone until enemies return. A
 ## wardrobe or barrel on the edge lets him out on the lane side.
@@ -61,18 +61,49 @@ func _in_the_chasm(point: Vector2) -> bool:
 	return _drop_rects().any(func(rect: Rect2) -> bool: return rect.has_point(point))
 
 
-func test_the_chasm_is_mirrored_either_side_of_a_bridge_and_runs_off_the_room() -> void:
+func test_the_chasm_has_a_mirrored_lip_and_runs_off_the_room() -> void:
 	var rects := _drop_rects()
 	assert_gt(rects.size(), 2, "a ragged lip, made of several Drops")
 	for rect in rects:
-		var mirrored := Rect2(Vector2(1152.0 - rect.end.x, rect.position.y), rect.size)
-		assert_true(rects.has(mirrored), "%s has its mirror image across the bridge" % rect)
-		assert_eq(rect.end.y, 648.0, "%s runs off the south edge" % rect)
 		assert_gte(rect.position.y, DROP_TOP, "%s leaves the lane whole" % rect)
+	# Along the lane, away from the bridge, the lip is the same either side of the centre.
+	for x in range(16, 480, 32):
+		for y in range(232, 320, 16):
+			assert_eq(_in_the_chasm(Vector2(x, y)), _in_the_chasm(Vector2(1152 - x, y)), "the lip mirrors at %d, %d" % [x, y])
 	assert_true(_in_the_chasm(Vector2(4, 400)), "off the west edge")
 	assert_true(_in_the_chasm(Vector2(1148, 400)), "off the east edge")
-	for y in range(240, 640, 16):
-		assert_false(_in_the_chasm(Vector2(576, y)), "the bridge is solid at %d" % y)
+	assert_true(_in_the_chasm(Vector2(200, 644)), "off the south edge")
+
+
+func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_south_exit() -> void:
+	var exit := _room.get_node("Exits/to_radio_officers") as Node2D
+	# A walk of firm ground from the lane down to the exit, a tile at a time, never stepping into the chasm.
+	var reached := {}
+	var frontier := [Vector2i(18, 6)]
+	while not frontier.is_empty():
+		var cell: Vector2i = frontier.pop_back()
+		if reached.has(cell) or cell.x < 0 or cell.x > 35 or cell.y < 6 or cell.y > 20:
+			continue
+		if _in_the_chasm(Vector2(cell) * 32.0 + Vector2(16, 16)):
+			continue
+		reached[cell] = true
+		for step in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			frontier.append(cell + step)
+	var exit_cell := Vector2i(floori(exit.position.x / 32.0), 19)
+	assert_true(reached.has(exit_cell), "the bridge reaches the south exit")
+	var columns := {}
+	for cell: Vector2i in reached:
+		if cell.y >= 10:
+			columns[cell.x] = true
+	assert_gte(columns.size(), 5, "it winds: its spans do not all run down one line")
+	var narrowest := 99
+	for row in range(9, 18):
+		var width := 0
+		for x in 36:
+			if reached.has(Vector2i(x, row)):
+				width += 1
+		narrowest = mini(narrowest, width)
+	assert_eq(narrowest, 2, "it narrows to a span two tiles wide, room enough to pass")
 	for wall_name in ["MassWest", "MassEast", "MassWestEdge", "MassEastEdge", "WallBottom1", "WallBottom2"]:
 		assert_null(_room.get_node_or_null("Walls/" + wall_name), "no %s framing it" % wall_name)
 
