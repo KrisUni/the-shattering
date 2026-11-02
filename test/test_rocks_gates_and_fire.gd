@@ -375,3 +375,24 @@ func test_a_skull_is_lifted_and_thrown_and_a_thrown_pot_breaks() -> void:
 	await _tap(&"cast_spell")
 	await wait_seconds(1.2)
 	assert_eq(pot.get_node("Liftable").state, Liftable.State.BROKEN, "a thrown pot breaks where it lands")
+
+
+func test_the_guard_at_the_post_sits_until_he_is_in_pursuit() -> void:
+
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var guard = room.get_node("Guards/PostGuard")
+	var art := guard.get_node("Look/Art") as AnimatedSprite2D
+	await wait_physics_frames(4)
+	assert_true(guard.seated, "the guard at the post is seated")
+	assert_true(guard.sitting(), "and sits, at rest")
+	assert_eq(art.animation, &"sit", "drawn sitting")
+	var bench := room.get_node("Furniture/BenchPost") as Node2D
+	assert_lt(guard.global_position.distance_to(bench.global_position), 24.0, "on the bench")
+	var almos = _almos_input.spawn_almos()
+	almos.global_position = guard.global_position + Vector2(-200, 80)
+	guard.target = almos
+	guard.health.take_damage(1.0)
+	await wait_physics_frames(4)
+	assert_true(guard.in_pursuit, "control: hurt, he goes after Almos")
+	assert_false(guard.sitting(), "on his feet")

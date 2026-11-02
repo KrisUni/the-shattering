@@ -80,6 +80,8 @@ func _animation_name() -> StringName:
 		return &"strike"
 	if not (_enemy as CharacterBody2D).velocity.is_zero_approx():
 		return &"walk"
+	if _enemy.has_method(&"sitting") and _enemy.sitting():
+		return &"sit"
 	return &"idle"
 
 

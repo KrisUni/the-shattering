@@ -23,6 +23,8 @@
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_0.png" id="t_death_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_1.png" id="t_death_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_2.png" id="t_death_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_0.png" id="t_sit_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_1.png" id="t_sit_1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(32, 32)
@@ -40,6 +42,17 @@ animations = [{
 "loop": true,
 "name": &"idle",
 "speed": 2.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_sit_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("t_sit_1")
+}],
+"loop": true,
+"name": &"sit",
+"speed": 1.5
 }, {
 "frames": [{
 "duration": 1.0,

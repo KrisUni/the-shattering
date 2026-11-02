@@ -91,6 +91,10 @@ signal unblockable_cue_played
 ## Losing him, it walks back to the point it was walking to and goes on with its round.
 @export var patrol: PackedVector2Array = PackedVector2Array()
 
+## Whether it sits at its post (on a bench) while it has noticed nothing: it is drawn sitting. Once it
+## is in Pursuit, hurt or away from its post, it is on its feet as usual. Only a look.
+@export var seated := false
+
 ## The way it faces, a unit vector. While it is free it turns to face its target exactly; in an
 ## attack it keeps the direction it committed the swing to. Its front is centred on it, and a
 ## hit from outside the front builds extra Stagger.
@@ -815,3 +819,12 @@ func _finish_dying() -> void:
 		WorldState.record_defeated(id)
 	died.emit()
 	queue_free()
+
+
+## Whether it is sitting now: seated at its post, at rest, having noticed nothing.
+func sitting() -> bool:
+	if not seated or _dead or in_pursuit or attacking or broken:
+		return false
+	if not velocity.is_zero_approx():
+		return false
+	return global_position.distance_to(_post) < 2.0

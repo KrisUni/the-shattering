@@ -497,8 +497,9 @@ position = Vector2(80, 176)
 patrol = PackedVector2Array(1072, 176, 80, 176)
 
 [node name="PostGuard" parent="Guards" instance=ExtResource("20_jailer")]
-position = Vector2(1012, 146)
+position = Vector2(972, 102)
 post_facing = Vector2(-1, 0)
+seated = true
 
 [node name="Ambience" type="Node2D" parent="."]
 script = ExtResource("95_ambience")
