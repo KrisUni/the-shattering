@@ -86,6 +86,18 @@ The Health, Stamina and Mana bars share `scenes/hud/hud_bar.gd`, a ProgressBar t
 
 The text labels in the test room are still placeholders.
 
+### Spell icon
+
+A 15x15 box right of the Health bar (`scenes/hud/spell_icon.gd`), framed like the bars, shows the selected Spell: Pull is two sand arrows pointing in at a violet-and-cream mote, Shove the same arrows pointing out from it. A rose `V`, the switch key, sits beside it, and the box's top edge flashes cream for a moment when the Spell switches. The letters are a 5x7 pixel font drawn in code (`scenes/hud/pixel_text.gd`); the project has no font file.
+
+### Thoughts
+
+Almos's thoughts (`scenes/hud/thought_text.gd`) show low on the screen in a dark, slate-edged box, in the pixel font in sand, typed out letter by letter, with three small bubbles rising from its corner and a blinking violet prompt once the lines are out.
+
+### Spell waves
+
+A Pull or Shove on ordinary things (not a flame, which keeps its fire look) shows a wave of energy in the base palette (`scenes/almos/spell_wave.gd`): for Pull, a broken cream ring half as wide as Pull's reach closes in on Almos with a rose ring behind and motes drawn in; for Shove, an arc in cream, rose and slate bands bursts out along his aim to half Shove's reach. What it lands on gets a small cream ripple. It shows on every press, even one that moves nothing.
+
 ### Enemy Health bars
 
 Each enemy carries a small Health bar over its head (`scenes/enemies/enemy_health_bar.gd`, node `OverheadHealthBar`). It is 16x3 art px, drawn like the HUD's: a frame, a blood-red fill lit along its top, and a pale trail where a loss took it from. It shows once the enemy is hurt or in Pursuit, and hides while it is whole and at rest, and once it is dead.

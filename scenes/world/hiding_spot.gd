@@ -26,6 +26,9 @@ const RATTLE_OFFSET := 2.0
 
 var _rattle_clock := 0.0
 var _rattle_left := 0.0
+# Whether the rattle last moved its look, so that only then is the look put back: otherwise the look
+# is left alone, for whatever else moves it (a Pull or Shove making it shudder).
+var _moved_look := false
 
 
 ## Whether someone is hiding in it now.
@@ -46,7 +49,9 @@ func _process(delta: float) -> void:
 	if not occupied():
 		_rattle_clock = 0.0
 		_rattle_left = 0.0
-		look.position = Vector2.ZERO
+		if _moved_look:
+			look.position = Vector2.ZERO
+			_moved_look = false
 		return
 	_rattle_clock += delta
 	# Each spot keeps its own rhythm, a little off the others', so a row of them does not rattle as one.
@@ -58,8 +63,10 @@ func _process(delta: float) -> void:
 		_rattle_left -= delta
 		var step := int(_rattle_left * 30.0)
 		look.position = Vector2(RATTLE_OFFSET if step % 2 == 0 else -RATTLE_OFFSET, -RATTLE_OFFSET if step % 4 < 2 else 0.0)
-	else:
+		_moved_look = true
+	elif _moved_look:
 		look.position = Vector2.ZERO
+		_moved_look = false
 
 
 func _ready() -> void:

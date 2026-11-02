@@ -3,13 +3,13 @@
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
 [ext_resource type="PackedScene" path="res://scenes/world/path_blocker.tscn" id="3_blocker"]
-[ext_resource type="PackedScene" path="res://scenes/world/lamp_standing.tscn" id="4_torch"]
+[ext_resource type="PackedScene" path="res://scenes/world/lamp.tscn" id="4_torch"]
 [ext_resource type="TileSet" path="res://assets/shared/dungeon_tiles/dungeon_tiles.tres" id="5_tiles"]
 [ext_resource type="Texture2D" uid="uid://c3prrhy0g637y" path="res://assets/shared/dungeon_tiles/roots_blocker.png" id="6_roots"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bars_80.png" id="p_cell_bars"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_window.png" id="p_cell_window"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_light.png" id="p_cell_light"]
-[ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_pallet.png" id="p_cell_pallet"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bed.png" id="p_cell_bed"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bucket.png" id="p_cell_bucket"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_shackles.png" id="p_cell_shackles"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_tally.png" id="p_cell_tally"]
@@ -36,6 +36,9 @@ size = Vector2(32, 416)
 
 [sub_resource type="RectangleShape2D" id="Shape_1088x128"]
 size = Vector2(1088, 128)
+
+[sub_resource type="RectangleShape2D" id="Shape_bed"]
+size = Vector2(64, 24)
 
 [sub_resource type="RectangleShape2D" id="Shape_288x416"]
 size = Vector2(288, 416)
@@ -221,7 +224,25 @@ scale = Vector2(2, 2)
 texture = ExtResource("6_roots")
 
 [node name="Torch" parent="." instance=ExtResource("4_torch")]
-position = Vector2(480, 470)
+position = Vector2(544, 228)
+
+[node name="Bed" type="StaticBody2D" parent="."]
+z_index = -1
+position = Vector2(424, 296)
+
+[node name="Art" type="Sprite2D" parent="Bed"]
+scale = Vector2(2, 2)
+texture = ExtResource("p_cell_bed")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bed"]
+position = Vector2(0, 4)
+shape = SubResource("Shape_bed")
+
+[node name="WakeSpot" type="Marker2D" parent="Bed"]
+position = Vector2(20, -6)
+
+[node name="GetUpSpot" type="Marker2D" parent="Bed"]
+position = Vector2(8, 48)
 
 [node name="Props" type="Node2D" parent="."]
 z_index = -1
@@ -246,10 +267,6 @@ position = Vector2(624, 300)
 scale = Vector2(2, 2)
 texture = ExtResource("p_cell_light")
 
-[node name="Pallet" type="Sprite2D" parent="Props"]
-position = Vector2(408, 290)
-scale = Vector2(2, 2)
-texture = ExtResource("p_cell_pallet")
 
 [node name="Bones" type="Sprite2D" parent="Props"]
 position = Vector2(378, 586)

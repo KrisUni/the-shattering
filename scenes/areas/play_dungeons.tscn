@@ -2,8 +2,12 @@
 
 [ext_resource type="Script" path="res://scripts/areas/area_host.gd" id="1_host"]
 [ext_resource type="Resource" path="res://data/area_load.tres" id="2_tuning"]
+[ext_resource type="Script" path="res://scripts/areas/opening.gd" id="3_opening"]
 
 [node name="PlayDungeons" type="Node"]
 script = ExtResource("1_host")
 start = "res://scenes/areas/dungeons/dungeons.tscn"
 tuning = ExtResource("2_tuning")
+
+[node name="Opening" type="Node" parent="."]
+script = ExtResource("3_opening")

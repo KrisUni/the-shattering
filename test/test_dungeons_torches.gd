@@ -9,7 +9,7 @@ const PULL_PATH := "res://data/pull.tres"
 const TILE := 32.0
 # In units, in Cell 3. Where Almos stands to Pull the torch's flame and Shove it at the roots
 # (as in test_dungeons_cell.gd).
-const CELL_3_STANDING_SPOT := Vector2(560.0, 548.0)
+const CELL_3_STANDING_SPOT := Vector2(560.0, 340.0)
 
 
 func _rooms() -> Array[Node2D]:
