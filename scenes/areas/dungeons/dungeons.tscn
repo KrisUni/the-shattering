@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/almos/almos.tscn" id="4_almos"]
 [ext_resource type="Script" path="res://scenes/hud/stamina_bar.gd" id="5_stamina_bar"]
 [ext_resource type="Script" path="res://scenes/hud/health_bar.gd" id="6_health_bar"]
+[ext_resource type="Script" path="res://scenes/hud/spell_icon.gd" id="7_spell_icon"]
 
 [node name="Dungeons" type="Node2D" node_paths=PackedStringArray("almos")]
 script = ExtResource("1_dungeons")
@@ -39,3 +40,12 @@ offset_bottom = 13.0
 show_percentage = false
 script = ExtResource("6_health_bar")
 health = NodePath("../../Almos/Health")
+
+[node name="SpellIcon" type="Control" parent="Hud" node_paths=PackedStringArray("spell")]
+offset_left = 94.0
+offset_top = 5.0
+offset_right = 117.0
+offset_bottom = 20.0
+mouse_filter = 2
+script = ExtResource("7_spell_icon")
+spell = NodePath("../../Almos/Spell")

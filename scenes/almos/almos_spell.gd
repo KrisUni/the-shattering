@@ -41,6 +41,8 @@ const WALL_MASK := 1
 const FIREBALL_SCENE := preload("res://scenes/almos/fireball.tscn")
 # Props Pull lifts and Shove throws, by their component's script (no class name needed to load).
 const LIFTABLE_SCRIPT := preload("res://scenes/world/liftable.gd")
+# The wave of energy a Pull or Shove on ordinary things shows (only a look).
+const WAVE_SCRIPT := preload("res://scenes/almos/spell_wave.gd")
 # In pixels: how far in front of his feet a prop he puts down lands.
 const DROP_AHEAD := 40.0
 
@@ -52,6 +54,11 @@ signal object_thrown(liftable: Node)
 
 ## Emitted when the selected Spell changes.
 signal selection_changed
+
+## Emitted with every press of Pull or Shove that is not for a flame, whether it moves anything or
+## not, as its wave of energy goes out: whether it is a Pull, and what it lands on (an enemy or a
+## prop), or null.
+signal wave_sent(pulling: bool, target: Node2D)
 
 ## The fireball's numbers, and those of taking a torch's flame. The data file is given in the Almos scene.
 @export var spell_data: SpellData
@@ -240,8 +247,10 @@ func _act_on_an_enemy(aim: Vector2) -> void:
 	var enemy = _nearest_enemy_in_the_cone(cost, aim)
 	var prop := _nearest_prop_in_the_cone(cost, aim)
 	if prop != null and (enemy == null or _distance_to(prop.prop()) < _distance_to(enemy)):
+		_send_a_wave(pulling, aim, prop.prop())
 		_act_on_a_prop(prop, pulling, cost)
 		return
+	_send_a_wave(pulling, aim, enemy)
 	if enemy == null or not _can_pay(cost):
 		return
 	_pay(cost)
@@ -264,7 +273,8 @@ func _act_on_a_prop(prop: Node, pulling: bool, cost: SpellCost) -> void:
 		return
 	if prop.weight > tuning.greatest_weight():
 		_pay(cost)
-		prop.shudder()
+		var toward: Vector2 = body.global_position - prop.prop().global_position
+		prop.shudder(toward if pulling else -toward)
 		return
 	if pulling:
 		_lift = prop
@@ -429,8 +439,20 @@ func _throw_object(aim: Vector2) -> void:
 	_held_object = null
 	_select(_selected_before_draw)
 	_pay(shove_cost)
+	_send_a_wave(false, aim, null)
 	prop.throw(aim)
 	object_thrown.emit(prop)
+
+
+# The wave of energy of a Pull or Shove on ordinary things: a look, sent whatever comes of the press.
+func _send_a_wave(pulling: bool, aim: Vector2, target: Node2D) -> void:
+	if body != null and body.get_parent() != null:
+		var cost := pull_cost if pulling else shove_cost
+		var wave: Node2D = WAVE_SCRIPT.new()
+		body.get_parent().add_child(wave)
+		wave.global_position = body.global_position
+		wave.call(&"start", pulling, aim, cost.target_range, cost.cone_half_angle_degrees, body, target)
+	wave_sent.emit(pulling, target)
 
 
 # The held flame leaves him as a fireball.

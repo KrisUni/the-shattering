@@ -1,7 +1,8 @@
 extends GutTest
 ## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a lane three
-## Almos-widths wide that one guard walks from end to end, beside a row along the north wall where
-## wardrobes and barrels stand between the cell doors, to hide in while he goes by. Here: he patrols the whole length, the route
+## Almos-widths wide that one guard walks from end to end, with wardrobes and barrels spread on both
+## sides of it, by the north wall between the cell doors and along the south edge, to hide in while
+## he goes by. Here: he patrols the whole length, the route
 ## and the doorways are clear, and in the real Dungeons he walks his whole round past Almos hidden in
 ## the wardrobe by Cell 3 without noticing him, while he catches him standing in the open.
 
@@ -91,9 +92,13 @@ func test_there_are_places_to_hide_along_his_path() -> void:
 	for spot in spots:
 		assert_true(spot.is_in_group(&"hiding_spots"), "%s can be got into" % spot.name)
 		xs.append((spot as Node2D).position.x)
-		# Each stands in the row along the north wall, off his lane.
+		# Each stands off his lane, by the north wall or along the south edge of the hall.
 		var y: float = (spot as Node2D).position.y
-		assert_true(y > 64.0 and y <= 128.0, "%s stands in the row by the north wall, off his lane" % spot.name)
+		var by_the_north_wall := y > 64.0 and y <= 128.0
+		var by_the_south_edge := y >= 200.0 and y <= 224.0
+		assert_true(by_the_north_wall or by_the_south_edge, "%s stands off his lane, by the north wall or the south edge" % spot.name)
+	var sides := spots.map(func(spot: Node) -> bool: return (spot as Node2D).position.y > 140.0)
+	assert_true(sides.has(true) and sides.has(false), "spread on both sides of the hall")
 	xs.sort()
 	for i in range(1, xs.size()):
 		assert_lt(xs[i] - xs[i - 1], 400.0, "no long stretch of the hall without a place to hide")

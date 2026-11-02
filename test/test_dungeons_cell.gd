@@ -13,11 +13,13 @@ const FIRE_PATH := "res://data/fire.tres"
 const AREA_LOAD_PATH := "res://data/area_load.tres"
 # In pixels. The size of the view the Dungeons is shown in: the project's default window.
 const VIEW_SIZE := Vector2i(1152, 648)
-# In pixels, in Cell 3. Where Almos stands to Pull the torch's flame and Shove it down at the roots:
-# within Pull's flame range of the torch and well clear of the roots.
-const STANDING_SPOT := Vector2(560.0, 548.0)
-# In pixels, in Cell 3. Far enough from the roots that a Fire there does not spread to them.
-const FIRE_SPOT := Vector2(560.0, 440.0)
+# In pixels, in Cell 3. Where Almos stands to Pull the flame of the lamp on the cell's north wall and
+# Shove it down at the roots: within Pull's flame range of the lamp, and the roots within the
+# fireball's range below.
+const STANDING_SPOT := Vector2(560.0, 340.0)
+# In pixels, in Cell 3. Beside the standing spot, out of the fireball's way down to the roots, and
+# far enough from them that a Fire there does not spread to them.
+const FIRE_SPOT := Vector2(660.0, 340.0)
 const TAP_FRAMES := 2
 const MARGIN_FRAMES := 8
 # In physics frames. Long enough to walk from the standing spot to the door, and to push on after.

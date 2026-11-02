@@ -293,22 +293,25 @@ position = Vector2(864, 36)
 [node name="Furniture" type="Node2D" parent="."]
 
 [node name="Wardrobe1" parent="Furniture" instance=ExtResource("21_wardrobe")]
-position = Vector2(1068, 124)
-
-[node name="Barrel1" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(840, 120)
-
-[node name="Wardrobe2" parent="Furniture" instance=ExtResource("21_wardrobe")]
-position = Vector2(690, 124)
-
-[node name="Barrel2" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(460, 120)
-
-[node name="Wardrobe3" parent="Furniture" instance=ExtResource("21_wardrobe")]
-position = Vector2(300, 124)
+position = Vector2(1080, 118)
 
 [node name="Wardrobe4" parent="Furniture" instance=ExtResource("21_wardrobe")]
-position = Vector2(72, 124)
+position = Vector2(96, 112)
+
+[node name="Wardrobe2" parent="Furniture" instance=ExtResource("21_wardrobe")]
+position = Vector2(340, 220)
+
+[node name="Barrel2" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(410, 104)
+
+[node name="Wardrobe3" parent="Furniture" instance=ExtResource("21_wardrobe")]
+position = Vector2(716, 114)
+
+[node name="Barrel1" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(862, 214)
+
+[node name="Barrel3" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(1010, 210)
 
 [node name="Sacks" type="Sprite2D" parent="Furniture"]
 position = Vector2(536, 586)

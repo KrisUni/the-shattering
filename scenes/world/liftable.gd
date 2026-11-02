@@ -31,7 +31,9 @@ const GRIP_SHAKE := 2.0
 ## How a refusal looks, when it is too heavy to move: its look jolts side to side, harder, for this
 ## many physics frames. A look.
 const SHUDDER_SHAKE := 3.0
-const SHUDDER_FRAMES := 14
+const SHUDDER_FRAMES := 18
+## In pixels: how far it leans the way it is drawn or pushed at the start of a shudder. A look.
+const SHUDDER_LEAN := 6.0
 
 enum State { RESTING, GRIPPED, LIFTING, HELD, FLYING, BROKEN }
 
@@ -78,6 +80,7 @@ var _home_layers: Array[int] = []
 var _home_z := 0
 var _dust: Node2D
 var _shudder_left := 0
+var _shudder_way := Vector2.ZERO
 # Whether this flight is a knock from the floor rather than a throw from his hold.
 var _knocked := false
 # Where it first stood, where it is whole again after it broke.
@@ -140,10 +143,12 @@ func release_grip() -> void:
 		_set_look_offset(Vector2.ZERO)
 
 
-## Too heavy for the Pull or Shove: it jolts where it stands and stays there.
-func shudder() -> void:
+## Too heavy for the Pull or Shove: it jolts where it stands and stays there, rocking the way given
+## (toward the one who Pulls, away from the one who Shoves) as it strains.
+func shudder(way := Vector2.ZERO) -> void:
 	if _state == State.RESTING:
 		_shudder_left = SHUDDER_FRAMES
+		_shudder_way = way.normalized() if not way.is_zero_approx() else Vector2.ZERO
 		shuddered.emit()
 
 
@@ -201,7 +206,10 @@ func _physics_process(delta: float) -> void:
 	if _shudder_left > 0:
 		_shudder_left -= 1
 		var jolt := SHUDDER_SHAKE if _shudder_left % 4 < 2 else -SHUDDER_SHAKE
-		_set_look_offset(Vector2(jolt, -2.0 if _shudder_left % 8 < 2 else 0.0) if _shudder_left > 0 else Vector2.ZERO)
+		# It strains the way it is drawn or pushed, most at the start, and rocks back as it gives up.
+		var strain := _shudder_way * SHUDDER_LEAN * (float(_shudder_left) / SHUDDER_FRAMES)
+		var offset := Vector2(jolt, -2.0 if _shudder_left % 8 < 2 else 0.0) + strain
+		_set_look_offset(offset.snapped(Vector2(2.0, 2.0)) if _shudder_left > 0 else Vector2.ZERO)
 	match _state:
 		State.GRIPPED:
 			_set_look_offset(Vector2(GRIP_SHAKE if Engine.get_physics_frames() % 2 == 0 else -GRIP_SHAKE, 0.0))
