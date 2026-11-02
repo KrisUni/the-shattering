@@ -1,10 +1,10 @@
 extends GutTest
 ## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a lane three
-## Almos-widths wide that one guard walks from end to end, with big rocks and barrels spread on both
-## sides of it, by the north wall between the cell doors and along the south edge, to hide in while
-## he goes by. Here: he patrols the whole length, the route
-## and the doorways are clear, and in the real Dungeons he walks his whole round past Almos hidden in
-## the barrel by Cell 3 without noticing him, while he catches him standing in the open.
+## Almos-widths wide that one guard walks from end to end while a second stands at the guard post,
+## past a rockfall, the stores and the post's barrels, to hide in while he goes by. Here: he patrols
+## the whole length, the route and the doorways are clear, and in the real Dungeons he walks his whole
+## round past Almos hidden in the barrel by Cell 3 without noticing him, while he catches him standing
+## in the open.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
@@ -61,9 +61,13 @@ func _path_blocked(room: Room, a: Vector2, b: Vector2) -> bool:
 func test_one_guard_walks_the_hall_from_one_end_to_the_other() -> void:
 	var room := await _corridor_in_a_viewport()
 	var guards := _guards(room)
-	assert_eq(guards.size(), 1, "one guard")
-	var guard = guards[0]
-	assert_eq(guard.tuning, load(JAILER_PATH), "a jailer, who Blocks and Parries")
+	assert_eq(guards.size(), 2, "two guards: one walking the hall, one at the guard post")
+	var walkers := guards.filter(func(g: Node) -> bool: return g.patrol.size() > 0)
+	assert_eq(walkers.size(), 1, "one of them walks")
+	for g in guards:
+		assert_eq(g.tuning, load(JAILER_PATH), "a jailer, who Blocks and Parries")
+		assert_false(g.named, "an ordinary guard, back after a rest")
+	var guard = walkers[0]
 	assert_false(guard.named, "an ordinary guard, back after a rest")
 	var xs: Array[float] = []
 	for point in guard.patrol:
@@ -98,8 +102,6 @@ func test_there_are_places_to_hide_along_his_path() -> void:
 		# The south edge of the lane, or a ledge reaching out over the chasm.
 		var by_the_south_edge := y >= 200.0 and y <= 288.0
 		assert_true(by_the_north_wall or by_the_south_edge, "%s stands off his lane, by the north wall or the south edge" % spot.name)
-	var sides := spots.map(func(spot: Node) -> bool: return (spot as Node2D).position.y > 140.0)
-	assert_true(sides.has(true) and sides.has(false), "spread on both sides of the hall")
 	xs.sort()
 	for i in range(1, xs.size()):
 		assert_lt(xs[i] - xs[i - 1], 400.0, "no long stretch of the hall without a place to hide")
@@ -120,6 +122,9 @@ func test_every_patrol_route_is_clear_of_walls_and_crates() -> void:
 	var room := await _corridor_in_a_viewport()
 	for guard in _guards(room):
 		var route: PackedVector2Array = guard.patrol
+		if route.is_empty():
+			# The guard at the post stands still: it has no route to be clear.
+			continue
 		var points := [guard.position] + Array(route)
 		for i in range(points.size()):
 			var a: Vector2 = points[i]

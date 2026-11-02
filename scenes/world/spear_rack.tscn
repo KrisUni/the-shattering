@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/liftable.gd" id="1_lift"]
+[ext_resource type="Resource" path="res://data/spear_rack_lift.tres" id="2_tuning"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/spear_rack.png" id="3_art"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(30, 12)
+
+[node name="SpearRack" type="StaticBody2D"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Art" type="Sprite2D" parent="Look"]
+position = Vector2(0, -26)
+scale = Vector2(2, 2)
+texture = ExtResource("3_art")
+
+[node name="Liftable" type="Node" parent="."]
+script = ExtResource("1_lift")
+tuning = ExtResource("2_tuning")

@@ -10,6 +10,8 @@
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_light.png" id="p_cell_light"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bed.png" id="p_cell_bed"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bucket.png" id="p_cell_bucket"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bowl.png" id="p_cell_bowl"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_puddle.png" id="p_cell_puddle"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_shackles.png" id="p_cell_shackles"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_tally.png" id="p_cell_tally"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bones.png" id="p_cell_bones"]
@@ -268,6 +270,16 @@ texture = ExtResource("p_cell_bones")
 position = Vector2(772, 580)
 scale = Vector2(2, 2)
 texture = ExtResource("p_cell_bucket")
+
+[node name="Bowl" type="Sprite2D" parent="Props"]
+position = Vector2(470, 330)
+scale = Vector2(2, 2)
+texture = ExtResource("p_cell_bowl")
+
+[node name="Puddle" type="Sprite2D" parent="Props"]
+position = Vector2(748, 300)
+scale = Vector2(2, 2)
+texture = ExtResource("p_cell_puddle")
 
 [node name="Straw1" type="Sprite2D" parent="Props"]
 position = Vector2(456, 320)

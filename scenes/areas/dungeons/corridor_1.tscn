@@ -13,7 +13,6 @@
 [ext_resource type="PackedScene" path="res://scenes/world/barrel.tscn" id="22_barrel"]
 [ext_resource type="PackedScene" path="res://scenes/world/drop.tscn" id="23_drop"]
 [ext_resource type="Script" path="res://scenes/world/chasm_edge.gd" id="24_chasm_edge"]
-[ext_resource type="PackedScene" path="res://scenes/world/lamp_standing.tscn" id="25_lamp_standing"]
 [ext_resource type="PackedScene" path="res://scenes/world/metal_gate.tscn" id="27_gate"]
 [ext_resource type="PackedScene" path="res://scenes/world/small_rock.tscn" id="28_small_rock"]
 [ext_resource type="PackedScene" path="res://scenes/world/skull.tscn" id="29_skull"]
@@ -21,6 +20,11 @@
 [ext_resource type="PackedScene" path="res://scenes/world/bone_pile.tscn" id="31_bone_pile"]
 [ext_resource type="PackedScene" path="res://scenes/world/clay_pot.tscn" id="32_pot"]
 [ext_resource type="PackedScene" path="res://scenes/world/sacks.tscn" id="33_sacks"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate_stack.tscn" id="34_crates"]
+[ext_resource type="PackedScene" path="res://scenes/world/bench.tscn" id="35_bench"]
+[ext_resource type="PackedScene" path="res://scenes/world/spear_rack.tscn" id="36_rack"]
+[ext_resource type="PackedScene" path="res://scenes/world/bucket.tscn" id="37_bucket"]
+[ext_resource type="PackedScene" path="res://scenes/world/bowl.tscn" id="38_bowl"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/moss_0.png" id="40_moss0"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/moss_1.png" id="41_moss1"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/moss_2.png" id="42_moss2"]
@@ -290,9 +294,6 @@ texture = ExtResource("5_seal")
 region_enabled = true
 region_rect = Rect2(0, 0, 8, 80)
 
-[node name="LandingLamp" parent="." instance=ExtResource("25_lamp_standing")]
-position = Vector2(480, 440)
-
 [node name="Lamp1" parent="." instance=ExtResource("92_torch")]
 position = Vector2(112, 36)
 
@@ -338,7 +339,7 @@ scale = Vector2(2, 2)
 texture = ExtResource("41_moss1")
 
 [node name="Moss4" type="Sprite2D" parent="Growth"]
-position = Vector2(214, 232)
+position = Vector2(150, 236)
 scale = Vector2(2, 2)
 texture = ExtResource("40_moss0")
 
@@ -383,7 +384,7 @@ scale = Vector2(2, 2)
 texture = ExtResource("44_fungus0")
 
 [node name="Fungus2" type="Sprite2D" parent="Growth"]
-position = Vector2(612, 108)
+position = Vector2(70, 112)
 scale = Vector2(-2, 2)
 texture = ExtResource("45_fungus1")
 
@@ -415,98 +416,89 @@ texture = ExtResource("45_fungus1")
 [node name="Furniture" type="Node2D" parent="."]
 
 [node name="RockWest" parent="Furniture" instance=ExtResource("21_rock")]
-position = Vector2(116, 102)
+position = Vector2(100, 104)
 
-[node name="PebbleWest1" parent="Furniture" instance=ExtResource("28_small_rock")]
-position = Vector2(152, 120)
+[node name="RockFallen" parent="Furniture" instance=ExtResource("21_rock")]
+position = Vector2(178, 120)
 
-[node name="PebbleWest2" parent="Furniture" instance=ExtResource("28_small_rock")]
-position = Vector2(84, 126)
+[node name="Rubble1" parent="Furniture" instance=ExtResource("28_small_rock")]
+position = Vector2(140, 134)
 
-[node name="SkullWest" parent="Furniture" instance=ExtResource("29_skull")]
-position = Vector2(170, 98)
+[node name="Rubble2" parent="Furniture" instance=ExtResource("28_small_rock")]
+position = Vector2(220, 130)
 
-[node name="BarrelLedgeA" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(206, 264)
-exit_offset = Vector2(0, -50)
+[node name="Rubble3" parent="Furniture" instance=ExtResource("28_small_rock")]
+position = Vector2(62, 126)
 
-[node name="BarrelLedgeB" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(232, 266)
-exit_offset = Vector2(0, -52)
+[node name="Rubble4" parent="Furniture" instance=ExtResource("28_small_rock")]
+position = Vector2(240, 108)
 
-[node name="BarrelLedgeC" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(219, 250)
-exit_offset = Vector2(0, -40)
+[node name="BarrelWater" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(286, 104)
 
-[node name="BonesLedge" parent="Furniture" instance=ExtResource("30_bone")]
-position = Vector2(176, 236)
+[node name="BucketWater" parent="Furniture" instance=ExtResource("37_bucket")]
+position = Vector2(260, 124)
 
-[node name="BarrelByCell3" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(286, 108)
+[node name="BarrelStore1" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(478, 100)
 
-[node name="PotByCell3" parent="Furniture" instance=ExtResource("32_pot")]
-position = Vector2(258, 98)
+[node name="BarrelStore2" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(504, 100)
 
-[node name="BonePileWest" parent="Furniture" instance=ExtResource("31_bone_pile")]
-position = Vector2(338, 214)
+[node name="BarrelStore3" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(530, 100)
 
-[node name="RockMiddle" parent="Furniture" instance=ExtResource("21_rock")]
-position = Vector2(580, 104)
+[node name="PotStore" parent="Furniture" instance=ExtResource("32_pot")]
+position = Vector2(558, 98)
 
-[node name="PebbleMiddle1" parent="Furniture" instance=ExtResource("28_small_rock")]
-position = Vector2(548, 124)
+[node name="CratesStore" parent="Furniture" instance=ExtResource("34_crates")]
+position = Vector2(600, 106)
 
-[node name="PebbleMiddle2" parent="Furniture" instance=ExtResource("28_small_rock")]
-position = Vector2(612, 122)
+[node name="SacksStore1" parent="Furniture" instance=ExtResource("33_sacks")]
+position = Vector2(648, 102)
 
-[node name="PotMiddle" parent="Furniture" instance=ExtResource("32_pot")]
-position = Vector2(508, 100)
+[node name="SacksStore2" parent="Furniture" instance=ExtResource("33_sacks")]
+position = Vector2(670, 114)
 
-[node name="BarrelBridge" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(652, 212)
-exit_offset = Vector2(0, -34)
+[node name="BarrelPost" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(864, 104)
 
-[node name="SkullBridge" parent="Furniture" instance=ExtResource("29_skull")]
-position = Vector2(496, 214)
+[node name="BenchPost" parent="Furniture" instance=ExtResource("35_bench")]
+position = Vector2(972, 118)
 
-[node name="BarrelStoreA" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(924, 98)
-exit_offset = Vector2(-30, 12)
+[node name="BowlPost" parent="Furniture" instance=ExtResource("38_bowl")]
+position = Vector2(1006, 132)
 
-[node name="BarrelStoreB" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(950, 100)
-exit_offset = Vector2(30, 14)
+[node name="BucketPost" parent="Furniture" instance=ExtResource("37_bucket")]
+position = Vector2(1050, 110)
 
-[node name="BarrelStoreC" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(936, 116)
+[node name="RackPost" parent="Furniture" instance=ExtResource("36_rack")]
+position = Vector2(1110, 100)
 
-[node name="SacksStore" parent="Furniture" instance=ExtResource("33_sacks")]
-position = Vector2(980, 106)
+[node name="BonePileLip" parent="Furniture" instance=ExtResource("31_bone_pile")]
+position = Vector2(300, 214)
 
-[node name="RockEast" parent="Furniture" instance=ExtResource("21_rock")]
-position = Vector2(1064, 106)
+[node name="BoneLip" parent="Furniture" instance=ExtResource("30_bone")]
+position = Vector2(700, 214)
 
-[node name="PebbleEast" parent="Furniture" instance=ExtResource("28_small_rock")]
-position = Vector2(1030, 124)
-
-[node name="BoneEast" parent="Furniture" instance=ExtResource("30_bone")]
-position = Vector2(820, 212)
+[node name="SkullLedgeWest" parent="Furniture" instance=ExtResource("29_skull")]
+position = Vector2(222, 262)
 
 [node name="RockLedge" parent="Furniture" instance=ExtResource("21_rock")]
 position = Vector2(928, 278)
 
-[node name="SkullLedge" parent="Furniture" instance=ExtResource("29_skull")]
-position = Vector2(902, 250)
-
-[node name="BarrelEast" parent="Furniture" instance=ExtResource("22_barrel")]
-position = Vector2(1104, 210)
-exit_offset = Vector2(0, -34)
+[node name="SkullLedgeEast" parent="Furniture" instance=ExtResource("29_skull")]
+position = Vector2(904, 250)
 
 [node name="Guards" type="Node2D" parent="."]
 
 [node name="Guard" parent="Guards" instance=ExtResource("20_jailer")]
 position = Vector2(80, 176)
 patrol = PackedVector2Array(1072, 176, 80, 176)
+
+[node name="PostGuard" parent="Guards" instance=ExtResource("20_jailer")]
+position = Vector2(1012, 146)
+post_facing = Vector2(-1, 0)
 
 [node name="Ambience" type="Node2D" parent="."]
 script = ExtResource("95_ambience")

@@ -337,11 +337,11 @@ func test_in_the_hall_everything_but_plants_and_big_rocks_can_be_lifted_and_thro
 		assert_not_null(liftable, "%s can be lifted and thrown" % node.name)
 		if liftable != null:
 			kinds[liftable.tuning.resource_path] = true
-	assert_gte(kinds.size(), 6, "barrels, small rocks, skulls, bones, bone piles, pots and sacks")
+	assert_gte(kinds.size(), 8, "barrels, small rocks, skulls, bones, bone piles, pots, sacks, crates, a bench, a rack, buckets, a bowl")
 	for node in room.get_node("Growth").get_children():
 		assert_true(node is Sprite2D, "%s is a plant, only a look" % node.name)
 		assert_null(node.get_node_or_null("Liftable"), "a plant cannot be lifted")
-	# Barrels stand alone and in threes.
+	# Barrels are kept together, in a row of stores, or stand alone where they are used.
 	var barrels: Array[Vector2] = []
 	for node in room.get_node("Furniture").get_children():
 		if node.scene_file_path == "res://scenes/world/barrel.tscn":
@@ -350,7 +350,7 @@ func test_in_the_hall_everything_but_plants_and_big_rocks_can_be_lifted_and_thro
 		var near := barrels.filter(func(o: Vector2) -> bool: return o != b and o.distance_to(b) < 32.0)
 		if near.size() == 2:
 			clusters += 1
-	assert_gte(clusters, 6, "two clusters of three barrels together")
+	assert_gte(clusters, 1, "barrels kept together in a row of stores")
 
 
 func test_a_skull_is_lifted_and_thrown_and_a_thrown_pot_breaks() -> void:
