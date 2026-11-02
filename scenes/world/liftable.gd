@@ -11,9 +11,15 @@ extends Node
 ## splinters and comes to rest, a prop again: a hiding spot can be got into, a crate stack blocks.
 ## Lifted or flying, it is none of that: it neither blocks nor can be hidden in. Its solid parts (the
 ## prop itself if it is a body, and a child StaticBody2D named Body) are switched off meanwhile.
+##
+## A prop whose tuning says it breaks (a barrel) does not come to rest where a throw ends: it bursts
+## apart in staves and hoops and is gone, as a burnt-out thing is, until enemies return, when it is
+## whole again where it first stood. A knock from the floor breaks it only if it hits something.
+## Gone, by breaking or by burning out, it blocks nothing.
 
 const BURST_SCENE := preload("res://scenes/world/impact_burst.tscn")
 const DUST_SCRIPT := preload("res://scenes/world/throw_dust.gd")
+const BREAK_SCRIPT := preload("res://scenes/world/prop_break.gd")
 
 ## What it is stopped by in flight, as collision mask bits: walls and enemy hurtboxes.
 const WALLS := 1 << 0
@@ -27,13 +33,15 @@ const GRIP_SHAKE := 2.0
 const SHUDDER_SHAKE := 3.0
 const SHUDDER_FRAMES := 14
 
-enum State { RESTING, GRIPPED, LIFTING, HELD, FLYING }
+enum State { RESTING, GRIPPED, LIFTING, HELD, FLYING, BROKEN }
 
 ## Emitted each time a Pull or a Shove is too much for its Weight and it shudders instead.
 signal shuddered
 
 ## Emitted when it comes to rest after a flight.
 signal landed
+## Emitted when it breaks apart where its flight ends, instead of coming to rest.
+signal broke
 ## Emitted when it hits an enemy in flight, with the Hurtbox it hit.
 signal struck(hurtbox: Hurtbox)
 
@@ -70,6 +78,10 @@ var _home_layers: Array[int] = []
 var _home_z := 0
 var _dust: Node2D
 var _shudder_left := 0
+# Whether this flight is a knock from the floor rather than a throw from his hold.
+var _knocked := false
+# Where it first stood, where it is whole again after it broke.
+var _home_position := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -83,6 +95,11 @@ func _ready() -> void:
 	for solid in _bodies:
 		_home_layers.append(solid.collision_layer)
 	_home_z = _prop.z_index
+	_home_position = _prop.global_position
+	var flammable := _flammable()
+	if flammable != null:
+		flammable.burned_out.connect(_on_gone)
+		flammable.restored.connect(_on_whole_again)
 
 
 ## The RIDs of its solid parts, which a line to it or its own flight must not count as a wall.
@@ -165,6 +182,7 @@ func throw(direction: Vector2, knocked := false) -> void:
 		return
 	if knocked:
 		_take_up()
+	_knocked = knocked
 	_direction = direction.normalized()
 	_left = throw_tuning.knock_range if knocked else throw_tuning.throw_range
 	_range = _left
@@ -228,6 +246,9 @@ func _fly(delta: float) -> void:
 				enemy.slide(_direction, tuning.knockback, throw_tuning.throw_speed)
 			struck.emit(hurtbox)
 		_prop.global_position = at - _direction * REST_SHORT
+		if tuning.get(&"breaks") == true:
+			_break_apart(at)
+			return
 		_burst(at)
 		_come_to_rest()
 		return
@@ -239,6 +260,9 @@ func _fly(delta: float) -> void:
 	_prop.global_position = _ground + Vector2(0.0, -height)
 	if _left <= 0.0:
 		_prop.global_position = _ground
+		if tuning.get(&"breaks") == true and not _knocked:
+			_break_apart(_ground)
+			return
 		_burst(_ground)
 		_come_to_rest()
 
@@ -256,6 +280,53 @@ func _take_up() -> void:
 	if _prop.is_in_group(&"hiding_spots"):
 		_prop.remove_from_group(&"hiding_spots")
 	_prop.z_index = 3
+
+
+# Where its flight ends it breaks apart: its art bursts into pieces and the prop is gone, nothing to
+# block, hide in or lift, until enemies return.
+func _break_apart(at: Vector2) -> void:
+	var art := _prop.get_node_or_null("Look/Art") as Sprite2D
+	if art != null and art.texture != null:
+		var pieces: Node2D = BREAK_SCRIPT.new()
+		_prop.get_parent().add_child(pieces)
+		pieces.global_position = at
+		pieces.call(&"shatter", art.texture, art.position + (_prop.global_position - at), art.scale, _direction)
+	else:
+		_burst(at)
+	_state = State.BROKEN
+	if _dust != null and is_instance_valid(_dust):
+		_dust.call(&"stop")
+	_dust = null
+	_prop.global_position = at.snapped(Vector2(2.0, 2.0))
+	_prop.z_index = _home_z
+	_set_look_offset(Vector2.ZERO)
+	var flammable := _flammable()
+	if flammable != null:
+		flammable.burn_out_now()
+	else:
+		_prop.visible = false
+	broke.emit()
+
+
+# Burnt out or broken: it is gone, and blocks nothing.
+func _on_gone() -> void:
+	for solid in _bodies:
+		solid.collision_layer = 0
+
+
+# Whole again after a return. One that broke stands where it first stood.
+func _on_whole_again() -> void:
+	if _state == State.BROKEN:
+		_state = State.RESTING
+		_prop.global_position = _home_position
+		_prop.visible = true
+	if _state == State.RESTING:
+		for i in _bodies.size():
+			_bodies[i].collision_layer = _home_layers[i]
+
+
+func _flammable() -> Flammable:
+	return _prop.get(&"flammable") as Flammable
 
 
 # Back on the floor: a prop again.

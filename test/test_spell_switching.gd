@@ -6,6 +6,7 @@ extends GutTest
 ## cost files; the selection returns after the throw or when the flame goes out; a throw he cannot
 ## pay for leaves the flame held. Every amount is read from the data files.
 
+const PullReach := preload("res://test/helpers/pull_reach.gd")
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
@@ -317,6 +318,8 @@ func _set_up_room() -> void:
 	_almos.spell.selection_changed.connect(func() -> void: _changes += 1)
 	_torch = _room.get_node("WallTorch") as Torch
 	_enemy = _room.get_node("TrainingEnemy")
+	# Pull takes the nearest thing all round him: nothing else it could take is left in the room.
+	PullReach.clear(_room, [_enemy])
 	_almos.global_position = _torch.global_position + Vector2(0.0, _spell.draw_range * ALMOS_AT_DRAW_FRACTION)
 	_almos.facing = Vector2.RIGHT
 	_enemy.global_position = _almos.global_position + Vector2(_spell.fireball_range * 0.5, 0.0)

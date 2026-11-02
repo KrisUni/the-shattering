@@ -5,6 +5,7 @@ extends GutTest
 ## Every distance, cost and time is worked from Pull's cost file, the fireball's data file and the room's
 ## own nodes, so nothing here pins a number in them.
 
+const PullReach := preload("res://test/helpers/pull_reach.gd")
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
@@ -99,7 +100,7 @@ func test_pull_just_outside_flame_range_takes_nothing() -> void:
 	assert_almost_eq(_almos.stamina.current, _almos.stamina.maximum, TOLERANCE, "Stamina")
 
 
-func test_pull_just_outside_flame_range_acts_on_an_enemy_in_the_cone_as_before() -> void:
+func test_pull_just_outside_flame_range_acts_on_an_enemy_in_range_as_before() -> void:
 	_set_up_room()
 	_stand_below_the_curtain(_pull.flame_range + EDGE_MARGIN)
 	_almos.facing = Vector2.LEFT
@@ -204,15 +205,16 @@ func test_pull_with_too_little_stamina_leaves_the_fire_burning() -> void:
 	assert_false(_almos.spell.holding, "holding")
 
 
-func test_a_lit_torch_in_range_is_drawn_before_a_fire() -> void:
+func test_a_lit_torch_nearer_than_a_fire_is_drawn_first() -> void:
 	_set_up_room()
 	var torch := _room.get_node("WallTorch") as Torch
-	_almos.global_position = torch.global_position + Vector2(0.0, _spell.draw_range / 2.0)
+	_almos.global_position = torch.global_position + Vector2(0.0, _spell.draw_range / 4.0)
 	var barrel := (load("res://scenes/world/flammable.tscn") as PackedScene).instantiate() as Flammable
-	barrel.position = _almos.global_position + Vector2(_pull.flame_range / 2.0, 0.0)
+	barrel.position = _almos.global_position + Vector2(_pull.flame_range * 0.9, 0.0)
 	_room.add_child(barrel)
 	barrel.ignite()
 	assert_lte(barrel.distance_to_edge(_almos.global_position), _pull.flame_range, "the fire is in range too")
+	assert_gt(barrel.distance_to_edge(_almos.global_position), _almos.global_position.distance_to(torch.global_position), "but further off")
 	_almos.facing = Vector2.LEFT
 
 	await _pull_the_flame()
@@ -222,11 +224,28 @@ func test_a_lit_torch_in_range_is_drawn_before_a_fire() -> void:
 	assert_true(_almos.spell.holding, "holding")
 
 
-func test_a_fire_is_taken_before_an_enemy_in_the_cone() -> void:
+func test_a_fire_nearer_than_a_lit_torch_is_taken_first() -> void:
 	_set_up_room()
-	_stand_below_the_curtain(_pull.flame_range - EDGE_MARGIN)
+	var torch := _room.get_node("WallTorch") as Torch
+	_almos.global_position = torch.global_position + Vector2(0.0, _spell.draw_range * 0.9)
+	var barrel := (load("res://scenes/world/flammable.tscn") as PackedScene).instantiate() as Flammable
+	barrel.position = _almos.global_position + Vector2(_pull.flame_range / 4.0, 0.0)
+	_room.add_child(barrel)
+	barrel.ignite()
+	assert_lt(barrel.distance_to_edge(_almos.global_position), _almos.global_position.distance_to(torch.global_position), "the fire is nearer")
+
+	await _pull_the_flame()
+
+	assert_true(torch.lit, "the torch is left")
+	assert_false(barrel.burning, "the fire is taken")
+	assert_true(_almos.spell.holding, "holding")
+
+
+func test_a_fire_nearer_than_an_enemy_is_taken_first() -> void:
+	_set_up_room()
+	_stand_below_the_curtain(_pull.flame_range / 2.0)
 	_almos.facing = Vector2.UP
-	_enemy.global_position = _almos.global_position + Vector2(0.0, -FAR / 2.0)
+	_enemy.global_position = _almos.global_position + Vector2(0.0, _pull.flame_range)
 	var start: Vector2 = _enemy.global_position
 
 	await _pull_the_flame()
@@ -256,6 +275,8 @@ func _set_up_room() -> void:
 	_enemy = _room.get_node("TrainingEnemy")
 	_enemy.target = null
 	_enemy.global_position = Vector2(300.0, 560.0)
+	# Pull takes the nearest thing all round him: nothing else Pull could take is left near the Curtain.
+	PullReach.clear(_room, [_enemy])
 	_curtain.ignite()
 
 

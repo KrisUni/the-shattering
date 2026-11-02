@@ -12,3 +12,7 @@ extends Resource
 
 ## How far, in pixels, it knocks that enemy back along its flight.
 @export var knockback: float
+
+## Whether it breaks apart where a throw from his hold ends (or where a knock sends it into a wall or
+## an enemy), gone until enemies return, rather than coming to rest. A barrel does.
+@export var breaks := false

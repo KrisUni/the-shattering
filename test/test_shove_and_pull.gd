@@ -6,6 +6,7 @@ extends GutTest
 ## number in them. The one exception is the Weight limit rule, worked by hand from numbers this
 ## test gives.
 
+const PullReach := preload("res://test/helpers/pull_reach.gd")
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const EnemyRig := preload("res://test/helpers/enemy_rig.gd")
 
@@ -316,6 +317,7 @@ func test_a_ledge_side_blocks_a_sliding_enemy() -> void:
 
 func test_pull_slides_the_enemy_towards_him_and_stops_at_the_pull_distance() -> void:
 	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + Vector2(_pull.target_range - EDGE_MARGIN, 0.0))
+	PullReach.clear(_room, [_enemy])
 
 	await _cast()
 	await _wait_for_the_slide(_pull)
@@ -347,6 +349,7 @@ func test_pull_never_ends_with_the_enemy_on_top_of_him() -> void:
 
 func test_pull_leaves_an_enemy_outside_the_range_and_spends_nothing() -> void:
 	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + Vector2(_pull.target_range + EDGE_MARGIN, 0.0))
+	PullReach.clear(_room, [_enemy])
 	var start: Vector2 = _enemy.global_position
 
 	await _cast()
@@ -356,15 +359,15 @@ func test_pull_leaves_an_enemy_outside_the_range_and_spends_nothing() -> void:
 	_assert_nothing_was_spent()
 
 
-func test_pull_leaves_an_enemy_outside_the_cone_and_spends_nothing() -> void:
-	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + _in_the_cone_at(_pull.cone_half_angle_degrees + ANGLE_MARGIN, NEAR * 2.0))
-	var start: Vector2 = _enemy.global_position
+func test_pull_takes_an_enemy_behind_him_all_round_not_only_in_a_cone() -> void:
+	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + Vector2(-NEAR * 2.0, 0.0))
+	PullReach.clear(_room, [_enemy])
+	assert_eq(_almos.facing, Vector2.RIGHT, "control: he faces away from it")
 
 	await _cast()
 	await _wait_for_the_slide(_pull)
 
-	assert_eq(_enemy.global_position, start, "enemy")
-	_assert_nothing_was_spent()
+	assert_almost_eq(_enemy.global_position.distance_to(_almos.global_position), _pull.distance, DISTANCE_TOLERANCE, "pulled in from behind")
 
 
 func test_pull_takes_a_lit_torch_in_range_first_and_leaves_the_enemy() -> void:

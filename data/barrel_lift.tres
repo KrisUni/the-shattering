@@ -7,3 +7,4 @@ script = ExtResource("1_tuning")
 weight = 10.0
 damage = 12.0
 knockback = 40.0
+breaks = true

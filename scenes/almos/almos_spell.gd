@@ -4,7 +4,11 @@ extends Node
 ## button cycles through them in that order; the one selected starts as Pull. A switch tap is read only when he
 ## is free to act, as a Switch Weapon tap is, and is refused while he winds up or holds a flame.
 ##
-## A tap of the Spell button with Pull selected and a lit torch in range draws: the press winds up
+## Pull takes whatever is nearest to him, all round him (an invisible circle, not a cone): a lit
+## torch's flame within draw_range, a Fire's flame within flame_range of its edge, or an enemy or prop
+## within the Pull's target_range with no wall between. Shove still looks in a cone along his aim.
+##
+## A tap of the Spell button with Pull selected and a lit torch nearest draws: the press winds up
 ## for wind_up_frames, and at the end of the wind-up the Pull cost is spent, the nearest lit torch
 ## in range goes out and he HOLDS its flame. Holding selects Shove and locks the selection. Nothing
 ## is thrown until a tap with Shove: that tap throws a fireball at once, paying the Shove cost, and
@@ -17,7 +21,7 @@ extends Node
 ## fall, a Hiding spot, a return). The Health a Spell spends itself is not such a loss.
 ##
 ## Pull and Shove also move props: a wardrobe, a barrel, a crate stack (anything with a Liftable). A
-## Pull at one in the cone, with no flame to take, grips it for the wind-up and then lifts it: it is
+## Pull at one nearer than any flame to take, grips it for the wind-up and then lifts it: it is
 ## held over his head as a flame is held, Shove is selected, and a tap of Shove throws it the way he
 ## aims, into the first enemy in its path. A Shove at one standing on the floor knocks it away from
 ## him. A prop heavier than the greatest Weight he can move shudders, the cost spent. Any loss of
@@ -161,10 +165,8 @@ func advance(free: bool, aim: Vector2) -> void:
 			_throw(aim)
 		return
 	if not _winding_up and free and Input.is_action_just_pressed(&"cast_spell"):
-		if _selected == Spell.PULL and _nearest_lit_torch_in_range() != null:
-			_begin()
-		elif _selected == Spell.PULL and _nearest_fire_in_range() != null:
-			_begin_on_a_fire()
+		if _selected == Spell.PULL:
+			_pull(aim)
 		else:
 			_act_on_an_enemy(aim)
 	if not _winding_up:
@@ -194,6 +196,29 @@ func reset() -> void:
 	_drawn_from = null
 	_holding = false
 	_light_the_way(false)
+
+
+# Pull takes whatever is nearest to him of all it can take, each within its own range around him: a
+# lit torch's flame, a Fire's flame (measured to its edge), an enemy or a prop. Nothing in range,
+# nothing happens and nothing is spent.
+func _pull(aim: Vector2) -> void:
+	var torch := _nearest_lit_torch_in_range()
+	var fire := _nearest_fire_in_range()
+	var torch_distance := _distance_to(torch) if torch != null else INF
+	var fire_distance := fire.distance_to_edge(body.global_position) if fire != null else INF
+	var other_distance := INF
+	var enemy := _nearest_enemy_in_the_cone(pull_cost, aim)
+	if enemy != null:
+		other_distance = _distance_to(enemy)
+	var prop := _nearest_prop_in_the_cone(pull_cost, aim)
+	if prop != null:
+		other_distance = minf(other_distance, _distance_to(prop.prop()))
+	if torch != null and torch_distance <= fire_distance and torch_distance <= other_distance:
+		_begin()
+	elif fire != null and fire_distance <= other_distance:
+		_begin_on_a_fire()
+	else:
+		_act_on_an_enemy(aim)
 
 
 # Starts the wind-up on the nearest lit torch in range, if he can pay for the Pull.
@@ -265,7 +290,7 @@ func _nearest_prop_in_the_cone(cost: SpellCost, aim: Vector2) -> Node:
 		var distance := away.length()
 		if distance > nearest_distance or distance <= 0.0:
 			continue
-		if rad_to_deg(absf(aim.angle_to(away))) > cost.cone_half_angle_degrees:
+		if not _in_the_cone(cost, aim, away):
 			continue
 		var line := PhysicsRayQueryParameters2D.create(body.global_position, prop.global_position, WALL_MASK)
 		line.exclude = node.body_rids()
@@ -274,6 +299,14 @@ func _nearest_prop_in_the_cone(cost: SpellCost, aim: Vector2) -> Node:
 		nearest = node
 		nearest_distance = distance
 	return nearest
+
+
+# Whether this way from him lies in the cost's cone around the aim. A cone of 180 degrees either side
+# is all round him, straight behind included.
+func _in_the_cone(cost: SpellCost, aim: Vector2, away: Vector2) -> bool:
+	if cost.cone_half_angle_degrees >= 180.0:
+		return true
+	return rad_to_deg(absf(aim.angle_to(away))) <= cost.cone_half_angle_degrees
 
 
 func _distance_to(target: Node2D) -> float:
@@ -298,7 +331,7 @@ func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
 		var distance := away.length()
 		if distance > nearest_distance or distance <= 0.0:
 			continue
-		if rad_to_deg(absf(aim.angle_to(away))) > cost.cone_half_angle_degrees:
+		if not _in_the_cone(cost, aim, away):
 			continue
 		if _wall_between(enemy):
 			continue

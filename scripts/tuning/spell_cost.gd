@@ -18,7 +18,7 @@ extends Resource
 @export var target_range: float
 
 ## How wide, in degrees, the cone is that the Spell looks for an enemy in, centred on the way he
-## aims: half of it either side.
+## aims: half of it either side. 180 looks all round him, a circle: Pull's does.
 @export var cone_half_angle_degrees: float
 
 ## Shove: how far, in pixels, the enemy is slid away from him. Pull: how far from his centre, in

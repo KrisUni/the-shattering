@@ -4,7 +4,8 @@ extends GutTest
 ##   barrels are solid, and he steps out in front of them;
 ## - Pull lifts a barrel over his head and Shove throws it into an enemy, hurting it; a Shove knocks
 ##   a barrel from the floor; a wardrobe is too heavy for him yet and only shudders; a loss of Health
-##   puts down what he holds;
+##   puts down what he holds; a thrown barrel breaks apart and is whole again when enemies return;
+##   Pull takes the nearest thing all round him;
 ## - an enemy's Health bar shows once it is hurt or in Pursuit, with a trail where a loss took it.
 ## Numbers come from the data files.
 
@@ -138,14 +139,57 @@ func test_shove_throws_the_held_barrel_into_an_enemy_and_hurts_it() -> void:
 	for i in 90:
 		await wait_physics_frames(1)
 		flew = flew or lift.state == Liftable.State.FLYING
-		if flew and lift.state == Liftable.State.RESTING:
+		if flew and lift.state != Liftable.State.FLYING:
 			break
 	assert_true(flew, "the barrel flew")
-	assert_eq(lift.state, Liftable.State.RESTING, "and came down")
+	assert_eq(lift.state, Liftable.State.BROKEN, "and broke on the jailer")
 	assert_almost_eq(jailer.get_node("Health").current, before - lift.tuning.damage, 0.01, "it hurt the jailer for its damage")
-	assert_true(barrel.is_in_group(&"hiding_spots"), "at rest it is a hiding spot again")
-	assert_ne((barrel.get_node("Body") as StaticBody2D).collision_layer, 0, "and blocks again")
 	assert_false((almos.get_node("Spell") as AlmosSpell).holding, "he holds nothing")
+
+
+func test_a_thrown_barrel_breaks_apart_and_is_whole_again_when_enemies_return() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	var barrel := _place(BARREL_SCENE, almos, Vector2(70, 0)) as HidingSpot
+	var home := barrel.global_position
+	var lift := barrel.get_node("Liftable")
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up_frames())
+	await wait_seconds(0.3)
+	watch_signals(lift)
+	await _tap(&"cast_spell")
+	for i in 120:
+		await wait_physics_frames(1)
+		if lift.state == Liftable.State.BROKEN:
+			break
+	assert_signal_emitted(lift, "broke", "it broke where it came down")
+	assert_eq(lift.state, Liftable.State.BROKEN, "and stays broken")
+	assert_true(barrel.flammable.burnt_out, "gone, as a burnt-out thing is")
+	assert_false((barrel.get_node("Look") as CanvasItem).visible, "nothing of it shows")
+	assert_false(barrel.is_in_group(&"hiding_spots"), "it cannot be hidden in")
+	assert_eq((barrel.get_node("Body") as StaticBody2D).collision_layer, 0, "nor does it block")
+	assert_false(lift.can_be_moved(), "nor be lifted")
+	var pieces := false
+	for child in barrel.get_parent().get_children():
+		pieces = pieces or child.get_script() == preload("res://scenes/world/prop_break.gd")
+	assert_true(pieces, "its pieces fly apart")
+	barrel.flammable.come_back()
+	await wait_physics_frames(2)
+	assert_eq(lift.state, Liftable.State.RESTING, "enemies return: it is whole")
+	assert_eq(barrel.global_position, home, "where it first stood")
+	assert_true(barrel.is_in_group(&"hiding_spots"), "a hiding spot again")
+	assert_ne((barrel.get_node("Body") as StaticBody2D).collision_layer, 0, "and blocks again")
+
+
+func test_a_burnt_out_barrel_blocks_nothing() -> void:
+	var almos = _almos_input.spawn_almos()
+	var barrel := _place(BARREL_SCENE, almos, Vector2(200, 0)) as HidingSpot
+	await wait_physics_frames(2)
+	barrel.flammable.burn_out_now()
+	assert_eq((barrel.get_node("Body") as StaticBody2D).collision_layer, 0, "burnt out, it blocks nothing")
+	barrel.flammable.come_back()
+	assert_ne((barrel.get_node("Body") as StaticBody2D).collision_layer, 0, "whole again, it blocks")
 
 
 func test_a_shove_knocks_a_barrel_from_the_floor_into_an_enemy() -> void:
@@ -161,6 +205,46 @@ func test_a_shove_knocks_a_barrel_from_the_floor_into_an_enemy() -> void:
 	await _tap(&"cast_spell")
 	await wait_physics_frames(60)
 	assert_lt(jailer.get_node("Health").current, before, "the knocked barrel hurt the jailer")
+
+
+func test_a_knocked_barrel_that_hits_nothing_comes_to_rest_whole() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	var barrel := _place(BARREL_SCENE, almos, Vector2(60, 0))
+	var lift := barrel.get_node("Liftable")
+	await wait_physics_frames(2)
+	await _tap(&"switch_spell")
+	await _tap(&"cast_spell")
+	await wait_physics_frames(60)
+	assert_eq(lift.state, Liftable.State.RESTING, "it skidded to a stop, whole")
+	assert_true(barrel.is_in_group(&"hiding_spots"), "a hiding spot still")
+
+
+func test_pull_takes_the_nearest_thing_all_round_him_not_only_ahead() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	var near := _place(BARREL_SCENE, almos, Vector2(-60, 0))
+	var far := _place(BARREL_SCENE, almos, Vector2(120, 0))
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up_frames())
+	var spell := almos.get_node("Spell") as AlmosSpell
+	assert_eq(spell.held_object, near.get_node("Liftable"), "the barrel behind him, being nearer")
+	assert_eq(far.get_node("Liftable").state, Liftable.State.RESTING, "not the one ahead")
+
+
+func test_pull_takes_a_nearer_barrel_before_a_torch_further_off() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	var barrel := _place(BARREL_SCENE, almos, Vector2(0, 40))
+	var torch := _place(preload("res://scenes/world/torch.tscn"), almos, Vector2(-100, 0))
+	await wait_physics_frames(2)
+	assert_true(torch.lit, "control: the torch burns")
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up_frames())
+	var spell := almos.get_node("Spell") as AlmosSpell
+	assert_eq(spell.held_object, barrel.get_node("Liftable"), "he lifted the nearer barrel")
+	assert_true(torch.lit, "and left the torch alight")
 
 
 func test_a_wardrobe_is_too_heavy_for_him_and_only_shudders() -> void:
