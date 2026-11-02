@@ -53,7 +53,8 @@ func test_the_root_darkens_with_distance_from_the_walkable_floor() -> void:
 			var tile := back.get_cell_atlas_coords(cell)
 			if tile != MASS and tile != BLEND and tile != DEEP:
 				continue
-			var tile_rect := Rect2(Vector2(cell) * 32.0, Vector2(32.0, 32.0))
+			# The bottom row is cut by the Room's south edge, as a Drop is.
+			var tile_rect := Rect2(Vector2(cell) * 32.0, Vector2(32.0, 32.0)).intersection(Rect2(0, 0, 1152, 648))
 			if drops.any(func(rect: Rect2) -> bool: return rect.encloses(tile_rect)):
 				assert_eq(tile, DEEP, "%s %s in a Drop is deep root" % [room_name, cell])
 				deep += 1

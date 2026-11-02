@@ -1,6 +1,7 @@
 extends GutTest
-## Corridor 1's two dark root masses below the lane are Drops: open edges Almos can walk off, where
-## the root falls away. Walking or rolling off one is a Deadly fall (he drops out of sight and dies,
+## Corridor 1's lane runs above a chasm, crossed by one bridge to the south exit: the chasm is made of
+## Drops, open edges Almos can walk off, mirrored either side of the bridge with a ragged lip, and it
+## runs off the Room's west, east and south edges with no wall around it. Walking or rolling off one is a Deadly fall (he drops out of sight and dies,
 ## and his Remains are left at the edge); an enemy Shoved or Pulled into one falls to its death and
 ## no enemy walks into one by itself; a barrel knocked into one is gone until enemies return. A
 ## wardrobe or barrel on the edge lets him out on the lane side.
@@ -48,13 +49,32 @@ func _almos_at(point: Vector2):
 	return almos
 
 
-func test_the_hall_has_two_drops_where_the_root_masses_were() -> void:
-	for drop_name in ["DropWest", "DropEast"]:
-		var drop := _room.get_node_or_null("Drops/" + drop_name) as Footprint
-		assert_not_null(drop, "%s is there" % drop_name)
-		assert_almost_eq(drop.position.y - drop.size.y / 2.0, DROP_TOP, 0.01, "%s begins at the lane's south edge" % drop_name)
-	assert_null(_room.get_node_or_null("Walls/MassWest"), "no solid root left in its place")
-	assert_null(_room.get_node_or_null("Walls/MassEast"), "nor on the east")
+func _drop_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	for drop in _room.get_node("Drops").get_children():
+		var footprint := drop as Footprint
+		rects.append(Rect2(footprint.position - footprint.size / 2.0, footprint.size))
+	return rects
+
+
+func _in_the_chasm(point: Vector2) -> bool:
+	return _drop_rects().any(func(rect: Rect2) -> bool: return rect.has_point(point))
+
+
+func test_the_chasm_is_mirrored_either_side_of_a_bridge_and_runs_off_the_room() -> void:
+	var rects := _drop_rects()
+	assert_gt(rects.size(), 2, "a ragged lip, made of several Drops")
+	for rect in rects:
+		var mirrored := Rect2(Vector2(1152.0 - rect.end.x, rect.position.y), rect.size)
+		assert_true(rects.has(mirrored), "%s has its mirror image across the bridge" % rect)
+		assert_eq(rect.end.y, 648.0, "%s runs off the south edge" % rect)
+		assert_gte(rect.position.y, DROP_TOP, "%s leaves the lane whole" % rect)
+	assert_true(_in_the_chasm(Vector2(4, 400)), "off the west edge")
+	assert_true(_in_the_chasm(Vector2(1148, 400)), "off the east edge")
+	for y in range(240, 640, 16):
+		assert_false(_in_the_chasm(Vector2(576, y)), "the bridge is solid at %d" % y)
+	for wall_name in ["MassWest", "MassEast", "MassWestEdge", "MassEastEdge", "WallBottom1", "WallBottom2"]:
+		assert_null(_room.get_node_or_null("Walls/" + wall_name), "no %s framing it" % wall_name)
 
 
 func test_walking_off_the_edge_is_a_deadly_fall() -> void:
@@ -70,7 +90,7 @@ func test_walking_off_the_edge_is_a_deadly_fall() -> void:
 	_almos_input.release_action(&"move_down")
 	assert_true(almos.dead, "he fell to his death")
 	assert_eq(places.size(), 1, "one Death")
-	assert_lt(_room.to_local(places[0]).y, DROP_TOP, "its Remains place is on the lane, at the edge")
+	assert_false(_in_the_chasm(_room.to_local(places[0])), "its Remains place is on firm ground, at the edge")
 	await wait_physics_frames(30)
 	assert_lt((almos.get_node("Look") as Node2D).scale.x, 1.0, "he drops out of sight")
 
@@ -134,7 +154,7 @@ func test_a_barrel_knocked_into_a_drop_is_gone_until_enemies_return() -> void:
 	barrel.flammable.come_back()
 	await wait_physics_frames(2)
 	assert_eq(lift.state, Liftable.State.RESTING, "whole again when enemies return")
-	assert_lt(barrel.position.y, DROP_TOP, "back on the lane where it stood")
+	assert_false(_in_the_chasm(barrel.position), "back on firm ground where it stood")
 
 
 func test_the_props_on_the_edge_let_him_out_on_the_lane_side() -> void:
@@ -143,4 +163,5 @@ func test_the_props_on_the_edge_let_him_out_on_the_lane_side() -> void:
 		if spot == null:
 			continue
 		var out := spot.position + spot.exit_offset
-		assert_lt(out.y, DROP_TOP - 12.0, "%s lets him out on the lane, not down the Drop" % spot.name)
+		for corner in [Vector2(-12, -12), Vector2(12, -12), Vector2(-12, 12), Vector2(12, 12)]:
+			assert_false(_in_the_chasm(out + corner), "%s lets him out on firm ground, not down the Drop" % spot.name)

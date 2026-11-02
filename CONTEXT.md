@@ -248,7 +248,7 @@ Stepping or jumping off an edge onto ground below. A Drop shorter than the safe 
 _Avoid_: Fall (for a safe drop), ledge hop
 
 **Deadly fall**:
-A Drop past the safe height or into empty space, which kills the player. Nothing warns of it in advance; players learn which edges are deadly by dying. In the Dungeons, the hall outside the cells (Corridor 1) has open edges where the root falls away below its lane: walking or rolling off one is a Deadly fall, his Remains are left at the edge, an enemy Shoved or Pulled over one falls to its death (no enemy walks off by itself), and a barrel knocked into one is gone until enemies return.
+A Drop past the safe height or into empty space, which kills the player. Nothing warns of it in advance; players learn which edges are deadly by dying. In the Dungeons, the hall outside the cells (Corridor 1) runs above a chasm, crossed by one bridge to the south: the edge of its lane and of the bridge is open, the root falling away below: walking or rolling off one is a Deadly fall, his Remains are left at the edge, an enemy Shoved or Pulled over one falls to its death (no enemy walks off by itself), and a barrel knocked into one is gone until enemies return.
 _Avoid_: Pit, fall damage, void-out
 
 **Block**:

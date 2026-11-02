@@ -9,13 +9,13 @@ const TILE := 32.0
 # In tiles. The Room is 36 by 20 tiles, plus a quarter-tile strip at the south wall.
 const COLUMNS := 36
 const ROWS := 20
-const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallTop4", "WallBottom1", "WallBottom2"]
-# The solid root at the Room's west and east edges.
-const MASS_NAMES := ["MassWestEdge", "MassEastEdge"]
+const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallTop4"]
+# No solid root is left below the lane: the chasm runs off the Room's west, east and south edges.
+const MASS_NAMES := []
 # The Drops that narrow the hall, with the passage south between them: open edges where the root
 # falls away, drawn all in the deep root tile (the dark the masses had), with no wall texture on them.
 const DEEP_ROOT := Vector2i(0, 2)
-const DROP_NAMES := ["DropWest", "DropEast"]
+
 # In units. The foot of the north wall, and the row along it where the furniture stands.
 const NORTH_FACE_FOOT := 64.0
 const FURNITURE_ROW := 64.0
@@ -46,9 +46,9 @@ func _drawn_rects() -> Array:
 
 func _drop_rects() -> Array[Rect2]:
 	var rects: Array[Rect2] = []
-	for drop_name in DROP_NAMES:
-		var drop := _room.get_node("Drops/" + drop_name) as Footprint
-		rects.append(Rect2(drop.position - drop.size / 2.0, drop.size))
+	for drop in _room.get_node("Drops").get_children():
+		var footprint := drop as Footprint
+		rects.append(Rect2(footprint.position - footprint.size / 2.0, footprint.size))
 	return rects
 
 
@@ -64,9 +64,10 @@ func test_corridor_1_has_a_floor_layer_with_used_cells() -> void:
 
 func test_corridor_1_has_wall_layers_with_used_cells() -> void:
 	for layer_name in ["WallTiles", "WallTilesFront"]:
-		var layer := _layer(layer_name)
-		assert_not_null(layer, "Corridor 1 should have a %s TileMapLayer" % layer_name)
-		assert_gt(layer.get_used_cells().size(), 0, "%s should have tiles" % layer_name)
+		assert_not_null(_layer(layer_name), "Corridor 1 should have a %s TileMapLayer" % layer_name)
+	assert_gt(_layer("WallTiles").get_used_cells().size(), 0, "WallTiles should have tiles")
+	# The hall has no south wall: the chasm runs off the Room's south edge, so nothing draws in front.
+	assert_eq(_layer("WallTilesFront").get_used_cells().size(), 0, "no south wall in front of Almos")
 
 
 func test_the_tile_layers_draw_a_tile_of_16_art_px_at_scale_2() -> void:
@@ -160,7 +161,8 @@ func test_the_back_entrance_seal_is_drawn_over_its_footprint_and_keeps_its_hidde
 	var seal := _room.get_node("BackEntranceSeal") as Node2D
 	var art := seal.get_node("Look/Art") as Sprite2D
 	assert_not_null(art.texture, "the seal has art")
-	assert_eq(art.texture.get_size() * art.scale, Vector2(16, 616), "the art covers the 16 by 616 footprint")
+	var drawn := (art.region_rect.size if art.region_enabled else art.texture.get_size()) * art.scale
+	assert_eq(drawn, (seal as Footprint).size if seal is Footprint else seal.get(&"size"), "the art covers its footprint")
 	assert_false((seal.get_node("Look/Shape") as Polygon2D).visible, "the placeholder shape is hidden")
 
 
@@ -192,6 +194,7 @@ func test_the_hall_is_a_furniture_row_and_a_lane_three_times_as_wide_as_almos() 
 	autofree(almos)
 	var art := almos.get_node("Look/Art") as AnimatedSprite2D
 	var almos_width := art.sprite_frames.get_frame_texture(&"idle_down", 0).get_size().x * art.scale.x
-	var drop := _room.get_node("Drops/DropWest") as Footprint
-	var mass_top := drop.position.y - drop.size.y / 2.0
+	var mass_top := INF
+	for rect in _drop_rects():
+		mass_top = minf(mass_top, rect.position.y)
 	assert_eq(mass_top - NORTH_FACE_FOOT - FURNITURE_ROW, almos_width * 3.0, "the lane is three Almos-widths wide")

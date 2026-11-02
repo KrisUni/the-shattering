@@ -95,7 +95,8 @@ func test_there_are_places_to_hide_along_his_path() -> void:
 		# Each stands off his lane, by the north wall or along the south edge of the hall.
 		var y: float = (spot as Node2D).position.y
 		var by_the_north_wall := y > 64.0 and y <= 128.0
-		var by_the_south_edge := y >= 200.0 and y <= 224.0
+		# The south edge of the lane, or a ledge reaching out over the chasm.
+		var by_the_south_edge := y >= 200.0 and y <= 288.0
 		assert_true(by_the_north_wall or by_the_south_edge, "%s stands off his lane, by the north wall or the south edge" % spot.name)
 	var sides := spots.map(func(spot: Node) -> bool: return (spot as Node2D).position.y > 140.0)
 	assert_true(sides.has(true) and sides.has(false), "spread on both sides of the hall")
