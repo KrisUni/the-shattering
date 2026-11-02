@@ -12,8 +12,9 @@ const ROWS := 20
 const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallTop4", "WallBottom1", "WallBottom2"]
 # The solid root at the Room's west and east edges.
 const MASS_NAMES := ["MassWestEdge", "MassEastEdge"]
-# The Drops that narrow the hall, the dark root falling away below it, with the passage south between
-# them: drawn by the same tiles as the walls, but open to walk off.
+# The Drops that narrow the hall, with the passage south between them: open edges where the root
+# falls away, drawn all in the deep root tile (the dark the masses had), with no wall texture on them.
+const DEEP_ROOT := Vector2i(0, 2)
 const DROP_NAMES := ["DropWest", "DropEast"]
 # In units. The foot of the north wall, and the row along it where the furniture stands.
 const NORTH_FACE_FOOT := 64.0
@@ -38,9 +39,16 @@ func _drawn_rects() -> Array:
 		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
 		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
 		rects.append([wall_name, Rect2(wall.position - size / 2.0, size)])
+	for rect in _drop_rects():
+		rects.append(["Drop", rect])
+	return rects
+
+
+func _drop_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
 	for drop_name in DROP_NAMES:
 		var drop := _room.get_node("Drops/" + drop_name) as Footprint
-		rects.append([drop_name, Rect2(drop.position - drop.size / 2.0, drop.size)])
+		rects.append(Rect2(drop.position - drop.size / 2.0, drop.size))
 	return rects
 
 
@@ -83,7 +91,7 @@ func test_the_floor_stays_inside_the_room_and_its_south_strip() -> void:
 		assert_between(cell.y, 0, ROWS, "floor row %d inside the Room or its strip" % cell.y)
 
 
-func test_each_wall_and_drop_is_drawn_by_tiles_where_it_is() -> void:
+func test_each_wall_is_drawn_by_tiles_where_it_collides() -> void:
 	for entry in _drawn_rects():
 		var wall_name: String = entry[0]
 		var rect: Rect2 = entry[1]
@@ -96,7 +104,7 @@ func test_each_wall_and_drop_is_drawn_by_tiles_where_it_is() -> void:
 				assert_true(_drawn(Vector2i(x, y)), "%s tile at %d, %d" % [wall_name, x, y])
 
 
-func test_no_wall_tile_is_drawn_where_there_is_no_wall_or_drop() -> void:
+func test_no_wall_tile_is_drawn_where_nothing_collides() -> void:
 	var rects: Array[Rect2] = []
 	for entry in _drawn_rects():
 		rects.append(entry[1])
@@ -106,8 +114,18 @@ func test_no_wall_tile_is_drawn_where_there_is_no_wall_or_drop() -> void:
 			var covered := false
 			for rect in rects:
 				covered = covered or rect.intersects(tile_rect)
-			assert_true(covered, "%s tile at %d, %d sits on a wall or a Drop" % [layer_name, cell.x, cell.y])
+			assert_true(covered, "%s tile at %d, %d sits on a wall" % [layer_name, cell.x, cell.y])
 
+
+func test_the_drops_are_all_deep_root_with_no_wall_texture() -> void:
+	var back := _layer("WallTiles")
+	var front := _layer("WallTilesFront")
+	for rect in _drop_rects():
+		for x in range(floori(rect.position.x / TILE), ceili(rect.end.x / TILE)):
+			for y in range(floori(rect.position.y / TILE), ceili(rect.end.y / TILE)):
+				var cell := Vector2i(x, y)
+				assert_eq(back.get_cell_atlas_coords(cell), DEEP_ROOT, "deep root at %d, %d" % [x, y])
+				assert_eq(front.get_cell_source_id(cell), -1, "nothing drawn over it at %d, %d" % [x, y])
 
 func test_every_doorway_cell_is_empty_of_wall_tiles() -> void:
 	for exit_node in _room.get_node("Exits").get_children():
@@ -136,9 +154,6 @@ func test_the_placeholder_floor_and_walls_are_hidden_not_deleted() -> void:
 		var placeholder := _room.get_node("Walls/%s/Placeholder" % wall_name) as Polygon2D
 		assert_not_null(placeholder, "%s keeps its Placeholder" % wall_name)
 		assert_false(placeholder.visible, "%s Placeholder is hidden" % wall_name)
-	for drop_name in DROP_NAMES:
-		var shape := _room.get_node("Drops/%s/Look/Shape" % drop_name) as Polygon2D
-		assert_false(shape.visible, "%s's placeholder shape is hidden: the tiles draw it" % drop_name)
 
 
 func test_the_back_entrance_seal_is_drawn_over_its_footprint_and_keeps_its_hidden_shape() -> void:

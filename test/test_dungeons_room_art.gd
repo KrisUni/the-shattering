@@ -34,7 +34,7 @@ func _wall_rects(room: Node2D) -> Array[Rect2]:
 	for wall in room.get_node("Walls").get_children():
 		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
 		rects.append(Rect2((wall as Node2D).position - size / 2.0, size))
-	# A Drop is drawn by the same tiles as a wall: the root falling away below its open edge.
+	# A Drop is drawn in root tiles too: the dark falling away below its open edge.
 	var drops := room.get_node_or_null("Drops")
 	if drops != null:
 		for drop in drops.get_children():

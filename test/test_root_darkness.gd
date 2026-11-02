@@ -1,7 +1,8 @@
 extends GutTest
 ## The solid root around Corridor 1 and the cells reads as deliberate darkness, so the eye stays on
 ## where Almos can walk: the root tile next to the walkable floor, a dithered blend one tile further,
-## and a deep, near-black root tile with faint strands beyond, like a vignette.
+## and a deep, near-black root tile with faint strands beyond, like a vignette. A Drop (Corridor 1's
+## open edges) is all deep root, right up to the lane, so it reads as a fall and not a wall.
 
 const ROOMS := ["corridor_1", "cell_1", "cell_2", "cell_3"]
 const DUNGEONS_DIR := "res://scenes/areas/dungeons/"
@@ -15,6 +16,18 @@ func _room(room_name: String) -> Node2D:
 	var room := (load(DUNGEONS_DIR + room_name + ".tscn") as PackedScene).instantiate() as Node2D
 	add_child_autofree(room)
 	return room
+
+
+# Each Drop's rectangle in the Room, in units.
+func _drop_rects(room: Node2D) -> Array:
+	var rects := []
+	var drops := room.get_node_or_null("Drops")
+	if drops != null:
+		for drop in drops.get_children():
+			var footprint := drop as Footprint
+			if footprint != null:
+				rects.append(Rect2(footprint.position - footprint.size / 2.0, footprint.size))
+	return rects
 
 
 # How many tiles (counting diagonals as one) the cell is from the nearest walkable floor.
@@ -35,9 +48,15 @@ func test_the_root_darkens_with_distance_from_the_walkable_floor() -> void:
 		var room := _room(room_name)
 		var back := room.get_node("WallTiles") as TileMapLayer
 		var deep := 0
+		var drops := _drop_rects(room)
 		for cell in back.get_used_cells():
 			var tile := back.get_cell_atlas_coords(cell)
 			if tile != MASS and tile != BLEND and tile != DEEP:
+				continue
+			var tile_rect := Rect2(Vector2(cell) * 32.0, Vector2(32.0, 32.0))
+			if drops.any(func(rect: Rect2) -> bool: return rect.encloses(tile_rect)):
+				assert_eq(tile, DEEP, "%s %s in a Drop is deep root" % [room_name, cell])
+				deep += 1
 				continue
 			var d := _distance_to_floor(room, cell)
 			if d <= 2:
