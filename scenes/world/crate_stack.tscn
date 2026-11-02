@@ -1,5 +1,8 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://scenes/world/liftable.gd" id="9_lift"]
+[ext_resource type="Resource" path="res://data/crate_stack_lift.tres" id="10_lift_tuning"]
+
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/crate_stack.png" id="1_art"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_crates"]
@@ -17,3 +20,7 @@ shape = SubResource("RectangleShape2D_crates")
 position = Vector2(0, -26)
 scale = Vector2(2, 2)
 texture = ExtResource("1_art")
+
+[node name="Liftable" type="Node" parent="."]
+script = ExtResource("9_lift")
+tuning = ExtResource("10_lift_tuning")

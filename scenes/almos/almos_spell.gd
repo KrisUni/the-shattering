@@ -4,7 +4,11 @@ extends Node
 ## button cycles through them in that order; the one selected starts as Pull. A switch tap is read only when he
 ## is free to act, as a Switch Weapon tap is, and is refused while he winds up or holds a flame.
 ##
-## A tap of the Spell button with Pull selected and a lit torch in range draws: the press winds up
+## Pull takes whatever is nearest to him, all round him (an invisible circle, not a cone): a lit
+## torch's flame within draw_range, a Fire's flame within flame_range of its edge, or an enemy or prop
+## within the Pull's target_range with no wall between. Shove still looks in a cone along his aim.
+##
+## A tap of the Spell button with Pull selected and a lit torch nearest draws: the press winds up
 ## for wind_up_frames, and at the end of the wind-up the Pull cost is spent, the nearest lit torch
 ## in range goes out and he HOLDS its flame. Holding selects Shove and locks the selection. Nothing
 ## is thrown until a tap with Shove: that tap throws a fireball at once, paying the Shove cost, and
@@ -15,6 +19,13 @@ extends Node
 ## While he holds the flame it lights the way as a lit torch in his hand does. Any loss of Health,
 ## a Fire tick included, puts it out, and the cost stays spent; so does reset (a Death, a rest, a
 ## fall, a Hiding spot, a return). The Health a Spell spends itself is not such a loss.
+##
+## Pull and Shove also move props: a wardrobe, a barrel, a crate stack (anything with a Liftable). A
+## Pull at one nearer than any flame to take, grips it for the wind-up and then lifts it: it is
+## held over his head as a flame is held, Shove is selected, and a tap of Shove throws it the way he
+## aims, into the first enemy in its path. A Shove at one standing on the floor knocks it away from
+## him. A prop heavier than the greatest Weight he can move shudders, the cost spent. Any loss of
+## Health, or a reset, puts down a prop he holds, as it puts out a held flame.
 ##
 ## A press that cannot cast does nothing and spends nothing: Pull with no lit torch in range,
 ## Shove with no flame held, Health that would not stay above the Health cost, or Stamina below the
@@ -28,9 +39,16 @@ enum Spell { PULL, SHOVE }
 const WALL_MASK := 1
 
 const FIREBALL_SCENE := preload("res://scenes/almos/fireball.tscn")
+# Props Pull lifts and Shove throws, by their component's script (no class name needed to load).
+const LIFTABLE_SCRIPT := preload("res://scenes/world/liftable.gd")
+# In pixels: how far in front of his feet a prop he puts down lands.
+const DROP_AHEAD := 40.0
 
 ## Emitted when the fireball leaves him, with the fireball and the torch whose flame it is.
 signal fireball_thrown(fireball: Fireball, torch: Torch)
+
+## Emitted when a prop leaves him, thrown from his hold or knocked from the floor.
+signal object_thrown(liftable: Node)
 
 ## Emitted when the selected Spell changes.
 signal selection_changed
@@ -63,10 +81,21 @@ var winding_up: bool:
 	get:
 		return _winding_up
 
-## Whether he holds a drawn flame, from the end of the wind-up until it is thrown or put out.
+## Whether he holds something over his hand: a drawn flame or a lifted prop, from the end of the
+## wind-up until it is thrown, put out or put down.
 var holding: bool:
 	get:
+		return _holding or _held_object != null
+
+## Whether what he holds is a drawn flame.
+var holding_flame: bool:
+	get:
 		return _holding
+
+## The prop he holds, its Liftable, or null.
+var held_object: Node:
+	get:
+		return _held_object
 
 ## What the wind-up draws a flame from, the torch or the Fire, or null when he is not winding up.
 ## Only read, by his look.
@@ -101,6 +130,9 @@ var _torch: Torch
 # a Fire (zero for a torch's, which he holds as long as he likes).
 var _fire: Flammable
 var _fire_hold_left := 0.0
+# The prop the wind-up is lifting, and the prop he holds.
+var _lift: Node
+var _held_object: Node
 
 
 func _ready() -> void:
@@ -113,8 +145,15 @@ func _ready() -> void:
 ## to throw the flame he holds; aim is the unit direction a fireball thrown now flies in. A press
 ## made when he is not free is lost.
 func advance(free: bool, aim: Vector2) -> void:
-	if free and not _holding and not _winding_up and Input.is_action_just_pressed(&"switch_spell"):
+	if free and not holding and not _winding_up and Input.is_action_just_pressed(&"switch_spell"):
 		_select(_next_spell())
+	if _held_object != null:
+		if not is_instance_valid(_held_object) or not _held_object.held():
+			reset()
+			return
+		if free and Input.is_action_just_pressed(&"cast_spell") and _selected == Spell.SHOVE and _can_pay(shove_cost):
+			_throw_object(aim)
+		return
 	if _holding:
 		if _fire_hold_left > 0.0:
 			_fire_hold_left -= get_physics_process_delta_time()
@@ -126,10 +165,8 @@ func advance(free: bool, aim: Vector2) -> void:
 			_throw(aim)
 		return
 	if not _winding_up and free and Input.is_action_just_pressed(&"cast_spell"):
-		if _selected == Spell.PULL and _nearest_lit_torch_in_range() != null:
-			_begin()
-		elif _selected == Spell.PULL and _nearest_fire_in_range() != null:
-			_begin_on_a_fire()
+		if _selected == Spell.PULL:
+			_pull(aim)
 		else:
 			_act_on_an_enemy(aim)
 	if not _winding_up:
@@ -143,8 +180,14 @@ func advance(free: bool, aim: Vector2) -> void:
 ## thrown, and the selection is what it was before the draw. Called when Almos falls, rests, hides
 ## or is returned.
 func reset() -> void:
-	if _holding:
+	if holding:
 		_select(_selected_before_draw)
+	if _lift != null and is_instance_valid(_lift):
+		_lift.release_grip()
+	_lift = null
+	if _held_object != null and is_instance_valid(_held_object):
+		_held_object.drop_at(body.global_position + _ahead() * DROP_AHEAD)
+	_held_object = null
 	_winding_up = false
 	_frames = 0
 	_torch = null
@@ -153,6 +196,29 @@ func reset() -> void:
 	_drawn_from = null
 	_holding = false
 	_light_the_way(false)
+
+
+# Pull takes whatever is nearest to him of all it can take, each within its own range around him: a
+# lit torch's flame, a Fire's flame (measured to its edge), an enemy or a prop. Nothing in range,
+# nothing happens and nothing is spent.
+func _pull(aim: Vector2) -> void:
+	var torch := _nearest_lit_torch_in_range()
+	var fire := _nearest_fire_in_range()
+	var torch_distance := _distance_to(torch) if torch != null else INF
+	var fire_distance := fire.distance_to_edge(body.global_position) if fire != null else INF
+	var other_distance := INF
+	var enemy := _nearest_enemy_in_the_cone(pull_cost, aim)
+	if enemy != null:
+		other_distance = _distance_to(enemy)
+	var prop := _nearest_prop_in_the_cone(pull_cost, aim)
+	if prop != null:
+		other_distance = minf(other_distance, _distance_to(prop.prop()))
+	if torch != null and torch_distance <= fire_distance and torch_distance <= other_distance:
+		_begin()
+	elif fire != null and fire_distance <= other_distance:
+		_begin_on_a_fire()
+	else:
+		_act_on_an_enemy(aim)
 
 
 # Starts the wind-up on the nearest lit torch in range, if he can pay for the Pull.
@@ -172,6 +238,10 @@ func _act_on_an_enemy(aim: Vector2) -> void:
 	var pulling := _selected == Spell.PULL
 	var cost := pull_cost if pulling else shove_cost
 	var enemy = _nearest_enemy_in_the_cone(cost, aim)
+	var prop := _nearest_prop_in_the_cone(cost, aim)
+	if prop != null and (enemy == null or _distance_to(prop.prop()) < _distance_to(enemy)):
+		_act_on_a_prop(prop, pulling, cost)
+		return
 	if enemy == null or not _can_pay(cost):
 		return
 	_pay(cost)
@@ -187,6 +257,68 @@ func _act_on_an_enemy(aim: Vector2) -> void:
 		enemy.slide(away, cost.distance, cost.move_speed)
 
 
+# Pull grips a prop for the wind-up, to lift it at the end; Shove knocks it away at once. Too heavy,
+# it shudders, the cost spent.
+func _act_on_a_prop(prop: Node, pulling: bool, cost: SpellCost) -> void:
+	if not _can_pay(cost):
+		return
+	if prop.weight > tuning.greatest_weight():
+		_pay(cost)
+		prop.shudder()
+		return
+	if pulling:
+		_lift = prop
+		prop.grip()
+		_winding_up = true
+		_frames = 0
+		return
+	_pay(cost)
+	prop.throw(prop.prop().global_position - body.global_position, true)
+	object_thrown.emit(prop)
+
+
+# The nearest prop that can be moved within the cost's range and cone around the aim, with no wall
+# between, or null.
+func _nearest_prop_in_the_cone(cost: SpellCost, aim: Vector2) -> Node:
+	var nearest: Node = null
+	var nearest_distance := cost.target_range
+	for node in get_tree().get_nodes_in_group(&"liftables"):
+		if node.get_script() != LIFTABLE_SCRIPT or not node.can_be_moved():
+			continue
+		var prop: Node2D = node.prop()
+		var away := prop.global_position - body.global_position
+		var distance := away.length()
+		if distance > nearest_distance or distance <= 0.0:
+			continue
+		if not _in_the_cone(cost, aim, away):
+			continue
+		var line := PhysicsRayQueryParameters2D.create(body.global_position, prop.global_position, WALL_MASK)
+		line.exclude = node.body_rids()
+		if not body.get_world_2d().direct_space_state.intersect_ray(line).is_empty():
+			continue
+		nearest = node
+		nearest_distance = distance
+	return nearest
+
+
+# Whether this way from him lies in the cost's cone around the aim. A cone of 180 degrees either side
+# is all round him, straight behind included.
+func _in_the_cone(cost: SpellCost, aim: Vector2, away: Vector2) -> bool:
+	if cost.cone_half_angle_degrees >= 180.0:
+		return true
+	return rad_to_deg(absf(aim.angle_to(away))) <= cost.cone_half_angle_degrees
+
+
+func _distance_to(target: Node2D) -> float:
+	return body.global_position.distance_to(target.global_position)
+
+
+# The way he faces, for where he puts a prop down.
+func _ahead() -> Vector2:
+	var facing: Variant = body.get(&"facing")
+	return (facing as Vector2).normalized() if facing is Vector2 and not (facing as Vector2).is_zero_approx() else Vector2.DOWN
+
+
 # The nearest living enemy or movable object within the cost's range and cone around the aim, or null.
 func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
 	var nearest: Node2D = null
@@ -199,7 +331,7 @@ func _nearest_enemy_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
 		var distance := away.length()
 		if distance > nearest_distance or distance <= 0.0:
 			continue
-		if rad_to_deg(absf(aim.angle_to(away))) > cost.cone_half_angle_degrees:
+		if not _in_the_cone(cost, aim, away):
 			continue
 		if _wall_between(enemy):
 			continue
@@ -250,7 +382,12 @@ func _nearest_fire_in_range() -> Flammable:
 func _release() -> void:
 	var torch := _torch
 	var fire := _fire
+	var lift := _lift
+	_lift = null
 	reset()
+	if lift != null:
+		_lift_up(lift)
+		return
 	if not _can_pay(pull_cost):
 		return
 	if fire != null:
@@ -271,6 +408,31 @@ func _release() -> void:
 	_light_the_way(true)
 
 
+# The end of a lift's wind-up: he pays and holds the prop, if it can still be moved and he can still
+# pay; otherwise it settles where it stands, nothing spent.
+func _lift_up(prop: Node) -> void:
+	if not is_instance_valid(prop):
+		return
+	prop.release_grip()
+	if not prop.can_be_moved() or not _can_pay(pull_cost):
+		return
+	_pay(pull_cost)
+	prop.lift(body)
+	_held_object = prop
+	_selected_before_draw = _selected
+	_select(Spell.SHOVE)
+
+
+# The held prop leaves him, thrown the way he aims.
+func _throw_object(aim: Vector2) -> void:
+	var prop := _held_object
+	_held_object = null
+	_select(_selected_before_draw)
+	_pay(shove_cost)
+	prop.throw(aim)
+	object_thrown.emit(prop)
+
+
 # The held flame leaves him as a fireball.
 func _throw(aim: Vector2) -> void:
 	var torch := _drawn_from if is_instance_valid(_drawn_from) else null
@@ -284,9 +446,9 @@ func _throw(aim: Vector2) -> void:
 	fireball_thrown.emit(fireball, torch)
 
 
-# Any loss of Health puts the held flame out.
+# Any loss of Health puts the held flame out, and puts down a prop he holds.
 func _on_health_changed() -> void:
-	if _holding and health.current < _health_seen:
+	if (holding or _lift != null) and health.current < _health_seen:
 		reset()
 	_health_seen = health.current
 

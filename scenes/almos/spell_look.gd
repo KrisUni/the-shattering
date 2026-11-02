@@ -56,8 +56,8 @@ func _process(delta: float) -> void:
 		_was_winding_up = true
 	elif _was_winding_up:
 		_was_winding_up = false
-		_since_release = 0.0 if spell.holding else -1.0
-		if not spell.holding:
+		_since_release = 0.0 if spell.holding_flame else -1.0
+		if not spell.holding_flame:
 			_streaming_for = -1.0
 	if _since_release >= 0.0:
 		_since_release += delta
@@ -99,7 +99,7 @@ func _draw() -> void:
 		_draw_smoke(_source, _since_release / SMOKE)
 	if flashing():
 		_draw_splash(hand, _since_release / SPLASH)
-	if spell.holding:
+	if spell.holding_flame:
 		_draw_hand_flame(hand)
 
 

@@ -1,9 +1,16 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://scenes/world/liftable.gd" id="9_lift"]
+[ext_resource type="Resource" path="res://data/barrel_lift.tres" id="10_lift_tuning"]
+
 [ext_resource type="PackedScene" path="res://scenes/world/hiding_spot.tscn" id="1_spot"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/barrel.png" id="2_art"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(24, 16)
+
 [node name="Barrel" instance=ExtResource("1_spot")]
+exit_offset = Vector2(0, 18)
 
 [node name="Shape" parent="Look" index="0"]
 visible = false
@@ -12,3 +19,13 @@ visible = false
 position = Vector2(0, -14)
 scale = Vector2(2, 2)
 texture = ExtResource("2_art")
+
+[node name="Liftable" type="Node" parent="."]
+script = ExtResource("9_lift")
+tuning = ExtResource("10_lift_tuning")
+
+[node name="Body" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body"]
+position = Vector2(0, -10)
+shape = SubResource("RectangleShape2D_body")

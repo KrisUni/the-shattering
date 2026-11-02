@@ -7,6 +7,7 @@ extends GutTest
 ## out with the cost still spent; and a Death, a fall and a return put it out; he cannot rest or hide while he holds it. Every wait
 ## and distance is worked from the data files.
 
+const PullReach := preload("res://test/helpers/pull_reach.gd")
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
@@ -511,6 +512,8 @@ func _set_up_room() -> void:
 	_almos.spell.fireball_thrown.connect(_on_fireball_thrown)
 	_torch = _room.get_node("WallTorch") as Torch
 	_enemy = _room.get_node("TrainingEnemy")
+	# Pull takes the nearest thing all round him: nothing else it could take is left in the room.
+	PullReach.clear(_room, [_enemy])
 	_almos.global_position = _torch.global_position + Vector2(0.0, _spell.draw_range * ALMOS_AT_DRAW_FRACTION)
 	_almos.facing = Vector2.RIGHT
 	_enemy.global_position = _almos.global_position + Vector2(_spell.fireball_range * ENEMY_AT_RANGE_FRACTION, 0.0)

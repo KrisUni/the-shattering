@@ -5,6 +5,9 @@ extends Node
 ## - while he swings, `attack_<side>` follows the swing's own phases, whatever its length: wind-up
 ##   over its startup frames, the strike on its active frames, follow-through and recovery after.
 ##   While he charges a Heavy attack it holds the coiled wind-up;
+## - while he winds up a Spell (drawing a flame, gripping a prop) it holds the coiled wind-up of
+##   `attack_<side>`, and when he throws (a fireball, a prop) it shows the strike and follow-through
+##   for a moment;
 ## - while he rolls, `roll_<side>` plays once from its first frame each time a roll starts;
 ## - otherwise `walk_<side>` while he moves and `idle_<side>` while he stands.
 ## A name the sprite lacks is skipped. Facing left plays the side animations flipped, so they
@@ -19,16 +22,26 @@ const COIL := 1
 const STRIKE := 2
 const FOLLOW_THROUGH := 3
 const RECOVER := 4
+# For how many physics frames a throw shows the strike, then the follow-through. A look.
+const THROW_FRAMES := 12
 
 var _almos: Node
 var _attacks: Node
 var _art: AnimatedSprite2D
 var _was_rolling := false
+var _spell: Node
+var _throw_left := 0
 
 
 func _ready() -> void:
 	_almos = get_parent().get_parent()
 	_attacks = _almos.get_node_or_null("Attacks")
+	_spell = _almos.get_node_or_null("Spell")
+	if _spell != null:
+		if _spell.has_signal(&"fireball_thrown"):
+			_spell.fireball_thrown.connect(func(_fireball, _torch) -> void: _throw_left = THROW_FRAMES)
+		if _spell.has_signal(&"object_thrown"):
+			_spell.object_thrown.connect(func(_prop) -> void: _throw_left = THROW_FRAMES)
 
 
 func _physics_process(_delta: float) -> void:
@@ -46,7 +59,7 @@ func update_look() -> void:
 	var side := side_for(_almos.facing)
 	# Only the side animations flip; up and down are drawn for themselves.
 	_art.flip_h = side == &"side" and (_almos.facing as Vector2).x < 0.0
-	if _show_attack(side):
+	if _show_attack(side) or _show_casting(side):
 		_was_rolling = false
 		return
 	if _almos.rolling:
@@ -93,6 +106,26 @@ func _show_attack(side: StringName) -> bool:
 	elif _attacks.charging:
 		frame = COIL
 	else:
+		return false
+	if _art.animation != attack:
+		_art.animation = attack
+	_art.pause()
+	_art.frame = frame
+	return true
+
+
+# Shows the wind-up of a Spell, or a throw just made. Whether it did.
+func _show_casting(side: StringName) -> bool:
+	var frame := -1
+	if _throw_left > 0:
+		_throw_left -= 1
+		frame = STRIKE if _throw_left > THROW_FRAMES / 2 else FOLLOW_THROUGH
+	elif _spell != null and _spell.get(&"winding_up") == true:
+		frame = COIL
+	if frame < 0:
+		return false
+	var attack := StringName("attack_" + side)
+	if _art.sprite_frames == null or not _art.sprite_frames.has_animation(attack):
 		return false
 	if _art.animation != attack:
 		_art.animation = attack

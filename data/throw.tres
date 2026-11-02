@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ThrowTuning" format=3]
+
+[ext_resource type="Script" path="res://scripts/tuning/throw_tuning.gd" id="1_tuning"]
+
+[resource]
+script = ExtResource("1_tuning")
+hold_height = 34.0
+lift_time = 0.25
+throw_speed = 420.0
+throw_range = 280.0
+knock_range = 150.0

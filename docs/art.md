@@ -86,6 +86,10 @@ The Health, Stamina and Mana bars share `scenes/hud/hud_bar.gd`, a ProgressBar t
 
 The text labels in the test room are still placeholders.
 
+### Enemy Health bars
+
+Each enemy carries a small Health bar over its head (`scenes/enemies/enemy_health_bar.gd`, node `OverheadHealthBar`). It is 16x3 art px, drawn like the HUD's: a frame, a blood-red fill lit along its top, and a pale trail where a loss took it from. It shows once the enemy is hurt or in Pursuit, and hides while it is whole and at rest, and once it is dead.
+
 ## Look sheets
 
 One sheet per thing that is in the game now. Fill a sheet in when its art is chosen. The test room stays placeholder and gets no sheet. The Cave's door to the Catacombs stands in until the Catacombs are drawn (out of scope), so it has no sheet yet.
@@ -225,7 +229,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
   Both inherit `hiding_spot.tscn`. The placeholder shape is hidden, and the spot is at the foot of the furniture. The test room's spots stay placeholder.
 - **Size in art px:** Wardrobe 20x30; barrel 14x18.
 - **Palette notes and accents used:** Dusty-rose wood with sand highlights, navy outline and seams, indigo shadow at the foot. No accent; a burning one shows the shared Fire flame.
-- **Animations and poses needed:** None; still pictures. Almos inside shows through faintly, as his hidden tint does.
+- **Animations and poses needed:** No frames. Almos inside is not drawn at all, and the spot rattles every three seconds or so, each on its own rhythm: its look hops and jolts for a third of a second. Pulled, it shudders through the wind-up and floats up over Almos's head, bobbing while held. Thrown, it falls in an arc with a dust trail (`scenes/world/throw_dust.gd`) and bursts in dust and wood splinters where it lands (`scenes/world/impact_burst.gd`). Too heavy, it jolts harder and stays put. Almos holds his coiled wind-up pose while gripping, and strikes as he throws.
 - **Placement:** In Corridor 1 they stand in a row along the north wall, between the cell doors, beside the guard's lane: wardrobes at both ends and either side of the doors, one a step from Cell 3's door, and barrels between, so no stretch of the hall is far from one.
 - **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
