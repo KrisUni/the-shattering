@@ -9,9 +9,13 @@ const TILE := 32.0
 # In tiles. The Room is 36 by 20 tiles, plus a quarter-tile strip at the south wall.
 const COLUMNS := 36
 const ROWS := 20
-const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallTop4", "WallBottom1", "WallBottom2"]
-# The solid root that narrows the hall, with the passage south between its halves.
-const MASS_NAMES := ["MassWestEdge", "MassEastEdge", "MassWest", "MassEast"]
+const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3"]
+# No solid root is left below the lane: the chasm runs off the Room's west, east and south edges.
+const MASS_NAMES := []
+# The Drops that narrow the hall, with the passage south between them: open edges where the root
+# falls away, drawn all in the deep root tile (the dark the masses had), with no wall texture on them.
+const DEEP_ROOT := Vector2i(0, 2)
+
 # In units. The foot of the north wall, and the row along it where the furniture stands.
 const NORTH_FACE_FOOT := 64.0
 const FURNITURE_ROW := 64.0
@@ -28,6 +32,26 @@ func _layer(layer_name: String) -> TileMapLayer:
 	return _room.get_node(layer_name) as TileMapLayer
 
 
+# Each wall's and each Drop's rectangle, in the Room's coordinates, as [name, Rect2].
+func _drawn_rects() -> Array:
+	var rects := []
+	for wall_name in WALL_NAMES + MASS_NAMES:
+		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
+		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
+		rects.append([wall_name, Rect2(wall.position - size / 2.0, size)])
+	for rect in _drop_rects():
+		rects.append(["Drop", rect])
+	return rects
+
+
+func _drop_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	for drop in _room.get_node("Drops").get_children():
+		var footprint := drop as Footprint
+		rects.append(Rect2(footprint.position - footprint.size / 2.0, footprint.size))
+	return rects
+
+
 func _drawn(cell: Vector2i) -> bool:
 	return _layer("WallTiles").get_cell_source_id(cell) != -1 or _layer("WallTilesFront").get_cell_source_id(cell) != -1
 
@@ -40,9 +64,10 @@ func test_corridor_1_has_a_floor_layer_with_used_cells() -> void:
 
 func test_corridor_1_has_wall_layers_with_used_cells() -> void:
 	for layer_name in ["WallTiles", "WallTilesFront"]:
-		var layer := _layer(layer_name)
-		assert_not_null(layer, "Corridor 1 should have a %s TileMapLayer" % layer_name)
-		assert_gt(layer.get_used_cells().size(), 0, "%s should have tiles" % layer_name)
+		assert_not_null(_layer(layer_name), "Corridor 1 should have a %s TileMapLayer" % layer_name)
+	assert_gt(_layer("WallTiles").get_used_cells().size(), 0, "WallTiles should have tiles")
+	# The hall has no south wall: the chasm runs off the Room's south edge, so nothing draws in front.
+	assert_eq(_layer("WallTilesFront").get_used_cells().size(), 0, "no south wall in front of Almos")
 
 
 func test_the_tile_layers_draw_a_tile_of_16_art_px_at_scale_2() -> void:
@@ -68,11 +93,11 @@ func test_the_floor_stays_inside_the_room_and_its_south_strip() -> void:
 
 
 func test_each_wall_is_drawn_by_tiles_where_it_collides() -> void:
-	for wall_name in WALL_NAMES + MASS_NAMES:
-		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
-		var shape := wall.get_node("CollisionShape2D") as CollisionShape2D
-		var size := (shape.shape as RectangleShape2D).size
-		var top_left := wall.position - size / 2.0
+	for entry in _drawn_rects():
+		var wall_name: String = entry[0]
+		var rect: Rect2 = entry[1]
+		var size := rect.size
+		var top_left := rect.position
 		var first := Vector2i(floori(top_left.x / TILE), floori(top_left.y / TILE))
 		var last := Vector2i(ceili((top_left.x + size.x) / TILE) - 1, ceili((top_left.y + size.y) / TILE) - 1)
 		for x in range(first.x, last.x + 1):
@@ -82,10 +107,8 @@ func test_each_wall_is_drawn_by_tiles_where_it_collides() -> void:
 
 func test_no_wall_tile_is_drawn_where_nothing_collides() -> void:
 	var rects: Array[Rect2] = []
-	for wall_name in WALL_NAMES + MASS_NAMES:
-		var wall := _room.get_node("Walls/" + wall_name) as StaticBody2D
-		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
-		rects.append(Rect2(wall.position - size / 2.0, size))
+	for entry in _drawn_rects():
+		rects.append(entry[1])
 	for layer_name in ["WallTiles", "WallTilesFront"]:
 		for cell in _layer(layer_name).get_used_cells():
 			var tile_rect := Rect2(Vector2(cell) * TILE, Vector2(TILE, TILE))
@@ -94,6 +117,16 @@ func test_no_wall_tile_is_drawn_where_nothing_collides() -> void:
 				covered = covered or rect.intersects(tile_rect)
 			assert_true(covered, "%s tile at %d, %d sits on a wall" % [layer_name, cell.x, cell.y])
 
+
+func test_the_drops_are_all_deep_root_with_no_wall_texture() -> void:
+	var back := _layer("WallTiles")
+	var front := _layer("WallTilesFront")
+	for rect in _drop_rects():
+		for x in range(floori(rect.position.x / TILE), ceili(rect.end.x / TILE)):
+			for y in range(floori(rect.position.y / TILE), ceili(rect.end.y / TILE)):
+				var cell := Vector2i(x, y)
+				assert_eq(back.get_cell_atlas_coords(cell), DEEP_ROOT, "deep root at %d, %d" % [x, y])
+				assert_eq(front.get_cell_source_id(cell), -1, "nothing drawn over it at %d, %d" % [x, y])
 
 func test_every_doorway_cell_is_empty_of_wall_tiles() -> void:
 	for exit_node in _room.get_node("Exits").get_children():
@@ -128,7 +161,8 @@ func test_the_back_entrance_seal_is_drawn_over_its_footprint_and_keeps_its_hidde
 	var seal := _room.get_node("BackEntranceSeal") as Node2D
 	var art := seal.get_node("Look/Art") as Sprite2D
 	assert_not_null(art.texture, "the seal has art")
-	assert_eq(art.texture.get_size() * art.scale, Vector2(16, 616), "the art covers the 16 by 616 footprint")
+	var drawn := (art.region_rect.size if art.region_enabled else art.texture.get_size()) * art.scale
+	assert_eq(drawn, (seal as Footprint).size if seal is Footprint else seal.get(&"size"), "the art covers its footprint")
 	assert_false((seal.get_node("Look/Shape") as Polygon2D).visible, "the placeholder shape is hidden")
 
 
@@ -155,11 +189,12 @@ func test_the_shared_path_blocker_stays_placeholder() -> void:
 
 func test_the_hall_is_a_furniture_row_and_a_lane_three_times_as_wide_as_almos() -> void:
 	# Almos's sprite is 16 art px across, 32 units. Under the north wall runs a row for the furniture,
-	# then a lane three times his width, then the solid root.
+	# then a lane three times his width, then the Drop.
 	var almos := (load("res://scenes/almos/almos.tscn") as PackedScene).instantiate()
 	autofree(almos)
 	var art := almos.get_node("Look/Art") as AnimatedSprite2D
 	var almos_width := art.sprite_frames.get_frame_texture(&"idle_down", 0).get_size().x * art.scale.x
-	var mass := _room.get_node("Walls/MassWest") as Node2D
-	var mass_top := mass.position.y - ((mass.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size.y / 2.0
+	var mass_top := INF
+	for rect in _drop_rects():
+		mass_top = minf(mass_top, rect.position.y)
 	assert_eq(mass_top - NORTH_FACE_FOOT - FURNITURE_ROW, almos_width * 3.0, "the lane is three Almos-widths wide")

@@ -45,7 +45,7 @@
 [ext_resource type="Texture2D" uid="uid://by6opfljgamf7" path="res://assets/creatures/root_crawler/walk_7.png" id="43_walk_7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
-size = Vector2(16, 16)
+size = Vector2(32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_crawler"]
 animations = [

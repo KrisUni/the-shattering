@@ -22,7 +22,6 @@ var _tuning: FireTuning
 func before_each() -> void:
 	await get_tree().process_frame
 	_tuning = FireTuning.new()
-	_tuning.spread_radius = 100.0
 	_tuning.spread_delay = 10.0
 	_tuning.burn_time = 1.5
 	_tuning.light = 0.6

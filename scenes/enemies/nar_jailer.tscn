@@ -25,7 +25,7 @@
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_2.png" id="t_death_2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
-size = Vector2(24, 24)
+size = Vector2(32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_jailer"]
 animations = [{

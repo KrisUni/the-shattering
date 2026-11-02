@@ -24,6 +24,8 @@ const BREAK_SCRIPT := preload("res://scenes/world/prop_break.gd")
 ## What it is stopped by in flight, as collision mask bits: walls and enemy hurtboxes.
 const WALLS := 1 << 0
 const ENEMY_HURTBOX := 1 << 2
+## The inside of a Gap or a Drop, where a prop that comes down falls in.
+const GAP_AREA := 1 << 5
 ## In pixels: how far short of what it hits it comes to rest.
 const REST_SHORT := 10.0
 ## How a grip looks: its look shudders this many pixels side to side. A look.
@@ -83,6 +85,9 @@ var _shudder_left := 0
 var _shudder_way := Vector2.ZERO
 # Whether this flight is a knock from the floor rather than a throw from his hold.
 var _knocked := false
+
+## Where it is held and thrown from, beside the one who lifts it: two small rocks are held side by side.
+var hold_offset := Vector2.ZERO
 # Where it first stood, where it is whole again after it broke.
 var _home_position := Vector2.ZERO
 
@@ -194,7 +199,7 @@ func throw(direction: Vector2, knocked := false) -> void:
 	# Thrown from over his head, it flies from above his feet and comes down as it goes; knocked
 	# from the floor, it skids along it.
 	_height = 0.0 if knocked or _holder == null else throw_tuning.hold_height
-	_ground = _holder.global_position if _height > 0.0 else _prop.global_position
+	_ground = _holder.global_position + hold_offset if _height > 0.0 else _prop.global_position
 	_state = State.FLYING
 	_holder = null
 	_dust = DUST_SCRIPT.new()
@@ -232,7 +237,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _hold_point() -> Vector2:
-	return _holder.global_position + Vector2(0.0, -throw_tuning.hold_height)
+	return _holder.global_position + hold_offset + Vector2(0.0, -throw_tuning.hold_height)
 
 
 # One physics frame of flight: it looks ahead along its step over the ground for a wall or an
@@ -247,6 +252,7 @@ func _fly(delta: float) -> void:
 	if not found.is_empty():
 		var at: Vector2 = found["position"]
 		var hurtbox := found["collider"] as Hurtbox
+		_smash_what_it_hit(found["collider"])
 		if hurtbox != null:
 			hurtbox.hurt_damage_only(tuning.damage, at)
 			var enemy := hurtbox.get_parent()
@@ -290,6 +296,43 @@ func _take_up() -> void:
 	_prop.z_index = 3
 
 
+## Hit by something thrown: a prop that breaks (a barrel) breaks apart where it stands, the way it
+## was hit. Anything else is left as it is.
+func smash(direction: Vector2) -> void:
+	if tuning.get(&"breaks") != true or _state != State.RESTING:
+		return
+	_direction = direction.normalized() if not direction.is_zero_approx() else Vector2.DOWN
+	_take_up()
+	_break_apart(_prop.global_position)
+
+
+## Whether, thrown, it crashes through a metal gate.
+func crushes() -> bool:
+	return tuning.get(&"crushes") == true
+
+
+# What its flight ran into: a barrel breaks, and a gate a rock crashes into gives way.
+func _smash_what_it_hit(collider: Object) -> void:
+	var node := collider as Node
+	if node == null:
+		return
+	var other := _liftable_of(node)
+	if other != null and other != self:
+		other.smash(_direction)
+	elif node.has_method(&"smash_by"):
+		node.call(&"smash_by", self, _direction)
+
+
+func _liftable_of(node: Node) -> Node:
+	var prop_node := node.get_parent() if node.name == &"Body" else node
+	if prop_node == null:
+		return null
+	for child in prop_node.get_children():
+		if child.get_script() == get_script():
+			return child
+	return null
+
+
 # Where its flight ends it breaks apart: its art bursts into pieces and the prop is gone, nothing to
 # block, hide in or lift, until enemies return.
 func _break_apart(at: Vector2) -> void:
@@ -301,11 +344,21 @@ func _break_apart(at: Vector2) -> void:
 		pieces.call(&"shatter", art.texture, art.position + (_prop.global_position - at), art.scale, _direction)
 	else:
 		_burst(at)
+	_prop.global_position = at.snapped(Vector2(2.0, 2.0))
+	_go()
+
+
+# Its flight ended over a Gap or a Drop: it falls in and is gone, as a broken one is.
+func _fall_in() -> void:
+	_go()
+
+
+# Gone, broken or fallen: nothing to block, hide in or lift, until enemies return.
+func _go() -> void:
 	_state = State.BROKEN
 	if _dust != null and is_instance_valid(_dust):
 		_dust.call(&"stop")
 	_dust = null
-	_prop.global_position = at.snapped(Vector2(2.0, 2.0))
 	_prop.z_index = _home_z
 	_set_look_offset(Vector2.ZERO)
 	var flammable := _flammable()
@@ -333,13 +386,27 @@ func _on_whole_again() -> void:
 			_bodies[i].collision_layer = _home_layers[i]
 
 
+# Whether it is over the inside of a Gap or a Drop (layer gap_area).
+func _over_a_drop() -> bool:
+	var query := PhysicsPointQueryParameters2D.new()
+	query.position = _prop.global_position
+	query.collision_mask = GAP_AREA
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	return not _prop.get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
+
+
 func _flammable() -> Flammable:
 	return _prop.get(&"flammable") as Flammable
 
 
-# Back on the floor: a prop again.
+# Back on the floor: a prop again. One whose flight ends over a Gap or a Drop falls in and is gone,
+# until enemies return.
 func _come_to_rest() -> void:
 	var was_flying := _state == State.FLYING
+	if was_flying and _over_a_drop():
+		_fall_in()
+		return
 	_state = State.RESTING
 	_holder = null
 	_prop.global_position = _prop.global_position.snapped(Vector2(2.0, 2.0))

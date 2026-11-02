@@ -4,6 +4,10 @@ extends GutTest
 ## Fire that already spread from it keeps burning. And how far a point is from its nearest edge. The
 ## numbers are a tuning this test makes, so nothing here pins the shipped ones.
 
+# In pixels. Fire passes only by contact: a thing this far from another touches it (their catch boxes,
+# 32 wide, overlap), and one this far does not.
+const TOUCHING := 20.0
+const APART := 100.0
 const FLAMMABLE_PATH := "res://scenes/world/flammable.tscn"
 # In pixels. The size of the rectangle in the Flammable scene, read from it, not pinned.
 const MARGIN_FRAMES := 3
@@ -14,7 +18,6 @@ var _tuning: FireTuning
 func before_each() -> void:
 	await get_tree().process_frame
 	_tuning = FireTuning.new()
-	_tuning.spread_radius = 100.0
 	_tuning.spread_delay = 0.5
 	_tuning.burn_time = 1.5
 	_tuning.light = 0.6
@@ -56,7 +59,7 @@ func test_a_thing_put_out_never_burns_out_later() -> void:
 
 func test_a_thing_put_out_before_its_spread_delay_spreads_nothing() -> void:
 	var thing := _thing(Vector2.ZERO)
-	var neighbour := _thing(Vector2(_tuning.spread_radius / 2.0, 0.0))
+	var neighbour := _thing(Vector2(TOUCHING, 0.0))
 	thing.ignite()
 	await wait_physics_frames(_frames(_tuning.spread_delay / 2.0))
 	thing.extinguish()
@@ -68,7 +71,7 @@ func test_a_thing_put_out_before_its_spread_delay_spreads_nothing() -> void:
 
 func test_fire_that_already_spread_keeps_burning() -> void:
 	var thing := _thing(Vector2.ZERO)
-	var neighbour := _thing(Vector2(_tuning.spread_radius / 2.0, 0.0))
+	var neighbour := _thing(Vector2(TOUCHING, 0.0))
 	thing.ignite()
 	await wait_physics_frames(_frames(_tuning.spread_delay) + MARGIN_FRAMES)
 	assert_true(neighbour.burning, "it spread")

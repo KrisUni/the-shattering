@@ -6,7 +6,7 @@ extends GutTest
 const GRAPH_PATH := "res://data/dungeons_room_graph.tres"
 # The Rooms of the Dungeons, as the floor plan of the issue names them.
 const DUNGEONS_ROOMS: Array[StringName] = [
-	&"cell_1", &"cell_2", &"cell_3", &"radio_officers",
+	&"cell_2", &"cell_3", &"radio_officers",
 	&"corridor_1", &"corridor_2", &"corridor_3", &"corridor_4",
 	&"interviews", &"interview_surveillance", &"wcs", &"lockers_showers",
 	&"kitchenette_staff_mess", &"archives_evidence", &"store_room",

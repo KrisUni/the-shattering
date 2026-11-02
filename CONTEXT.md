@@ -51,7 +51,7 @@ How the Base of the tree ends. If the Nar guards bring Almos's Health to zero, o
 _Avoid_: Arrest, forced death
 
 **Dungeons**:
-The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in Cell 3, a cell of living roots, and gets out by burning through it with his first Pull and Shove of a torch's flame. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
+The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in Cell 3, one of two cells off the hall (Corridor 1), each shut by a metal gate, and gets out by melting his gate with his first Pull and Shove of a torch's flame (or crashing it with a thrown rock). He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
 _Avoid_: Prison, cells, roots
 
 **Store room**:
@@ -223,7 +223,7 @@ Catching a Parried Lightning strike and throwing it as a single bolt, in the man
 _Avoid_: Lightning catch, bolt throw, thunder parry
 
 **Fire**:
-Burning started by a fireball, or by touching a lit torch in hand to something flammable; the touch is an attack swing with the lit torch in hand. Anything flammable, such as living roots, barrels, curtains, a bed, wooden doors or dry fungus, catches and, after a delay, spreads it to flammable things within a radius. It burns for a set time and gives light while it burns, as a lit torch does, but it is never a torch: Pull takes a Fire's flame under its own rules, from a short range measured to the burning thing's edge and only for a hold time, but a Fire is never a torch. Checkpoint shoots and torches are not flammable. Fire hurts anyone standing in it, Almos included, in ticks. A tick is damage only: it cannot be Blocked, it misses during a Roll's untouchable moment, and it alerts an enemy like any hit, except a creature's own Fire, which hurts it without alerting it. A burning Hiding spot puts Almos out at once and cannot be entered: a tap of Interact in reach of one falls through to the next thing in reach, as for a burnt-out one. A fireball does not hit a flammable thing its flight starts inside; it flies on to the first thing it meets. Burnt means gone: nothing of it is seen or touched. A Root crawler is flammable too, but a creature is not burnt out: when its burn time is over it stops burning and can catch again. At a return, whether a rest or the return after a Death, every Fire goes out; Hiding spots and fungus that burnt are whole again, and at a rest a path blocker that caught, even one still burning, stays open for good, while at the return after a Death one that caught since the last rest is whole and closed again, as is every change to the world.
+Burning started by a fireball, or by touching a lit torch in hand to something flammable; the touch is an attack swing with the lit torch in hand. Anything flammable, such as living roots, barrels, curtains, a bed, wooden doors or dry fungus, catches and, after a delay, sets alight the flammable things it touches: Fire passes only by contact, so a burning enemy must walk into a barrel for the barrel to catch. Almos is flammable too: touching something burning (a burning enemy, a burning barrel) sets him alight, and he burns and takes its ticks for the burn time, setting alight what he touches in turn; a return puts him out, and Pull can take the flame off him. A metal gate catches only from a thrown flame, never by touch. It burns for a set time and gives light while it burns, as a lit torch does, but it is never a torch: Pull takes a Fire's flame under its own rules, from a short range measured to the burning thing's edge and only for a hold time, but a Fire is never a torch. Checkpoint shoots and torches are not flammable. Fire hurts anyone standing in it, Almos included, in ticks. A tick is damage only: it cannot be Blocked, it misses during a Roll's untouchable moment, and it alerts an enemy like any hit, except a creature's own Fire, which hurts it without alerting it. A burning Hiding spot puts Almos out at once and cannot be entered: a tap of Interact in reach of one falls through to the next thing in reach, as for a burnt-out one. A fireball does not hit a flammable thing its flight starts inside; it flies on to the first thing it meets. Burnt means gone: nothing of it is seen or touched. A Root crawler is flammable too, but a creature is not burnt out: when its burn time is over it stops burning and can catch again. At a return, whether a rest or the return after a Death, every Fire goes out; Hiding spots and fungus that burnt are whole again, and at a rest a path blocker that caught, even one still burning, stays open for good, while at the return after a Death one that caught since the last rest is whole and closed again, as is every change to the world.
 _Avoid_: Flames, burning, blaze
 
 **Roll**:
@@ -248,7 +248,7 @@ Stepping or jumping off an edge onto ground below. A Drop shorter than the safe 
 _Avoid_: Fall (for a safe drop), ledge hop
 
 **Deadly fall**:
-A Drop past the safe height or into empty space, which kills the player. Nothing warns of it in advance; players learn which edges are deadly by dying.
+A Drop past the safe height or into empty space, which kills the player. Nothing warns of it in advance; players learn which edges are deadly by dying. In the Dungeons, the hall outside the cells (Corridor 1) runs above a chasm, crossed by one bridge to the south: the edge of its lane and of the bridge is open, the root falling away below: walking or rolling off one is a Deadly fall, his Remains are left at the edge, an enemy Shoved or Pulled over one falls to its death (no enemy walks off by itself), and a barrel knocked into one is gone until enemies return.
 _Avoid_: Pit, fall damage, void-out
 
 **Block**:
@@ -398,3 +398,16 @@ _Avoid_: Perilous attack, guard breaker
 **Low attack**:
 An enemy attack that travels along the ground, such as a tail swipe or a shockwave, and can be cleared with a Jump. It hits only a target on the ground: one in the air as it passes is missed, like one who is untouchable, so the same swing still catches him if he comes down while it is on. Against a target on the ground it is like any attack: it can be Blocked and Parried, and a Parry builds Stagger as usual. It has a wind-up of its own with a tint of its own, and a wider strike than the enemy's plain attack so that it reads as a sweep. The training enemy takes its attacks in a fixed repeating order set in its tuning; a Break does not reset that order or skip a place in it.
 _Avoid_: Sweep, ground attack
+
+**Big rock**:
+A boulder in the Dungeons' hall, solid and far too heavy to move: a Pull or a Shove only makes it budge. A Shove with a wall right behind it crushes it against the wall into four to six small rocks.
+_Avoid_: Boulder (the test room's movable), stone
+
+**Small rock**:
+A piece of a Big rock. Pull lifts two at a time, held side by side over his head, and one Shove throws both. A thrown rock hurts the enemy it hits, breaks a barrel, and crashes a metal gate open.
+_Avoid_: Pebble, debris
+
+**Metal gate**:
+The iron bars that shut a cell's doorway: a path blocker that a thrown flame melts open (it glows and sags as it burns) or a thrown rock crashes open. A Pull or a Shove only makes it budge. Open, it stays open by the path blocker's rules: saved at a rest, undone by a Death.
+_Avoid_: Bars, door, portcullis
+

@@ -6,7 +6,6 @@
 script = ExtResource("1_graph")
 start_room = &"cell_3"
 rooms = Dictionary[StringName, String]({
-&"cell_1": "res://scenes/areas/dungeons/cell_1.tscn",
 &"cell_2": "res://scenes/areas/dungeons/cell_2.tscn",
 &"cell_3": "res://scenes/areas/dungeons/cell_3.tscn",
 &"radio_officers": "res://scenes/areas/dungeons/radio_officers.tscn",
@@ -39,8 +38,6 @@ exits = Dictionary[String, String]({
 "corridor_3/west": "corridor_2/east",
 "corridor_3/east": "corridor_4/west",
 "corridor_4/west": "corridor_3/east",
-"corridor_1/to_cell_1": "cell_1/door",
-"cell_1/door": "corridor_1/to_cell_1",
 "corridor_1/to_cell_2": "cell_2/door",
 "cell_2/door": "corridor_1/to_cell_2",
 "corridor_1/to_cell_3": "cell_3/door",

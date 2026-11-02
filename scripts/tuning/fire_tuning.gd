@@ -1,13 +1,10 @@
 class_name FireTuning
 extends Resource
-## The numbers of Fire: how it spreads, how long a thing burns, and the light a burning thing gives.
+## The numbers of Fire: when it passes on by contact, how long a thing burns, and the light a burning thing gives.
 ## The values live in data/fire.tres, not here.
 
-## How far from a burning thing, in pixels, Fire spreads to other flammable things.
-@export var spread_radius: float
-
-## How long, in seconds, after a thing catches before it spreads Fire to the flammable things within
-## the spread radius.
+## How long, in seconds, after a thing catches before it sets alight the flammable things it touches.
+## Fire passes only by contact: there is no spread radius.
 @export var spread_delay: float
 
 ## How long, in seconds, a thing burns before it is burnt out.

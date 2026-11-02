@@ -90,6 +90,10 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_side_3.png" id="27_attack_side_3"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_side_4.png" id="27_attack_side_4"]
 [ext_resource type="Script" path="res://scenes/almos/spell_look.gd" id="28_spell_look"]
+[ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="29_flammable"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
+size = Vector2(32, 32)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -565,3 +569,14 @@ mana = NodePath("../Mana")
 [node name="SpellLook" type="Node2D" parent="." node_paths=PackedStringArray("spell")]
 script = ExtResource("28_spell_look")
 spell = NodePath("../Spell")
+
+[node name="Flammable" parent="." instance=ExtResource("29_flammable")]
+collision_layer = 2048
+collision_mask = 518
+kind = 3
+
+[node name="CollisionShape2D" parent="Flammable" index="0"]
+shape = SubResource("RectangleShape2D_flammable")
+
+[node name="Art" parent="Flammable/Flame" index="0"]
+position = Vector2(-20, -56)

@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/gap.tscn" id="1_gap"]
+
+[node name="Drop" instance=ExtResource("1_gap")]
+collision_layer = 1024
+
+[node name="Shape" parent="Look" index="0"]
+visible = false

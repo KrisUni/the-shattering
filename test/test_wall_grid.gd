@@ -23,7 +23,8 @@ const LEAST_OPENING := 128.0
 # In pixels, in each Room's own coordinates. The centres of the openings in the north wall, read off
 # the Room scenes' Exits.
 const NORTH_OPENINGS := {
-	"corridor_1": [192.0, 576.0, 960.0],
+	# Cell 3's doorway; Cell 2's (x 768) is shut by its metal gate, which is not a wall.
+	"corridor_1": [384.0],
 	"lobby": [576.0],
 	"cell_3": [],
 }
@@ -101,7 +102,7 @@ func _all_rects() -> Dictionary:
 
 
 func test_every_dungeons_room_has_walls_to_check() -> void:
-	assert_eq(_all_rects().size(), 25, "25 Dungeons Rooms should have Walls")
+	assert_eq(_all_rects().size(), 24, "24 Dungeons Rooms should have Walls")
 
 
 func test_every_wall_edge_across_the_room_is_a_multiple_of_32() -> void:
@@ -217,8 +218,8 @@ func test_almos_cannot_walk_into_the_north_face_of_corridor_1_away_from_its_open
 	var got_in := []
 	var x := 2.0 * TILE
 	while x <= ROOM_WIDTH - 2.0 * TILE:
-		# Corridor 1's three openings are x 128..256, 512..640 and 896..1024.
-		var in_opening := (x > 128.0 and x < 256.0) or (x > 512.0 and x < 640.0) or (x > 896.0 and x < 1024.0)
+		# Corridor 1's two openings, to the two cells, are x 320..448 and 704..832.
+		var in_opening := (x > 320.0 and x < 448.0) or (x > 704.0 and x < 832.0)
 		if not in_opening and not _blocked_at(room, Vector2(x, INSIDE_FACE_Y)):
 			got_in.append(x)
 		x += PROBE_STEP

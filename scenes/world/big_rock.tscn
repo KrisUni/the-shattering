@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/big_rock.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/rocks/rock_big.png" id="2_art"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(44, 22)
+
+[node name="BigRock" type="StaticBody2D"]
+script = ExtResource("1_script")
+
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Art" type="Sprite2D" parent="Look"]
+position = Vector2(0, -18)
+scale = Vector2(2, 2)
+texture = ExtResource("2_art")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -12)
+shape = SubResource("RectangleShape2D_body")

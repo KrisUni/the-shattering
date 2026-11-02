@@ -95,7 +95,7 @@ func test_almos_pulls_the_torchs_flame_and_shoves_it_at_the_roots_to_burn_them_o
 	await wait_physics_frames(2)
 	var dungeons := host.current_space as DungeonsBuilding
 	var cell := dungeons.room(&"cell_3")
-	var roots := cell.get_node("Roots") as PathBlocker
+	var roots := cell.get_node("Gate") as PathBlocker
 	var torch := cell.get_node("Torch") as Torch
 	host.almos.global_position = cell.to_global(STANDING_SPOT)
 	host.almos.facing = Vector2.DOWN
@@ -119,7 +119,7 @@ func test_a_flame_pulled_from_a_fire_and_shoved_at_the_roots_also_burns_them_ope
 	await wait_physics_frames(2)
 	var dungeons := host.current_space as DungeonsBuilding
 	var cell := dungeons.room(&"cell_3")
-	var roots := cell.get_node("Roots") as PathBlocker
+	var roots := cell.get_node("Gate") as PathBlocker
 	# The torch is put out: the nearest lit torch's flame is taken before a Fire's.
 	(cell.get_node("Torch") as Torch).extinguish()
 	var fire := (load(FLAMMABLE_PATH) as PackedScene).instantiate() as Flammable
@@ -154,7 +154,7 @@ func test_a_death_before_a_checkpoint_makes_the_roots_whole_again() -> void:
 	await wait_physics_frames(2)
 	await _burn_the_roots_out_and_die_in_the_corridor(host)
 
-	var roots := (host.current_space as DungeonsBuilding).room(&"cell_3").get_node("Roots") as PathBlocker
+	var roots := (host.current_space as DungeonsBuilding).room(&"cell_3").get_node("Gate") as PathBlocker
 	assert_false(roots.open, "the roots should be whole")
 	assert_false(WorldState.is_burnt(&"dungeons/cell_3/roots"), "the roots should not be remembered as burnt")
 
@@ -182,7 +182,7 @@ func test_almos_burns_the_roots_out_again_after_a_death_before_a_checkpoint() ->
 
 	await _pull_and_shove_the_torchs_flame_at_the_roots(host)
 
-	assert_true((cell.get_node("Roots") as PathBlocker).open, "the roots should burn open again")
+	assert_true((cell.get_node("Gate") as PathBlocker).open, "the roots should burn open again")
 
 
 func test_almos_carries_no_weapon_after_a_death_before_a_checkpoint() -> void:

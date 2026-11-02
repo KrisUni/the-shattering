@@ -34,6 +34,13 @@ func _wall_rects(room: Node2D) -> Array[Rect2]:
 	for wall in room.get_node("Walls").get_children():
 		var size := ((wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size
 		rects.append(Rect2((wall as Node2D).position - size / 2.0, size))
+	# A Drop is drawn in root tiles too: the dark falling away below its open edge.
+	var drops := room.get_node_or_null("Drops")
+	if drops != null:
+		for drop in drops.get_children():
+			var footprint := drop as Footprint
+			if footprint != null:
+				rects.append(Rect2(footprint.position - footprint.size / 2.0, footprint.size))
 	return rects
 
 
@@ -43,7 +50,7 @@ func _drawn(room: Node2D, cell: Vector2i) -> bool:
 
 
 func test_there_are_all_the_rooms() -> void:
-	assert_eq(_room_paths().size(), 25, "the Dungeons have 25 Rooms")
+	assert_eq(_room_paths().size(), 24, "the Dungeons have 24 Rooms")
 
 
 func test_every_room_has_the_three_tile_layers_at_scale_2_in_the_right_order() -> void:

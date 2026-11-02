@@ -1,5 +1,5 @@
 extends GutTest
-## The Dungeons' three cells are cells: each closes its walkable space in with its own north face and
+## The Dungeons' two cells are cells: each closes its walkable space in with its own north face and
 ## side walls and solid root around it, keeps its door, its Entrance and where Almos wakes inside, is
 ## dressed with root bars either side of the door and a few props, and is lit by a lamp. They differ:
 ## each has its own size and its own dressing.
@@ -8,7 +8,7 @@ extends GutTest
 ## and it lights the way as a torch does), drawn as a lantern.
 
 const DUNGEONS_DIR := "res://scenes/areas/dungeons/"
-const CELLS := ["cell_1", "cell_2", "cell_3"]
+const CELLS := ["cell_2", "cell_3"]
 const LAMP_PATH := "res://scenes/world/lamp.tscn"
 const STANDING_LAMP_PATH := "res://scenes/world/lamp_standing.tscn"
 
@@ -68,7 +68,7 @@ func test_every_cell_has_bars_props_and_a_lit_lamp_inside() -> void:
 			assert_true(on_its_face, "%s's lamp is in the cell or on its north face" % cell_name)
 
 
-func test_the_three_cells_differ() -> void:
+func test_the_two_cells_differ() -> void:
 	var shapes := {}
 	var dressings := {}
 	for cell_name in CELLS:
@@ -79,8 +79,8 @@ func test_the_three_cells_differ() -> void:
 			names.append(String(prop.name).rstrip("0123456789"))
 		names.sort()
 		dressings[",".join(names)] = true
-	assert_eq(shapes.size(), 3, "each cell has its own size")
-	assert_eq(dressings.size(), 3, "each cell has its own dressing")
+	assert_eq(shapes.size(), CELLS.size(), "each cell has its own size")
+	assert_eq(dressings.size(), CELLS.size(), "each cell has its own dressing")
 
 
 func test_the_dungeons_are_lit_by_lamps_not_pole_torches() -> void:
