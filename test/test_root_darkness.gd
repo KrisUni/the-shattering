@@ -4,7 +4,7 @@ extends GutTest
 ## and a deep, near-black root tile with faint strands beyond, like a vignette. A Drop (Corridor 1's
 ## open edges) is all deep root, right up to the lane, so it reads as a fall and not a wall.
 
-const ROOMS := ["corridor_1", "cell_1", "cell_2", "cell_3"]
+const ROOMS := ["corridor_1", "cell_2", "cell_3"]
 const DUNGEONS_DIR := "res://scenes/areas/dungeons/"
 const TILES_PATH := "res://assets/shared/dungeon_tiles/dungeon_tiles.png"
 const MASS := Vector2i(5, 0)

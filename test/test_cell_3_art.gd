@@ -1,6 +1,6 @@
 extends GutTest
 ## Cell 3 is drawn: a tiled earth floor and root/woven walls on the 16 art px grid (a 32-unit tile),
-## with its Roots and the tile layers drawn in front of or behind Almos by where they stand. The
+## with its metal Gate and the tile layers drawn in front of or behind Almos by where they stand. The
 ## placeholder floor and wall polygons stay in the scene, hidden.
 
 const CELL_3_PATH := "res://scenes/areas/dungeons/cell_3.tscn"
@@ -97,13 +97,14 @@ func test_the_placeholder_floor_and_walls_are_hidden_not_deleted() -> void:
 		assert_false(placeholder.visible, "%s Placeholder is hidden" % wall_name)
 
 
-func test_the_roots_are_drawn_over_their_footprint_and_keep_their_hidden_shape() -> void:
-	var roots := _room.get_node("Roots") as Node2D
-	var art := roots.get_node("Look/Art") as Sprite2D
-	assert_not_null(art.texture, "the roots have art")
-	var drawn := art.texture.get_size() * art.scale
-	assert_eq(drawn, Vector2(128, 16), "the art covers the 128 by 16 footprint")
-	assert_false((roots.get_node("Look/Shape") as Polygon2D).visible, "the placeholder shape is hidden")
+func test_the_gate_is_drawn_across_its_footprint_and_keeps_its_hidden_shape() -> void:
+	var gate := _room.get_node("Gate") as MetalGate
+	assert_not_null(gate, "a metal gate shuts the doorway")
+	var art := gate.get_node("Look/Art") as Sprite2D
+	assert_not_null(art.texture, "the gate has art")
+	assert_eq(art.texture.get_size().x * art.scale.x, gate.size.x, "the art spans the doorway")
+	assert_almost_eq(art.position.y + art.texture.get_size().y * art.scale.y / 2.0, gate.size.y / 2.0, 0.01, "its bars stand on the footprint's foot")
+	assert_false((gate.get_node("Look/Shape") as Polygon2D).visible, "the placeholder shape is hidden")
 
 
 func test_the_test_room_blocker_stays_placeholder() -> void:

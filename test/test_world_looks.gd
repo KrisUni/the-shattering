@@ -24,7 +24,8 @@ const DOORWAYS := [
 	["res://scenes/areas/test_open_map_2.tscn", "Doorways/ToMap1"],
 	["res://scenes/areas/test_building.tscn", "RoomA/Doorways/ToMap1"],
 	["res://scenes/areas/dungeons/lobby.tscn", "Doorways/ToUpperTree"],
-	["res://scenes/areas/dungeons/cell_3.tscn", "Roots"],
+	["res://scenes/areas/dungeons/cell_3.tscn", "Gate"],
+	["res://scenes/areas/dungeons/corridor_1.tscn", "Cell2Gate"],
 	["res://scenes/areas/dungeons/corridor_1.tscn", "BackEntranceSeal"],
 ]
 
@@ -65,11 +66,9 @@ func test_a_footprint_fits_its_shape_to_its_size() -> void:
 	]))
 
 
-func test_the_roots_and_the_seal_keep_their_colours() -> void:
-	var cell: Node = autofree(load("res://scenes/areas/dungeons/cell_3.tscn").instantiate())
+func test_the_seal_keeps_its_colour() -> void:
 	var corridor: Node = autofree(load("res://scenes/areas/dungeons/corridor_1.tscn").instantiate())
 
-	assert_eq((cell.get_node("Roots/Look/Shape") as Polygon2D).color, Color(0.22, 0.3, 0.12, 1))
 	assert_eq((corridor.get_node("BackEntranceSeal/Look/Shape") as Polygon2D).color, Color(0.38, 0.32, 0.36, 1))
 
 

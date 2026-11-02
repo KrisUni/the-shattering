@@ -246,17 +246,21 @@ func test_a_lit_torch_swung_at_a_crawler_sets_it_alight() -> void:
 	assert_true(_flame_of(c.crawler).burning)
 
 
-func test_fire_spreads_from_a_burning_crawler_to_the_crawlers_near_it() -> void:
+func test_fire_spreads_from_a_burning_crawler_only_to_a_crawler_it_touches() -> void:
 	var c := _case(Vector2.LEFT * CLOSE_BY * 8.0, true)
-	var others: Array[Flammable] = [_flame_of(c.room.get_node(CRAWLER_NAMES[1])), _flame_of(c.room.get_node(CRAWLER_NAMES[2]))]
+	var touching = c.room.get_node(CRAWLER_NAMES[1])
+	var apart = c.room.get_node(CRAWLER_NAMES[2])
+	touching.global_position = c.crawler.global_position + Vector2(8.0, 0.0)
+	apart.global_position = c.crawler.global_position + Vector2(0.0, 80.0)
+	await _watch(1)
 	_flame_of(c.crawler).ignite()
 	await _watch(1)
-	assert_false(others[0].burning or others[1].burning, "control: not at once")
+	assert_false(_flame_of(touching).burning, "control: not at once")
 
 	await _watch(_frames(_fire.spread_delay) + MARGIN_FRAMES)
 
-	assert_true(others[0].burning, "the second")
-	assert_true(others[1].burning, "the third")
+	assert_true(_flame_of(touching).burning, "the one it touches catches")
+	assert_false(_flame_of(apart).burning, "the one apart from it does not")
 
 
 func test_a_burning_crawler_goes_on_towards_the_noise_he_makes() -> void:

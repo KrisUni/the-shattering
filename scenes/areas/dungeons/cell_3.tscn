@@ -2,10 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
-[ext_resource type="PackedScene" path="res://scenes/world/path_blocker.tscn" id="3_blocker"]
+[ext_resource type="PackedScene" path="res://scenes/world/metal_gate.tscn" id="3_blocker"]
 [ext_resource type="PackedScene" path="res://scenes/world/lamp.tscn" id="4_torch"]
 [ext_resource type="TileSet" path="res://assets/shared/dungeon_tiles/dungeon_tiles.tres" id="5_tiles"]
-[ext_resource type="Texture2D" uid="uid://c3prrhy0g637y" path="res://assets/shared/dungeon_tiles/roots_blocker.png" id="6_roots"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bars_80.png" id="p_cell_bars"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_window.png" id="p_cell_window"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_light.png" id="p_cell_light"]
@@ -210,18 +209,9 @@ shape = SubResource("Shape_128x16")
 [node name="Entrance" type="Marker2D" parent="Exits/door"]
 position = Vector2(0, -56)
 
-[node name="Roots" parent="." instance=ExtResource("3_blocker")]
+[node name="Gate" parent="." instance=ExtResource("3_blocker")]
 position = Vector2(576, 620)
-id = &"dungeons/cell_3/roots"
-size = Vector2(128, 16)
-
-[node name="Shape" parent="Roots/Look" index="0"]
-visible = false
-color = Color(0.22, 0.3, 0.12, 1)
-
-[node name="Art" type="Sprite2D" parent="Roots/Look"]
-scale = Vector2(2, 2)
-texture = ExtResource("6_roots")
+id = &"dungeons/cell_3/gate"
 
 [node name="Torch" parent="." instance=ExtResource("4_torch")]
 position = Vector2(544, 228)

@@ -1,10 +1,10 @@
 extends GutTest
 ## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a lane three
-## Almos-widths wide that one guard walks from end to end, with wardrobes and barrels spread on both
+## Almos-widths wide that one guard walks from end to end, with big rocks and barrels spread on both
 ## sides of it, by the north wall between the cell doors and along the south edge, to hide in while
 ## he goes by. Here: he patrols the whole length, the route
 ## and the doorways are clear, and in the real Dungeons he walks his whole round past Almos hidden in
-## the wardrobe by Cell 3 without noticing him, while he catches him standing in the open.
+## the barrel by Cell 3 without noticing him, while he catches him standing in the open.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
@@ -75,11 +75,11 @@ func test_one_guard_walks_the_hall_from_one_end_to_the_other() -> void:
 
 func test_the_furniture_leaves_every_cell_door_clear() -> void:
 	var room := await _corridor_in_a_viewport()
-	for door in ["to_cell_1", "to_cell_2", "to_cell_3"]:
+	for door in ["to_cell_2", "to_cell_3"]:
 		var exit_node := room.get_node("Exits/" + door) as Node2D
 		for node in room.get_node("Furniture").get_children():
 			# Only what stands in the row along the north wall, where the doors are.
-			if (node as Node2D).position.y > 140.0:
+			if not node is Node2D or (node as Node2D).position.y > 140.0:
 				continue
 			assert_gt(absf((node as Node2D).position.x - exit_node.position.x), 64.0 + 20.0, "%s stands clear of %s" % [node.name, door])
 
@@ -87,7 +87,7 @@ func test_the_furniture_leaves_every_cell_door_clear() -> void:
 func test_there_are_places_to_hide_along_his_path() -> void:
 	var room := await _corridor_in_a_viewport()
 	var spots := room.get_node("Furniture").get_children().filter(func(n: Node) -> bool: return n is HidingSpot)
-	assert_gte(spots.size(), 4, "wardrobes and barrels to hide in")
+	assert_gte(spots.size(), 4, "barrels to hide in")
 	var xs: Array[float] = []
 	for spot in spots:
 		assert_true(spot.is_in_group(&"hiding_spots"), "%s can be got into" % spot.name)
@@ -145,19 +145,24 @@ func _host_in_the_dungeons() -> AreaHost:
 	return host
 
 
-func test_hidden_in_the_wardrobe_by_cell_3_a_whole_patrol_round_goes_by_without_noticing_him() -> void:
+func test_hidden_in_the_barrel_by_cell_3_a_whole_patrol_round_goes_by_without_noticing_him() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 	var dungeons := host.current_space as DungeonsBuilding
 	var corridor := dungeons.room(&"corridor_1")
-	var wardrobe := corridor.get_node("Furniture/Wardrobe1") as HidingSpot
-	host.current_space.put_almos_at(wardrobe.global_position + Vector2(0, 8))
+	var entrance := corridor.get_node("Exits/to_cell_3/Entrance") as Node2D
+	var barrel: HidingSpot = null
+	for node in corridor.get_node("Furniture").get_children():
+		var spot := node as HidingSpot
+		if spot != null and (barrel == null or spot.global_position.distance_to(entrance.global_position) < barrel.global_position.distance_to(entrance.global_position)):
+			barrel = spot
+	host.current_space.put_almos_at(barrel.global_position + Vector2(0, 8))
 	await wait_physics_frames(2)
 	_almos_input.press_action(&"interact")
 	await wait_physics_frames(TAP_FRAMES)
 	_almos_input.release_action(&"interact")
 	await wait_physics_frames(2)
-	assert_true(host.almos.hiding, "he is in the wardrobe")
+	assert_true(host.almos.hiding, "he is in the barrel")
 	var guard = corridor.get_node("Guards/Guard")
 	var tuning := load(JAILER_PATH) as EnemyTuning
 	var round_length := 0.0
@@ -172,7 +177,7 @@ func test_hidden_in_the_wardrobe_by_cell_3_a_whole_patrol_round_goes_by_without_
 			noticed = noticed or g.in_pursuit
 		if noticed:
 			break
-	assert_false(noticed, "no guard noticed him in the wardrobe for a whole round")
+	assert_false(noticed, "no guard noticed him in the barrel for a whole round")
 	assert_true(host.almos.hiding, "and he is still hidden")
 
 

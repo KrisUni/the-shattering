@@ -178,7 +178,7 @@ func _room(host: AreaHost, id: StringName) -> Room:
 
 
 func _roots(host: AreaHost) -> PathBlocker:
-	return _room(host, &"cell_3").get_node("Roots") as PathBlocker
+	return _room(host, &"cell_3").get_node("Gate") as PathBlocker
 
 
 # The Checkpoints in the node's subtree.

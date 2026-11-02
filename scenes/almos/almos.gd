@@ -572,6 +572,10 @@ func return_to(point: Vector2) -> void:
 	_fell_down_a_drop = false
 	_look.scale = Vector2.ONE
 	_look.position = Vector2.ZERO
+	# Any Fire on him goes out.
+	var on_fire := get_node_or_null(^"Flammable") as Flammable
+	if on_fire != null:
+		on_fire.extinguish()
 	global_position = point
 	_last_firm_ground = point
 	health.refill()

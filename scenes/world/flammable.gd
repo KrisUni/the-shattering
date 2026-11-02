@@ -1,8 +1,9 @@
 class_name Flammable
 extends Area2D
 ## A flammable thing: it catches Fire when a fireball hits it or a lit torch in Almos's hand is
-## swung into it. Once it burns it spreads Fire, after the spread delay, to every flammable thing
-## within the spread radius, and burns for the burn time, then it is burnt out: gone, with no look
+## swung into it. Once it burns, from the spread delay on, it sets alight every flammable thing it
+## touches (whose area overlaps its own, now or later while it burns): Fire passes only by contact,
+## so a burning enemy has to walk into a barrel for the barrel to catch. It burns for the burn time, then it is burnt out: gone, with no look
 ## and no collision. (A creature, such as a Root crawler, is the exception: when its burn time is
 ## over it stops burning, as extinguish leaves a thing, and is never burnt out.) While it burns it gives light, as a lit torch does (it has light and lights), and
 ## is in the group "fires" for those that read light. It is never in the group "torches", so Flame
@@ -50,6 +51,10 @@ enum Kind { HIDING_SPOT, FUNGUS, PATH_BLOCKER, CREATURE }
 ## What is drawn of the thing itself, hidden once it is burnt out. Optional.
 @export var look: CanvasItem
 
+## Whether touching something burning sets it alight. A metal gate does not catch that way: only a
+## thrown flame melts it.
+@export var catches_by_contact := true
+
 ## The gameplay light it gives within its light radius while it burns.
 var light: float:
 	get:
@@ -64,6 +69,11 @@ var burning: bool:
 var burnt_out: bool:
 	get:
 		return _burnt_out
+
+## How long, in seconds, it has burnt since it caught.
+var burned_for: float:
+	get:
+		return _burned_for
 
 ## How many ticks it has made since it caught.
 var ticks: int:
@@ -95,7 +105,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_burned_for += delta
 	_tick()
-	if not _spread and _burned_for >= tuning.spread_delay:
+	if _burned_for >= tuning.spread_delay:
 		_spread = true
 		_spread_fire()
 	if _burned_for >= tuning.burn_time:
@@ -212,11 +222,11 @@ func _tick() -> void:
 		ticked.emit()
 
 
-# Sets alight every other flammable thing within the spread radius.
+# Sets alight every other flammable thing it touches: whose area overlaps its own.
 func _spread_fire() -> void:
-	for node in get_tree().get_nodes_in_group(&"flammables"):
-		var other := node as Flammable
-		if other != null and other != self and global_position.distance_to(other.global_position) <= tuning.spread_radius:
+	for area in get_overlapping_areas():
+		var other := area as Flammable
+		if other != null and other != self and not other.burning and other.catches_by_contact:
 			other.ignite()
 
 

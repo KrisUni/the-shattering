@@ -45,6 +45,8 @@ const LIFTABLE_SCRIPT := preload("res://scenes/world/liftable.gd")
 const WAVE_SCRIPT := preload("res://scenes/almos/spell_wave.gd")
 # In pixels: how far in front of his feet a prop he puts down lands.
 const DROP_AHEAD := 40.0
+# In pixels: how far either side of him two small rocks are held and thrown.
+const PAIR_SPACING := 10.0
 
 ## Emitted when the fireball leaves him, with the fireball and the torch whose flame it is.
 signal fireball_thrown(fireball: Fireball, torch: Torch)
@@ -104,6 +106,11 @@ var held_object: Node:
 	get:
 		return _held_object
 
+## The second prop he holds beside the first (two small rocks are lifted together), or null.
+var held_extra: Node:
+	get:
+		return _held_extra
+
 ## What the wind-up draws a flame from, the torch or the Fire, or null when he is not winding up.
 ## Only read, by his look.
 var drawing_from: Node2D:
@@ -140,6 +147,8 @@ var _fire_hold_left := 0.0
 # The prop the wind-up is lifting, and the prop he holds.
 var _lift: Node
 var _held_object: Node
+# The second small rock he holds beside the first, or null.
+var _held_extra: Node
 
 
 func _ready() -> void:
@@ -195,6 +204,9 @@ func reset() -> void:
 	if _held_object != null and is_instance_valid(_held_object):
 		_held_object.drop_at(body.global_position + _ahead() * DROP_AHEAD)
 	_held_object = null
+	if _held_extra != null and is_instance_valid(_held_extra):
+		_held_extra.drop_at(body.global_position + _ahead() * DROP_AHEAD + _ahead().orthogonal() * 16.0)
+	_held_extra = null
 	_winding_up = false
 	_frames = 0
 	_torch = null
@@ -220,6 +232,9 @@ func _pull(aim: Vector2) -> void:
 	var prop := _nearest_prop_in_the_cone(pull_cost, aim)
 	if prop != null:
 		other_distance = minf(other_distance, _distance_to(prop.prop()))
+	var budgeable := _nearest_budgeable_in_the_cone(pull_cost, aim)
+	if budgeable != null:
+		other_distance = minf(other_distance, _distance_to(budgeable))
 	if torch != null and torch_distance <= fire_distance and torch_distance <= other_distance:
 		_begin()
 	elif fire != null and fire_distance <= other_distance:
@@ -246,6 +261,19 @@ func _act_on_an_enemy(aim: Vector2) -> void:
 	var cost := pull_cost if pulling else shove_cost
 	var enemy = _nearest_enemy_in_the_cone(cost, aim)
 	var prop := _nearest_prop_in_the_cone(cost, aim)
+	var budgeable := _nearest_budgeable_in_the_cone(cost, aim)
+	if budgeable != null:
+		var budge_distance := _distance_to(budgeable)
+		var nearer_than_prop := prop == null or budge_distance < _distance_to(prop.prop())
+		var nearer_than_enemy := enemy == null or budge_distance < _distance_to(enemy)
+		if nearer_than_prop and nearer_than_enemy:
+			_send_a_wave(pulling, aim, budgeable)
+			if not _can_pay(cost):
+				return
+			_pay(cost)
+			var toward: Vector2 = body.global_position - budgeable.global_position
+			budgeable.budge(toward if pulling else -toward, not pulling)
+			return
 	if prop != null and (enemy == null or _distance_to(prop.prop()) < _distance_to(enemy)):
 		_send_a_wave(pulling, aim, prop.prop())
 		_act_on_a_prop(prop, pulling, cost)
@@ -321,6 +349,30 @@ func _in_the_cone(cost: SpellCost, aim: Vector2, away: Vector2) -> bool:
 
 func _distance_to(target: Node2D) -> float:
 	return body.global_position.distance_to(target.global_position)
+
+
+# The nearest thing that only budges (a big rock, a metal gate) within the cost's range and cone
+# around the aim, with no wall between, or null.
+func _nearest_budgeable_in_the_cone(cost: SpellCost, aim: Vector2) -> Node2D:
+	var nearest: Node2D = null
+	var nearest_distance := cost.target_range
+	for node in get_tree().get_nodes_in_group(&"budgeables"):
+		var thing := node as Node2D
+		if thing == null or not thing.can_be_moved():
+			continue
+		var away := thing.global_position - body.global_position
+		var distance := away.length()
+		if distance > nearest_distance or distance <= 0.0:
+			continue
+		if not _in_the_cone(cost, aim, away):
+			continue
+		var line := PhysicsRayQueryParameters2D.create(body.global_position, thing.global_position, WALL_MASK)
+		line.exclude = thing.body_rids()
+		if not body.get_world_2d().direct_space_state.intersect_ray(line).is_empty():
+			continue
+		nearest = thing
+		nearest_distance = distance
+	return nearest
 
 
 # The way he faces, for where he puts a prop down.
@@ -427,6 +479,17 @@ func _lift_up(prop: Node) -> void:
 	if not prop.can_be_moved() or not _can_pay(pull_cost):
 		return
 	_pay(pull_cost)
+	_held_extra = null
+	if prop.tuning.get(&"pairs") == true:
+		# Two at a time: the nearest other one in reach comes up with it, the two side by side.
+		var second := _nearest_pair_for(prop)
+		if second != null:
+			prop.hold_offset = Vector2(-PAIR_SPACING, 0.0)
+			second.hold_offset = Vector2(PAIR_SPACING, 0.0)
+			second.lift(body)
+			_held_extra = second
+		else:
+			prop.hold_offset = Vector2.ZERO
 	prop.lift(body)
 	_held_object = prop
 	_selected_before_draw = _selected
@@ -436,12 +499,39 @@ func _lift_up(prop: Node) -> void:
 # The held prop leaves him, thrown the way he aims.
 func _throw_object(aim: Vector2) -> void:
 	var prop := _held_object
+	var second := _held_extra
 	_held_object = null
+	_held_extra = null
 	_select(_selected_before_draw)
 	_pay(shove_cost)
 	_send_a_wave(false, aim, null)
 	prop.throw(aim)
 	object_thrown.emit(prop)
+	if second != null and is_instance_valid(second) and second.held():
+		second.throw(aim)
+		object_thrown.emit(second)
+
+
+# The nearest other prop that pairs with this one (another small rock), at rest and within Pull's
+# reach of him with no wall between, or null.
+func _nearest_pair_for(prop: Node) -> Node:
+	var nearest: Node = null
+	var nearest_distance := pull_cost.target_range
+	for node in get_tree().get_nodes_in_group(&"liftables"):
+		if node == prop or node.get_script() != LIFTABLE_SCRIPT or not node.can_be_moved():
+			continue
+		if node.tuning.get(&"pairs") != true:
+			continue
+		var distance := _distance_to(node.prop())
+		if distance > nearest_distance:
+			continue
+		var line := PhysicsRayQueryParameters2D.create(body.global_position, node.prop().global_position, WALL_MASK)
+		line.exclude = node.body_rids()
+		if not body.get_world_2d().direct_space_state.intersect_ray(line).is_empty():
+			continue
+		nearest = node
+		nearest_distance = distance
+	return nearest
 
 
 # The wave of energy of a Pull or Shove on ordinary things: a look, sent whatever comes of the press.

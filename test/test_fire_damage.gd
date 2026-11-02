@@ -179,6 +179,9 @@ func test_a_burnt_out_spot_hurts_no_one() -> void:
 	await wait_physics_frames(MARGIN_FRAMES)
 	curtain.ignite()
 	await _until(func() -> bool: return curtain.burnt_out)
+	# Standing in it, he caught from it (Fire passes by contact): his own Fire is put out, so that
+	# only the burnt-out spot is left to hurt him.
+	(_almos.get_node("Flammable") as Flammable).extinguish()
 	var lost := _lost()
 	assert_gt(lost, 0.0, "control: it hurt while it burned")
 

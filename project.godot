@@ -161,6 +161,7 @@ sip_mana={
 2d_physics/layer_9="player_body"
 2d_physics/layer_10="flammable"
 2d_physics/layer_11="drop_edge"
+2d_physics/layer_12="player_flammable"
 
 [rendering]
 

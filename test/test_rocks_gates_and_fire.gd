@@ -1,0 +1,325 @@
+extends GutTest
+## Big rocks, small rocks, metal gates and Fire by contact:
+## - a big rock is solid and too heavy to move: a Pull or a Shove only budges it, and a Shove with a
+##   wall right behind it breaks it into four to six small rocks;
+## - Pull lifts small rocks two at a time and one Shove throws both; a thrown rock breaks a barrel it
+##   hits and crashes a metal gate open;
+## - a metal gate budges at a Pull or a Shove and stays shut; a thrown flame melts it open, but
+##   touching something burning does not;
+## - Fire passes only by contact: a burning guard sets alight a barrel it touches, not one apart from
+##   it, and Almos catches from a burning guard he touches, burns and is hurt, and is put out when
+##   returned;
+## - the guards are drawn as Almos recoloured.
+
+const AlmosInput := preload("res://test/helpers/almos_input.gd")
+const BIG_ROCK_SCENE := preload("res://scenes/world/big_rock.tscn")
+const SMALL_ROCK_SCENE := preload("res://scenes/world/small_rock.tscn")
+const BARREL_SCENE := preload("res://scenes/world/barrel.tscn")
+const GATE_SCENE := preload("res://scenes/world/metal_gate.tscn")
+const JAILER_SCENE := preload("res://scenes/enemies/nar_jailer.tscn")
+const SPELL_PATH := "res://data/fireball.tres"
+const FIRE_PATH := "res://data/fire.tres"
+const TAP_FRAMES := 2
+const MARGIN_FRAMES := 8
+
+var _almos_input: AlmosInput
+
+
+func before_each() -> void:
+	WorldState.reset()
+	await get_tree().process_frame
+	_almos_input = AlmosInput.new(self)
+
+
+func after_each() -> void:
+	_almos_input.release_everything()
+	WorldState.reset()
+
+
+func _tap(action: StringName) -> void:
+	_almos_input.press_action(action)
+	await wait_physics_frames(TAP_FRAMES)
+	_almos_input.release_action(action)
+
+
+func _place(scene: PackedScene, almos: Node2D, offset: Vector2) -> Node2D:
+	var node := scene.instantiate() as Node2D
+	node.position = almos.global_position + offset
+	almos.get_parent().add_child(node)
+	autofree(node)
+	return node
+
+
+func _wall(almos: Node2D, centre: Vector2, size: Vector2) -> StaticBody2D:
+	var wall := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = size
+	shape.shape = rect
+	wall.add_child(shape)
+	wall.position = almos.global_position + centre
+	almos.get_parent().add_child(wall)
+	autofree(wall)
+	return wall
+
+
+func _wind_up() -> int:
+	return (load(SPELL_PATH) as SpellData).wind_up_frames + MARGIN_FRAMES
+
+
+func _small_rocks(parent: Node) -> Array:
+	return parent.get_children().filter(func(n: Node) -> bool: return n.name.begins_with("SmallRock") and is_instance_valid(n))
+
+
+# --- big rocks ---
+
+func test_a_pull_only_budges_a_big_rock() -> void:
+	var almos = _almos_input.spawn_almos()
+	var rock := _place(BIG_ROCK_SCENE, almos, Vector2(0, 80)) as BigRock
+	var at := rock.global_position
+	watch_signals(rock)
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(4)
+	assert_signal_emitted(rock, "budged", "it budged")
+	assert_true(rock.budging(), "and is rocking")
+	await wait_physics_frames(30)
+	assert_eq(rock.global_position, at, "it stays where it stands")
+	assert_false((almos.get_node("Spell") as AlmosSpell).holding, "he holds nothing")
+
+
+func test_a_shove_in_the_open_only_budges_a_big_rock() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.DOWN
+	var rock := _place(BIG_ROCK_SCENE, almos, Vector2(0, 80)) as BigRock
+	watch_signals(rock)
+	await wait_physics_frames(2)
+	await _tap(&"switch_spell")
+	await _tap(&"cast_spell")
+	await wait_physics_frames(4)
+	assert_signal_emitted(rock, "budged", "it budged")
+	assert_signal_not_emitted(rock, "shattered", "nothing behind it to crush it on")
+	assert_true(is_instance_valid(rock), "whole")
+
+
+func test_a_shove_against_a_wall_breaks_a_big_rock_into_four_to_six_small_rocks() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.UP
+	var rock := _place(BIG_ROCK_SCENE, almos, Vector2(0, -80)) as BigRock
+	_wall(almos, Vector2(0, -80 - 23 - 16 - 10), Vector2(200, 20))
+	var parent := rock.get_parent()
+	var pieces: Array = []
+	rock.shattered.connect(func(made: Array) -> void: pieces.append_array(made))
+	await wait_physics_frames(2)
+	assert_true(rock.wall_behind(Vector2.UP), "control: a wall right behind it")
+	await _tap(&"switch_spell")
+	await _tap(&"cast_spell")
+	await wait_physics_frames(4)
+	assert_between(pieces.size(), 4, 6, "it broke into four to six small rocks")
+	assert_false(is_instance_valid(rock), "the big rock is gone")
+	for piece in pieces:
+		autofree(piece)
+		assert_eq(piece.get_parent(), parent, "scattered where it stood")
+
+
+# --- small rocks ---
+
+func test_pull_lifts_small_rocks_two_at_a_time_and_a_shove_throws_both() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	var first := _place(SMALL_ROCK_SCENE, almos, Vector2(50, 0))
+	var second := _place(SMALL_ROCK_SCENE, almos, Vector2(70, 20))
+	var third := _place(SMALL_ROCK_SCENE, almos, Vector2(150, 0))
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up())
+	var spell := almos.get_node("Spell") as AlmosSpell
+	assert_eq(spell.held_object, first.get_node("Liftable"), "the nearest")
+	assert_eq(spell.held_extra, second.get_node("Liftable"), "and the next nearest with it")
+	assert_eq(third.get_node("Liftable").state, Liftable.State.RESTING, "not a third")
+	await wait_seconds(0.3)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(2)
+	assert_eq(first.get_node("Liftable").state, Liftable.State.FLYING, "one Shove throws the first")
+	assert_eq(second.get_node("Liftable").state, Liftable.State.FLYING, "and the second")
+	assert_false(spell.holding, "his hands are empty")
+
+
+func test_a_thrown_rock_breaks_a_barrel() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	_place(SMALL_ROCK_SCENE, almos, Vector2(50, 0))
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up())
+	await wait_seconds(0.3)
+	var barrel := _place(BARREL_SCENE, almos, Vector2(140, 6))
+	await wait_physics_frames(2)
+	almos.facing = Vector2.RIGHT
+	await _tap(&"cast_spell")
+	await wait_seconds(0.6)
+	assert_eq(barrel.get_node("Liftable").state, Liftable.State.BROKEN, "the barrel broke")
+
+
+func test_a_thrown_rock_crashes_a_metal_gate_open() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.RIGHT
+	_place(SMALL_ROCK_SCENE, almos, Vector2(50, 0))
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(_wind_up())
+	await wait_seconds(0.3)
+	var gate := GATE_SCENE.instantiate() as MetalGate
+	gate.id = &"test/gate_crashed"
+	gate.size = Vector2(16, 128)
+	gate.position = almos.global_position + Vector2(160, 0)
+	almos.get_parent().add_child(gate)
+	autofree(gate)
+	watch_signals(gate)
+	await wait_physics_frames(2)
+	almos.facing = Vector2.RIGHT
+	await _tap(&"cast_spell")
+	await wait_seconds(0.6)
+	assert_signal_emitted(gate, "crashed", "the rock crashed it")
+	assert_true(gate.open, "it is open")
+
+
+# --- metal gates ---
+
+func _gate(almos: Node2D, offset: Vector2, id: StringName) -> MetalGate:
+	var gate := GATE_SCENE.instantiate() as MetalGate
+	gate.id = id
+	gate.position = almos.global_position + offset
+	almos.get_parent().add_child(gate)
+	autofree(gate)
+	return gate
+
+
+func test_a_pull_or_a_shove_only_budges_a_metal_gate() -> void:
+	var almos = _almos_input.spawn_almos()
+	almos.facing = Vector2.DOWN
+	var gate := _gate(almos, Vector2(0, 80), &"test/gate_budged")
+	watch_signals(gate)
+	await wait_physics_frames(2)
+	await _tap(&"cast_spell")
+	await wait_physics_frames(4)
+	assert_signal_emit_count(gate, "budged", 1, "a Pull budges it")
+	await wait_physics_frames(30)
+	await _tap(&"switch_spell")
+	await _tap(&"cast_spell")
+	await wait_physics_frames(4)
+	assert_signal_emit_count(gate, "budged", 2, "and a Shove")
+	assert_false(gate.open, "it stays shut")
+
+
+func test_a_thrown_flame_melts_a_metal_gate_open() -> void:
+	var almos = _almos_input.spawn_almos()
+	var gate := _gate(almos, Vector2(400, 0), &"test/gate_melted")
+	await wait_physics_frames(2)
+	gate.flammable.ignite()
+	await wait_physics_frames(30)
+	var art := gate.get_node("Look/Art") as Sprite2D
+	assert_ne(art.modulate, Color.WHITE, "it glows as it melts")
+	await wait_seconds((load(FIRE_PATH) as FireTuning).burn_time)
+	assert_true(gate.open, "melted open")
+
+
+func test_touching_something_burning_does_not_melt_a_metal_gate() -> void:
+	var almos = _almos_input.spawn_almos()
+	var gate := _gate(almos, Vector2(400, 0), &"test/gate_touched")
+	var jailer := _place(JAILER_SCENE, almos, Vector2(400, 20))
+	await wait_physics_frames(2)
+	(jailer.get_node("Flammable") as Flammable).ignite()
+	await wait_seconds((load(FIRE_PATH) as FireTuning).spread_delay + 0.3)
+	assert_false(gate.flammable.burning, "the gate does not catch")
+
+
+# --- Fire by contact ---
+
+func test_a_burning_guard_sets_alight_a_barrel_it_touches_and_not_one_apart() -> void:
+	var almos = _almos_input.spawn_almos()
+	var touching := _place(BARREL_SCENE, almos, Vector2(400, 0)) as HidingSpot
+	var apart := _place(BARREL_SCENE, almos, Vector2(400, 120)) as HidingSpot
+	var jailer := _place(JAILER_SCENE, almos, Vector2(400, 22))
+	await wait_physics_frames(2)
+	(jailer.get_node("Flammable") as Flammable).ignite()
+	await wait_physics_frames(4)
+	assert_false(touching.flammable.burning, "control: not at once")
+	await wait_seconds((load(FIRE_PATH) as FireTuning).spread_delay + 0.2)
+	assert_true(touching.flammable.burning, "the barrel it touches caught")
+	assert_false(apart.flammable.burning, "the one apart from it did not")
+
+
+func test_almos_catches_fire_from_a_burning_guard_he_touches_and_burns() -> void:
+	var almos = _almos_input.spawn_almos()
+	var jailer := _place(JAILER_SCENE, almos, Vector2(22, 0))
+	await wait_physics_frames(2)
+	(jailer.get_node("Flammable") as Flammable).ignite()
+	await wait_seconds((load(FIRE_PATH) as FireTuning).spread_delay + 0.2)
+	var on_fire := almos.get_node("Flammable") as Flammable
+	assert_true(on_fire.burning, "he caught")
+	jailer.global_position += Vector2(400, 0)
+	var before: float = almos.health.current
+	await wait_seconds((load(FIRE_PATH) as FireTuning).tick_interval * 2.0 + 0.1)
+	assert_lt(almos.health.current, before, "his own Fire hurts him, away from the guard")
+	almos.return_to(almos.global_position)
+	assert_false(on_fire.burning, "returned, he is put out")
+
+
+func test_almos_is_not_set_alight_by_a_fire_he_does_not_touch() -> void:
+	var almos = _almos_input.spawn_almos()
+	var barrel := _place(BARREL_SCENE, almos, Vector2(120, 0)) as HidingSpot
+	await wait_physics_frames(2)
+	barrel.flammable.ignite()
+	await wait_seconds((load(FIRE_PATH) as FireTuning).spread_delay + 0.5)
+	assert_false((almos.get_node("Flammable") as Flammable).burning, "not touching it, he does not catch")
+
+
+# --- the guards' look ---
+
+func test_the_guards_are_drawn_as_almos_recoloured() -> void:
+	var guard := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/nar_jailer/idle_0.png"))
+	var almos := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/almos/idle_side_0.png"))
+	var same_shape := true
+	var recoloured := false
+	var dx := (guard.get_width() - almos.get_width()) / 2
+	var dy := 28 - almos.get_height()
+	for y in almos.get_height():
+		for x in almos.get_width():
+			var a := almos.get_pixel(x, y)
+			var g := guard.get_pixel(x + dx, y + dy)
+			same_shape = same_shape and (a.a > 0.0) == (g.a > 0.0)
+			recoloured = recoloured or (a.a > 0.0 and not a.is_equal_approx(g))
+	assert_true(same_shape, "the guard's idle frame has Almos's outline")
+	assert_true(recoloured, "in other colours")
+
+
+# --- the hall and its cells ---
+
+func test_the_hall_has_two_centred_cell_doors_big_rocks_and_no_wardrobes() -> void:
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var doors: Array[float] = []
+	for exit_node in room.get_node("Exits").get_children():
+		if String(exit_node.name).begins_with("to_cell_"):
+			doors.append((exit_node as Node2D).position.x)
+	doors.sort()
+	assert_eq(doors.size(), 2, "two cells")
+	assert_almost_eq(doors[0] + doors[1], 1152.0, 0.01, "their doors centred about the middle of the hall")
+	var rocks := 0
+	for node in room.get_node("Furniture").get_children():
+		assert_false(String(node.name).begins_with("Wardrobe"), "no wardrobe left")
+		if node is BigRock:
+			rocks += 1
+	assert_gte(rocks, 3, "big rocks in their place")
+	var gate := room.get_node("Cell2Gate") as MetalGate
+	var door_2 := room.get_node("Exits/to_cell_2") as Node2D
+	assert_almost_eq(gate.position.x, door_2.position.x, 0.01, "a metal gate shuts the other cell's doorway")
+	assert_false(gate.open, "shut")
+
+
+func test_both_cells_are_shut_by_metal_gates() -> void:
+	var cell := (load("res://scenes/areas/dungeons/cell_3.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(cell)
+	assert_true(cell.get_node_or_null("Gate") is MetalGate, "Cell 3, where he wakes, has a metal gate")
+	assert_false(ResourceLoader.exists("res://scenes/areas/dungeons/cell_1.tscn"), "Cell 1 is gone")

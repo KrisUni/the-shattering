@@ -50,7 +50,7 @@ func _drawn(room: Node2D, cell: Vector2i) -> bool:
 
 
 func test_there_are_all_the_rooms() -> void:
-	assert_eq(_room_paths().size(), 25, "the Dungeons have 25 Rooms")
+	assert_eq(_room_paths().size(), 24, "the Dungeons have 24 Rooms")
 
 
 func test_every_room_has_the_three_tile_layers_at_scale_2_in_the_right_order() -> void:

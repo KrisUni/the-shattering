@@ -1,12 +1,16 @@
 extends GutTest
 ## A Flammable thing on its own: igniting it sets it burning, Fire spreads from it to the flammable
-## things within the spread radius after the spread delay and to none beyond it, it burns for the
+## things it touches after the spread delay and to none it does not touch, it burns for the
 ## burn time and is then gone, and while it burns it gives light, as a lit torch does. Fire never
 ## touches a torch. The numbers are a tuning this test makes, so nothing here pins the shipped ones.
 
+# In pixels. Fire passes only by contact: a thing this far from another touches it (their catch boxes,
+# 32 wide, overlap), and one this far does not.
+const TOUCHING := 20.0
+const APART := 100.0
 const FLAMMABLE_PATH := "res://scenes/world/flammable.tscn"
 const TORCH_PATH := "res://scenes/world/torch.tscn"
-# In pixels. How far inside or beyond the spread radius or the light radius a point is put.
+# In pixels. How far inside or beyond the light radius a point is put.
 const EDGE_MARGIN := 1.0
 # In physics frames. Slack added to a computed wait.
 const MARGIN_FRAMES := 3
@@ -17,7 +21,6 @@ var _tuning: FireTuning
 func before_each() -> void:
 	await get_tree().process_frame
 	_tuning = FireTuning.new()
-	_tuning.spread_radius = 100.0
 	_tuning.spread_delay = 0.5
 	_tuning.burn_time = 1.5
 	_tuning.light = 0.6
@@ -51,9 +54,9 @@ func test_igniting_says_whether_it_caught_and_tells_the_thing_once() -> void:
 	assert_signal_emit_count(thing, "caught", 1)
 
 
-func test_fire_spreads_to_a_neighbour_within_the_radius_after_the_delay() -> void:
+func test_fire_spreads_to_a_neighbour_it_touches_after_the_delay() -> void:
 	var source := _thing(Vector2.ZERO)
-	var neighbour := _thing(Vector2(_tuning.spread_radius - EDGE_MARGIN, 0.0))
+	var neighbour := _thing(Vector2(TOUCHING, 0.0))
 
 	source.ignite()
 	await wait_physics_frames(_frames(_tuning.spread_delay) + MARGIN_FRAMES)
@@ -63,7 +66,7 @@ func test_fire_spreads_to_a_neighbour_within_the_radius_after_the_delay() -> voi
 
 func test_fire_does_not_spread_before_the_delay() -> void:
 	var source := _thing(Vector2.ZERO)
-	var neighbour := _thing(Vector2(_tuning.spread_radius - EDGE_MARGIN, 0.0))
+	var neighbour := _thing(Vector2(TOUCHING, 0.0))
 
 	source.ignite()
 	await wait_physics_frames(_frames(_tuning.spread_delay) - MARGIN_FRAMES)
@@ -71,9 +74,9 @@ func test_fire_does_not_spread_before_the_delay() -> void:
 	assert_false(neighbour.burning)
 
 
-func test_fire_does_not_spread_to_a_thing_beyond_the_radius() -> void:
+func test_fire_does_not_spread_to_a_thing_it_does_not_touch() -> void:
 	var source := _thing(Vector2.ZERO)
-	var far := _thing(Vector2(_tuning.spread_radius + EDGE_MARGIN, 0.0))
+	var far := _thing(Vector2(APART, 0.0))
 
 	source.ignite()
 	await wait_physics_frames(_frames(_tuning.spread_delay) + MARGIN_FRAMES)
@@ -83,8 +86,8 @@ func test_fire_does_not_spread_to_a_thing_beyond_the_radius() -> void:
 
 func test_fire_goes_on_from_a_neighbour_to_the_next_thing() -> void:
 	var first := _thing(Vector2.ZERO)
-	var second := _thing(Vector2(_tuning.spread_radius - EDGE_MARGIN, 0.0))
-	var third := _thing(Vector2(2.0 * (_tuning.spread_radius - EDGE_MARGIN), 0.0))
+	var second := _thing(Vector2(TOUCHING, 0.0))
+	var third := _thing(Vector2(2.0 * TOUCHING, 0.0))
 
 	first.ignite()
 	await wait_physics_frames(2 * _frames(_tuning.spread_delay) + 2 * MARGIN_FRAMES)
@@ -129,7 +132,7 @@ func test_a_burnt_out_thing_cannot_be_set_alight_again() -> void:
 
 func test_fire_does_not_spread_into_a_burnt_out_thing() -> void:
 	var source := _thing(Vector2.ZERO)
-	var neighbour := _thing(Vector2(_tuning.spread_radius - EDGE_MARGIN, 0.0))
+	var neighbour := _thing(Vector2(TOUCHING, 0.0))
 	neighbour.ignite()
 	await wait_physics_frames(_frames(_tuning.burn_time) + MARGIN_FRAMES)
 	assert_true(neighbour.burnt_out)
