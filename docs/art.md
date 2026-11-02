@@ -96,7 +96,7 @@ Almos's thoughts (`scenes/hud/thought_text.gd`) show low on the screen in a dark
 
 ### Spell waves
 
-A Pull or Shove on ordinary things (not a flame, which keeps its fire look) shows a wave of energy in the base palette (`scenes/almos/spell_wave.gd`): for Pull, a broken cream ring as wide as Pull's reach closes in on Almos with a rose ring behind and motes drawn in; for Shove, an arc in cream, rose and slate bands bursts out along his aim. What it lands on gets a small cream ripple. It shows on every press, even one that moves nothing.
+A Pull or Shove on ordinary things (not a flame, which keeps its fire look) shows a wave of energy in the base palette (`scenes/almos/spell_wave.gd`): for Pull, a broken cream ring half as wide as Pull's reach closes in on Almos with a rose ring behind and motes drawn in; for Shove, an arc in cream, rose and slate bands bursts out along his aim to half Shove's reach. What it lands on gets a small cream ripple. It shows on every press, even one that moves nothing.
 
 ### Enemy Health bars
 

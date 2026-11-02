@@ -1,9 +1,9 @@
 extends Node2D
 ## The look of a Pull or a Shove on ordinary things (not a flame): a wave of energy, so that every
 ## press shows, whether it moves anything or not.
-## - Pull: a ring as wide as Pull's reach closes in on Almos, a second following it, drawing motes
+## - Pull: a ring half as wide as Pull's reach closes in on Almos, a second following it, drawing motes
 ##   in with it.
-## - Shove: an arc bursts out from him along his aim to Shove's reach, in bands, thinning as it goes.
+## - Shove: an arc bursts out from him along his aim, to half Shove's reach, in bands, thinning as it goes.
 ## Where the Spell lands on something, an enemy or a prop, a small ripple shows on it. Only a look:
 ## it reads nothing back, and frees itself when done. Drawn on the art pixel grid.
 
@@ -22,7 +22,10 @@ const RIPPLE_TIME := 0.3
 const SECOND_RING := 0.22
 # How much wider, either side, Shove's arc is drawn than its cone, in degrees, so that it reads.
 const ARC_SPREAD := 10.0
-const MOTES := 14
+const MOTES := 10
+# How big the wave is drawn, as a share of the Spell's reach: smaller than the reach itself, so it
+# reads as a burst around him rather than filling the Room.
+const SIZE := 0.5
 
 ## Whether it is a Pull (closing in) or a Shove (bursting out).
 var pulling := true
@@ -46,7 +49,7 @@ func _ready() -> void:
 func start(is_pull: bool, aim: Vector2, reach: float, half_angle_degrees: float, follow: Node2D, target: Node2D) -> void:
 	pulling = is_pull
 	_aim = aim.normalized() if not aim.is_zero_approx() else Vector2.DOWN
-	_reach = reach
+	_reach = reach * SIZE
 	_half_angle = half_angle_degrees
 	_follow = follow if is_pull else null
 	_target = weakref(target) if target != null else null
@@ -112,7 +115,7 @@ func _draw_pull(t: float) -> void:
 func _draw_shove(t: float) -> void:
 	var eased := 1.0 - pow(1.0 - t, 2.0)
 	var half := deg_to_rad(_half_angle + ARC_SPREAD)
-	var bands := [[0.0, CREAM, 2], [10.0, ROSE, 1], [20.0, SLATE, 1]]
+	var bands := [[0.0, CREAM, 2], [6.0, ROSE, 1], [12.0, SLATE, 1]]
 	for band in bands:
 		var radius: float = lerpf(10.0, _reach, eased) - band[0] * (0.4 + eased)
 		if radius <= 4.0:
@@ -124,7 +127,7 @@ func _draw_shove(t: float) -> void:
 		var puff := 1.0 - t / 0.3
 		for i in 6:
 			var angle := _aim.angle() + (i - 2.5) * 0.35
-			_pixel(Vector2.from_angle(angle) * (8.0 + 10.0 * t / 0.3), Color(CREAM, puff))
+			_pixel(Vector2.from_angle(angle) * (6.0 + 6.0 * t / 0.3), Color(CREAM, puff))
 
 
 # A small ring that swells and fades on what the Spell landed on, starting as the wave reaches it.
@@ -138,7 +141,7 @@ func _draw_ripple() -> void:
 		return
 	var centre := to_local(_target_at) + Vector2(0.0, -14.0)
 	var colour := Color(CREAM, 1.0 - local)
-	var radius := lerpf(4.0, 20.0, local)
+	var radius := lerpf(3.0, 12.0, local)
 	var steps := maxi(12, int(radius))
 	for i in steps:
 		var angle := TAU * i / steps
