@@ -137,12 +137,12 @@ Each sheet has these fields:
 #### Nar jailer
 
 - **Thing:** Nar jailer (the key jailer included)
-- **Source pack and files:** `assets/characters/nar_jailer/` is Almos's side-view sprite recoloured (the owner asked for the guards to be a recoloured Almos, replacing the earlier skeletons): root-brown hair in place of his blue hood, a slate-indigo uniform in place of his tan tunic, dark boots, the same bark-grey face. Frames are 32x32 with the feet on row 27: idle and walk from his idle and walk, strike, low and unblockable from his side attack, break from his idle leaned back, death from his roll ending lying down. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite; the key jailer in Radio/Officers is one with its own tuning. The test room's jailers stay placeholder.
-- **Size in art px:** 24x24 canvas (body 10 wide, centred, so it flips cleanly); feet on the bottom row (sprite offset -8 art px).
-- **Palette notes and accents used:** Base only: cream bone with navy outline and sockets, an indigo bark helmet and collar, base violet rags, an indigo spear with a sand and cream head (indigo, so it reads on the dusty-rose floor). No accent; the flashes come from the shared shader.
-- **Animations and poses needed:** `idle` (2), `walk` (4), `strike` (spear drawn back, thrust, recover), `low` (crouched sweep at the ankles), `unblockable` (spear raised overhead, held, slammed down), `break` (slumped, spear dropped), `death` (collapsing to a heap of bones). Drawn facing right. Not yet: a key at the key jailer's belt, and Block and Parry poses (the Block and Parry still show as the enemy's usual cues).
+- **Source pack and files:** Drawn for this game (no pack), `assets/characters/nar_jailer/`, made from parts by `scripts/art/draw_nar_jailer.py` so every pose shares one build. A warder of his own, not a recoloured Almos: heavy-set, in a carved bark helm with a ridged crest and a forward brim, a cuirass of overlapping bark plates and a bark pauldron on the near shoulder over a moss-grey fibre tunic, a leather belt with a bone buckle, dark trousers and boots, root-like hair spilling from under the helm, and a knotted club of grown root. The same bark-grey Nar skin as Almos. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite; the key jailer in Radio/Officers is one with its own tuning. The test room's jailers stay placeholder.
+- **Size in art px:** 32x32 canvas, facing right, feet on row 27 (sprite offset -8 art px). Each part is outlined on its own in near-black, the far arm and leg darker, so the limbs read against the body.
+- **Palette notes and accents used:** Free colour, muted: warm bark browns for the helm, plates and club, moss-grey cloth, bark-grey skin with a pale eye under the brim. No accent; the flashes come from the shared shader.
+- **Animations and poses needed:** `idle` (2, a breath, the club held low), `walk` (4, a heavy stride), `strike` (club drawn back over the shoulder, swung down, recover), `low` (crouched, a sweep along the floor), `unblockable` (club raised high in both hands, held, slammed down), `break` (knocked back and slumped, the club hanging), `death` (buckles, drops to his knees, falls flat with the club rolled from his hand), `sit` (2, on the guard post's bench, the club across his knees). Not yet: a key at the key jailer's belt, and Block and Parry poses.
 - **Burning:** a jailer carries a `Flammable` of the creature kind, as the Root crawler does: a fireball's hit or splash sets it alight, and the shared Fire flame stands on its feet while it burns.
-- **Status:** in the game (first draft; the owner checks the look in the editor). Open: `CONTEXT.md` still calls the jailers Nar; whether they are undead in the story too is the owner's call.
+- **Status:** in the game (second draft; the owner checks the look in the editor).
 
 #### Nar guard
 
@@ -171,11 +171,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Torch
 
 - **Thing:** Torch (see Pull)
-- **Source pack and files:** Bracket: Dead Swamp (Sevarihk / Aurora), `assets/shared/torch/torch.png`. Flame: hand-redrawn after Gigapack `fire_looping_003A`, `assets/shared/torch/flame_0-4.png`. See `assets/CREDITS.md`.
+- **Source pack and files:** Drawn for this game (no pack) by `scripts/art/draw_fire.py`: the bracket `assets/shared/torch/torch.png`, a shaft of grown root with a bowl of woven bark bound in dark cord, and the flame `assets/shared/torch/flame_0-4.png`.
 - **Size in art px:** Bracket 10×37; flame 16×24 (5 frames).
-- **Palette notes and accents used:** Bracket in the base violets and blues. Flame in Fire amber with sand and cream for the body and the core. A small, steady flame, so a lit torch stays apart from Fire.
+- **Palette notes and accents used:** Bracket in warm root browns. Flame in hard bands from a deep amber rim through Fire amber and sand to a cream core, no anti-aliasing. A small, steady flame, so a lit torch stays apart from Fire.
 - **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted. The Dungeons no longer use the torch: their light sources are lamps (below). `torch.tscn` stays for the test room and for the flames Almos carries; his carried torch and held flame hide the bracket.
-- **Status:** in the game (first draft; the owner checks the look in the editor)
+- **Status:** in the game (second draft; the owner checks the look in the editor)
 
 #### Lamp
 
@@ -193,12 +193,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Fire
 
 - **Thing:** Fire
-- **Source pack and files:** Gigapack (Will Tice / unTied Games) `fire_looping_004B`, `assets/shared/fire/flame_0-14.png`. See `assets/CREDITS.md`.
+- **Source pack and files:** Drawn for this game (no pack) by `scripts/art/draw_fire.py`, `assets/shared/fire/flame_0-14.png`: a teardrop flame with a rounded foot whose sides sway with looping waves, a ragged edge where its tongues lick up, tongues breaking off its top, and a wisp of violet smoke above.
 - **Size in art px:** 20×32 (15 frames), drawn over the 16×20 body of a Flammable, its foot on the body's foot.
-- **Palette notes and accents used:** Fire amber with sand and cream for the core; the smoke above in the base violets. Larger than a torch flame, with smoke, so a burning thing and a lit torch read apart.
-- **Animations and poses needed:** One looping burn (15 frames, 12 per second), shown only while the thing burns (the Flame node's visibility).
-- **Status:** in the game (first draft; the owner checks the look in the editor). Used by every Flammable, the Root crawler's burning look included (root_crawler.tscn places the shared flame at `Flammable/Flame/Art`).
-
+- **Palette notes and accents used:** Hard bands from a deep amber rim through Fire amber and sand to a cream core low in the flame; the smoke in muted violets. Larger than a torch flame, with smoke, so a burning thing and a lit torch read apart.
+- **Animations and poses needed:** One seamless looping burn (15 frames, 12 per second), shown only while the thing burns (the Flame node's visibility).
+- **Status:** in the game (second draft; the owner checks the look in the editor). Used by every Flammable, the Root crawler's burning look included (root_crawler.tscn places the shared flame at `Flammable/Flame/Art`).
 #### Pull and the fireball
 
 - **Thing:** Pull (taking a torch's or a Fire's flame), the held flame, and the Fireball (see Shove)
@@ -243,10 +242,10 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
   Both inherit `hiding_spot.tscn`. The placeholder shape is hidden, and the spot is at the foot of the furniture. The test room's spots stay placeholder.
 - **Size in art px:** Wardrobe 20x30; barrel 14x18.
 - **Palette notes and accents used:** Dusty-rose wood with sand highlights, navy outline and seams, indigo shadow at the foot. No accent; a burning one shows the shared Fire flame.
-- **Animations and poses needed:** No frames. Almos inside is not drawn at all, and the spot rattles every three seconds or so, each on its own rhythm: its look hops and jolts for a third of a second. Pulled, it shudders through the wind-up and floats up over Almos's head, bobbing while held. Thrown, it falls in an arc with a dust trail (`scenes/world/throw_dust.gd`) and bursts in dust and wood splinters where it lands (`scenes/world/impact_burst.gd`). Too heavy, it jolts harder and stays put. Almos holds his coiled wind-up pose while gripping, and strikes as he throws.
+- **Animations and poses needed:** No frames. Getting in, Almos is seen hopping in (`scenes/world/hide_hop.gd`, only a look: he is in the spot at once): he crouches, springs up in an arc and drops into a barrel feet first, cut away row by row below its rim (`open_top`), or squeezes in between a wardrobe's doors; the spot squashes and wobbles back as he lands. Getting out, he springs out of it from its rim and lands on his feet in front of it, and it squashes again. Almos inside is not drawn at all, and the spot rattles every three seconds or so, each on its own rhythm: its look hops and jolts for a third of a second. Pulled, it shudders through the wind-up and floats up over Almos's head, bobbing while held. Thrown, it falls in an arc with a dust trail (`scenes/world/throw_dust.gd`) and bursts in dust and wood splinters where it lands (`scenes/world/impact_burst.gd`). Too heavy, it jolts harder and stays put. Almos holds his coiled wind-up pose while gripping, and strikes as he throws.
 - **Placement:** Corridor 1 has no wardrobes any more: big rocks stand in their place (`assets/dungeons/rocks/rock_big.png`, a grey lumpy boulder with moss on top, `scenes/world/big_rock.tscn`), and barrels to hide in sit between them and the two cell doors, one a few steps from Cell 3's. A rock crushed against the wall bursts in pieces of its own art and leaves small rocks (`rock_small_0-2.png`).
 - **Loose things and growth:** The hall is laid out as a place people use, not scattered: a rockfall in the west corner (two big rocks and their rubble of small rocks), the prisoners' water barrel and bucket by Cell 3's door, the stores against the middle wall (barrels in a row, a pot, a crate stack, burlap sacks), and the guard post east of Cell 2's door (a barrel, a bench with a bowl, a bucket and the spear rack) where a second guard sits on the bench (`sit`, two frames of a slow breath, played while he is at rest at his post; he gets up once he is hurt or in Pursuit). Bones and skulls lie only along the chasm's lip and on its ledges. Everything that is not a plant can be lifted and thrown (barrels, bone piles, pots and bowls break where a throw ends; the bench, rack and crates are too heavy yet and shudder). Plants are only a look, kept sparse: floor moss, small glowing fungus and moss hanging from the north wall (`assets/dungeons/growth/`). The cells' lamps hang on their north walls; no lamp stands on a pole in the Dungeons' hall or cells. Cell 3 has a bowl by the bed and a puddle under a drip.
-- **Metal gate:** `assets/dungeons/gates/metal_gate.png`, 64x28 art px: iron bars between a top rail and a cross rail, rivets and rust flecks, posts at each end. It stands on its doorway's footprint. Melting, it glows from white to a hot orange and sags as it burns; crashed, it bursts in pieces of its own art.
+- **Metal gate:** `assets/dungeons/gates/metal_gate.png`, 64x28 art px: iron bars between a top rail and a cross rail, rivets and rust flecks, posts at each end. It stands on its doorway's footprint. Melting, it glows from white to a hot orange and melts away from the top down, a molten edge eating down the bars and dripping, their feet last; crashed, it bursts in pieces of its own art.
 - **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
 #### Furniture and cover
