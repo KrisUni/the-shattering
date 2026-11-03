@@ -1,7 +1,6 @@
 extends GutTest
-## Cell 3 is seen whole, but in Corridor 1, the hall outside, the camera closes in on Almos and
-## follows him, and the hall is dark but for a small circle around him and the pools of light that
-## lit torches throw.
+## Cell 3 is seen whole, and so is Corridor 1, the hall outside, at the same scale; but the hall is
+## dark but for a circle around Almos, and its torches show no light through the dark.
 
 const DUNGEONS_SCENE := preload("res://scenes/areas/dungeons/dungeons.tscn")
 
@@ -33,34 +32,21 @@ func test_the_cell_is_seen_whole() -> void:
 	assert_eq(cell.find_children("*", "Darkness", true, false).size(), 0, "and nothing dark over it")
 
 
-func test_in_the_hall_the_camera_closes_in_and_follows_him_inside_the_room() -> void:
-	var hall := _put_in(&"corridor_1", Vector2(576, 324))
+func test_the_hall_is_seen_at_the_cells_scale() -> void:
+	var hall := _put_in(&"corridor_1", Vector2(576, 150))
 	await wait_process_frames(2)
-	assert_true(hall.follows_almos, "the hall follows him")
-	assert_gt(_camera().zoom.x, 0.5, "closer in than a whole Room")
-	assert_almost_eq(_camera().global_position, _dungeons.almos.global_position, Vector2(2, 2), "centred on him")
-	# Near the Room's corner the view stops at its edges.
-	_dungeons.almos.global_position = hall.global_position + Vector2(40, 80)
-	await wait_process_frames(2)
-	var half := _camera().get_viewport_rect().size / _camera().zoom / 2.0
-	assert_gte(_camera().global_position.x - half.x, hall.global_position.x - 0.01, "never past the west edge")
-	assert_gte(_camera().global_position.y - half.y, hall.global_position.y - 0.01, "never past the north edge")
-	# Back in the cell, the whole view again.
-	var cell := _put_in(&"cell_3", Vector2(576, 400))
-	await wait_process_frames(2)
-	assert_almost_eq(_camera().zoom, Vector2(0.5, 0.5), Vector2(0.01, 0.01), "the cell's zoom")
-	assert_almost_eq(_camera().get_screen_center_position(), cell.get_view_center(), Vector2(2, 2), "the cell whole")
+	assert_almost_eq(_camera().zoom, Vector2(0.5, 0.5), Vector2(0.01, 0.01), "no closer than the cell")
+	assert_almost_eq(_camera().get_screen_center_position(), hall.get_view_center(), Vector2(2, 2), "the room in view")
 
 
-func test_the_hall_is_dark_but_round_him_and_under_its_lamps() -> void:
+func test_the_hall_is_dark_but_round_him_and_flames_give_no_light() -> void:
 	var hall := _put_in(&"corridor_1", Vector2(576, 150))
 	await wait_process_frames(2)
 	var darkness := hall.get_node("Darkness") as Darkness
 	assert_eq(darkness.target, _dungeons.almos, "it sees by him")
 	var almos := _dungeons.almos
-	assert_true(darkness.shows(almos.global_position + Vector2(30, 0)), "near him he sees")
-	assert_false(darkness.shows(almos.global_position + Vector2(0, 260)), "far off is dark")
+	assert_true(darkness.shows(almos.global_position + Vector2(150, 0)), "he sees a fair way round himself")
+	assert_false(darkness.shows(almos.global_position + Vector2(0, 400)), "far off is dark")
 	var lamp := hall.get_node("Lamp1") as Torch
-	assert_true(darkness.shows(lamp.global_position + Vector2(0, 20)), "a lit lamp shows its pool")
-	lamp.extinguish()
-	assert_false(darkness.shows(lamp.global_position + Vector2(0, 20)), "a lamp put out leaves it dark")
+	assert_true(lamp.lit, "control: the lamp burns")
+	assert_false(darkness.shows(lamp.global_position + Vector2(0, 20)), "but shows no light through the dark")
