@@ -14,6 +14,10 @@ extends Node2D
 ## a barrel) puts him in front of it, clear of the body; one without leaves him where it is.
 @export var exit_offset := Vector2.ZERO
 
+## Whether it is open at the top, as a barrel is: Almos is seen hopping in over its rim. One that is
+## not, a wardrobe, he squeezes into between its doors. A look.
+@export var open_top := false
+
 ## Who last got into it. It is occupied while that one is hiding, standing where it stands.
 var occupant: Node2D
 
@@ -24,6 +28,7 @@ const RATTLE_EVERY := 3.0
 const RATTLE_TIME := 0.3
 const RATTLE_OFFSET := 2.0
 
+var _jiggle: Tween
 var _rattle_clock := 0.0
 var _rattle_left := 0.0
 # Whether the rattle last moved its look, so that only then is the look put back: otherwise the look
@@ -35,6 +40,30 @@ var _moved_look := false
 func occupied() -> bool:
 	return occupant != null and is_instance_valid(occupant) and occupant.get(&"hiding") == true \
 		and occupant.global_position.distance_to(global_position) < 1.0
+
+
+## In pixels above the spot's place: where its top is drawn, which Almos hops in over (a little below
+## the top of its art, inside its opening). A look.
+func rim_height() -> float:
+	var art := get_node_or_null("Look/Art") as Sprite2D
+	if art == null or art.texture == null:
+		return 24.0
+	var top := art.position.y - art.texture.get_height() * art.scale.y / 2.0
+	return -top - (6.0 if open_top else 0.0)
+
+
+## Almos has landed in it, or sprung out of it: it squashes and wobbles back. A look.
+func jiggle() -> void:
+	var look := get_node_or_null("Look") as Node2D
+	if look == null:
+		return
+	if _jiggle != null and _jiggle.is_valid():
+		_jiggle.kill()
+	_jiggle = look.create_tween()
+	_jiggle.tween_property(look, ^"scale", Vector2(1.14, 0.84), 0.06).set_ease(Tween.EASE_OUT)
+	_jiggle.tween_property(look, ^"scale", Vector2(0.94, 1.08), 0.08)
+	_jiggle.tween_property(look, ^"scale", Vector2(1.03, 0.98), 0.07)
+	_jiggle.tween_property(look, ^"scale", Vector2.ONE, 0.07)
 
 
 ## Whether it is rattling now.

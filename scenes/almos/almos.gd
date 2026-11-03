@@ -19,8 +19,19 @@ const DEATH_TINT := Color(0.35, 0.35, 0.4)
 # The inside of a Gap or a Drop (layer gap_area). On the ground in one is a Deadly fall: only a Drop's
 # edge lets him walk in, as a Gap's edge blocks him and a Jump that comes down in one puts him back.
 const GAP_AREA_LAYER := 1 << 5
-# In seconds: how long he takes to drop out of sight down a Drop. A look.
-const DROP_FALL_TIME := 0.4
+# In seconds: how long he teeters at the edge before he drops, and how long he takes to drop out of
+# sight down a Drop after that. Looks.
+const DROP_TEETER_TIME := 0.12
+const DROP_FALL_TIME := 0.9
+# How he looks as he falls, t going from 0 to 1 over the fall: he drops down the screen with gravity,
+# DROP_DEPTH pixels by the end, faster and faster; his step carries him DROP_CARRY pixels on the way
+# he was going; he shrinks with the depth to 1 / (1 + DROP_SHRINK) of his size, tumbles DROP_TUMBLE
+# round, and sinks into the colour of the deep root before he is gone. Looks.
+const DROP_DEPTH := 150.0
+const DROP_CARRY := 14.0
+const DROP_SHRINK := 5.0
+const DROP_TUMBLE := TAU * 0.6
+const DROP_DEEP := Color(0.16, 0.15, 0.27)
 
 # What his look is tinted while he hides: not drawn at all, as if he were really inside the spot,
 # which rattles now and then to show someone is in it. A look, not a tuning number.
@@ -304,12 +315,16 @@ var _casting := false
 var _sipping := false
 # Whether he is in a Hiding spot.
 var _hiding := false
+# His spring out of the Hiding spot he left, while it is drawn.
+var _pop_tween: Tween
 
 # Where he last stood on firm ground, and whether his Death was a fall down a Drop: such a Death
 # leaves his Remains at the edge, where he can reach them, not down the Drop.
 var _last_firm_ground := Vector2.ZERO
 var _fell_down_a_drop := false
 var _drop_tween: Tween
+# The way he was going as he went over the edge, which his fall carries on a little.
+var _drop_way := Vector2.DOWN
 
 # The Hiding spot he is in, while he is in one.
 var _hiding_spot: HidingSpot
@@ -510,14 +525,36 @@ func _in_a_drop() -> bool:
 	return not get_world_2d().direct_space_state.intersect_point(query, 1).is_empty()
 
 
-# A Deadly fall down a Drop: he drops out of sight, shrinking and fading, and dies.
+# A Deadly fall down a Drop: he teeters at the edge for a moment, a little hop and a lean, then drops
+# away into the dark, tumbling and smaller and smaller as he goes deeper, sinking into the deep root's
+# colour, and dies.
 func _fall_down_a_drop() -> void:
 	_fell_down_a_drop = true
-	_drop_tween = create_tween().set_parallel()
-	_drop_tween.tween_property(_look, ^"scale", Vector2(0.3, 0.3), DROP_FALL_TIME).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-	_drop_tween.tween_property(_look, ^"position", Vector2(0.0, 24.0), DROP_FALL_TIME).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-	_drop_tween.tween_property(_look, ^"modulate:a", 0.0, DROP_FALL_TIME)
+	_end_pop_out()
+	_drop_way = velocity.normalized() if velocity.length() > 1.0 else facing.normalized()
+	var lean := -0.35 if _drop_way.x < 0.0 else 0.35
+	_drop_tween = create_tween()
+	# A moment on the edge: he is lifted a little on his last step and tips over.
+	_drop_tween.tween_property(_look, ^"position", Vector2(_drop_way.x * 4.0, -4.0), DROP_TEETER_TIME).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	_drop_tween.parallel().tween_property(_look, ^"rotation", lean, DROP_TEETER_TIME).set_ease(Tween.EASE_OUT)
+	_drop_tween.tween_method(_drop_step.bind(lean), 0.0, 1.0, DROP_FALL_TIME)
 	health.take_damage(health.current)
+
+
+# One step of the drop, t from 0 at the edge to 1 out of sight: he falls down the chasm, gathering
+# speed as a falling body does, a little on the way he stepped, smaller as he goes deeper, tumbling,
+# and darkening into the deep root.
+func _drop_step(t: float, lean: float) -> void:
+	var fall := t * t
+	var size := 1.0 / (1.0 + DROP_SHRINK * fall)
+	_look.scale = Vector2(size, size)
+	var from := Vector2(_drop_way.x * 4.0, -4.0)
+	_look.position = (from + Vector2(_drop_way.x * DROP_CARRY * t, DROP_DEPTH * fall)).snappedf(2.0)
+	_look.rotation = lean + signf(lean) * DROP_TUMBLE * fall
+	var art := _look.get_node_or_null(^"Art") as CanvasItem
+	if art != null:
+		art.self_modulate = Color.WHITE.lerp(DROP_DEEP, smoothstep(0.15, 0.85, t))
+	_look.modulate.a = 1.0 - smoothstep(0.65, 1.0, t)
 
 
 # His Health has reached zero: he goes limp where he is. Every action he was in ends at once, and
@@ -530,8 +567,8 @@ func _fall() -> void:
 	_pause_announced = false
 	_end_every_action()
 	if _fell_down_a_drop:
-		# Fading down the Drop, he keeps his fade; Remains are left at the edge.
-		_look.modulate = Color(DEATH_TINT, _look.modulate.a)
+		# Falling down the Drop, he keeps his fall: it darkens him itself as he goes deeper. Remains
+		# are left at the edge.
 		died.emit(_last_firm_ground)
 		return
 	_look.modulate = DEATH_TINT
@@ -569,9 +606,14 @@ func return_to(point: Vector2) -> void:
 	if _drop_tween != null and _drop_tween.is_valid():
 		_drop_tween.kill()
 	_drop_tween = null
+	_end_pop_out()
 	_fell_down_a_drop = false
 	_look.scale = Vector2.ONE
 	_look.position = Vector2.ZERO
+	_look.rotation = 0.0
+	var art := _look.get_node_or_null(^"Art") as CanvasItem
+	if art != null:
+		art.self_modulate = Color.WHITE
 	# Any Fire on him goes out.
 	var on_fire := get_node_or_null(^"Flammable") as Flammable
 	if on_fire != null:
@@ -743,6 +785,8 @@ func _hide_in_a_spot_in_reach() -> bool:
 		if enemy.has_method(&"react_to_hiding"):
 			enemy.react_to_hiding(nearest.global_position, _noise_before)
 	_end_every_action()
+	# Only a look: a copy of him is seen hopping in from where he stood.
+	HideHop.into(nearest, global_position, _look.get_node_or_null(^"Art") as AnimatedSprite2D)
 	global_position = nearest.global_position
 	_hiding = true
 	_hiding_spot = nearest
@@ -760,6 +804,20 @@ func _leave_hiding() -> void:
 	_show_hidden(false)
 	if _hiding_spot != null and is_instance_valid(_hiding_spot):
 		global_position = _hiding_spot.global_position + _hiding_spot.exit_offset
+		# Only a look: he springs out of it onto his feet.
+		if not _dead:
+			_end_pop_out()
+			_pop_tween = HideHop.pop_out(_look, _hiding_spot)
+
+
+# The spring out of a Hiding spot is cut short, his look put back as it always is: a Jump or a return
+# takes his look over.
+func _end_pop_out() -> void:
+	if _pop_tween != null and _pop_tween.is_valid():
+		_pop_tween.kill()
+		_look.scale = Vector2.ONE
+		_look.position = Vector2.ZERO
+	_pop_tween = null
 
 
 # Hidden, nothing of him is drawn: his look, and the torch he may carry. Only the look changes; a
@@ -963,6 +1021,7 @@ func _take_off(direction: Vector2, delta: float) -> void:
 		return
 	var sprint := _state == State.SPRINTING and _wants_to_sprint(direction)
 	_state = State.WALKING
+	_end_pop_out()
 	_jump.begin(_walking_velocity(direction, delta, sprint))
 
 
