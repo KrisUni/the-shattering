@@ -1,8 +1,8 @@
 class_name Darkness
 extends Node2D
 ## The dark of a Room that is not seen all at once: everything in it is black but a circle around
-## Almos. Torches and Fires show no light through it: only he sees. The circle's edge fades in
-## dithered steps on the art pixel grid, as the lamps' own glow does. Only a look: what enemies see
+## Almos. Torches and Fires show no light through it: only he sees. The circle's edge fades softly
+## and wide, in fine dithered steps on the art pixel grid. Only a look: what enemies see
 ## by is the gameplay light (LightZone.light_at), not this.
 ##
 ## It covers the Room it is in, drawn over everything in the world (the HUD and thoughts are on
@@ -13,9 +13,9 @@ extends Node2D
 const Z := 4000
 
 ## In pixels: how far Almos sees around himself in the dark.
-@export var sight_radius := 240.0
+@export var sight_radius := 340.0
 ## In pixels: where his sight starts to fade, from the outer edge inward.
-@export var sight_fade := 96.0
+@export var sight_fade := 220.0
 ## How dark the dark is.
 @export var shade := Color(0.02, 0.02, 0.035, 1.0)
 ## The extent it covers, from the Room's top left corner; by default the Room's own size.
@@ -51,10 +51,14 @@ void fragment() {
 	// On the art pixel grid: one value for every 2x2 block.
 	vec2 cell = floor(world / 2.0);
 	vec2 p = cell * 2.0 + 1.0;
-	float see = seen(p, eye, eye_radius, eye_fade);
-	// Four bands, dithered at their edges.
-	float dither = mod(cell.x + cell.y, 2.0) * 0.5;
-	float band = clamp(floor(see * 4.0 + dither) / 4.0, 0.0, 1.0);
+	// Eased, so the light thins out gently into the dark with no ring at either end of the fade.
+	float see = smoothstep(0.0, 1.0, seen(p, eye, eye_radius, eye_fade));
+	// Many fine steps, spread by a 4x4 ordered dither so that no step reads as an edge.
+	int bx = int(mod(cell.x, 4.0));
+	int by = int(mod(cell.y, 4.0));
+	int bayer[16] = int[16](0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
+	float dither = (float(bayer[by * 4 + bx]) + 0.5) / 16.0;
+	float band = clamp(floor(see * 8.0 + dither) / 8.0, 0.0, 1.0);
 	COLOR = vec4(shade.rgb, shade.a * (1.0 - band));
 }
 """
