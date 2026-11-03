@@ -58,7 +58,8 @@ func test_no_other_room_of_the_dungeons_holds_an_enemy_but_corridor_1s_patrols()
 	assert_eq(elsewhere.size(), 0, "no enemy should stand outside Radio/Officers and Corridor 1")
 	for enemy in _enemies_in(corridor_1):
 		assert_false(enemy.named, "Corridor 1's guards are ordinary")
-		assert_gt(enemy.patrol.size(), 0, "Corridor 1's guards patrol")
+	var walking := _enemies_in(corridor_1).filter(func(enemy: Node) -> bool: return enemy.patrol.size() > 0)
+	assert_gt(walking.size(), 0, "a guard of Corridor 1 patrols")
 
 
 func test_the_enemy_in_radio_officers_is_named_with_the_key_jailers_id() -> void:

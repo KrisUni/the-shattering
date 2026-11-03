@@ -39,3 +39,7 @@ texture = ExtResource("2_lamp")
 [node name="Art" parent="Flame" index="0"]
 position = Vector2(-12, -24)
 sprite_frames = SubResource("SpriteFrames_lamp")
+
+[node name="Glow" parent="Flame" index="1"]
+position = Vector2(0, 30)
+strength = 0.4

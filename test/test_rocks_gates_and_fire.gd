@@ -337,11 +337,11 @@ func test_in_the_hall_everything_but_plants_and_big_rocks_can_be_lifted_and_thro
 		assert_not_null(liftable, "%s can be lifted and thrown" % node.name)
 		if liftable != null:
 			kinds[liftable.tuning.resource_path] = true
-	assert_gte(kinds.size(), 6, "barrels, small rocks, skulls, bones, bone piles, pots and sacks")
+	assert_gte(kinds.size(), 8, "barrels, small rocks, skulls, bones, bone piles, pots, sacks, crates, a bench, a rack, buckets, a bowl")
 	for node in room.get_node("Growth").get_children():
 		assert_true(node is Sprite2D, "%s is a plant, only a look" % node.name)
 		assert_null(node.get_node_or_null("Liftable"), "a plant cannot be lifted")
-	# Barrels stand alone and in threes.
+	# Barrels are kept together, in a row of stores, or stand alone where they are used.
 	var barrels: Array[Vector2] = []
 	for node in room.get_node("Furniture").get_children():
 		if node.scene_file_path == "res://scenes/world/barrel.tscn":
@@ -350,7 +350,7 @@ func test_in_the_hall_everything_but_plants_and_big_rocks_can_be_lifted_and_thro
 		var near := barrels.filter(func(o: Vector2) -> bool: return o != b and o.distance_to(b) < 32.0)
 		if near.size() == 2:
 			clusters += 1
-	assert_gte(clusters, 6, "two clusters of three barrels together")
+	assert_gte(clusters, 1, "barrels kept together in a row of stores")
 
 
 func test_a_skull_is_lifted_and_thrown_and_a_thrown_pot_breaks() -> void:
@@ -375,3 +375,69 @@ func test_a_skull_is_lifted_and_thrown_and_a_thrown_pot_breaks() -> void:
 	await _tap(&"cast_spell")
 	await wait_seconds(1.2)
 	assert_eq(pot.get_node("Liftable").state, Liftable.State.BROKEN, "a thrown pot breaks where it lands")
+
+
+func test_the_guard_at_the_post_sits_until_he_is_in_pursuit() -> void:
+
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var guard = room.get_node("Guards/PostGuard")
+	var art := guard.get_node("Look/Art") as AnimatedSprite2D
+	await wait_physics_frames(4)
+	assert_true(guard.seated, "the guard at the post is seated")
+	assert_true(guard.sitting(), "and sits, at rest")
+	assert_eq(art.animation, &"sit", "drawn sitting")
+	var bench := room.get_node("Furniture/BenchPost") as Node2D
+	assert_lt(guard.global_position.distance_to(bench.global_position), 24.0, "on the bench")
+	var almos = _almos_input.spawn_almos()
+	almos.global_position = guard.global_position + Vector2(-200, 80)
+	guard.target = almos
+	guard.health.take_damage(1.0)
+	await wait_physics_frames(4)
+	assert_true(guard.in_pursuit, "control: hurt, he goes after Almos")
+	assert_false(guard.sitting(), "on his feet")
+
+
+# --- the hall teaches Pull and Shove ---
+
+func test_the_hall_teaches_pull_and_shove_step_by_step() -> void:
+	ThoughtSpot.forget_all()
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var lessons := room.get_node("Lessons").get_children()
+	assert_eq(lessons.size(), 4, "four lessons: a barrel, the barricade, the rockfall, the gate")
+	# The first, right outside Cell 3, where he comes out.
+	var entrance := room.get_node("Exits/to_cell_3/Entrance") as Node2D
+	var first := room.get_node("Lessons/PullTheBarrel") as ThoughtSpot
+	assert_lt(first.position.distance_to(room.to_local(entrance.global_position)), 64.0, "the first lesson meets him at Cell 3's door")
+	# The bridge down is shut by barrels he has to Pull away or Shove off.
+	var barricade := []
+	for node in room.get_node("Furniture").get_children():
+		if String(node.name).begins_with("BarricadeBarrel"):
+			barricade.append(node)
+	assert_eq(barricade.size(), 2, "two barrels across the bridge")
+	for barrel in barricade:
+		assert_lt((barrel.get_node("Liftable").weight as float), (load("res://data/player_tuning.tres") as PlayerTuning).greatest_weight(), "light enough to Pull")
+	# The walking guard keeps to the east half: the west is quiet ground to learn in.
+	var guard = room.get_node("Guards/Guard")
+	for point in guard.patrol:
+		assert_gt(point.x, 640.0, "the walking guard stays east of the bridge")
+
+
+func test_a_lesson_speaks_once_and_fades_by_itself() -> void:
+	ThoughtSpot.forget_all()
+	var almos = _almos_input.spawn_almos()
+	var spot := (load("res://scenes/world/thought_spot.tscn") as PackedScene).instantiate() as ThoughtSpot
+	spot.id = &"test_lesson"
+	spot.lines = PackedStringArray(["A LESSON."])
+	spot.stay = 0.5
+	spot.position = almos.global_position + Vector2(200, 0)
+	almos.get_parent().add_child(spot)
+	autofree(spot)
+	await wait_physics_frames(2)
+	almos.global_position = spot.global_position
+	await wait_physics_frames(4)
+	assert_true(spot.spoken(), "walking into it, he thinks it")
+	assert_not_null(spot.find_children("*", "Control", true, false).front() if not spot.find_children("*", "Control", true, false).is_empty() else null, "it shows")
+	await wait_seconds(2.0)
+	assert_true(spot.find_children("*", "Control", true, false).is_empty(), "and fades by itself")

@@ -10,11 +10,14 @@
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_light.png" id="p_cell_light"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bed.png" id="p_cell_bed"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bucket.png" id="p_cell_bucket"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bowl.png" id="p_cell_bowl"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_puddle.png" id="p_cell_puddle"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_shackles.png" id="p_cell_shackles"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_tally.png" id="p_cell_tally"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bones.png" id="p_cell_bones"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_straw.png" id="p_cell_straw"]
 
+[ext_resource type="Script" path="res://scenes/world/ambience.gd" id="95_ambience"]
 [sub_resource type="RectangleShape2D" id="Shape_1152x64"]
 size = Vector2(1152, 64)
 
@@ -268,6 +271,16 @@ position = Vector2(772, 580)
 scale = Vector2(2, 2)
 texture = ExtResource("p_cell_bucket")
 
+[node name="Bowl" type="Sprite2D" parent="Props"]
+position = Vector2(470, 330)
+scale = Vector2(2, 2)
+texture = ExtResource("p_cell_bowl")
+
+[node name="Puddle" type="Sprite2D" parent="Props"]
+position = Vector2(748, 300)
+scale = Vector2(2, 2)
+texture = ExtResource("p_cell_puddle")
+
 [node name="Straw1" type="Sprite2D" parent="Props"]
 position = Vector2(456, 320)
 scale = Vector2(2, 2)
@@ -305,3 +318,16 @@ texture = ExtResource("p_cell_bars")
 position = Vector2(720, 624)
 scale = Vector2(2, 2)
 texture = ExtResource("p_cell_bars")
+
+[node name="Ambience" type="Node2D" parent="."]
+script = ExtResource("95_ambience")
+dust_area = Rect2(580, 250, 100, 220)
+dust_count = 22
+drips = PackedVector2Array(420, 258, 748, 258)
+drip_fall = 36.0
+
+[node name="RoomDust" type="Node2D" parent="."]
+script = ExtResource("95_ambience")
+dust_area = Rect2(360, 260, 430, 340)
+dust_count = 14
+

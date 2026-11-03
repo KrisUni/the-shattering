@@ -15,6 +15,9 @@ area_id = &"dungeons"
 almos = NodePath("Almos")
 pursuit_tuning = ExtResource("3_pursuit")
 
+[node name="Grade" type="CanvasModulate" parent="."]
+color = Color(0.8, 0.82, 0.94, 1)
+
 [node name="Almos" parent="." instance=ExtResource("4_almos")]
 weapon = null
 
