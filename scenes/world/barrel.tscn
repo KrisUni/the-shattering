@@ -11,6 +11,7 @@ size = Vector2(24, 16)
 
 [node name="Barrel" instance=ExtResource("1_spot")]
 exit_offset = Vector2(0, 18)
+open_top = true
 
 [node name="Shape" parent="Look" index="0"]
 visible = false

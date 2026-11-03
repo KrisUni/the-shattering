@@ -9,7 +9,7 @@ extends GutTest
 ## - Fire passes only by contact: a burning guard sets alight a barrel it touches, not one apart from
 ##   it, and Almos catches from a burning guard he touches, burns and is hurt, and is put out when
 ##   returned;
-## - the guards are drawn as Almos recoloured.
+## - the guards are drawn as warders of their own, not as Almos.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 const BIG_ROCK_SCENE := preload("res://scenes/world/big_rock.tscn")
@@ -283,21 +283,23 @@ func test_almos_is_not_set_alight_by_a_fire_he_does_not_touch() -> void:
 
 # --- the guards' look ---
 
-func test_the_guards_are_drawn_as_almos_recoloured() -> void:
+func test_the_guards_are_drawn_as_warders_of_their_own_not_as_almos() -> void:
 	var guard := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/nar_jailer/idle_0.png"))
 	var almos := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/almos/idle_side_0.png"))
 	var same_shape := true
-	var recoloured := false
 	var dx := (guard.get_width() - almos.get_width()) / 2
 	var dy := 28 - almos.get_height()
 	for y in almos.get_height():
 		for x in almos.get_width():
-			var a := almos.get_pixel(x, y)
-			var g := guard.get_pixel(x + dx, y + dy)
-			same_shape = same_shape and (a.a > 0.0) == (g.a > 0.0)
-			recoloured = recoloured or (a.a > 0.0 and not a.is_equal_approx(g))
-	assert_true(same_shape, "the guard's idle frame has Almos's outline")
-	assert_true(recoloured, "in other colours")
+			same_shape = same_shape and (almos.get_pixel(x, y).a > 0.0) == (guard.get_pixel(x + dx, y + dy).a > 0.0)
+	assert_false(same_shape, "the guard has an outline of his own, not Almos's")
+	# Standing on the foot row, as every 32x32 enemy frame does.
+	var lowest := -1
+	for y in guard.get_height():
+		for x in guard.get_width():
+			if guard.get_pixel(x, y).a > 0.0:
+				lowest = y
+	assert_eq(lowest, 27, "his feet on row 27")
 
 
 # --- the hall and its cells ---
