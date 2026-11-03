@@ -51,7 +51,7 @@ How the Base of the tree ends. If the Nar guards bring Almos's Health to zero, o
 _Avoid_: Arrest, forced death
 
 **Dungeons**:
-The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in Cell 3, one of two cells off the hall (Corridor 1), each shut by a metal gate, and gets out by melting his gate with his first Pull and Shove of a torch's flame (or crashing it with a thrown rock). The hall outside then teaches his powers on things, step by step, with a short thought of his at each lesson (it fades by itself): Pull a lone barrel by Cell 3's door, clear two barrels barricading the bridge down (Pull them away or Shove them off the edge), crush a rock of the rockfall against the wall into small rocks, and throw them to crash Cell 2's gate for the Flask upgrade inside. The walking guard keeps to the hall's east half, so the west is quiet ground to learn in; a second guard sits at the guard post. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
+The prison in the roots beneath the arch tree, where Almos is held after his Seal breaks. It is built entirely from Rooms. Almos wakes in Cell 3, one of two cells off the hall (Corridor 1), each shut by a metal gate, and gets out by melting his gate with his first Pull and Shove of a torch's flame (or crashing it with a thrown rock). Cell 3 is seen whole, but the hall outside is dark: he sees only a circle around himself (torches and Fires show no light through it). The hall then teaches his powers on things, step by step and without words (his only thought is "Where am I?" as he wakes): Pull a lone barrel by Cell 3's door, get past two barrels barricading the bridge down (Pull them away, Shove them off the edge, or take the spur that loops round behind them over a gap he must Jump), crush a rock of the rockfall against the wall into small rocks, and throw them to crash Cell 2's gate for the Flask upgrade inside. The walking guard keeps to the hall's east half, so the west is quiet ground to learn in; a second guard sits at the guard post. He enters stripped of his Weapon and Armour, keeping only his Flasks, and fights Unarmed, with improvised Weapons and with a thrown flame. Its enemies are Nar jailers, who Block and Parry, and creatures living in the roots. He meets no NPCs here.
 _Avoid_: Prison, cells, roots
 
 **Store room**:
@@ -408,6 +408,6 @@ A piece of a Big rock. Pull lifts two at a time, held side by side over his head
 _Avoid_: Pebble, debris
 
 **Metal gate**:
-The iron bars that shut a cell's doorway: a path blocker that a thrown flame melts open (it glows and sags as it burns) or a thrown rock crashes open. A Pull or a Shove only makes it budge. Open, it stays open by the path blocker's rules: saved at a rest, undone by a Death.
+The iron bars that shut a cell's doorway: a path blocker that a thrown flame melts open (it glows and melts away from the top down as it burns) or a thrown rock crashes open. A Pull or a Shove only makes it budge. Open, it stays open by the path blocker's rules: saved at a rest, undone by a Death.
 _Avoid_: Bars, door, portcullis
 

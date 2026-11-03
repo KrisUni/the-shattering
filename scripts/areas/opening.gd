@@ -22,8 +22,7 @@ signal finished
 
 ## What he thinks as he wakes.
 @export var thought: PackedStringArray = [
-	"...MY SEAL. IT'S GONE.",
-	"I CAN FEEL THE MAGIC MOVING IN ME.",
+	"WHERE AM I?",
 ]
 
 ## In seconds: how long he lies asleep, stirs, and takes to get up.

@@ -66,9 +66,10 @@ func test_the_chasm_has_a_mirrored_lip_and_runs_off_the_room() -> void:
 	assert_gt(rects.size(), 2, "a ragged lip, made of several Drops")
 	for rect in rects:
 		assert_gte(rect.position.y, DROP_TOP, "%s leaves the lane whole" % rect)
-	# Along the lane, away from the bridge, the lip is the same either side of the centre.
+	# Along the lane, away from the bridge, the lip is the same either side of the centre. Below it
+	# the bridge's spur west (the loop round the barricade) has no twin.
 	for x in range(16, 480, 32):
-		for y in range(232, 320, 16):
+		for y in range(232, 288, 16):
 			assert_eq(_in_the_chasm(Vector2(x, y)), _in_the_chasm(Vector2(1152 - x, y)), "the lip mirrors at %d, %d" % [x, y])
 	assert_true(_in_the_chasm(Vector2(4, 400)), "off the west edge")
 	assert_true(_in_the_chasm(Vector2(1148, 400)), "off the east edge")

@@ -35,6 +35,8 @@ var _follows: Array[Follow] = []
 var _last_exit_from: Dictionary[Room, RoomExit] = {}
 
 @onready var _camera: Camera2D = $Camera
+# The camera's zoom as the scene gives it, which shows a whole Room.
+@onready var _room_zoom: Vector2 = _camera.zoom
 
 
 func _ready() -> void:
@@ -51,6 +53,12 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	for follow in _follows.duplicate():
 		_advance(follow)
+
+
+func _process(_delta: float) -> void:
+	# After the physics steps of the frame, so the view is where Almos is when it is drawn.
+	if current_room != null and current_room.follows_almos:
+		_follow_almos()
 
 
 func _on_exit_used(room_exit: RoomExit) -> void:
@@ -171,6 +179,25 @@ func _on_placed() -> void:
 	room_changed.emit(current_room)
 
 
-## Fixes the camera to the Room Almos is in, on the art pixel grid.
+## Fixes the camera to the Room Almos is in, on the art pixel grid; in a Room that follows him, it
+## is put on him, closer in. Every Darkness in the Room is given him to see by.
 func _show_current_room() -> void:
+	for darkness: Darkness in current_room.find_children("*", "Darkness", true, false):
+		darkness.target = almos
+	if current_room.follows_almos:
+		_camera.zoom = current_room.follow_zoom
+		_follow_almos()
+		return
+	_camera.zoom = _room_zoom
 	_camera.global_position = current_room.get_view_center().snappedf(OpenMapCamera.ART_PIXEL)
+
+
+# Centres the view on Almos, on the art pixel grid, except near the Room's edges, where it stops so
+# that the view never shows beyond the Room.
+func _follow_almos() -> void:
+	var half_view := get_viewport_rect().size / _camera.zoom / 2.0
+	var bounds := current_room.get_rect()
+	var lowest := ((bounds.position + half_view) / OpenMapCamera.ART_PIXEL).ceil() * OpenMapCamera.ART_PIXEL
+	var highest := ((bounds.end - half_view) / OpenMapCamera.ART_PIXEL).floor() * OpenMapCamera.ART_PIXEL
+	var at := almos.global_position if almos != null else bounds.get_center()
+	_camera.global_position = at.clamp(lowest, highest).snappedf(OpenMapCamera.ART_PIXEL)
