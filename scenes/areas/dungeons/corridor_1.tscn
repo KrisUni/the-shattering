@@ -25,6 +25,8 @@
 [ext_resource type="PackedScene" path="res://scenes/world/spear_rack.tscn" id="36_rack"]
 [ext_resource type="PackedScene" path="res://scenes/world/bucket.tscn" id="37_bucket"]
 [ext_resource type="PackedScene" path="res://scenes/world/bowl.tscn" id="38_bowl"]
+[ext_resource type="PackedScene" path="res://scenes/world/thought_spot.tscn" id="39_thought"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_light.png" id="46_light"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/moss_0.png" id="40_moss0"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/moss_1.png" id="41_moss1"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/growth/moss_2.png" id="42_moss2"]
@@ -413,6 +415,35 @@ position = Vector2(356, 206)
 scale = Vector2(2, 2)
 texture = ExtResource("45_fungus1")
 
+[node name="RoofLight" type="Sprite2D" parent="."]
+z_index = -1
+modulate = Color(1.15, 1.1, 0.95, 1)
+position = Vector2(140, 108)
+scale = Vector2(3, 2.4)
+texture = ExtResource("46_light")
+
+[node name="Lessons" type="Node2D" parent="."]
+
+[node name="PullTheBarrel" parent="Lessons" instance=ExtResource("39_thought")]
+position = Vector2(384, 100)
+id = &"hall_pull_barrel"
+lines = PackedStringArray("IF I CAN PULL A FLAME...", "MAYBE I CAN PULL THAT BARREL TOO.")
+
+[node name="Barricade" parent="Lessons" instance=ExtResource("39_thought")]
+position = Vector2(512, 300)
+id = &"hall_barricade"
+lines = PackedStringArray("BARRELS BLOCK THE WAY DOWN.", "PULL THEM AWAY, OR SHOVE THEM OFF THE EDGE.")
+
+[node name="Rockfall" parent="Lessons" instance=ExtResource("39_thought")]
+position = Vector2(190, 160)
+id = &"hall_rockfall"
+lines = PackedStringArray("TOO HEAVY TO MOVE...", "BUT SHOVED AGAINST THE WALL, IT MIGHT CRACK.")
+
+[node name="Gate" parent="Lessons" instance=ExtResource("39_thought")]
+position = Vector2(768, 112)
+id = &"hall_gate"
+lines = PackedStringArray("A ROCK THROWN HARD ENOUGH", "COULD BREAK THESE BARS.")
+
 [node name="Furniture" type="Node2D" parent="."]
 
 [node name="RockWest" parent="Furniture" instance=ExtResource("21_rock")]
@@ -475,6 +506,14 @@ position = Vector2(1050, 110)
 [node name="RackPost" parent="Furniture" instance=ExtResource("36_rack")]
 position = Vector2(1110, 100)
 
+[node name="BarricadeBarrel1" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(498, 372)
+exit_offset = Vector2(0, -34)
+
+[node name="BarricadeBarrel2" parent="Furniture" instance=ExtResource("22_barrel")]
+position = Vector2(526, 372)
+exit_offset = Vector2(0, -34)
+
 [node name="BonePileLip" parent="Furniture" instance=ExtResource("31_bone_pile")]
 position = Vector2(300, 214)
 
@@ -493,8 +532,8 @@ position = Vector2(904, 250)
 [node name="Guards" type="Node2D" parent="."]
 
 [node name="Guard" parent="Guards" instance=ExtResource("20_jailer")]
-position = Vector2(80, 176)
-patrol = PackedVector2Array(1072, 176, 80, 176)
+position = Vector2(1072, 176)
+patrol = PackedVector2Array(720, 176, 1072, 176)
 
 [node name="PostGuard" parent="Guards" instance=ExtResource("20_jailer")]
 position = Vector2(972, 102)

@@ -1,6 +1,6 @@
 extends GutTest
 ## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a lane three
-## Almos-widths wide that one guard walks from end to end while a second stands at the guard post,
+## Almos-widths wide that one guard walks in its east half while a second sits at the guard post,
 ## past a rockfall, the stores and the post's barrels, to hide in while he goes by. Here: he patrols
 ## the whole length, the route and the doorways are clear, and in the real Dungeons he walks his whole
 ## round past Almos hidden in the barrel by Cell 3 without noticing him, while he catches him standing
@@ -58,7 +58,7 @@ func _path_blocked(room: Room, a: Vector2, b: Vector2) -> bool:
 	return result[0] < 1.0
 
 
-func test_one_guard_walks_the_hall_from_one_end_to_the_other() -> void:
+func test_one_guard_walks_the_east_half_of_the_hall() -> void:
 	var room := await _corridor_in_a_viewport()
 	var guards := _guards(room)
 	assert_eq(guards.size(), 2, "two guards: one walking the hall, one at the guard post")
@@ -73,8 +73,10 @@ func test_one_guard_walks_the_hall_from_one_end_to_the_other() -> void:
 	for point in guard.patrol:
 		xs.append(point.x)
 		assert_almost_eq(point.y, 176.0, 0.01, "his route runs down the middle of the lane")
-	assert_lt(xs.min(), 128.0, "it reaches the west end")
-	assert_gt(xs.max(), 1024.0, "and the east end")
+	# He keeps to the east half, from Cell 2's door to the east end: the west, by Cell 3, is quiet
+	# ground where Almos learns his powers.
+	assert_between(xs.min(), 640.0, 800.0, "it turns back by Cell 2's door")
+	assert_gt(xs.max(), 1024.0, "and reaches the east end")
 
 
 func test_the_furniture_leaves_every_cell_door_clear() -> void:
@@ -100,7 +102,8 @@ func test_there_are_places_to_hide_along_his_path() -> void:
 		var y: float = (spot as Node2D).position.y
 		var by_the_north_wall := y > 64.0 and y <= 128.0
 		# The south edge of the lane, or a ledge reaching out over the chasm.
-		var by_the_south_edge := y >= 200.0 and y <= 288.0
+		# Below his lane: its south edge, a ledge, or down on the bridge (the barricade's barrels).
+		var by_the_south_edge := y >= 200.0
 		assert_true(by_the_north_wall or by_the_south_edge, "%s stands off his lane, by the north wall or the south edge" % spot.name)
 	xs.sort()
 	for i in range(1, xs.size()):

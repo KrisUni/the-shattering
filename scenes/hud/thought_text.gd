@@ -27,10 +27,15 @@ signal dismissed
 ## The prompt shown under them once they are out.
 @export var prompt := "PRESS ANY BUTTON"
 
+## In seconds: when more than zero, the thought takes no press at all (so it never holds Almos up or
+## eats a press of his) and fades by itself this long after its lines are out, with no prompt.
+@export var auto_hide_after := 0.0
+
 var _shown := 0.0
 var _total := 0
 var _time := 0.0
 var _gone := false
+var _shown_for := 0.0
 
 
 func _ready() -> void:
@@ -57,11 +62,17 @@ func dismiss() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	_shown = minf(_shown + TYPE_SPEED * delta, _total)
+	if auto_hide_after > 0.0 and all_shown():
+		_shown_for += delta
+		modulate.a = clampf((auto_hide_after - _shown_for) / 0.5, 0.0, 1.0)
+		if _shown_for >= auto_hide_after:
+			dismiss()
+			return
 	queue_redraw()
 
 
 func _input(event: InputEvent) -> void:
-	if _gone or not _is_a_press(event):
+	if _gone or auto_hide_after > 0.0 or not _is_a_press(event):
 		return
 	get_viewport().set_input_as_handled()
 	if not all_shown():
@@ -85,9 +96,10 @@ func _draw() -> void:
 	var widest := 0
 	for line in lines:
 		widest = maxi(widest, PixelText.width_of(line))
-	widest = maxi(widest, PixelText.width_of(prompt))
+	if auto_hide_after <= 0.0:
+		widest = maxi(widest, PixelText.width_of(prompt))
 	var line_height := PixelText.HEIGHT + LINE_GAP
-	var height := PADDING * 2 + lines.size() * line_height + line_height
+	var height := PADDING * 2 + lines.size() * line_height + (line_height if auto_hide_after <= 0.0 else 0)
 	var width := widest + PADDING * 2
 	var origin := Vector2(floorf((view.x - width) / 2.0), floorf(view.y - BOTTOM_MARGIN - height))
 	draw_rect(Rect2(origin, Vector2(width, height)), BOX)
@@ -105,6 +117,6 @@ func _draw() -> void:
 		var x := origin.x + floorf((width - PixelText.width_of(line)) / 2.0)
 		PixelText.draw(self, Vector2(x, y), part, TEXT, 1, SHADOW)
 		y += line_height
-	if all_shown() and fmod(_time, 1.2) < 0.85:
+	if auto_hide_after <= 0.0 and all_shown() and fmod(_time, 1.2) < 0.85:
 		var x := origin.x + floorf((width - PixelText.width_of(prompt)) / 2.0)
 		PixelText.draw(self, Vector2(x, y + 1), prompt, PROMPT, 1, SHADOW)

@@ -396,3 +396,48 @@ func test_the_guard_at_the_post_sits_until_he_is_in_pursuit() -> void:
 	await wait_physics_frames(4)
 	assert_true(guard.in_pursuit, "control: hurt, he goes after Almos")
 	assert_false(guard.sitting(), "on his feet")
+
+
+# --- the hall teaches Pull and Shove ---
+
+func test_the_hall_teaches_pull_and_shove_step_by_step() -> void:
+	ThoughtSpot.forget_all()
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var lessons := room.get_node("Lessons").get_children()
+	assert_eq(lessons.size(), 4, "four lessons: a barrel, the barricade, the rockfall, the gate")
+	# The first, right outside Cell 3, where he comes out.
+	var entrance := room.get_node("Exits/to_cell_3/Entrance") as Node2D
+	var first := room.get_node("Lessons/PullTheBarrel") as ThoughtSpot
+	assert_lt(first.position.distance_to(room.to_local(entrance.global_position)), 64.0, "the first lesson meets him at Cell 3's door")
+	# The bridge down is shut by barrels he has to Pull away or Shove off.
+	var barricade := []
+	for node in room.get_node("Furniture").get_children():
+		if String(node.name).begins_with("BarricadeBarrel"):
+			barricade.append(node)
+	assert_eq(barricade.size(), 2, "two barrels across the bridge")
+	for barrel in barricade:
+		assert_lt((barrel.get_node("Liftable").weight as float), (load("res://data/player_tuning.tres") as PlayerTuning).greatest_weight(), "light enough to Pull")
+	# The walking guard keeps to the east half: the west is quiet ground to learn in.
+	var guard = room.get_node("Guards/Guard")
+	for point in guard.patrol:
+		assert_gt(point.x, 640.0, "the walking guard stays east of the bridge")
+
+
+func test_a_lesson_speaks_once_and_fades_by_itself() -> void:
+	ThoughtSpot.forget_all()
+	var almos = _almos_input.spawn_almos()
+	var spot := (load("res://scenes/world/thought_spot.tscn") as PackedScene).instantiate() as ThoughtSpot
+	spot.id = &"test_lesson"
+	spot.lines = PackedStringArray(["A LESSON."])
+	spot.stay = 0.5
+	spot.position = almos.global_position + Vector2(200, 0)
+	almos.get_parent().add_child(spot)
+	autofree(spot)
+	await wait_physics_frames(2)
+	almos.global_position = spot.global_position
+	await wait_physics_frames(4)
+	assert_true(spot.spoken(), "walking into it, he thinks it")
+	assert_not_null(spot.find_children("*", "Control", true, false).front() if not spot.find_children("*", "Control", true, false).is_empty() else null, "it shows")
+	await wait_seconds(2.0)
+	assert_true(spot.find_children("*", "Control", true, false).is_empty(), "and fades by itself")

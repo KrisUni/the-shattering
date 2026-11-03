@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
 [ext_resource type="TileSet" path="res://assets/shared/dungeon_tiles/dungeon_tiles.tres" id="90_tiles"]
 [ext_resource type="PackedScene" path="res://scenes/world/lamp.tscn" id="92_torch"]
+[ext_resource type="PackedScene" path="res://scenes/world/flask_upgrade.tscn" id="94_flask"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bars_64.png" id="p_cell_bars_64"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bars_96.png" id="p_cell_bars_96"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bowl.png" id="p_cell_bowl"]
@@ -210,6 +211,10 @@ shape = SubResource("Shape_128x16")
 
 [node name="Entrance" type="Marker2D" parent="Exits/door"]
 position = Vector2(0, -56)
+
+[node name="FlaskUpgrade" parent="." instance=ExtResource("94_flask")]
+position = Vector2(544, 400)
+id = &"dungeons/cell_2/flask_upgrade"
 
 [node name="Lamp" parent="." instance=ExtResource("92_torch")]
 position = Vector2(640, 228)
