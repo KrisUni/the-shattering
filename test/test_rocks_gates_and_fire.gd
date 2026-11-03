@@ -216,11 +216,17 @@ func test_a_thrown_flame_melts_a_metal_gate_open() -> void:
 	var almos = _almos_input.spawn_almos()
 	var gate := _gate(almos, Vector2(400, 0), &"test/gate_melted")
 	await wait_physics_frames(2)
+	var art := gate.get_node("Look/Art") as Sprite2D
+	var foot := art.position.y + art.texture.get_size().y * art.scale.y / 2.0
 	gate.flammable.ignite()
 	await wait_physics_frames(30)
-	var art := gate.get_node("Look/Art") as Sprite2D
 	assert_ne(art.modulate, Color.WHITE, "it glows as it melts")
-	await wait_seconds((load(FIRE_PATH) as FireTuning).burn_time)
+	await wait_seconds((load(FIRE_PATH) as FireTuning).burn_time * 0.5)
+	assert_gt(gate.melted(), 0, "it melts away from the top")
+	assert_true(art.region_enabled, "only what is left of the bars is drawn")
+	assert_almost_eq(art.position.y + art.region_rect.size.y * art.scale.y / 2.0, foot, 0.01, "their feet stand where they stood: it melts top to bottom")
+	assert_almost_eq(art.scale, Vector2(2.0, 2.0), Vector2(0.01, 0.01), "not squashed from both ends")
+	await wait_seconds((load(FIRE_PATH) as FireTuning).burn_time * 0.6)
 	assert_true(gate.open, "melted open")
 
 
@@ -400,16 +406,11 @@ func test_the_guard_at_the_post_sits_until_he_is_in_pursuit() -> void:
 
 # --- the hall teaches Pull and Shove ---
 
-func test_the_hall_teaches_pull_and_shove_step_by_step() -> void:
-	ThoughtSpot.forget_all()
+func test_the_hall_teaches_pull_and_shove_without_words() -> void:
 	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
 	add_child_autofree(room)
-	var lessons := room.get_node("Lessons").get_children()
-	assert_eq(lessons.size(), 4, "four lessons: a barrel, the barricade, the rockfall, the gate")
-	# The first, right outside Cell 3, where he comes out.
-	var entrance := room.get_node("Exits/to_cell_3/Entrance") as Node2D
-	var first := room.get_node("Lessons/PullTheBarrel") as ThoughtSpot
-	assert_lt(first.position.distance_to(room.to_local(entrance.global_position)), 64.0, "the first lesson meets him at Cell 3's door")
+	assert_null(room.get_node_or_null("Lessons"), "no lessons spelt out: the hall teaches by its layout")
+	assert_eq(room.find_children("*", "ThoughtSpot", true, false).size(), 0, "and no thought of his on the way")
 	# The bridge down is shut by barrels he has to Pull away or Shove off.
 	var barricade := []
 	for node in room.get_node("Furniture").get_children():
@@ -422,6 +423,66 @@ func test_the_hall_teaches_pull_and_shove_step_by_step() -> void:
 	var guard = room.get_node("Guards/Guard")
 	for point in guard.patrol:
 		assert_gt(point.x, 640.0, "the walking guard stays east of the bridge")
+
+
+# In tiles of 32 units: whether the tile is firm ground, outside every Drop of the hall.
+func _hall_floor(room: Node2D, cell: Vector2i) -> bool:
+	var centre := (Vector2(cell) + Vector2(0.5, 0.5)) * 32.0
+	for drop in room.get_node("Drops").get_children():
+		var footprint := drop as Footprint
+		if Rect2(footprint.position - footprint.size / 2.0, footprint.size).has_point(centre):
+			return false
+	return true
+
+
+# Whether firm ground joins the lane (at Cell 3's door) to the hall's south exit, on foot, with the
+# barricade standing, and with Jumps over one tile of chasm if `jumps` is set. A Jump cannot go over
+# the barricade: barrels are solid in the air too.
+func _reaches_the_south_exit(room: Node2D, barred: Array[Vector2i], jumps: bool) -> bool:
+	var start := Vector2i(12, 2)
+	var goal := Vector2i(18, 19)
+	var seen := {start: true}
+	var queue: Array[Vector2i] = [start]
+	while not queue.is_empty():
+		var cell: Vector2i = queue.pop_front()
+		if cell == goal:
+			return true
+		for way: Vector2i in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var steps: Array[Vector2i] = [cell + way]
+			if jumps and not _hall_floor(room, cell + way) and not barred.has(cell + way):
+				steps.append(cell + way * 2)
+			for next in steps:
+				if next.x < 0 or next.x >= 36 or next.y < 2 or next.y > 19 or seen.has(next):
+					continue
+				if not _hall_floor(room, next) or barred.has(next):
+					continue
+				seen[next] = true
+				queue.append(next)
+	return false
+
+
+func test_a_second_way_down_loops_behind_the_barricade_over_a_gap_he_must_jump() -> void:
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var barred: Array[Vector2i] = []
+	for node in room.get_node("Furniture").get_children():
+		if String(node.name).begins_with("BarricadeBarrel"):
+			var cell := Vector2i(((node as Node2D).position / 32.0).floor())
+			if not barred.has(cell):
+				barred.append(cell)
+	assert_eq(barred.size(), 2, "the barricade fills the neck of the bridge, two tiles across")
+	assert_true(_reaches_the_south_exit(room, [], false), "control: with the barrels gone he walks down")
+	assert_false(_reaches_the_south_exit(room, barred, false), "with them standing, no way down on foot")
+	assert_true(_reaches_the_south_exit(room, barred, true), "but a Jump takes him round them")
+	# The loop: a spur off the bridge above the barricade, down to a gap one tile across, and firm
+	# ground beyond it that joins the bridge below the barricade.
+	assert_true(_hall_floor(room, Vector2i(12, 10)), "the spur, west of the barricade")
+	assert_false(_hall_floor(room, Vector2i(12, 11)), "the gap he jumps")
+	assert_true(_hall_floor(room, Vector2i(12, 12)), "the landing beyond it")
+	# A walking Jump clears the gap: one tile of chasm is less than a Jump carries him.
+	var tuning := load("res://data/player_tuning.tres") as PlayerTuning
+	var body_radius := 12.0
+	assert_gt(tuning.walk_speed * tuning.jump_duration - body_radius, 32.0, "a Jump from a walk clears it")
 
 
 func test_a_lesson_speaks_once_and_fades_by_itself() -> void:
