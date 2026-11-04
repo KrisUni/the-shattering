@@ -24,14 +24,14 @@ size = Vector2(512, 64)
 [sub_resource type="RectangleShape2D" id="Shape_32x416"]
 size = Vector2(32, 416)
 
-[sub_resource type="RectangleShape2D" id="Shape_512x40"]
-size = Vector2(512, 40)
+[sub_resource type="RectangleShape2D" id="Shape_512x32"]
+size = Vector2(512, 32)
 
-[sub_resource type="RectangleShape2D" id="Shape_288x392"]
-size = Vector2(288, 392)
+[sub_resource type="RectangleShape2D" id="Shape_288x384"]
+size = Vector2(288, 384)
 
-[sub_resource type="RectangleShape2D" id="Shape_1088x152"]
-size = Vector2(1088, 152)
+[sub_resource type="RectangleShape2D" id="Shape_1088x160"]
+size = Vector2(1088, 160)
 
 [sub_resource type="RectangleShape2D" id="Shape_desk"]
 size = Vector2(34, 10)
@@ -153,48 +153,48 @@ color = Color(0.35, 0.33, 0.42, 1)
 polygon = PackedVector2Array(-16, -208, 16, -208, 16, 208, -16, 208)
 
 [node name="CellWallBottom" type="StaticBody2D" parent="Walls"]
-position = Vector2(576, 436)
+position = Vector2(576, 432)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/CellWallBottom"]
-shape = SubResource("Shape_512x40")
+shape = SubResource("Shape_512x32")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/CellWallBottom"]
 visible = false
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-256, -20, 256, -20, 256, 20, -256, 20)
+polygon = PackedVector2Array(-256, -16, 256, -16, 256, 16, -256, 16)
 
 [node name="RootMassLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(176, 260)
+position = Vector2(176, 256)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/RootMassLeft"]
-shape = SubResource("Shape_288x392")
+shape = SubResource("Shape_288x384")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/RootMassLeft"]
 visible = false
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-144, -196, 144, -196, 144, 196, -144, 196)
+polygon = PackedVector2Array(-144, -192, 144, -192, 144, 192, -144, 192)
 
 [node name="RootMassRight" type="StaticBody2D" parent="Walls"]
-position = Vector2(976, 260)
+position = Vector2(976, 256)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/RootMassRight"]
-shape = SubResource("Shape_288x392")
+shape = SubResource("Shape_288x384")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/RootMassRight"]
 visible = false
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-144, -196, 144, -196, 144, 196, -144, 196)
+polygon = PackedVector2Array(-144, -192, 144, -192, 144, 192, -144, 192)
 
 [node name="RootMassBottom" type="StaticBody2D" parent="Walls"]
-position = Vector2(576, 532)
+position = Vector2(576, 528)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/RootMassBottom"]
-shape = SubResource("Shape_1088x152")
+shape = SubResource("Shape_1088x160")
 
 [node name="Placeholder" type="Polygon2D" parent="Walls/RootMassBottom"]
 visible = false
 color = Color(0.35, 0.33, 0.42, 1)
-polygon = PackedVector2Array(-544, -76, 544, -76, 544, 76, -544, 76)
+polygon = PackedVector2Array(-544, -80, 544, -80, 544, 80, -544, 80)
 
 [node name="Exits" type="Node2D" parent="."]
 
