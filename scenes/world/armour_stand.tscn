@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/armour_stand.png" id="1_art"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_foot"]
+size = Vector2(16, 8)
+
+[node name="ArmourStand" type="StaticBody2D"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_foot")
+
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Art" type="Sprite2D" parent="Look"]
+position = Vector2(0, -27)
+texture = ExtResource("1_art")
