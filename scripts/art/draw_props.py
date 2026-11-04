@@ -524,6 +524,80 @@ def cell_carving(w=50, h=15):
     return image
 
 
+PAPER = M("#c2b28f", tones=3, step=0.08)
+INK = (40, 34, 44)
+ROOT = M("#4a3f52", tones=4, step=0.08, lit_step=0.09)
+DARK = M("#1c1820", tones=2, step=0.04)
+
+
+def desk(w=58, h=32):
+    """Radio/Officers's desk, seen in three-quarter view: a plank top from above, a front apron and
+    four legs, with a stool at its west end where the knight sits. On it, a few bark sheets, an ink
+    pot and the speaking-root, a curled root grown up through the east end, its mouth open toward
+    the sitter. The node stands at the legs' feet (row h - 1)."""
+    c = canvas(w, h)
+    x0, x1 = 12, w - 2  # the desk top's west and east ends
+    top_y, front_y = 12, 21  # the top's back edge, and where the front apron starts
+    for x in (x0 + 1, x1 - 3):
+        c.box(x, front_y + 3, x + 2, h - 1, WOOD_OLD, 1, form="cylinder")
+    for x in (x0 + 4, x1 - 6):
+        c.box(x, front_y, x + 1, h - 5, WOOD_OLD, 0.5, form="cylinder")
+    top = c.box(x0, top_y, x1, front_y - 1, WOOD_TOP, 3, form="flat")
+    top.bias = 0.1
+    for x in range(x0 + 2, x1 - 1, 9):
+        for y in range(top_y + 1, front_y - 1):
+            c.dot(x, y, WOOD_TOP.ramp[0])
+    c.box(x0, front_y, x1, front_y + 3, WOOD, 3.2, form="cylinder")
+    # The stool, under where the knight sits, at the desk's west end.
+    c.box(1, front_y + 3, 12, front_y + 5, WOOD_TOP, 2, form="flat")
+    for x in (2, 9):
+        c.box(x, front_y + 6, x + 1, h - 1, WOOD_OLD, 1.5, form="cylinder")
+    # Bark sheets, a little askew, with lines of writing.
+    c.box(x0 + 10, top_y + 2, x0 + 19, top_y + 6, PAPER, 4)
+    c.box(x0 + 13, top_y + 3, x0 + 22, top_y + 7, PAPER, 4.2)
+    for y in (top_y + 4, top_y + 6):
+        for x in range(x0 + 15, x0 + 21, 1):
+            if x % 3:
+                c.dot(x, y, PAPER.ramp[0])
+    # The ink pot.
+    c.ellipse(x0 + 27, top_y + 5, 2.0, 1.8, DARK, 4)
+    c.dot(x0 + 26, top_y + 4, GLINT)
+    # The speaking-root: a root that rises from the desk's east end and curls over into a mouth.
+    rx = x1 - 6
+    c.capsule(rx, top_y + 5, rx - 1, top_y - 4, 2.2, ROOT, 4, r2=1.8)
+    c.capsule(rx - 1, top_y - 4, rx - 4, top_y - 9, 1.8, ROOT, 4.2, r2=1.6)
+    c.ellipse(rx - 7, top_y - 9, 3.4, 3.0, ROOT, 4.4)
+    c.ellipse(rx - 7.6, top_y - 8.8, 1.8, 1.7, DARK, 4.6, form="flat", line=False)
+    c.capsule(rx + 2, top_y + 6, rx + 4, top_y + 9, 0.9, ROOT, 3.5, line=False)
+    return out(c)
+
+
+def key_crate(w=32, h=34, open_=False):
+    """The crate the Jailer's key is kept in, a single crate with an iron hasp on its front. Open,
+    its lid stands against the back and its inside is dark and empty. Its foot is the bottom row."""
+    c = canvas(w, h)
+    x0, y0, cw, ch, top_h = 2, 8, w - 4, h - 8, 8
+    if open_:
+        lid = c.box(x0 + 1, 0, x0 + cw - 2, 9, WOOD_TOP, 0.5, form="flat")
+        lid.bias = -0.05
+        for x in range(x0 + 5, x0 + cw - 3, 6):
+            for y in range(1, 9):
+                c.dot(x, y, WOOD_TOP.ramp[0])
+    front = crate(c, x0, y0, cw, ch, top_h, 1)
+    if open_:
+        c.box(x0 + 2, y0 + 1, x0 + cw - 3, y0 + top_h - 2, DARK, 1.5, form="flat", line=False)
+        # The lid's grain is gone with the lid: nothing marks the dark inside.
+        for x in range(x0 + 2, x0 + cw - 2):
+            for y in range(y0 + 1, y0 + top_h - 1):
+                c.details.pop((x, y), None)
+    else:
+        # The hasp: an iron plate on the lid's edge with a ring.
+        c.box(x0 + cw // 2 - 2, y0 + top_h - 1, x0 + cw // 2 + 1, y0 + top_h + 3, IRON, 1.6)
+        c.dot(x0 + cw // 2 - 1, y0 + top_h + 4, IRON.ramp[0])
+        c.dot(x0 + cw // 2, y0 + top_h + 4, IRON.ramp[0])
+    return out(c)
+
+
 PICTURES = {
     "dungeons/furniture/barrel.png": barrel,
     "dungeons/furniture/bench.png": bench,
@@ -531,6 +605,9 @@ PICTURES = {
     "dungeons/furniture/sacks.png": sacks,
     "dungeons/furniture/spear_rack.png": spear_rack,
     "dungeons/furniture/wardrobe.png": wardrobe,
+    "dungeons/furniture/desk.png": desk,
+    "dungeons/furniture/key_crate.png": key_crate,
+    "dungeons/furniture/key_crate_open.png": lambda: key_crate(open_=True),
     "dungeons/pots/clay_pot.png": clay_pot,
     "dungeons/bones/bone.png": bone,
     "dungeons/bones/bone_pile.png": bone_pile,
