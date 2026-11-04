@@ -103,7 +103,10 @@ func test_the_gate_is_drawn_across_its_footprint_and_keeps_its_hidden_shape() ->
 	var art := gate.get_node("Look/Art") as Sprite2D
 	assert_not_null(art.texture, "the gate has art")
 	assert_eq(art.texture.get_size().x * art.scale.x, gate.size.x, "the art spans the doorway")
-	assert_almost_eq(art.position.y + art.texture.get_size().y * art.scale.y / 2.0, gate.size.y / 2.0, 0.01, "its bars stand on the footprint's foot")
+	# Its feet are drawn a little below the footprint's foot, down into the doorway, so they line up
+	# with the cell's bars on either side.
+	var foot := art.position.y + art.texture.get_size().y * art.scale.y / 2.0
+	assert_between(foot, gate.size.y / 2.0, gate.size.y / 2.0 + 12.0, "its bars stand at or just below the footprint's foot")
 	assert_false((gate.get_node("Look/Shape") as Polygon2D).visible, "the placeholder shape is hidden")
 
 

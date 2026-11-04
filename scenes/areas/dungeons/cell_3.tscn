@@ -213,6 +213,9 @@ position = Vector2(0, -56)
 position = Vector2(576, 620)
 id = &"dungeons/cell_3/gate"
 
+[node name="Art" parent="Gate/Look" index="1"]
+position = Vector2(0, -12)
+
 [node name="Torch" parent="." instance=ExtResource("4_torch")]
 position = Vector2(544, 228)
 
