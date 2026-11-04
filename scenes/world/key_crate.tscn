@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/key_crate.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/key_crate.png" id="2_art"]
+[ext_resource type="PackedScene" path="res://scenes/world/jailers_key.tscn" id="3_key"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_crate"]
+size = Vector2(28, 16)
+
+[node name="KeyCrate" type="StaticBody2D"]
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_crate")
+
+[node name="Look" type="Node2D" parent="."]
+
+[node name="Art" type="Sprite2D" parent="Look"]
+position = Vector2(0, -17)
+texture = ExtResource("2_art")
+
+[node name="Key" parent="." instance=ExtResource("3_key")]
+position = Vector2(0, -8)
+id = &"dungeons/jailers_key"
+
+[node name="Look" parent="Key" index="0"]
+visible = false
