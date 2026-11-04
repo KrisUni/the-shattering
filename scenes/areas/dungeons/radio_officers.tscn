@@ -6,8 +6,16 @@
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/desk.png" id="4_desk"]
 [ext_resource type="PackedScene" path="res://scenes/world/key_crate.tscn" id="5_crate"]
 [ext_resource type="TileSet" path="res://assets/shared/dungeon_tiles/dungeon_tiles.tres" id="90_tiles"]
-[ext_resource type="Texture2D" path="res://assets/shared/dungeon_tiles/root_vein_column.png" id="91_column"]
-[ext_resource type="PackedScene" path="res://scenes/world/lamp.tscn" id="92_torch"]
+[ext_resource type="PackedScene" path="res://scenes/world/lamp_side.tscn" id="92_lamp_side"]
+[ext_resource type="PackedScene" path="res://scenes/world/bookshelf.tscn" id="93_shelf"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/bookshelf_1.png" id="94_shelf_1"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_rack.tscn" id="95_rack"]
+[ext_resource type="PackedScene" path="res://scenes/world/armour_stand.tscn" id="96_stand"]
+[ext_resource type="PackedScene" path="res://scenes/world/crate_stack.tscn" id="97_crates"]
+[ext_resource type="PackedScene" path="res://scenes/world/sacks.tscn" id="98_sacks"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/stool.png" id="99_stool"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/rug.png" id="100_rug"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/scrolls.png" id="101_scrolls"]
 
 [sub_resource type="RectangleShape2D" id="Shape_1152x40"]
 size = Vector2(1152, 40)
@@ -34,7 +42,7 @@ size = Vector2(288, 384)
 size = Vector2(1088, 160)
 
 [sub_resource type="RectangleShape2D" id="Shape_desk"]
-size = Vector2(34, 10)
+size = Vector2(26, 50)
 
 [node name="RadioOfficers" type="Node2D"]
 script = ExtResource("1_room")
@@ -63,16 +71,17 @@ y_sort_enabled = true
 tile_map_data = PackedByteArray("AAAAABQAAAAFAAEAAAABABQAAAAFAAEAAAACABQAAAAFAAEAAAADABQAAAAFAAEAAAAEABQAAAAFAAEAAAAFABQAAAAFAAEAAAAGABQAAAAFAAEAAAAHABQAAAAFAAEAAAAIABQAAAAFAAEAAAAJABQAAAAFAAEAAAAKAA0AAAAEAAEAAAAKAA4AAAAFAAEAAAAKABQAAAAFAAEAAAALAA0AAAAEAAEAAAALAA4AAAAFAAEAAAALABQAAAAFAAEAAAAMAA0AAAAEAAEAAAAMAA4AAAAFAAEAAAAMABQAAAAFAAEAAAANAA0AAAAEAAEAAAANAA4AAAAFAAEAAAANABQAAAAFAAEAAAAOAA0AAAAEAAEAAAAOAA4AAAAFAAEAAAAOABQAAAAFAAEAAAAPAA0AAAAEAAEAAAAPAA4AAAAFAAEAAAAPABQAAAAFAAEAAAAQAA0AAAAEAAEAAAAQAA4AAAAFAAEAAAAQABQAAAAFAAEAAAARAA0AAAAEAAEAAAARAA4AAAAFAAEAAAARABQAAAAFAAEAAAASAA0AAAAEAAEAAAASAA4AAAAFAAEAAAASABQAAAAFAAEAAAATAA0AAAAEAAEAAAATAA4AAAAFAAEAAAATABQAAAAFAAEAAAAUAA0AAAAEAAEAAAAUAA4AAAAFAAEAAAAUABQAAAAFAAEAAAAVAA0AAAAEAAEAAAAVAA4AAAAFAAEAAAAVABQAAAAFAAEAAAAWAA0AAAAEAAEAAAAWAA4AAAAFAAEAAAAWABQAAAAFAAEAAAAXAA0AAAAEAAEAAAAXAA4AAAAFAAEAAAAXABQAAAAFAAEAAAAYAA0AAAAEAAEAAAAYAA4AAAAFAAEAAAAYABQAAAAFAAEAAAAZAA0AAAAEAAEAAAAZAA4AAAAFAAEAAAAZABQAAAAFAAEAAAAaABQAAAAFAAEAAAAbABQAAAAFAAEAAAAcABQAAAAFAAEAAAAdABQAAAAFAAEAAAAeABQAAAAFAAEAAAAfABQAAAAFAAEAAAAgABQAAAAFAAEAAAAhABQAAAAFAAEAAAAiABQAAAAFAAEAAAAjABQAAAAFAAEAAAA=")
 tile_set = ExtResource("90_tiles")
 
-[node name="Decor" type="Node2D" parent="."]
+[node name="Props" type="Node2D" parent="."]
 z_index = -1
 
-[node name="RootColumn1" type="Sprite2D" parent="Decor"]
-position = Vector2(384, 32)
-texture = ExtResource("91_column")
+[node name="Rug" type="Sprite2D" parent="Props"]
+position = Vector2(560, 268)
+texture = ExtResource("100_rug")
 
-[node name="RootColumn2" type="Sprite2D" parent="Decor"]
-position = Vector2(768, 32)
-texture = ExtResource("91_column")
+[node name="Scrolls" type="Sprite2D" parent="Props"]
+position = Vector2(444, 90)
+texture = ExtResource("101_scrolls")
+
 [node name="Walls" type="Node2D" parent="."]
 
 [node name="WallTop1" type="StaticBody2D" parent="Walls"]
@@ -211,19 +220,46 @@ shape = SubResource("Shape_128x16")
 [node name="Entrance" type="Marker2D" parent="Exits/door"]
 position = Vector2(0, 56)
 
+[node name="Furniture" type="Node2D" parent="."]
+
+[node name="Bookshelf1" parent="Furniture" instance=ExtResource("93_shelf")]
+position = Vector2(392, 76)
+
+[node name="Bookshelf2" parent="Furniture" instance=ExtResource("93_shelf")]
+position = Vector2(456, 76)
+
+[node name="Art" parent="Furniture/Bookshelf2/Look" index="0"]
+texture = ExtResource("94_shelf_1")
+
+[node name="WeaponRack" parent="Furniture" instance=ExtResource("95_rack")]
+position = Vector2(690, 76)
+
+[node name="ArmourStand" parent="Furniture" instance=ExtResource("96_stand")]
+position = Vector2(756, 80)
+
+[node name="CrateStack" parent="Furniture" instance=ExtResource("97_crates")]
+position = Vector2(768, 406)
+
+[node name="Sacks" parent="Furniture" instance=ExtResource("98_sacks")]
+position = Vector2(446, 408)
+
+[node name="Stool" type="Sprite2D" parent="Furniture"]
+position = Vector2(754, 231)
+texture = ExtResource("99_stool")
+
 [node name="Desk" type="StaticBody2D" parent="."]
-position = Vector2(630, 236)
+position = Vector2(782, 245)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Desk"]
-position = Vector2(10, -5)
+position = Vector2(1, -30)
 shape = SubResource("Shape_desk")
 
 [node name="Art" type="Sprite2D" parent="Desk"]
-position = Vector2(0, -16)
+position = Vector2(0, -36)
 texture = ExtResource("4_desk")
 
 [node name="Knight" parent="." instance=ExtResource("3_knight")]
-position = Vector2(608, 232)
+position = Vector2(756, 232)
 post_facing = Vector2(1, 0)
 seated = true
 asleep = true
@@ -233,8 +269,14 @@ id = &"dungeons/radio_officers/knight"
 [node name="KeyCrate" parent="." instance=ExtResource("5_crate")]
 position = Vector2(400, 392)
 
-[node name="Lamp1" parent="." instance=ExtResource("92_torch")]
-position = Vector2(480, 36)
+[node name="LampLeft" parent="." instance=ExtResource("92_lamp_side")]
+position = Vector2(364, 220)
 
-[node name="Lamp2" parent="." instance=ExtResource("92_torch")]
-position = Vector2(672, 36)
+[node name="LampRight" parent="." instance=ExtResource("92_lamp_side")]
+position = Vector2(788, 128)
+
+[node name="Art" parent="LampRight/Look" index="1"]
+flip_h = true
+
+[node name="Glow" parent="LampRight/Flame" index="1"]
+position = Vector2(-18, 26)

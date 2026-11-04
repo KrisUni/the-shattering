@@ -20,7 +20,7 @@ const BESIDE := 5.0
 # In pixels. The walls are 16 pixels thick and a knight is about 30 across; he stands clear of a wall
 # when he is at least this far from the edge of the Room, and clear of the door's strip likewise.
 const CLEARANCE_FROM_WALLS := 48.0
-# The least a unit vector's dot product with the direction to the desk may be for it to face the desk.
+# The least a unit vector's dot product with east may be for it to face his desk.
 const FACING_THE_DESK := 0.9
 # In physics frames. How long the knight is watched at his post with Almos elsewhere.
 const WATCH_FRAMES := 120
@@ -121,15 +121,14 @@ func test_the_knight_stands_clear_of_the_walls_and_the_doors_strip() -> void:
 	assert_false(strip_rect.has_point(knight.global_position), "he should stand clear of the door's strip")
 
 
-func test_the_knight_faces_his_desk_at_his_post() -> void:
+func test_the_knight_faces_his_desk_against_the_east_wall_at_his_post() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 	var desk := _room(host, &"radio_officers").get_node("Desk") as Node2D
 	var knight := _knight(host)
 
-	var to_desk := (desk.global_position - knight.global_position).normalized()
-
-	assert_gt(knight.facing.dot(to_desk), FACING_THE_DESK, "he should face his desk")
+	assert_gt(desk.global_position.x, knight.global_position.x, "his desk should stand east of him")
+	assert_gt(knight.facing.dot(Vector2.RIGHT), FACING_THE_DESK, "he should face it, east")
 
 
 func test_the_knight_is_a_nar_knight_seated_and_asleep() -> void:
@@ -161,7 +160,7 @@ func test_the_knight_sees_almos_in_front_of_him_and_wakes() -> void:
 	await wait_physics_frames(2)
 	var knight := _knight(host)
 
-	host.almos.global_position = knight.global_position + Vector2(60.0, 40.0)
+	host.almos.global_position = knight.global_position + Vector2(26.0, 22.0)
 	await wait_physics_frames(10)
 
 	assert_true(knight.in_pursuit, "he should have seen Almos")

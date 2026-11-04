@@ -1,7 +1,8 @@
 class_name SleepZzz
 extends Node2D
 ## The zzz over a sleeping enemy: small Z letters, drawn in code on the art pixel grid, that rise
-## from over its head, drift aside, grow and fade, one after another, looping for as long as the
+## from over its head, drift back over its shoulder (away from where it faces, so clear of a desk
+## it sleeps at), grow and fade, one after another, looping for as long as the
 ## enemy sleeps (its sleeping()). The moment it wakes they are gone. Only a look: nothing reads it.
 ## It sits in the enemy's Look, so the enemy is its parent's parent.
 
@@ -20,7 +21,7 @@ const DRIFT := 12.0
 
 ## In art pixels, from the enemy's feet. Where the letters start, just over its head as it sleeps,
 ## for a sprite facing right; for one flipped to face left it is mirrored.
-@export var over_head := Vector2(8, -26)
+@export var over_head := Vector2(4, -28)
 
 var _enemy: Node
 var _time := 0.0
@@ -47,15 +48,15 @@ func showing() -> bool:
 
 
 func _draw() -> void:
-	# The sprite flips with the enemy; the letters always drift up and to the right of its head,
-	# so they follow its head's side.
+	# The sprite flips with the enemy; the letters start over its head, on the side it faces, and
+	# drift up and back over its shoulder.
 	var side := -1.0 if _flipped() else 1.0
 	for i in COUNT:
 		var t := fposmod(_time / LIFE + float(i) / COUNT, 1.0)
 		var glyph: Array = SMALL if t < 0.45 else BIG
 		var at := Vector2(side * over_head.x, over_head.y) \
-			+ Vector2(roundf(side * (DRIFT * t + sin(t * TAU))), roundf(-RISE * t))
-		if side < 0.0:
+			+ Vector2(roundf(-side * (DRIFT * t + sin(t * TAU))), roundf(-RISE * t))
+		if side > 0.0:
 			at.x -= glyph[0].length()
 		var alpha := clampf(minf(t / 0.15, (1.0 - t) / 0.35), 0.0, 1.0)
 		_glyph(glyph, at + Vector2(1, 1), Color(SHADE, alpha * 0.8))
