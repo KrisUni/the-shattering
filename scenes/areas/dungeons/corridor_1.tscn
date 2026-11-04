@@ -311,6 +311,9 @@ position = Vector2(1040, 36)
 position = Vector2(768, 40)
 id = &"dungeons/corridor_1/cell_2_gate"
 
+[node name="Art" parent="Cell2Gate/Look" index="1"]
+position = Vector2(0, -4)
+
 [node name="WallGrowth" type="Node2D" parent="."]
 z_index = -1
 
