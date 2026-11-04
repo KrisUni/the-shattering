@@ -8,6 +8,9 @@ extends Node
 ## - while he winds up a Spell (drawing a flame, gripping a prop) it holds the coiled wind-up of
 ##   `attack_<side>`, and when he throws (a fireball, a prop) it shows the strike and follow-through
 ##   for a moment;
+## - for a moment after he casts Pull or Shove on an enemy or a thing (or at nothing), `pull_<side>`
+##   or `shove_<side>` shows a small gesture of the hands: Shove gathers them and pushes the palms
+##   out, Pull reaches out, closes on it and draws them in;
 ## - while he rolls, `roll_<side>` plays once from its first frame each time a roll starts;
 ## - otherwise `walk_<side>` while he moves and `idle_<side>` while he stands.
 ## A name the sprite lacks is skipped. Facing left plays the side animations flipped, so they
@@ -24,6 +27,11 @@ const FOLLOW_THROUGH := 3
 const RECOVER := 4
 # For how many physics frames a throw shows the strike, then the follow-through. A look.
 const THROW_FRAMES := 12
+# For how many physics frames a Pull or Shove gesture shows, and from which of them its second and
+# third frames show. A look.
+const GESTURE_FRAMES := 18
+const GESTURE_KEY := 4
+const GESTURE_EASE := 12
 
 var _almos: Node
 var _attacks: Node
@@ -31,6 +39,9 @@ var _art: AnimatedSprite2D
 var _was_rolling := false
 var _spell: Node
 var _throw_left := 0
+# The gesture of the last Pull or Shove, and how many physics frames it has shown for, or -1.
+var _gesture := &""
+var _gesture_frame := -1
 
 
 func _ready() -> void:
@@ -42,6 +53,8 @@ func _ready() -> void:
 			_spell.fireball_thrown.connect(func(_fireball, _torch) -> void: _throw_left = THROW_FRAMES)
 		if _spell.has_signal(&"object_thrown"):
 			_spell.object_thrown.connect(func(_prop) -> void: _throw_left = THROW_FRAMES)
+		if _spell.has_signal(&"wave_sent"):
+			_spell.wave_sent.connect(_begin_gesture)
 
 
 func _physics_process(_delta: float) -> void:
@@ -60,6 +73,12 @@ func update_look() -> void:
 	# Only the side animations flip; up and down are drawn for themselves.
 	_art.flip_h = side == &"side" and (_almos.facing as Vector2).x < 0.0
 	if _show_attack(side) or _show_casting(side):
+		_was_rolling = false
+		_gesture_frame = -1
+		return
+	if _almos.rolling or _almos.dead:
+		_gesture_frame = -1
+	if _show_gesture(side):
 		_was_rolling = false
 		return
 	if _almos.rolling:
@@ -129,6 +148,29 @@ func _show_casting(side: StringName) -> bool:
 		return false
 	if _art.animation != attack:
 		_art.animation = attack
+	_art.pause()
+	_art.frame = frame
+	return true
+
+
+func _begin_gesture(pulling: bool, _target: Node2D) -> void:
+	_gesture = &"pull_" if pulling else &"shove_"
+	_gesture_frame = 0
+
+
+# Shows the gesture of a Pull or Shove just cast, for its few frames. Whether it did.
+func _show_gesture(side: StringName) -> bool:
+	if _gesture_frame < 0:
+		return false
+	var frame := 0 if _gesture_frame < GESTURE_KEY else (1 if _gesture_frame < GESTURE_EASE else 2)
+	_gesture_frame += 1
+	if _gesture_frame >= GESTURE_FRAMES:
+		_gesture_frame = -1
+	var gesture := StringName(_gesture + side)
+	if _art.sprite_frames == null or not _art.sprite_frames.has_animation(gesture):
+		return false
+	if _art.animation != gesture:
+		_art.animation = gesture
 	_art.pause()
 	_art.frame = frame
 	return true

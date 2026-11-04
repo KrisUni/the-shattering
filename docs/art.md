@@ -131,6 +131,8 @@ Each sheet has these fields:
   - `roll` (6 frames at 20 a second, played once from the start of each roll)
   - `attack` (5 frames: wind-up, coil, strike with a smear arc, follow-through, recover). These are not played at a frame rate: `AlmosLook` picks the frame from the swing's own startup, active and recovery frames, so it fits every Weapon and every swing of a combo. A charging Heavy attack holds the coil. The smear is drawn without a weapon, so it stands for any Weapon or for a fist.
 
+  - `pull` and `shove` (3 frames each, 32x48): a small gesture of the hands for a moment after a Pull or Shove is cast on an enemy or a thing (or at nothing), 18 physics frames, its middle frame from the 4th to the 12th. Shove gathers the hands to the chest, pushes the palms out and eases back; Pull reaches out, closes on it and draws the hands in. A Spell's wind-up (drawing a flame, gripping a prop) and a throw show the attack frames instead, as before.
+
   The side frames face right and are flipped for left; a diagonal shows the side. Still owed: Block, Parry, Sip, Jump, the limp Death pose, and a weapon drawn in hand; until then the Block and Parry shapes and the death tint show over the sprite. The sword's strike box (`Sword/Look/Shape`) is transparent now that the smear shows the swing; it stays for the code and tests that measure it. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
 - **Status:** in the game (fifth draft, the first in free colour; the owner checks the look in the editor)
 

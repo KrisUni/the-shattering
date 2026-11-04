@@ -190,3 +190,74 @@ func test_the_old_strike_box_draws_nothing_now_the_sprite_shows_the_swing() -> v
 	var shape := almos.get_node("Sword/Look/Shape") as Polygon2D
 	assert_not_null(shape, "the strike box shape stays for the code and tests that measure it")
 	assert_eq(shape.color.a, 0.0, "it is transparent, so only the smear shows the swing")
+
+
+func test_he_has_a_three_frame_pull_and_shove_gesture_for_every_side() -> void:
+	var almos = _almos_input.spawn_almos()
+	var art := _art(almos)
+	for kind in ["pull", "shove"]:
+		for side in ["down", "up", "side"]:
+			var animation_name := StringName("%s_%s" % [kind, side])
+			assert_true(art.sprite_frames.has_animation(animation_name), "he has %s" % animation_name)
+			if not art.sprite_frames.has_animation(animation_name):
+				continue
+			assert_eq(art.sprite_frames.get_frame_count(animation_name), 3, "%s has three frames" % animation_name)
+			for i in 3:
+				var texture := art.sprite_frames.get_frame_texture(animation_name, i)
+				assert_eq(texture.get_size(), Vector2(32, 48), "%s %d is 32 by 48" % [animation_name, i])
+				assert_true(texture.resource_path.begins_with(ART_DIR), "%s %d is his own" % [animation_name, i])
+
+
+func test_a_pull_shows_the_pull_gesture_for_his_side_for_a_moment() -> void:
+	var almos = _almos_input.spawn_almos()
+	var art := _art(almos)
+	await wait_physics_frames(2)
+
+	var frames := await _cast_and_watch(art)
+
+	assert_eq(frames[0], 0, "it starts with the hands reaching out")
+	assert_true(frames.has(1) and frames.has(2), "and goes through its other two frames")
+	var sorted := frames.duplicate()
+	sorted.sort()
+	assert_eq(frames, sorted, "the frames only move forward")
+	assert_lte(frames.size(), AlmosLook.GESTURE_FRAMES + 1, "it lasts only a moment")
+	assert_eq(art.animation, &"idle_down", "then he stands again")
+
+
+func test_a_shove_shows_the_shove_gesture() -> void:
+	var almos = _almos_input.spawn_almos()
+	var art := _art(almos)
+	await wait_physics_frames(2)
+	await _tap(&"switch_spell")
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(3)
+	_almos_input.release_everything()
+	await wait_physics_frames(2)
+
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(2)
+	_almos_input.release_action(&"cast_spell")
+
+	assert_eq(art.animation, &"shove_side", "facing right, he shoves with the side gesture")
+
+
+# Casts the selected Spell at nothing, facing down, and gives the gesture frames seen, one a physics
+# frame, while it shows.
+func _cast_and_watch(art: AnimatedSprite2D) -> Array:
+	_almos_input.press_action(&"cast_spell")
+	await wait_physics_frames(1)
+	_almos_input.release_action(&"cast_spell")
+	var frames := []
+	for i in 40:
+		if art.animation != &"pull_down":
+			break
+		frames.append(art.frame)
+		await wait_physics_frames(1)
+	return frames
+
+
+func _tap(action: StringName) -> void:
+	_almos_input.press_action(action)
+	await wait_physics_frames(2)
+	_almos_input.release_action(action)
+	await wait_physics_frames(2)
