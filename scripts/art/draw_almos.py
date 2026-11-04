@@ -1,7 +1,8 @@
-"""Draws Almos at 32 px: every frame of idle, walk, roll and attack for down, up and side.
+"""Draws Almos at 32 px: every frame of idle, walk, roll, attack, pull and shove for down, up and side.
 
     python3 scripts/art/draw_almos.py [OUT_DIR] [--sheet SHEET.png]
 
+Pull and Shove each have a small gesture of the hands, `pull_<side>` and `shove_<side>` (3 frames).
 Writes `<anim>_<side>_<n>.png` (32x48, attacks 64x64 with the body in the middle) into OUT_DIR,
 by default `assets/characters/almos/`. The feet are on the bottom row of a 32x48 frame (row 55 of
 an attack frame), so with the sprite offset (0, -16) they stand on his 12-unit body. Side frames
@@ -308,6 +309,36 @@ def smear(c, cx, cy, radius, a0, a1, thick, fade=1.0):
                 c.overlay(x, y, SMEAR[tone])
 
 
+# --- Pull and Shove: a small gesture of the hands ------------------------------------------------
+
+# The hands of each frame of a gesture, (near, far) as Pose.hands, and the lean, for each view.
+# Shove: hands drawn in to the chest, palms pushed out, then eased back. Pull: hands reached out,
+# closed on it, then drawn in to the chest.
+GESTURES = {
+    "shove": {
+        "side": [(((3, -6), (2, -6)), -1), (((9, -6), (8, -5)), 1), (((6, -3), (5, -3)), 0)],
+        "down": [(((3, -4), (-3, -4)), 0), (((5, -7), (-5, -7)), 0), (((3, -3), (-3, -3)), 0)],
+        "up": [(((2, -5), (-2, -5)), 0), (((4, -9), (-4, -9)), 0), (((2, -4), (-2, -4)), 0)],
+    },
+    "pull": {
+        "side": [(((9, -6), (8, -5)), 1), (((7, -6), (6, -6)), 0), (((2, -6), (1, -6)), -1)],
+        "down": [(((5, -7), (-5, -7)), 0), (((4, -6), (-4, -6)), 0), (((2, -3), (-2, -3)), 0)],
+        "up": [(((4, -9), (-4, -9)), 0), (((3, -7), (-3, -7)), 0), (((1, -3), (-1, -3)), 0)],
+    },
+}
+
+
+def gesture_frames(kind, view):
+    images = []
+    for hands, lean in GESTURES[kind][view]:
+        if view == "side":
+            c = side(Pose(hands=hands, lean=lean, tail=-lean))
+        else:
+            c = front(Pose(hands=hands), back=(view == "up"))
+        images.append(render(c))
+    return images
+
+
 # --- the poses -----------------------------------------------------------------------------------
 
 def idle_poses():
@@ -415,6 +446,8 @@ def frames():
         out["walk_" + view] = [render(draw(p)) for p in walk_poses(view)]
         out["roll_" + view] = roll_frames(view)
         out["attack_" + view] = attack_frames(view)
+        out["pull_" + view] = gesture_frames("pull", view)
+        out["shove_" + view] = gesture_frames("shove", view)
     return out
 
 
