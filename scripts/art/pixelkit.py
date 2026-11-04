@@ -10,7 +10,7 @@ renders the parts the way the art bible asks:
   warmer (toward sand) and paler. Three or four tones per material.
 - Parts in front cast a short shadow onto parts behind and below them.
 - Selective outlines: only the silhouette is outlined, near black tinted by the material, and on the
-  lit top left edge the outline is the material's own deep tone. Where one part meets another
+  lit top left edge the outline is softer, halfway to the material's own deep tone. Where one part meets another
   inside the silhouette, the line is the deep tone of the part behind, never black.
 - Cleanup: a pixel whose four neighbours all share another tone of its material takes that tone,
   so there are no stray single pixels; marked details (eyes, glints, rivets) are kept.
@@ -78,6 +78,8 @@ class Material:
             outline = shift(self.ramp[0], -0.13, hue=0.5, sat=0.05)
         self.outline = hexrgb(outline) if isinstance(outline, str) else outline
         self.shine = shine
+        # The silhouette's edge on its lit top left: between the deep tone and the outline.
+        self.lit_edge = tuple(round((d + o) / 2) for d, o in zip(self.ramp[0], self.outline))
 
     @property
     def deep(self):
@@ -261,7 +263,7 @@ class Canvas:
                         if (x + ox, y + oy) not in owner]
                 if edge:
                     lit_side = all(e in ((0, -1), (-1, 0)) for e in edge)
-                    colour[(x, y)] = part.material.deep if lit_side else part.material.outline
+                    colour[(x, y)] = part.material.lit_edge if lit_side else part.material.outline
         for p, rgb in self.details.items():
             colour[p] = rgb
         image = Image.new("RGBA", (self.w, self.h), (0, 0, 0, 0))

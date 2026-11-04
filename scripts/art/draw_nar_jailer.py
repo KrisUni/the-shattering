@@ -1,266 +1,188 @@
-"""Draws the Nar jailer's frames, assets/characters/nar_jailer/*.png, from parts.
+"""Draws the Nar jailer's frames, assets/characters/nar_jailer/*.png, at 32 px, from parts.
 
-An original design for the game: a heavy-set Nar warder in a carved bark helm with a forward brim,
-a cuirass of overlapping bark plates over a moss-grey fibre tunic, a knotted club of grown root, and
-root-like hair spilling from under the helm. Each frame is a 32x32 canvas, facing right, feet on
-row 27, built from the same parts set in a pose, then outlined in near-black around the silhouette.
+An original design for the game: a heavy-set Nar warder in a carved bark helm with a ridged crest
+and a forward brim, a cuirass of overlapping bark plates and a bark pauldron over a moss-grey fibre
+tunic, a leather belt with a bone buckle, dark trousers and boots, root-like hair spilling from
+under the helm, and a knotted club of grown root. Each frame is a 64x64 canvas, facing right, feet
+on row 55, built from the same parts set in a pose and lit by pixelkit.py (top-left light,
+hue-shifted ramps, selective outlines). The poses are given on a 32 grid (as the first, 16 px
+drawing had them) and drawn at twice that.
 
-    python3 -I scripts/art/draw_nar_jailer.py [OUT_DIR]
+    python3 -I scripts/art/draw_nar_jailer.py [OUT_DIR] [--sheet SHEET.png]
 """
 import math
 import os
 import sys
 
-from PIL import Image
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import pixelkit as pk  # noqa: E402
 
-PALETTE = {
-    "o": (26, 21, 30),  # outline
-    # carved bark helm
-    "h": (130, 98, 74), "H": (96, 71, 54), "G": (64, 47, 38), "v": (34, 26, 24),
-    # bark-grey skin, pale eye
-    "s": (138, 134, 130), "S": (108, 105, 102), "K": (78, 75, 73), "e": (222, 214, 186),
-    # dry-root hair
-    "r": (138, 118, 92), "R": (100, 84, 66),
-    # bark plates
-    "p": (150, 136, 112), "P": (112, 101, 85), "Q": (76, 68, 58),
-    # moss-grey fibre cloth
-    "c": (110, 132, 120), "C": (78, 98, 90), "D": (52, 66, 62),
-    # leather belt, a bone buckle
-    "L": (58, 44, 36), "l": (92, 70, 54), "n": (214, 200, 168),
-    # trousers
-    "t": (86, 80, 90), "T": (63, 58, 66), "U": (43, 39, 46),
-    # boots
-    "b": (78, 60, 50), "B": (46, 36, 31),
-    # knotted root club
-    "w": (150, 108, 72), "W": (108, 76, 52), "X": (72, 50, 35), "k": (52, 36, 26),
-}
+M = pk.Material
+HELM = M("#7e5f48", tones=4, step=0.075, lit_step=0.09)
+HELM_DARK = M("#3a2b25", tones=2, step=0.05)
+SKIN = M("#77736f", tones=3, step=0.09)
+SKIN_FAR = M("#5a5754", tones=2, step=0.06)
+HAIR = M("#6e5d4a", tones=2, step=0.07)
+PLATE = M("#8f8169", tones=4, step=0.075, lit_step=0.09)
+CLOTH = M("#62786d", tones=3, step=0.07)
+CLOTH_FAR = M("#46564f", tones=2, step=0.06)
+BELT = M("#4a3a30", tones=2, step=0.06)
+TROUSERS = M("#545060", tones=3, step=0.07)
+TROUSERS_FAR = M("#3b3844", tones=2, step=0.05)
+BOOT = M("#4e3c32", tones=3, step=0.07)
+BOOT_FAR = M("#382b25", tones=2, step=0.05)
+WOOD = M("#93694a", tones=4, step=0.08, lit_step=0.09)
 
-SIZE = 32
-FOOT = 27
+EYE = "#ddd3b4"
+BONE = "#d6c8a8"
 
-# Parts, as char maps; "." is empty. Each has an anchor: the pixel of the map that is put on the
-# point the pose gives.
-HEAD = [  # anchor: the neck, bottom middle
-    "...oooo....",
-    ".oohphhoo..",
-    "ohhhhhhHHo.",
-    "ohhHHHHHHGo",
-    "RhHHHHHHHGGo",
-    "RGGGGGGGGGGGo",
-    "RRKSSSSSvvSo",
-    "RRKSSSSSSeS.",
-    "rRKSSSSSSSSs",
-    ".RKKSSSSSSK.",
-    "..oKKSSSKK..",
-]
-HEAD_ANCHOR = (5, 10)
-
-# The bark pauldron on his near shoulder. Anchor: the shoulder.
-PAULDRON = [
-    ".pppo",
-    "pPPPPo",
-    "QPPPQ",
-    ".QQQ.",
-]
-PAULDRON_ANCHOR = (2, 1)
-
-TORSO = [  # anchor: the hips, bottom middle (col 5, row 11)
-    "..oCCCCCo..",
-    ".oQPPPPpPo.",
-    "oQPPpppppPo",
-    "oQPPPPPPpPo",
-    "oQQPPpPPPPo",
-    "oCQPPPPPPPo",
-    "oCQQPPPpPPo",
-    "oCCQQPPPPQo",
-    "oLLLLlnLLLo",
-    ".oCCCCcCCo.",
-    ".oCDCCCCDo.",
-    "..oDDCDDo..",
-]
-TORSO_ANCHOR = (5, 11)
+SIZE = 64
+FOOT = 27  # the foot row on the 32 grid; 55 at 64
 
 
-def blank():
-    return [[None] * SIZE for _ in range(SIZE)]
+def _p(x, y):
+    """A point on the 32 grid, drawn at 64."""
+    return (x * 2 + 1.0, y * 2 + 1.0)
 
 
-def put(canvas, x, y, key):
-    if 0 <= x < SIZE and 0 <= y < SIZE and key is not None:
-        canvas[y][x] = key
+def leg(c, hip, knee, foot, near):
+    mat, boot, z = (TROUSERS, BOOT, 3) if near else (TROUSERS_FAR, BOOT_FAR, 1)
+    h, k, f = _p(*hip), _p(*knee), _p(*foot)
+    c.capsule(h[0], h[1], k[0], k[1], 3.3, mat, z, r2=3.0)
+    c.capsule(k[0], k[1], f[0], f[1] - 0.5, 3.0, mat, z, r2=2.7)
+    c.ellipse(f[0] + 1.8, f[1] + 1.4, 4.0, 2.4, boot, z + 0.2, clip=lambda x, y: y <= min(f[1] + 3, FOOT * 2 + 1))
 
 
-def stamp(canvas, part, anchor, at, flip=False):
-    ax, ay = anchor
-    for row, line in enumerate(part):
-        for col, key in enumerate(line):
-            if key == ".":
-                continue
-            dx = col - ax
-            if flip:
-                dx = -dx
-            put(canvas, at[0] + dx, at[1] + row - ay, key)
+def arm(c, shoulder, elbow, hand, near):
+    cloth, skin, z = (CLOTH, SKIN, 7) if near else (CLOTH_FAR, SKIN_FAR, 0.5)
+    s, e, h = _p(*shoulder), _p(*elbow), _p(*hand)
+    c.capsule(s[0], s[1], e[0], e[1], 3.0, cloth, z, r2=2.7)
+    c.capsule(e[0], e[1], h[0], h[1], 2.4, skin, z + 0.1, r2=2.2)
+    c.ellipse(h[0], h[1] + 0.5, 2.5, 2.4, skin, z + 0.2)
 
 
-def line(a, b):
-    """The pixels of a line from a to b, end points included."""
-    (x0, y0), (x1, y1) = a, b
-    points = []
-    steps = max(abs(x1 - x0), abs(y1 - y0), 1)
-    for i in range(steps + 1):
-        t = i / steps
-        points.append((round(x0 + (x1 - x0) * t), round(y0 + (y1 - y0) * t)))
-    return points
-
-
-def limb(canvas, joints, width, lit, mid, shade):
-    """A limb through the joints, `width` px thick, lit on its top-left edge and shaded on the other."""
-    for a, b in zip(joints, joints[1:]):
-        for (x, y) in line(a, b):
-            for w in range(width):
-                key = lit if w == 0 else (shade if w == width - 1 else mid)
-                put(canvas, x + w - width // 2, y, key)
-
-
-def leg(canvas, hip, knee, foot, near):
-    t, T, U = ("t", "T", "U") if near else ("T", "U", "U")
-    limb(canvas, [hip, knee, foot], 3, t, T, U)
-    fx, fy = foot
-    # The boot: toe forward (to the right).
-    b, B = ("b", "B") if near else ("B", "B")
-    for x in range(fx - 1, fx + 3):
-        put(canvas, x, fy, B)
-        put(canvas, x, fy - 1, b if x < fx + 2 else B)
-
-
-def arm(canvas, shoulder, elbow, hand, near):
-    c, C, D = ("c", "C", "D") if near else ("C", "D", "D")
-    limb(canvas, [shoulder, elbow], 3, c, C, D)
-    limb(canvas, [elbow, hand], 2, "s" if near else "S", "S" if near else "K", "K")
-    hx, hy = hand
-    for dx in (0, 1):
-        for dy in (0, 1):
-            put(canvas, hx + dx - 1, hy + dy, "S" if near else "K")
-
-
-def club(canvas, hand, angle, length=11):
+def club(c, hand, angle, length=11, z=8):
     """The knotted club, from the grip in the hand out along the angle (radians, 0 = right, y down)."""
+    hx, hy = _p(*hand)
     dx, dy = math.cos(angle), math.sin(angle)
-    tip = (round(hand[0] + dx * length), round(hand[1] + dy * length))
-    shaft = line(hand, tip)
-    for i, (x, y) in enumerate(shaft):
-        thick = 2 if i > len(shaft) * 0.45 else 1
-        for w in range(thick):
-            ox = round(-dy * w)
-            oy = round(dx * w)
-            put(canvas, x + ox, y + oy, "w" if w == 0 else "W")
-        if i in (len(shaft) // 2, len(shaft) * 3 // 4):
-            put(canvas, x, y, "k")
-    # The heavy root knot at its head.
-    tx, ty = tip
-    for ox in (-1, 0, 1, 2):
-        for oy in (-1, 0, 1, 2):
-            if abs(ox - 0.5) + abs(oy - 0.5) > 2.2:
-                continue
-            key = "W" if (ox + oy) > 1 else "w"
-            if ox == 2 or oy == 2:
-                key = "X"
-            put(canvas, tx + ox - 1, ty + oy - 1, key)
-    put(canvas, tx, ty, "k")
+    length *= 2
+    sx, sy = hx - dx * 2.5, hy - dy * 2.5
+    tx, ty = hx + dx * length, hy + dy * length
+    c.capsule(sx, sy, tx, ty, 1.5, WOOD, z, r2=2.8)
+    # Knots along it, and the knob at its head.
+    for t, r in ((0.45, 2.1), (0.72, 2.6)):
+        kx, ky = hx + dx * length * t - dy * 1.2, hy + dy * length * t + dx * 1.2
+        c.ellipse(kx, ky, r, r, WOOD, z + 0.1)
+    c.ellipse(tx, ty, 3.6, 3.6, WOOD, z + 0.2)
 
 
-def outline(canvas):
-    out = [row[:] for row in canvas]
-    for y in range(SIZE):
-        for x in range(SIZE):
-            if canvas[y][x] is not None:
-                continue
-            for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
-                if 0 <= nx < SIZE and 0 <= ny < SIZE and canvas[ny][nx] not in (None, "o"):
-                    out[y][x] = "o"
-                    break
-    return out
+def torso(c, hx, hy, lean):
+    """The cuirass of bark plates over the tunic, the belt, from the hip (on the 32 grid)."""
+    x, y = _p(hx + lean / 2.0, hy)
+    top = y - 20
+    sk = lean * 1.0
+    # Tunic skirt, below the belt.
+    c.poly([(x - 7, y - 3), (x + 7, y - 3), (x + 8.5, y + 6), (x + 3, y + 7.5), (x - 3, y + 6.5),
+            (x - 8.5, y + 7)], CLOTH, 2.5, form="cylinder")
+    body = c.poly([(x - 5 + sk, top), (x + 5 + sk, top), (x + 9 + sk, top + 4), (x + 9.5 + sk * 0.5, top + 12),
+                   (x + 8, y - 1), (x - 8, y - 1), (x - 8.5, top + 11), (x - 7.5 + sk, top + 3)],
+                  PLATE, 4, form="cylinder")
+    # The plates overlap: a line in the plate's own deep tone every few rows, offset like shingles.
+    for i, row in enumerate(range(int(top) + 6, int(y) - 2, 5)):
+        for px in range(int(x - 9 + sk), int(x + 10 + sk)):
+            if (px, row) in body.mask and ((px + i * 3) % 7) != 0:
+                c.dot(px, row, PLATE.ramp[0])
+    c.capsule(x - 8.4, y - 1.5, x + 8.4, y - 1.5, 1.4, BELT, 5)
+    c.ellipse(x + 4.5 + lean * 0.3, y - 1.5, 1.6, 1.4, BELT, 5.5)
+    c.dot(int(x + 4.5 + lean * 0.3), int(y - 2), BONE)
+    c.dot(int(x + 4.5 + lean * 0.3) - 1, int(y - 2), BONE)
 
 
-def render(canvas):
-    image = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    for y in range(SIZE):
-        for x in range(SIZE):
-            key = canvas[y][x]
-            if key is not None:
-                image.putpixel((x, y), PALETTE[key] + (255,))
-    return image
+def head(c, hx, hy):
+    """The head under its helm, from the neck point (on the 32 grid)."""
+    x, y = _p(hx, hy)
+    cy = y - 7
+    # Root hair spilling from under the helm, at the back.
+    c.capsule(x - 5, cy - 1, x - 7, cy + 4, 2.2, HAIR, 5.2, r2=1.2)
+    c.capsule(x - 3, cy, x - 4.2, cy + 5, 1.6, HAIR, 5.3, r2=1.0)
+    # The face, in profile: a heavy jaw, the brow under the brim.
+    c.poly([(x - 4, cy - 3), (x + 4.5, cy - 3), (x + 6.6, cy + 1), (x + 6, cy + 3), (x + 6.4, cy + 4.2),
+            (x + 4.5, cy + 7.2), (x - 1, cy + 7.6), (x - 4.5, cy + 4)], SKIN, 6, form="sphere")
+    c.dot(int(x + 4), int(cy + 1), EYE)
+    c.dot(int(x + 3), int(cy + 1), SKIN.ramp[0])
+    c.dot(int(x + 5), int(cy + 5), SKIN.ramp[0])
+    # The helm: a dome with a ridged crest and a brim jutting forward.
+    c.ellipse(x - 0.5, cy - 4, 7.4, 6.0, HELM, 7, clip=lambda px, py: py < cy - 1)
+    c.poly([(x - 8, cy - 2.5), (x + 9.5, cy - 3), (x + 8.5, cy - 0.5), (x - 7.5, cy - 0.5)], HELM, 7.5,
+           form="cylinder")
+    c.capsule(x - 6, cy - 7, x + 3, cy - 10, 1.2, HELM, 7.6)
+    for px in range(int(x - 5), int(x + 3), 3):
+        c.dot(px, int(cy - 9 + (px - x) * 0.33), HELM.ramp[0])
+    c.mask({(px, int(cy - 0.5)) for px in range(int(x - 6), int(x + 9))}, HELM_DARK, 7.4, line=False)
 
 
-def layer_image(draw):
-    canvas = blank()
-    draw(canvas)
-    return render(outline(canvas))
+def pauldron(c, shoulder):
+    s = _p(*shoulder)
+    c.ellipse(s[0] + 0.5, s[1] + 0.5, 5.0, 4.0, PLATE, 7.8, clip=lambda x, y: y < s[1] + 3.5)
+    c.dot(int(s[0]), int(s[1] + 3), PLATE.ramp[0])
 
 
 def pose(hip=(15, 18), lean=0, head=(0, 0), back_leg=None, front_leg=None, back_arm=None, front_arm=None,
-         club_angle=None, club_in_front=True):
-    """One frame, built in layers that are each outlined, far side first, so his limbs read against
-    his body. Points are relative to the hip; legs are (knee, foot), arms (elbow, hand)."""
+         club_angle=None, club_in_front=True, render=True):
+    """One frame. Points are on the 32 grid, relative to the hip; legs are (knee, foot), arms
+    (elbow, hand)."""
+    c = pk.Canvas(SIZE, SIZE)
     hx, hy = hip
     shoulder = (hx + lean + 2, hy - 9)
     back_leg = back_leg or ((-1, 4), (-1, FOOT - 1 - hy))
     front_leg = front_leg or ((1, 4), (1, FOOT - 1 - hy))
     rel = lambda p: (hx + p[0], hy + p[1])
     hand = rel(front_arm[1]) if front_arm else None
-    layers = []
     if back_arm:
-        layers.append(lambda c: arm(c, (shoulder[0] - 3, shoulder[1] + 1), rel(back_arm[0]), rel(back_arm[1]), near=False))
-    if club_angle is not None and not club_in_front and hand:
-        layers.append(lambda c: club(c, hand, club_angle))
-
-    def body(c):
-        leg(c, (hx - 1, hy), rel(back_leg[0]), rel(back_leg[1]), near=False)
-        leg(c, (hx + 1, hy), rel(front_leg[0]), rel(front_leg[1]), near=True)
-        stamp(c, TORSO, TORSO_ANCHOR, (hx + lean // 2, hy))
-        stamp(c, HEAD, HEAD_ANCHOR, (hx + lean + head[0], hy - 11 + head[1]))
-    layers.append(body)
+        arm(c, (shoulder[0] - 3, shoulder[1] + 1), rel(back_arm[0]), rel(back_arm[1]), near=False)
+    if club_angle is not None and hand:
+        club(c, hand, club_angle, z=8.5 if club_in_front else 0.3)
+    leg(c, (hx - 1, hy), rel(back_leg[0]), rel(back_leg[1]), near=False)
+    leg(c, (hx + 1, hy), rel(front_leg[0]), rel(front_leg[1]), near=True)
+    torso(c, hx, hy, lean)
+    globals()["head"](c, hx + lean + head[0], hy - 11 + head[1])
     if front_arm:
-        def near_arm(c):
-            arm(c, shoulder, rel(front_arm[0]), hand, near=True)
-            stamp(c, PAULDRON, PAULDRON_ANCHOR, shoulder)
-        layers.append(near_arm)
-    if club_angle is not None and club_in_front and hand:
-        layers.append(lambda c: club(c, hand, club_angle))
-    image = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    for draw in layers:
-        image.alpha_composite(layer_image(draw))
-    return image
+        arm(c, shoulder, rel(front_arm[0]), hand, near=True)
+        pauldron(c, shoulder)
+    return pk.remove_orphans(c.render()) if render else c
 
 
 def on_the_floor(image, dx=0):
     """The image moved so that its lowest pixel is on the foot row."""
     box = image.getbbox()
-    out = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    out.alpha_composite(image, (dx, FOOT + 1 - box[3]))
+    out = pk.Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    out.alpha_composite(image, (dx, FOOT * 2 + 2 - box[3]))
     return out
 
 
 def death():
-    """He buckles, drops to his knees, and falls flat on his face, the club rolled from his hand."""
+    """He buckles, drops to his knees, and falls flat, the club rolled from his hand."""
     buckle = pose(hip=(14, 20), lean=-2, head=(-1, 2), front_arm=((2, -3), (3, 2)), back_arm=((-4, -4), (-5, -1)),
                   club_angle=1.6, front_leg=((3, 3), (3, 6)), back_leg=((-1, 3), (-2, 6)))
     kneel = pose(hip=(14, 23), lean=3, head=(2, 3), front_arm=((4, -2), (6, 3)), back_arm=((1, -3), (3, 2)),
                  club_angle=0.2, front_leg=((4, 0), (4, 3)), back_leg=((0, 3), (-3, 3)))
-    # Lying: a straight, slack pose turned a quarter onto his front.
+    # Lying: a straight, slack pose turned a quarter, lit so the light still comes from the top left.
+    saved = pk.LIGHT
+    pk.LIGHT = (-saved[1], saved[0], saved[2])
     slack = pose(hip=(16, 18), head=(1, 0), front_arm=((1, 4), (1, 7)), back_arm=((-2, 4), (-2, 7)),
                  front_leg=((1, 4), (1, 8)), back_leg=((-1, 4), (-1, 8)))
-    lying = on_the_floor(slack.transpose(Image.Transpose.ROTATE_270), -2)
-    club_layer = layer_image(lambda c: club(c, (6, 26), -0.08, 9))
-    lying_with_club = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    lying_with_club.alpha_composite(club_layer)
+    pk.LIGHT = saved
+    lying = on_the_floor(slack.transpose(pk.Image.Transpose.ROTATE_270), -4)
+    cl = pk.Canvas(SIZE, SIZE)
+    club(cl, (6, 26), -0.08, 9)
+    lying_with_club = pk.Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    lying_with_club.alpha_composite(pk.remove_orphans(cl.render()))
     lying_with_club.alpha_composite(lying)
     return [on_the_floor(buckle), on_the_floor(kneel), lying_with_club]
 
 
 def frames():
     down = math.pi / 2
-    stand_front = ((5, -3), (6, 0))
     out = {}
     # idle: a slow breath, the club resting on his shoulder... held low at his side.
     out["idle"] = [
@@ -324,13 +246,20 @@ def frames():
 
 
 def main():
-    out_dir = sys.argv[1] if len(sys.argv) > 1 else "assets/characters/nar_jailer"
-    os.makedirs(out_dir, exist_ok=True)
-    for name, images in frames().items():
-        for i, image in enumerate(images):
-            # Drawn at 16 px; saved at the game's 32 px scale, every pixel as 2x2.
-            image.resize((image.width * 2, image.height * 2), Image.NEAREST).save(
-                os.path.join(out_dir, "%s_%d.png" % (name, i)))
+    args = list(sys.argv[1:])
+    sheet = None
+    if "--sheet" in args:
+        i = args.index("--sheet")
+        sheet = args[i + 1]
+        del args[i:i + 2]
+    out_dir = args[0] if args else "assets/characters/nar_jailer"
+    all_frames = frames()
+    if out_dir != "-":
+        for name, images in all_frames.items():
+            for i, image in enumerate(images):
+                pk.save(image, os.path.join(out_dir, "%s_%d.png" % (name, i)))
+    if sheet:
+        pk.sheet([im for ims in all_frames.values() for im in ims], zoom=4, cols=6).save(sheet)
 
 
 if __name__ == "__main__":
