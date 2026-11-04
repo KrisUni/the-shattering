@@ -1,0 +1,483 @@
+"""Draws the Dungeons' props at 32 px: the hall's furniture, pots, bones and rocks, and the cells'.
+
+    python3 scripts/art/draw_props.py [ASSETS_DIR] [--sheet SHEET.png]
+
+Each picture keeps the canvas size of the one it replaces (the scenes, hiding spots and footprints
+are lined up with those sizes), and is drawn with pixelkit.py: one light from the top left,
+hue-shifted ramps, selective outlines. Seen in three-quarter view: tops from above, fronts face on.
+ASSETS_DIR is `assets` by default; `-` writes nothing (for a sheet only).
+"""
+
+import math
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import pixelkit as pk  # noqa: E402
+
+M = pk.Material
+WOOD = M("#7f5c44", tones=4, step=0.075, lit_step=0.085)
+WOOD_TOP = M("#94704f", tones=3, step=0.08)
+WOOD_OLD = M("#6b5446", tones=3, step=0.07)
+IRON = M("#4c5066", tones=3, step=0.08, shine=0.1)
+IRON_DARK = M("#33354a", tones=2, step=0.05)
+RUST = M("#7a5440", tones=2, step=0.06)
+BURLAP = M("#94805f", tones=3, step=0.08)
+ROPE = M("#b29467", tones=2, step=0.08)
+CLAY = M("#8e5a45", tones=4, step=0.075, lit_step=0.09)
+BONE = M("#c9bea3", tones=3, step=0.09, outline="#3a3340")
+STONE = M("#62667c", tones=4, step=0.075, lit_step=0.09)
+STONE_DARK = M("#4c4f63", tones=3, step=0.07)
+MOSS = M("#5f6e4a", tones=2, step=0.07)
+STRAW = M("#b39a63", tones=3, step=0.08)
+CLOTH = M("#6e6170", tones=3, step=0.07)
+WATER = M("#3d4766", tones=3, step=0.07, shine=0.1, outline="#262a40")
+SKY = M("#5d6a8c", tones=2, step=0.08)
+
+GLINT = (214, 212, 230)
+
+
+def canvas(w, h):
+    return pk.Canvas(w, h)
+
+
+def out(c):
+    return pk.remove_orphans(c.render())
+
+
+def band(c, x0, x1, y, sag, thick, mat, z, line=True):
+    """A band across a round thing, curving down by sag at the middle (seen from above)."""
+    pixels = set()
+    mid = (x0 + x1) / 2.0
+    half = (x1 - x0) / 2.0 or 1
+    for x in range(x0, x1 + 1):
+        u = (x + 0.5 - mid) / half
+        dy = round(sag * (1 - u * u))
+        for t in range(thick):
+            pixels.add((x, y + dy + t))
+    return c.mask(pixels, mat, z, form="cylinder", centre=(mid + 0.5, y + thick / 2.0),
+                  radii=(half + 0.5, thick / 2.0 + 1), line=line)
+
+
+def grain(c, part, mat, xs, y0, y1, gap=None):
+    """Lines in the material's deep tone down a part, at these columns (staves, planks), where no
+    part in front of it covers it. Call it once the parts in front are drawn."""
+    covered = set()
+    for other in c.parts:
+        if other.z > part.z:
+            covered |= other.mask
+    for x in xs:
+        for y in range(y0, y1 + 1):
+            if (x, y) in part.mask and (x, y) not in covered and (gap is None or not gap(x, y)):
+                c.dot(x, y, mat.ramp[0])
+
+
+# --- the hall --------------------------------------------------------------------------------
+
+def barrel(w=28, h=36):
+    c = canvas(w, h)
+    cx = w / 2.0
+    body = []
+    for i in range(0, 13):
+        y = 5 + i * (h - 6) / 12.0
+        bulge = math.sin(i / 12.0 * math.pi) * 1.6
+        body.append((cx - 12.2 - bulge, y))
+    for i in range(12, -1, -1):
+        y = 5 + i * (h - 6) / 12.0
+        bulge = math.sin(i / 12.0 * math.pi) * 1.6
+        body.append((cx + 12.2 + bulge, y))
+    bottom = lambda x, y: ((x + 0.5 - cx) / 13.5) ** 2 + ((y + 0.5 - (h - 4.5)) / 4.0) ** 2 <= 1.0 or y < h - 4.5
+    b = c.poly(body, WOOD, 1, form="cylinder", clip=bottom)
+    for y, sag in ((12, 2.5), (h - 11, 3.0)):
+        band(c, 1, w - 2, y, sag, 3, IRON, 2)
+    lid = c.ellipse(cx, 6.0, 12.0, 5.0, WOOD_TOP, 3, form="flat")
+    lid.bias = 0.2
+    grain(c, b, WOOD, [int(cx - 8), int(cx - 3), int(cx + 2), int(cx + 7)], 10, h - 2)
+    inside = lambda x, y: ((x + 0.5 - cx) / 10.2) ** 2 + ((y + 0.5 - 5.8) / 3.5) ** 2 <= 1.0
+    for (x, y) in lid.mask:
+        if not inside(x, y) and y >= 3:
+            c.dot(x, y, WOOD.ramp[1] if y < 6 else WOOD.ramp[0])
+    for x in (int(cx - 4), int(cx + 3)):
+        for y in range(3, 10):
+            if inside(x, y):
+                c.dot(x, y, WOOD_TOP.ramp[0])
+    return out(c)
+
+
+def bench(w=60, h=18):
+    c = canvas(w, h)
+    for x in (5, w - 9):
+        c.box(x, 6, x + 3, h - 1, WOOD_OLD, 1, form="cylinder")
+    top = c.box(1, 1, w - 2, 5, WOOD_TOP, 3, form="flat")
+    top.bias = 0.1
+    c.box(1, 6, w - 2, 8, WOOD, 3.2, form="cylinder")
+    for y in (3,):
+        for x in range(2, w - 2):
+            if (x * 7) % 23 != 0:
+                c.dot(x, y, WOOD_TOP.ramp[0] if x % 19 > 2 else WOOD_TOP.ramp[1])
+    for x in (14, 31, 45):
+        c.dot(x, 2, WOOD_TOP.ramp[0])
+    return out(c)
+
+
+def crate(c, x0, y0, w, h, top_h, z):
+    top = c.box(x0, y0, x0 + w - 1, y0 + top_h - 1, WOOD_TOP, z + 0.2)
+    top.bias = 0.1
+    for x in range(x0 + 4, x0 + w - 2, 6):
+        for y in range(y0 + 1, y0 + top_h - 1):
+            c.dot(x, y, WOOD_TOP.ramp[0])
+    front = c.box(x0, y0 + top_h, x0 + w - 1, y0 + h - 1, WOOD, z, form="cylinder")
+    # The frame round the front and its brace, in the wood's deep tone and a lighter edge.
+    fy0, fy1 = y0 + top_h, y0 + h - 1
+    inner = set()
+    for y in range(fy0 + 3, fy1 - 2):
+        for x in range(x0 + 3, x0 + w - 3):
+            inner.add((x, y))
+    panel = c.mask(inner, WOOD_OLD, z + 0.1, form="flat")
+    panel.bias = -0.15
+    iw = w - 6
+    ih = fy1 - 2 - (fy0 + 3)
+    for i in range(iw):
+        y_a = fy0 + 3 + round(i * (ih - 1) / max(1, iw - 1))
+        y_b = fy1 - 3 - round(i * (ih - 1) / max(1, iw - 1))
+        c.dot(x0 + 3 + i, y_a, WOOD.ramp[3])
+        c.dot(x0 + 3 + i, y_a + 1, WOOD.ramp[1])
+        c.dot(x0 + 3 + i, y_b, WOOD.ramp[2])
+        c.dot(x0 + 3 + i, y_b + 1, WOOD.ramp[1])
+    for x, y in ((x0 + 1, fy0 + 1), (x0 + w - 2, fy0 + 1), (x0 + 1, fy1 - 1), (x0 + w - 2, fy1 - 1)):
+        c.dot(x, y, IRON.ramp[1])
+    return front
+
+
+def crate_stack(w=48, h=52):
+    c = canvas(w, h)
+    crate(c, 1, 24, w - 2, h - 24, 7, 1)
+    crate(c, 6, 0, w - 13, 26, 7, 3)
+    return out(c)
+
+
+def sack(c, cx, bottom, rx, ry, z):
+    body = c.ellipse(cx, bottom - ry, rx, ry, BURLAP, z,
+                     clip=lambda x, y: y >= bottom - ry * 1.6)
+    c.poly([(cx - rx * 0.55, bottom - ry * 1.55), (cx + rx * 0.55, bottom - ry * 1.55),
+            (cx + 1.5, bottom - ry * 2.0), (cx - 1.5, bottom - ry * 2.0)], BURLAP, z + 0.1)
+    c.capsule(cx - 2.5, bottom - ry * 1.95, cx + 2.5, bottom - ry * 1.95, 1.0, ROPE, z + 0.2)
+    c.ellipse(cx, bottom - ry * 2.0 - 2.0, 2.0, 1.8, BURLAP, z + 0.15)
+    for x in range(int(cx - rx + 3), int(cx + rx - 2), 4):
+        c.dot(x, int(bottom - ry + 2), BURLAP.ramp[0])
+    return body
+
+
+def sacks(w=36, h=22):
+    c = canvas(w, h)
+    sack(c, 10, h - 1, 9.0, 6.5, 1)
+    sack(c, 25, h - 1, 9.5, 6.8, 2)
+    return out(c)
+
+
+def spear_rack(w=36, h=52):
+    c = canvas(w, h)
+    for x in (3, w - 6):
+        c.box(x, 8, x + 2, h - 1, WOOD_OLD, 1, form="cylinder")
+    for x in (9, 18, 27):
+        c.box(x, 6, x + 1, h - 3, WOOD, 2, form="cylinder")
+        c.poly([(x - 1.5, 7), (x + 3.5, 7), (x + 1, 0)], IRON, 2.5, form="sphere")
+        c.dot(x, 3, GLINT)
+        c.box(x - 1, 7, x + 2, 8, ROPE, 2.6)
+    c.box(1, 10, w - 2, 12, WOOD_TOP, 3, form="cylinder")
+    c.box(1, h - 14, w - 2, h - 12, WOOD_TOP, 3, form="cylinder")
+    return out(c)
+
+
+def wardrobe(w=40, h=60):
+    c = canvas(w, h)
+    for x in (3, w - 7):
+        c.box(x, h - 5, x + 3, h - 1, WOOD_OLD, 1)
+    body = c.box(1, 5, w - 2, h - 5, WOOD, 2, form="cylinder")
+    top = c.box(0, 0, w - 1, 5, WOOD_TOP, 3, form="cylinder")
+    top.bias = 0.1
+    for i, (x0, x1) in enumerate(((4, w // 2 - 2), (w // 2 + 1, w - 5))):
+        d = c.box(x0, 8, x1, h - 8, WOOD_OLD, 2.5, form="cylinder")
+        grain(c, d, WOOD_OLD, [x0 + (x1 - x0) // 2], 10, h - 10)
+        hx = x1 - 1 if i == 0 else x0 + 1
+        c.box(hx, h // 2 - 2, hx, h // 2 + 1, IRON, 3)
+        c.dot(hx, h // 2 - 2, GLINT)
+    return out(c)
+
+
+def clay_pot(w=20, h=22):
+    c = canvas(w, h)
+    c.ellipse(w / 2, h - 8.5, 9.0, 8.0, CLAY, 1)
+    c.box(6, 2, w - 7, 6, CLAY, 2, form="cylinder")
+    lip = c.ellipse(w / 2, 2.8, 5.5, 2.4, CLAY, 3)
+    lip.bias = 0.1
+    c.ellipse(w / 2, 2.8, 3.4, 1.2, M("#3a2a2c", tones=2), 3.5, form="flat", line=False)
+    band(c, 3, w - 4, 10, 1.5, 1, CLAY, 2.5, line=False)
+    for (x, y) in list(c.parts[-1].mask):
+        c.dot(x, y, CLAY.ramp[0])
+    return out(c)
+
+
+def bone_shape(c, ax, ay, bx, by, z, r=1.2):
+    c.capsule(ax, ay, bx, by, r, BONE, z)
+    dx, dy = bx - ax, by - ay
+    n = math.hypot(dx, dy) or 1
+    px, py = -dy / n, dx / n
+    for (x, y) in ((ax, ay), (bx, by)):
+        c.ellipse(x + px * 1.3, y + py * 1.3, 1.7, 1.7, BONE, z + 0.1)
+        c.ellipse(x - px * 1.3, y - py * 1.3, 1.7, 1.7, BONE, z + 0.1)
+
+
+def bone(w=20, h=10):
+    c = canvas(w, h)
+    bone_shape(c, 3.5, 6.5, 16.5, 3.5, 1)
+    return out(c)
+
+
+def skull_shape(c, cx, cy, z, scale=1.0):
+    s = scale
+    c.ellipse(cx, cy, 6.2 * s, 5.6 * s, BONE, z)
+    c.box(int(cx - 3.5 * s), int(cy + 3.5 * s), int(cx + 3 * s), int(cy + 6.2 * s), BONE, z + 0.1, form="cylinder")
+    hole = (42, 36, 48)
+    n = 2 if s >= 1 else 1
+    for ex in (-3, 1) if n == 2 else (-2, 1):
+        for dx in range(n):
+            for dy in range(n):
+                c.dot(int(cx + ex) + dx, int(cy + 1) + dy, hole)
+    c.dot(int(cx) - (1 if n == 2 else 0), int(cy + 3.5 * s), (70, 60, 72))
+    for tx in range(int(cx - 2.5 * s), int(cx + 3 * s), 2):
+        c.dot(tx, int(cy + 5.5 * s), BONE.ramp[0])
+
+
+def skull(w=16, h=16):
+    c = canvas(w, h)
+    skull_shape(c, 8.0, 7.5, 1)
+    return out(c)
+
+
+def bone_pile(w=28, h=14):
+    c = canvas(w, h)
+    bone_shape(c, 3.5, 11, 15, 7.5, 1)
+    bone_shape(c, 5, 6.5, 16, 11.5, 1.5)
+    skull_shape(c, 20.5, 7.0, 3, scale=0.75)
+    return out(c)
+
+
+def rock(w, h, seed, mat=STONE, moss=False):
+    c = canvas(w, h)
+    pts = []
+    n = 11
+    cx, cy = w / 2.0, h / 2.0 + 1
+    for i in range(n):
+        a = i / n * 2 * math.pi
+        r = 1.0 - 0.13 * (0.5 + 0.5 * math.sin(a * 3 + seed * 1.7)) - 0.06 * math.sin(a * 5 + seed)
+        x = cx + math.cos(a) * (w / 2.0 - 0.6) * r
+        y = cy + math.sin(a) * (h / 2.0 - 1.2) * r
+        y = min(y, h - 0.6)
+        pts.append((x, y))
+    body = c.poly(pts, mat, 1, form="sphere")
+    body.radii = (w / 2.0, h / 2.0)
+    # Facets: a crack or two in the stone's deep tone, a lit chip on the top left.
+    if w > 30:
+        # One crack running down from the top, branching once.
+        crack = [(cx + 2, cy - 9), (cx + 3, cy - 8), (cx + 3, cy - 7), (cx + 4, cy - 6), (cx + 4, cy - 5),
+                 (cx + 5, cy - 4), (cx + 6, cy - 4), (cx + 7, cy - 3), (cx + 3, cy - 4), (cx + 2, cy - 3)]
+        for x, y in crack:
+            c.dot(int(x), int(y), mat.ramp[0])
+        c.dot(int(cx + 2), int(cy - 10), mat.ramp[3])
+    if moss:
+        for x in range(int(cx - w * 0.3), int(cx + w * 0.2)):
+            for y in range(1, int(h * 0.35)):
+                if (x, y) in body.mask and (x * 13 + y * 7 + seed) % 5 < 2 and y < 4 + (x % 3):
+                    c.dot(x, y, MOSS.ramp[(x + y) % 2])
+    return out(c)
+
+
+# --- the cells -------------------------------------------------------------------------------
+
+def cell_bars(w, h=48):
+    c = canvas(w, h)
+    rail = c.box(0, 0, w - 1, 3, IRON, 3, form="cylinder")
+    for x in range(4, w - 2, 12):
+        c.box(x, 4, x + 3, h - 1, IRON, 2, form="cylinder")
+        c.box(x - 1, h // 2 - 1, x + 4, h // 2 + 1, IRON_DARK, 2.5, form="cylinder")
+    for x in range(2, w - 2, 12):
+        c.dot(x, 1, GLINT)
+    return out(c)
+
+
+def cell_bed(w=68, h=38):
+    c = canvas(w, h)
+    for x in (2, w - 6):
+        c.box(x, h - 8, x + 3, h - 1, WOOD_OLD, 1, form="cylinder")
+    frame = c.box(0, 0, w - 1, h - 8, WOOD, 2, form="cylinder")
+    c.box(0, h - 10, w - 1, h - 7, WOOD_OLD, 2.2, form="cylinder")
+    mat = c.box(3, 3, w - 4, h - 13, STRAW, 3, form="flat")
+    mat.bias = 0.05
+    for i in range(40):
+        x = 4 + (i * 17) % (w - 9)
+        y = 4 + (i * 7) % (h - 18)
+        c.dot(x, y, STRAW.ramp[0] if i % 3 else STRAW.ramp[2])
+    blanket = c.box(w // 2 - 4, 3, w - 4, h - 13, CLOTH, 3.5, form="cylinder")
+    for y in range(4, h - 13, 4):
+        c.dot(w // 2 - 3, y, CLOTH.ramp[0])
+    return out(c)
+
+
+def cell_bones(w=24, h=14):
+    c = canvas(w, h)
+    bone_shape(c, 3, 10.5, 13, 9, 1)
+    skull_shape(c, 16.5, 7.0, 2, scale=0.7)
+    return out(c)
+
+
+def cell_bowl(w=16, h=10):
+    c = canvas(w, h)
+    c.ellipse(8, 5.5, 7.4, 4.2, WOOD, 1)
+    c.ellipse(8, 4.4, 5.2, 2.4, M("#4a3a33", tones=2), 2, form="flat", line=False)
+    c.ellipse(8, 4.8, 3.8, 1.5, M("#7d7560", tones=2), 2.5, form="flat", line=False)
+    return out(c)
+
+
+def cell_bucket(w=20, h=22):
+    c = canvas(w, h)
+    body = c.poly([(2, 5), (w - 2, 5), (w - 3.5, h - 0.5), (3.5, h - 0.5)], WOOD, 1, form="cylinder")
+    grain(c, body, WOOD, [6, 10, 14], 7, h - 2)
+    for y in (8, h - 5):
+        band(c, 2, w - 3, y, 1.5, 1, IRON, 2)
+    lip = c.ellipse(w / 2, 5.0, 8.4, 3.4, WOOD_TOP, 3)
+    lip.bias = 0.1
+    c.ellipse(w / 2, 5.3, 6.2, 2.0, WATER, 3.5, form="flat", line=False)
+    c.dot(int(w / 2) - 2, 4, GLINT)
+    # The handle, a rope loop over the top.
+    for i in range(13):
+        a = math.pi * (1 + i / 12.0)
+        c.dot(int(w / 2 + math.cos(a) * 8.5), int(4.5 + math.sin(a) * 4.5), ROPE.ramp[1])
+    return out(c)
+
+
+def cell_pallet(w=52, h=24):
+    c = canvas(w, h)
+    m = c.poly([(1, 3), (w - 3, 1), (w - 1, h - 4), (3, h - 1)], STRAW, 1, form="sphere")
+    for i in range(46):
+        x = 3 + (i * 19) % (w - 6)
+        y = 3 + (i * 11) % (h - 6)
+        if (x, y) in m.mask:
+            c.dot(x, y, STRAW.ramp[0] if i % 2 else STRAW.ramp[2])
+            if (x + 1, y) in m.mask and i % 3 == 0:
+                c.dot(x + 1, y, STRAW.ramp[0])
+    return out(c)
+
+
+def cell_puddle(w=40, h=16):
+    c = canvas(w, h)
+    p = c.ellipse(w / 2, h / 2, w / 2 - 0.5, h / 2 - 1, WATER, 1, form="flat")
+    c.ellipse(w / 2 + 6, h / 2 + 1, 7, 3, WATER, 1.2, form="flat", line=False).bias = -0.3
+    for x in (12, 13, 14, 24, 25):
+        c.dot(x, 5, (120, 132, 162))
+    return out(c)
+
+
+def cell_shackles(w=32, h=32):
+    c = canvas(w, h)
+    for x in (9, 22):
+        c.ellipse(x, 2.5, 2.4, 2.4, IRON_DARK, 1)
+        for y in range(5, 22, 3):
+            c.ellipse(x + (0.5 if (y // 3) % 2 else -0.5), y + 1, 1.2, 1.8, IRON, 2)
+        ring = c.ellipse(x, 26, 4.6, 4.4, IRON, 3)
+        inner = {(px, py) for (px, py) in ring.mask if ((px + 0.5 - x) / 2.6) ** 2 + ((py + 0.5 - 26) / 2.4) ** 2 < 1}
+        ring.mask -= inner
+        c.dot(x - 2, 23, GLINT)
+    return out(c)
+
+
+def cell_straw(w=12, h=6):
+    c = canvas(w, h)
+    for (ax, ay, bx, by) in ((0.5, 4.5, 8, 2), (3, 5, 11.5, 4), (2, 2, 9, 4.5)):
+        c.capsule(ax, ay, bx, by, 0.7, STRAW, 1, line=False)
+    return out(c)
+
+
+def cell_tally(w=36, h=14):
+    """Days scratched into the wall: pale cuts, each with its shadow on its right."""
+    c = canvas(w, h)
+    cut, shade = (201, 188, 160), (92, 84, 102)
+    def mark(x, y0, y1):
+        for y in range(y0, y1 + 1):
+            c.dot(x, y, cut)
+            c.dot(x + 1, y, shade)
+    for g in range(2):
+        x0 = 1 + g * 15
+        for i in range(4):
+            mark(x0 + i * 3, 2 + (i % 2), 12 - (i % 2))
+        for i in range(12):
+            c.dot(x0 - 1 + i, 10 - (i * 7) // 12, cut)
+            c.dot(x0 - 1 + i, 11 - (i * 7) // 12, shade)
+    for i in range(2):
+        mark(30 + i * 3, 3, 11)
+    image = c.render()
+    return image
+
+
+def cell_window(w=16, h=24):
+    c = canvas(w, h)
+    c.box(0, 0, w - 1, h - 1, STONE_DARK, 1, form="cylinder")
+    sky = c.box(3, 3, w - 4, h - 4, SKY, 2, form="flat")
+    sky.bias = 0.2
+    for x in (6, 9):
+        c.box(x, 2, x, h - 3, IRON, 3)
+    c.box(2, h // 2, w - 3, h // 2, IRON, 3)
+    return out(c)
+
+
+PICTURES = {
+    "dungeons/furniture/barrel.png": barrel,
+    "dungeons/furniture/bench.png": bench,
+    "dungeons/furniture/crate_stack.png": crate_stack,
+    "dungeons/furniture/sacks.png": sacks,
+    "dungeons/furniture/spear_rack.png": spear_rack,
+    "dungeons/furniture/wardrobe.png": wardrobe,
+    "dungeons/pots/clay_pot.png": clay_pot,
+    "dungeons/bones/bone.png": bone,
+    "dungeons/bones/bone_pile.png": bone_pile,
+    "dungeons/bones/skull.png": skull,
+    "dungeons/rocks/rock_big.png": lambda: rock(52, 40, 2, moss=True),
+    "dungeons/rocks/rock_small_0.png": lambda: rock(16, 14, 0),
+    "dungeons/rocks/rock_small_1.png": lambda: rock(16, 14, 3, mat=STONE_DARK),
+    "dungeons/rocks/rock_small_2.png": lambda: rock(16, 14, 5),
+    "dungeons/cells/cell_bars_64.png": lambda: cell_bars(128),
+    "dungeons/cells/cell_bars_80.png": lambda: cell_bars(160),
+    "dungeons/cells/cell_bars_96.png": lambda: cell_bars(192),
+    "dungeons/cells/cell_bed.png": cell_bed,
+    "dungeons/cells/cell_bones.png": cell_bones,
+    "dungeons/cells/cell_bowl.png": cell_bowl,
+    "dungeons/cells/cell_bucket.png": cell_bucket,
+    "dungeons/cells/cell_pallet.png": cell_pallet,
+    "dungeons/cells/cell_puddle.png": cell_puddle,
+    "dungeons/cells/cell_shackles.png": cell_shackles,
+    "dungeons/cells/cell_straw.png": cell_straw,
+    "dungeons/cells/cell_tally.png": cell_tally,
+    "dungeons/cells/cell_window.png": cell_window,
+}
+
+
+def main():
+    args = list(sys.argv[1:])
+    sheet = None
+    if "--sheet" in args:
+        i = args.index("--sheet")
+        sheet = args[i + 1]
+        del args[i:i + 2]
+    root = args[0] if args else "assets"
+    images = []
+    for path, draw in PICTURES.items():
+        image = draw()
+        images.append(image)
+        if root != "-":
+            pk.save(image, os.path.join(root, path))
+    if sheet:
+        pk.sheet(images, zoom=4, cols=7).save(sheet)
+
+
+if __name__ == "__main__":
+    main()

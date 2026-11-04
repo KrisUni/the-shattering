@@ -235,13 +235,13 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Hiding spot
 
 - **Thing:** Hiding spot
-- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+- **Source pack and files:** Drawn for this game, `assets/dungeons/furniture/`. Redrawn at 32 px in code by `scripts/art/draw_props.py` (on `scripts/art/pixelkit.py`), at the same canvas sizes, so every footprint and rim is where it was.
   - `wardrobe.png` (`scenes/world/wardrobe.tscn`): a tall wardrobe of grown wood, two doors with a gap between them, a sand lip on top
   - `barrel.png` (`scenes/world/barrel.tscn`): a barrel with bark hoops
 
   Both inherit `hiding_spot.tscn`. The placeholder shape is hidden, and the spot is at the foot of the furniture. The test room's spots stay placeholder.
 - **Size in art px:** Wardrobe 40x60; barrel 28x36.
-- **Palette notes and accents used:** Dusty-rose wood with sand highlights, navy outline and seams, indigo shadow at the foot. No accent; a burning one shows the shared Fire flame.
+- **Palette notes and accents used:** Warm brown grown wood, lit on the top left, its staves and planks in its own deep tone, iron hoops in slate; the barrel's lid is open, a dark rim round a lighter top. No accent; a burning one shows the shared Fire flame.
 - **Animations and poses needed:** No frames. Getting in, Almos is seen hopping in (`scenes/world/hide_hop.gd`, only a look: he is in the spot at once): he crouches, springs up in an arc and drops into a barrel feet first, cut away row by row below its rim (`open_top`), or squeezes in between a wardrobe's doors; the spot squashes and wobbles back as he lands. Getting out, he springs out of it from its rim and lands on his feet in front of it, and it squashes again. Almos inside is not drawn at all, and the spot rattles every three seconds or so, each on its own rhythm: its look hops and jolts for a third of a second. Pulled, it shudders through the wind-up and floats up over Almos's head, bobbing while held. Thrown, it falls in an arc with a dust trail (`scenes/world/throw_dust.gd`) and bursts in dust and wood splinters where it lands (`scenes/world/impact_burst.gd`). Too heavy, it jolts harder and stays put. Almos holds his coiled wind-up pose while gripping, and strikes as he throws.
 - **Placement:** Corridor 1 has no wardrobes any more: big rocks stand in their place (`assets/dungeons/rocks/rock_big.png`, a grey lumpy boulder with moss on top, `scenes/world/big_rock.tscn`), and barrels to hide in sit between them and the two cell doors, one a few steps from Cell 3's. A rock crushed against the wall bursts in pieces of its own art and leaves small rocks (`rock_small_0-2.png`).
 - **Loose things and growth:** The hall is laid out as a place people use, not scattered: a rockfall in the west corner (two big rocks and their rubble of small rocks), the prisoners' water barrel and bucket by Cell 3's door, the stores against the middle wall (barrels in a row, a pot, a crate stack, burlap sacks), and the guard post east of Cell 2's door (a barrel, a bench with a bowl, a bucket and the spear rack) where a second guard sits on the bench (`sit`, two frames of a slow breath, played while he is at rest at his post; he gets up once he is hurt or in Pursuit). Bones and skulls lie only along the chasm's lip and on its ledges. Everything that is not a plant can be lifted and thrown (barrels, bone piles, pots and bowls break where a throw ends; the bench, rack and crates are too heavy yet and shudder). Plants are only a look, kept sparse: floor moss, small glowing fungus and moss hanging from the north wall (`assets/dungeons/growth/`). The cells' lamps hang on their north walls; no lamp stands on a pole in the Dungeons' hall or cells. Cell 3 has a bowl by the bed and a puddle under a drip.
@@ -251,11 +251,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Furniture and cover
 
 - **Thing:** The Dungeons' furniture. Crate stacks are cover: solid, on the walls layer, so they block Sight and movement as a wall does.
-- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+- **Source pack and files:** Drawn for this game, `assets/dungeons/furniture/`. Redrawn at 32 px in code by `scripts/art/draw_props.py` (on `scripts/art/pixelkit.py`), at the same canvas sizes, so every footprint and rim is where it was.
   - `crate_stack.png` (`scenes/world/crate_stack.tscn`, a StaticBody2D in the group "cover", its box on the lower crate's footprint)
   - `bench.png`, `spear_rack.png`, `sacks.png`: dressing with no collision
 - **Size in art px:** Crate stack 48x52, bench 60x18, spear rack 36x52, sacks 36x22.
-- **Palette notes and accents used:** Dusty-rose wood and cloth with sand highlights, navy outline; spear heads in cream and sand. No accent.
+- **Palette notes and accents used:** Warm brown wood (lighter on the tops seen from above), crates with a framed front and a pale brace, burlap sacks tied with rope, iron spear heads with a glint. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
@@ -365,7 +365,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 #### Cell 3, the cell
 
 - **Thing:** Cell 3 (where Almos wakes; see Dungeons)
-- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/cells/`:
+- **Source pack and files:** Drawn for this game, `assets/dungeons/cells/`. Redrawn at 32 px in code by `scripts/art/draw_props.py` (on `scripts/art/pixelkit.py`), at the same canvas sizes, so every footprint and rim is where it was. The light shaft (`cell_light.png`) is the old dither, doubled.
   - `cell_bars_80.png`: root bars along the front either side of the door, in front of Almos
   - `cell_window.png` and `cell_light.png`: a barred window slit high in the north wall, and the pale shaft of light it throws on the floor
   - `cell_pallet.png`, `cell_bucket.png`, `cell_bones.png`, `cell_straw.png`: a straw pallet, a bucket, old bones and scattered straw
