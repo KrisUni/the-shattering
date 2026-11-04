@@ -66,6 +66,10 @@ _Avoid_: Front door, gate
 The key to the Main entrance, carried by one Nar jailer. The jailer is a named enemy: Almos takes the key by killing him, he stays dead, and the key is kept even through a Death. He drops it where he falls and Almos takes it with a tap of Interact. It opens the Main entrance and nothing else.
 _Avoid_: Gate key, keycard
 
+**Inspect spot**:
+Something in a Room that Almos can look at closely with a tap of Interact beside it, such as remains or writing cut into a wall: his thought about it, or what it says, shows in a text box low on the screen and fades by itself a few seconds later. It takes no press, so it never holds him up, and he can look again as often as he likes. Interact takes it only when nothing else is in reach (a Checkpoint, a Hiding spot, a pickup or the Jailer's key comes first). In Cell 2 a dead prisoner's skeleton, a black ring by his hand and the writing he cut into the wall above him, which reads I SAW THE SERPENT GOD, are Inspect spots.
+_Avoid_: Examine point, readable
+
 **Back entrance**:
 A door at the end of the Dungeons' long corridor, hidden behind something flammable until the player burns it open. It leads down a long corridor to a cave, the first Rooms of the Catacombs.
 _Avoid_: Back door, secret door

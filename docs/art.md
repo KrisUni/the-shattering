@@ -357,7 +357,7 @@ The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_til
 
 All three cells (Cells 1, 2 and 3) are closed in and dressed the same way, from the same pictures in `assets/dungeons/cells/`. Each differs:
 - **Cell 1:** smaller (13 by 10 tiles), older and overgrown. Roots break through its wall and it has no window. Its lamp hangs on its wall, with bones, shackles, a bucket, and the pallet in the far corner.
-- **Cell 2:** wider (14 by 11 tiles) and damp. A window to the left with its shaft of light, a puddle of seep water (`cell_puddle.png`), a cracked bowl (`cell_bowl.png`), three rows of tallies, and a standing lamp in the corner.
+- **Cell 2:** wider (14 by 11 tiles) and damp. A window to the left with its shaft of light, a puddle of seep water (`cell_puddle.png`), a cracked bowl (`cell_bowl.png`), three rows of tallies, and a standing lamp in the corner. A dead prisoner's remains are its Inspect spots (`scenes/world/inspect_spot.gd`), drawn by `scripts/art/draw_props.py`: his skeleton slumped in the north-west corner with an arm fallen to the floor (`cell_skeleton.png`, 44x34), a black ring by his hand (`cell_ring.png`, 10x8, near black with a glint), and writing cut into the north wall just above him (`cell_carving.png`, 50x15): two lines of made-up letters in a shaky hand, the shape of I SAW THE / SERPENT GOD, so it looks like writing and is read only in the text box.
 - **Cell 3:** described below.
 
 The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.png` and `cell_bars_96.png`.

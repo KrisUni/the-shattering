@@ -430,6 +430,100 @@ def cell_window(w=16, h=24):
     return out(c)
 
 
+def cell_skeleton(w=44, h=34):
+    """A prisoner's remains, slumped against the cell's wall where he sat: skull fallen to one
+    shoulder, ribs, pelvis on the floor, legs out in front, one arm fallen to his side."""
+    c = canvas(w, h)
+    hole = (42, 36, 48)
+    # Legs out to the right, the far one a little higher.
+    bone_shape(c, 15, 23.5, 27, 21.5, 1, r=1.1)
+    bone_shape(c, 27, 21.5, 38.5, 23, 1, r=1.0)
+    bone_shape(c, 15, 27, 28, 27.5, 2, r=1.1)
+    bone_shape(c, 28, 27.5, 40, 29.5, 2, r=1.0)
+    # Pelvis and spine.
+    c.ellipse(12.5, 25, 4.6, 3.4, BONE, 2.5)
+    c.dot(12, 25, hole)
+    c.dot(13, 25, hole)
+    c.capsule(10.5, 12, 12, 23, 1.0, BONE, 2.2, line=False)
+    # Ribs: a cage with dark gaps between the bones.
+    cage = c.ellipse(11, 16.5, 5.6, 5.2, BONE, 3)
+    for row in (13, 16, 19):
+        for x in range(6, 17):
+            if (x, row) in cage.mask and abs(x - 11) > 0:
+                c.dot(x, row, hole if abs(x - 11) > 1 else BONE.ramp[0])
+    # The near arm fallen to the floor at his side, its hand open.
+    bone_shape(c, 15.5, 13, 18.5, 20, 3.5, r=0.9)
+    bone_shape(c, 18.5, 20, 22.5, 25.5, 3.5, r=0.9)
+    for fx in (23.5, 25, 26.5):
+        c.capsule(22.5, 25.5, fx + 0.5, 27.5, 0.6, BONE, 3.6, line=False)
+    # The skull, fallen onto his shoulder.
+    skull_shape(c, 9.5, 7.5, 4, scale=0.85)
+    return out(c)
+
+
+def cell_ring(w=10, h=8):
+    """A black ring lying on the floor: a near-black band seen from above, a glint on its top."""
+    c = canvas(w, h)
+    ring = c.ellipse(5, 4, 4.4, 3.2, M("#2a2731", tones=3, step=0.05, outline="#141219"), 1)
+    inner = {(x, y) for (x, y) in ring.mask if ((x + 0.5 - 5) / 2.2) ** 2 + ((y + 0.5 - 4) / 1.3) ** 2 < 1}
+    ring.mask -= inner
+    c.dot(3, 1, GLINT)
+    c.dot(4, 1, (150, 146, 168))
+    return out(c)
+
+
+# The strokes a scratched glyph is made of, on a 3x5 cell: uprights, bars, slants and hooks.
+STROKES = [
+    [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)],
+    [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)], [(0, 0), (1, 0), (2, 0)], [(0, 2), (1, 2), (2, 2)],
+    [(0, 4), (1, 4), (2, 4)], [(0, 0), (1, 1), (1, 2), (2, 3), (2, 4)], [(2, 0), (1, 1), (1, 2), (0, 3), (0, 4)],
+    [(0, 1), (1, 0), (2, 1)], [(0, 3), (1, 4), (2, 3)], [(2, 2), (2, 3), (1, 4)],
+]
+
+
+def _glyph(seed):
+    """A made-up letter: two or three strokes, picked by the seed, so it looks like writing that
+    Almos cannot read at a glance."""
+    n = 2 + seed % 2
+    cells = set()
+    k = seed * 7 + 3
+    for s in range(n):
+        k = (k * 1103515245 + 12345) & 0x7FFFFFFF
+        # The first stroke spans the glyph's height (an upright or a slant), so every letter
+        # stands as tall as the others.
+        cells.update(STROKES[(0, 1, 2, 6, 7)[k % 5]] if s == 0 else STROKES[k % len(STROKES)])
+    return cells
+
+
+def cell_carving(w=50, h=15):
+    """Writing cut into the wall in a shaky hand, letters of a script Almos does not read at a
+    glance (what it says shows when he looks at it: the Carving's Inspect spot). Two lines with the
+    shape of I SAW THE / SERPENT GOD. Pale cuts with their shadow on
+    the right, as the tally marks are. It is on the wall above the skeleton in Cell 2."""
+    from PIL import Image
+    image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    cut, shade = (201, 188, 160, 255), (92, 84, 102, 255)
+    marks = set()
+    seed = 5
+    for row, (words, x0, y0) in enumerate((((1, 3, 3), 2, 1), ((7, 3), 1, 8))):
+        x = x0
+        for word in words:
+            for i in range(word):
+                seed += 1
+                low = (i * 5 + row + seed) % 3 == 0  # a shaky hand: some letters a pixel low
+                for gx, gy in _glyph(seed):
+                    marks.add((x + gx, y0 + gy + (1 if low else 0)))
+                x += 4
+            x += 3
+    for (x, y) in marks:
+        if 0 <= x + 1 < w and 0 <= y + 1 < h and (x + 1, y) not in marks:
+            image.putpixel((x + 1, y), shade)
+    for (x, y) in marks:
+        if 0 <= x < w and 0 <= y < h:
+            image.putpixel((x, y), cut)
+    return image
+
+
 PICTURES = {
     "dungeons/furniture/barrel.png": barrel,
     "dungeons/furniture/bench.png": bench,
@@ -458,6 +552,9 @@ PICTURES = {
     "dungeons/cells/cell_straw.png": cell_straw,
     "dungeons/cells/cell_tally.png": cell_tally,
     "dungeons/cells/cell_window.png": cell_window,
+    "dungeons/cells/cell_skeleton.png": cell_skeleton,
+    "dungeons/cells/cell_ring.png": cell_ring,
+    "dungeons/cells/cell_carving.png": cell_carving,
 }
 
 
