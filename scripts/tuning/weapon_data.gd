@@ -6,6 +6,10 @@ extends Resource
 ## The Weapon's name, as the HUD will show it, such as "Sword".
 @export var display_name: String
 
+## The name Almos's swings with it go by in his sprite, such as "sword", which plays
+## attack_sword_<side>; empty, or a name his sprite lacks, plays his plain swing. Only a look.
+@export var look: StringName
+
 ## The Weapon's Weight, which counts toward the player's Load while it is carried. Nothing reads
 ## it yet.
 @export var weight: float

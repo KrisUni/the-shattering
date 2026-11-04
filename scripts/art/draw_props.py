@@ -651,10 +651,10 @@ def bookshelf(w=60, h=64, seed=0):
     return out(c)
 
 
-def weapon_rack(w=60, h=60):
+def weapon_rack(w=60, h=60, taken=False):
     """A small armoury against the north wall: a rack of dark wood with two swords and a mace hung
     point down from its upper rail, two spears stood in its foot, and a round shield of bark and
-    iron leaning against its front."""
+    iron leaning against its front. Taken, the left sword is gone from its peg (Almos has it)."""
     c = canvas(w, h)
     blade = M("#9aa0b0", tones=3, step=0.11, shine=0.15, outline="#363442")
     grip = M("#3a2c25", tones=2, step=0.05)
@@ -668,12 +668,15 @@ def weapon_rack(w=60, h=60):
         c.capsule(x, h - 2, x, 4, 0.9, WOOD_OLD, 1.5, line=True)
         c.poly([(x - 2, 6), (x, -0.5), (x + 2, 6), (x, 8)], IRON, 1.6)
     # Two swords hung by their crossguards from the upper rail, points down.
-    for x in (20, 38):
+    for x in ((38,) if taken else (20, 38)):
         c.capsule(x, 12, x, h - 14, 1.6, blade, 2, r2=0.6)
         c.capsule(x - 3.5, 11, x + 3.5, 11, 1.0, guard, 3.4)
         c.capsule(x, 5, x, 10, 0.8, grip, 3.3)
         c.ellipse(x, 4, 1.3, 1.3, guard, 3.4)
         c.dot(x, 24, GLINT)
+    if taken:
+        # The empty peg it hung from.
+        c.capsule(20, 9, 20, 12, 0.8, WOOD_OLD, 3.2)
     # A mace of root wood with an iron head.
     c.capsule(29, 8, 29, 32, 1.0, WOOD_OLD, 2.4)
     c.ellipse(29, 34, 3.4, 3.4, IRON, 2.5)
@@ -763,6 +766,7 @@ PICTURES = {
     "dungeons/furniture/bookshelf_0.png": lambda: bookshelf(seed=2),
     "dungeons/furniture/bookshelf_1.png": lambda: bookshelf(seed=7),
     "dungeons/furniture/weapon_rack.png": weapon_rack,
+    "dungeons/furniture/weapon_rack_taken.png": lambda: weapon_rack(taken=True),
     "dungeons/furniture/armour_stand.png": armour_stand,
     "dungeons/furniture/scrolls.png": scrolls,
     "dungeons/furniture/key_crate.png": key_crate,

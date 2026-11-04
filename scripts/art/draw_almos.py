@@ -187,6 +187,9 @@ def front(pose, c=None, ox=0, oy=0, back=False):
         c.capsule(sx + ox, top + 2.5, ex, ey, 2.2, o.sleeve, z, r2=2.0)
         c.capsule(ex, ey, hx, hy - 1.2, 1.7, o.wraps, z + 0.1, r2=1.5)
         c.ellipse(hx, hy, 1.6, 1.5, o.skin, z + 0.5)
+        if not hasattr(c, "hands"):
+            c.hands = [None, None]
+        c.hands[i] = (hx, hy, z + 0.5)
     mantle(c, 16 + ox, top + 0.5, o=o)
     head(c, pose, 16 + ox, 11 + b * 0.5 + oy, view="up" if back else "down")
     return c
@@ -354,8 +357,38 @@ def roll_frames(view):
 
 ATTACK_PHASES = ["wind", "coil", "strike", "follow", "recover"]
 
+# The sword in his hand when he carries one: a plain short blade of grey iron, a crossguard, a wrapped
+# grip and a pommel, drawn like the jailer's.
+SWORD_BLADE = M("#a3a8b8", tones=3, step=0.11, shine=0.15, outline="#3a3848")
+SWORD_GUARD = M("#4a4652", tones=2, step=0.06)
+SWORD_GRIP = M("#4b3934", tones=2, step=0.05)
+SWORD_GLINT = (226, 228, 238)
+SWORD_LENGTH = 17
+# The angle of the blade in each phase of a swing (radians, 0 = right, y down), for each view, and
+# whether it is behind him. Side: drawn back over the shoulder, swung down in front. Down: raised
+# over his head, swung down toward the viewer. Up: low at his side, swung up away from the viewer.
+SWORD_SWING = {
+    "side": {"wind": (-2.3, True), "coil": (-2.75, True), "strike": (0.35, False), "follow": (1.0, False), "recover": (1.3, False)},
+    "down": {"wind": (-2.2, True), "coil": (-2.0, True), "strike": (1.35, False), "follow": (2.0, False), "recover": (1.75, False)},
+    "up": {"wind": (1.2, True), "coil": (0.9, True), "strike": (-1.45, True), "follow": (-2.1, True), "recover": (1.6, True)},
+}
 
-def attack_frames(view):
+
+def sword(c, hand, angle, z, length=SWORD_LENGTH):
+    """The sword, its grip in the hand and its blade out along the angle."""
+    hx, hy = hand
+    dx, dy = math.cos(angle), math.sin(angle)
+    px, py = -dy, dx
+    gx, gy = hx + dx * 2.0, hy + dy * 2.0
+    c.capsule(gx, gy, hx + dx * length, hy + dy * length, 1.6, SWORD_BLADE, z, r2=0.6)
+    c.capsule(gx - px * 3.2, gy - py * 3.2, gx + px * 3.2, gy + py * 3.2, 0.9, SWORD_GUARD, z + 0.2)
+    c.capsule(hx - dx * 3.0, hy - dy * 3.0, gx, gy, 0.8, SWORD_GRIP, z + 0.1)
+    c.ellipse(hx - dx * 3.7, hy - dy * 3.7, 1.2, 1.2, SWORD_GUARD, z + 0.2)
+    c.dot(int(hx + dx * length * 0.5), int(hy + dy * length * 0.5), SWORD_GLINT)
+
+
+def attack_frames(view, with_sword=False):
+    """The five frames of a swing for the view; with_sword, the sword is in his hand."""
     images = []
     ox, oy = 16, 8
     for phase in ATTACK_PHASES:
@@ -368,6 +401,9 @@ def attack_frames(view):
                     "follow": ((5, 0), (-5, 0)), "recover": ((3, 0), (-3, 0))}[phase]
             crouch = {"wind": 0, "coil": 1, "strike": 1, "follow": 1, "recover": 0}[phase]
             side(Pose(hands=hands, lean=lean, feet=feet, crouch=crouch, tail=-lean), c, ox, oy)
+            if with_sword:
+                angle, behind = SWORD_SWING["side"][phase]
+                sword(c, c.hand, angle, 0.3 if behind else 7.9)
             if phase == "strike":
                 smear(c, 33, 30, 22, -1.35, 1.05, 6.5)
             elif phase == "follow":
@@ -388,6 +424,10 @@ def attack_frames(view):
             crouch = {"wind": 0, "coil": 1, "strike": 1, "follow": 1, "recover": 0}[phase]
             front(Pose(hands=tuple(hands), crouch=crouch, tail=1 if phase in ("strike", "follow") else 0),
                   c, ox, oy, back=back)
+            if with_sword:
+                angle, behind = SWORD_SWING[view][phase]
+                hx, hy, hz = c.hands[arm]
+                sword(c, (hx, hy), angle, 0.3 if behind else hz + 0.3)
             if phase in ("strike", "follow"):
                 fade = 1.0 if phase == "strike" else 0.6
                 if not back:
@@ -415,6 +455,7 @@ def frames():
         out["walk_" + view] = [render(draw(p)) for p in walk_poses(view)]
         out["roll_" + view] = roll_frames(view)
         out["attack_" + view] = attack_frames(view)
+        out["attack_sword_" + view] = attack_frames(view, with_sword=True)
     return out
 
 
