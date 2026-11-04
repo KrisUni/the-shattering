@@ -108,6 +108,25 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_side_3.png" id="sw_attack_side_3"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_side_4.png" id="sw_attack_side_4"]
 
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_down_0.png" id="g_pull_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_down_1.png" id="g_pull_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_down_2.png" id="g_pull_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_up_0.png" id="g_pull_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_up_1.png" id="g_pull_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_up_2.png" id="g_pull_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_side_0.png" id="g_pull_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_side_1.png" id="g_pull_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/pull_side_2.png" id="g_pull_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_down_0.png" id="g_shove_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_down_1.png" id="g_shove_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_down_2.png" id="g_shove_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_up_0.png" id="g_shove_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_up_1.png" id="g_shove_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_up_2.png" id="g_shove_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_side_0.png" id="g_shove_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_side_1.png" id="g_shove_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/shove_side_2.png" id="g_shove_side_2"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(32, 32)
 
@@ -492,6 +511,102 @@ animations = [{
 }],
 "loop": false,
 "name": &"attack_sword_side",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("g_pull_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_pull_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_pull_down_2")
+}],
+"loop": false,
+"name": &"pull_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("g_pull_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_pull_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_pull_up_2")
+}],
+"loop": false,
+"name": &"pull_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("g_pull_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_pull_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_pull_side_2")
+}],
+"loop": false,
+"name": &"pull_side",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("g_shove_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_shove_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_shove_down_2")
+}],
+"loop": false,
+"name": &"shove_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("g_shove_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_shove_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_shove_up_2")
+}],
+"loop": false,
+"name": &"shove_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("g_shove_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_shove_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("g_shove_side_2")
+}],
+"loop": false,
+"name": &"shove_side",
 "speed": 0.0
 }]
 
