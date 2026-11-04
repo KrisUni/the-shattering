@@ -14,7 +14,6 @@
 [ext_resource type="PackedScene" path="res://scenes/world/crate_stack.tscn" id="97_crates"]
 [ext_resource type="PackedScene" path="res://scenes/world/sacks.tscn" id="98_sacks"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/stool.png" id="99_stool"]
-[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/rug.png" id="100_rug"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/scrolls.png" id="101_scrolls"]
 
 [sub_resource type="RectangleShape2D" id="Shape_1152x40"]
@@ -73,10 +72,6 @@ tile_set = ExtResource("90_tiles")
 
 [node name="Props" type="Node2D" parent="."]
 z_index = -1
-
-[node name="Rug" type="Sprite2D" parent="Props"]
-position = Vector2(560, 268)
-texture = ExtResource("100_rug")
 
 [node name="Scrolls" type="Sprite2D" parent="Props"]
 position = Vector2(444, 90)

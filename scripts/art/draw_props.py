@@ -711,32 +711,6 @@ def armour_stand(w=26, h=54):
     return out(c)
 
 
-def rug(w=128, h=72):
-    """A woven fibre rug on the floor, seen from above: a dark border, a field of muted ochre with a
-    root-knot pattern and a frayed fringe at each end. Worn pale where feet go."""
-    c = canvas(w, h)
-    field = M("#6b5440", tones=3, step=0.06)
-    border = M("#3e3346", tones=2, step=0.05)
-    c.box(4, 2, w - 5, h - 3, border, 1, form="flat")
-    inner = c.box(8, 6, w - 9, h - 7, field, 1.1, form="flat")
-    inner.bias = 0.05
-    cx, cy = w / 2, h / 2
-    for y in range(6, h - 6):
-        for x in range(8, w - 8):
-            u, v = abs(x + 0.5 - cx), abs(y + 0.5 - cy)
-            d = u / 1.7 + v
-            if int(d) % 10 == 0 and d < 40:
-                c.dot(x, y, border.ramp[1])
-            elif (x * 3 + y * 7) % 17 == 0:
-                c.dot(x, y, field.ramp[0])
-    for y in range(4, h - 4, 2):
-        c.dot(2, y, PAPER.ramp[0])
-        c.dot(3, y, PAPER.ramp[0])
-        c.dot(w - 3, y, PAPER.ramp[0])
-        c.dot(w - 4, y, PAPER.ramp[0])
-    return out(c)
-
-
 def scrolls(w=28, h=14):
     """Bark scrolls and a sheet dropped on the floor by the shelves."""
     c = canvas(w, h)
@@ -790,7 +764,6 @@ PICTURES = {
     "dungeons/furniture/bookshelf_1.png": lambda: bookshelf(seed=7),
     "dungeons/furniture/weapon_rack.png": weapon_rack,
     "dungeons/furniture/armour_stand.png": armour_stand,
-    "dungeons/furniture/rug.png": rug,
     "dungeons/furniture/scrolls.png": scrolls,
     "dungeons/furniture/key_crate.png": key_crate,
     "dungeons/furniture/key_crate_open.png": lambda: key_crate(open_=True),
