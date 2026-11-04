@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" path="res://scenes/world/bookshelf.tscn" id="93_shelf"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/bookshelf_1.png" id="94_shelf_1"]
 [ext_resource type="PackedScene" path="res://scenes/world/weapon_rack.tscn" id="95_rack"]
+[ext_resource type="PackedScene" path="res://scenes/world/weapon_pickup.tscn" id="102_pickup"]
+[ext_resource type="Resource" path="res://data/sword.tres" id="103_sword"]
 [ext_resource type="PackedScene" path="res://scenes/world/armour_stand.tscn" id="96_stand"]
 [ext_resource type="PackedScene" path="res://scenes/world/crate_stack.tscn" id="97_crates"]
 [ext_resource type="PackedScene" path="res://scenes/world/sacks.tscn" id="98_sacks"]
@@ -228,6 +230,15 @@ texture = ExtResource("94_shelf_1")
 
 [node name="WeaponRack" parent="Furniture" instance=ExtResource("95_rack")]
 position = Vector2(690, 76)
+rouses = NodePath("../../Knight")
+
+[node name="Sword" parent="Furniture/WeaponRack" instance=ExtResource("102_pickup")]
+position = Vector2(-10, 6)
+weapon = ExtResource("103_sword")
+id = &"dungeons/radio_officers/sword"
+
+[node name="Look" parent="Furniture/WeaponRack/Sword" index="0"]
+visible = false
 
 [node name="ArmourStand" parent="Furniture" instance=ExtResource("96_stand")]
 position = Vector2(756, 80)

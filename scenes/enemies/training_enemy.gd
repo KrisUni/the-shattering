@@ -457,6 +457,15 @@ func _update_pursuit() -> void:
 		health.heal(tuning.health_recovery_rate * get_physics_process_delta_time())
 
 
+## Rouses it at once, wherever its Sight points: it notices its target as a hit makes it, and is in
+## Pursuit of him, on its feet if it sat or slept. Such as a sleeping guard woken by a sword taken
+## from the rack beside him. Does nothing once it is dead or with no target.
+func rouse() -> void:
+	if _dead or not is_instance_valid(target):
+		return
+	_notice_the_hit()
+
+
 ## Ends Pursuit at once, as losing the target for the lose-time does: it walks back to its post
 ## and recovers Health there. An attack under way is finished first. Does nothing out of Pursuit.
 ## It notices the target again if he is in its Sight or hits it.

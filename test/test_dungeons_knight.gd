@@ -2,7 +2,8 @@ extends GutTest
 ## A stronger, named Nar knight sits asleep at his desk in Radio/Officers, the Room nearest the Main
 ## entrance. He stays at his post rather than patrolling, and once killed he stays dead: through a
 ## Death and through a rest at a Checkpoint. Asleep, he notices Almos by Sight as the seated guard in
-## Corridor 1 does; he faces his desk. Apart from the ordinary guards patrolling Corridor 1 (see
+## Corridor 1 does; he faces his desk. A sword hangs on the armoury's rack, and taking it wakes him at
+## once: Almos goes by stealth for the key, or takes the sword and fights. Apart from the ordinary guards patrolling Corridor 1 (see
 ## test_corridor_1_stealth.gd), no other Room of the Dungeons holds an enemy.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
@@ -249,6 +250,56 @@ func test_a_knight_who_was_not_killed_is_still_in_radio_officers_after_a_rest() 
 	assert_eq(_enemies_in(_room(host, &"radio_officers")).size(), 1, "he should still be there")
 
 
+func test_a_sword_hangs_on_the_armourys_rack() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+
+	var sword := _rack(host).get_node_or_null("Sword") as WeaponPickup
+	assert_not_null(sword, "a sword should hang on the rack")
+	if sword != null:
+		assert_eq(sword.weapon, load("res://data/sword.tres"), "it should be a sword")
+	assert_false(_rack(host).is_empty(), "the rack should be drawn full")
+
+
+func test_taking_the_sword_wakes_the_knight_and_he_is_after_almos() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	var knight := _knight(host)
+	assert_true(knight.sleeping(), "control: he sleeps")
+
+	await _take_the_sword(host)
+
+	assert_true(host.almos.weapons.carried.has(load("res://data/sword.tres")), "control: Almos took it")
+	assert_false(is_instance_valid(_rack(host).get_node_or_null("Sword")), "the sword should be gone from the rack")
+	assert_true(_rack(host).is_empty(), "the rack should be drawn with its peg empty")
+	assert_true(knight.in_pursuit, "he should be after Almos")
+	assert_false(knight.sleeping(), "he should be awake")
+
+
+func test_after_a_death_before_a_rest_the_sword_hangs_there_again_and_the_knight_sleeps() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _take_the_sword(host)
+
+	await _die_and_wait_for_the_return(host)
+
+	assert_not_null(_rack(host).get_node_or_null("Sword"), "the sword should hang there again")
+	assert_false(_rack(host).is_empty(), "the rack should be drawn full")
+	assert_true(_knight(host).sleeping(), "he should be asleep at his desk again")
+
+
+func test_once_taken_and_rested_the_rack_stays_empty_and_wakes_nobody() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+	await _take_the_sword(host)
+	var before_the_rest := host.current_space
+	await _rest_at(host, &"lobby")
+	assert_ne(host.current_space, before_the_rest, "control: the rest rebuilt the space")
+
+	assert_true(_rack(host).is_empty(), "the rack should stay empty")
+	assert_true(_knight(host).sleeping(), "he should sleep on")
+
+
 func _host_in_the_dungeons() -> AreaHost:
 	var view := SubViewport.new()
 	view.size = VIEW_SIZE
@@ -275,6 +326,18 @@ func _enemies_in(node: Node) -> Array[Node]:
 # The one enemy in Radio/Officers, which the other tests have counted.
 func _knight(host: AreaHost) -> Node2D:
 	return _enemies_in(_room(host, &"radio_officers"))[0] as Node2D
+
+
+func _rack(host: AreaHost) -> WeaponRack:
+	return _room(host, &"radio_officers").get_node("Furniture/WeaponRack") as WeaponRack
+
+
+# Almos stands in front of the rack, by its sword, and taps Interact.
+func _take_the_sword(host: AreaHost) -> void:
+	var sword := _rack(host).get_node("Sword") as Node2D
+	host.almos.global_position = sword.global_position + Vector2(0.0, 10.0)
+	await _tap(&"interact")
+	await wait_physics_frames(2)
 
 
 # His Health is taken to zero, and the test waits until he is gone.
