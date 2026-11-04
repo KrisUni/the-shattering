@@ -3,9 +3,10 @@ extends Node
 ## Makes an enemy's sprite show what the enemy is doing. It looks for an AnimatedSprite2D named
 ## Art in the enemy's Look; with none it does nothing, and the enemy tints its whole look as it
 ## always did. With one, it plays the animation for the enemy's state (idle, walk, strike, low,
-## unblockable, break, death; a name the sprite lacks is skipped; hurt is not played yet, since it
-## needs a hurt signal from the enemy, which is still open) and draws the wind-up
-## flashes on the sprite itself, in palette colours, with a shader that leaves its alpha alone.
+## unblockable, break, death, and sit or sleep at a seated post; a name the sprite lacks is
+## skipped; hurt is not played yet, since it needs a hurt signal from the enemy, which is still
+## open) and draws the wind-up flashes on the sprite itself, in palette colours, with a shader
+## that leaves its alpha alone.
 ## It only reads the enemy and the sprite: no gameplay depends on it.
 
 # The palette's lightest colour (the white flash) and its Danger red. Looks, not tuning.
@@ -80,6 +81,8 @@ func _animation_name() -> StringName:
 		return &"strike"
 	if not (_enemy as CharacterBody2D).velocity.is_zero_approx():
 		return &"walk"
+	if _enemy.has_method(&"sleeping") and _enemy.sleeping():
+		return &"sleep"
 	if _enemy.has_method(&"sitting") and _enemy.sitting():
 		return &"sit"
 	return &"idle"

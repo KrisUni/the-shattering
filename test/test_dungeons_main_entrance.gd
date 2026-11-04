@@ -26,8 +26,8 @@ const DOOR_TOP := 632.0
 const BEYOND_REACH := 6.0
 # In pixels. How far from a Checkpoint or a key Almos stands: well inside his reach.
 const BESIDE := 5.0
-# In pixels, in Radio/Officers's own coordinates. Where the key jailer is moved to before he is killed.
-const PLACE_OF_DEATH := Vector2(300.0, 500.0)
+# In pixels. Beside the key crate in Radio/Officers, to its east, within Almos's reach of the key.
+const BESIDE_THE_CRATE := Vector2(27.0, 0.0)
 # In physics frames. Long enough to walk through the door from where Almos stands against it, and
 # to keep pushing against a shut one for a good while.
 const WALK_FRAMES := 120
@@ -157,7 +157,7 @@ func test_the_door_stands_shut_again_when_almos_comes_back_through_the_way_back(
 func test_the_door_is_shut_again_after_a_death_and_a_tap_opens_it_again() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
-	await _take_the_key_from_the_key_jailer(host)
+	await _take_the_key_from_the_crate(host)
 	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
 	await _tap(&"interact")
 	assert_true(_door(host).open, "control: the door is open")
@@ -174,7 +174,7 @@ func test_the_door_is_shut_again_after_a_death_and_a_tap_opens_it_again() -> voi
 func test_the_door_is_shut_again_after_a_rest_and_a_death_and_a_tap_opens_it_again() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
-	await _take_the_key_from_the_key_jailer(host)
+	await _take_the_key_from_the_crate(host)
 	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
 	await _tap(&"interact")
 	assert_true(_door(host).open, "control: the door is open")
@@ -191,10 +191,13 @@ func test_the_door_is_shut_again_after_a_rest_and_a_death_and_a_tap_opens_it_aga
 	assert_true(_door(host).open, "a tap should open it again")
 
 
-func test_the_key_jailer_stays_dead_after_a_death_with_the_door_open() -> void:
+func test_the_knight_stays_dead_after_a_death_with_the_door_open() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
-	await _take_the_key_from_the_key_jailer(host)
+	var knight := _enemies_in((host.current_space as DungeonsBuilding).room(&"radio_officers"))[0] as Node2D
+	knight.health.take_damage(knight.health.maximum)
+	await wait_physics_frames(TAP_FRAMES)
+	await _take_the_key_from_the_crate(host)
 	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
 	await _tap(&"interact")
 
@@ -244,10 +247,7 @@ func test_a_jailers_key_in_reach_is_taken_before_the_door_is_opened() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 	var room := (host.current_space as DungeonsBuilding).room(&"radio_officers")
-	var jailer := _enemies_in(room)[0] as Node2D
-	jailer.health.take_damage(jailer.health.maximum)
-	await wait_physics_frames(TAP_FRAMES)
-	var key := room.get_node("JailersKey") as Node2D
+	var key := room.get_node("KeyCrate/Key") as Node2D
 	host.almos.global_position = _in_the_lobby(host, AGAINST_THE_DOOR)
 	key.global_position = host.almos.global_position + Vector2(BESIDE, 0.0)
 	WorldState.record_kept(JAILERS_KEY_ID)
@@ -328,14 +328,10 @@ func _enemies_in(node: Node) -> Array[Node]:
 	return found
 
 
-# Almos kills the key jailer in Radio/Officers and takes the key he drops with a tap of Interact.
-func _take_the_key_from_the_key_jailer(host: AreaHost) -> void:
+# Almos takes the key from the crate in Radio/Officers with a tap of Interact beside it.
+func _take_the_key_from_the_crate(host: AreaHost) -> void:
 	var room := (host.current_space as DungeonsBuilding).room(&"radio_officers")
-	var jailer := _enemies_in(room)[0] as Node2D
-	jailer.global_position = room.global_position + PLACE_OF_DEATH
-	jailer.health.take_damage(jailer.health.maximum)
-	await wait_physics_frames(TAP_FRAMES)
-	host.almos.global_position = room.global_position + PLACE_OF_DEATH + Vector2(BESIDE, 0.0)
+	host.almos.global_position = (room.get_node("KeyCrate") as Node2D).global_position + BESIDE_THE_CRATE
 	await _tap(&"interact")
 	assert_true(WorldState.is_taken(JAILERS_KEY_ID), "control: Almos has the key")
 

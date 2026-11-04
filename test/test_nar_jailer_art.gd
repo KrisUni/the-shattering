@@ -1,10 +1,9 @@
 extends GutTest
 ## The Dungeons' guards are drawn as skeletons: nar_jailer.tscn is the training enemy with the Nar
-## jailer's tuning and a skeleton Art sprite, driven by EnemyLook. The key jailer in Radio/Officers
-## is one, with its own tuning. The test room's enemies stay placeholder.
+## jailer's tuning and a skeleton Art sprite, driven by EnemyLook. The test room's enemies stay
+## placeholder.
 
 const JAILER_PATH := "res://scenes/enemies/nar_jailer.tscn"
-const RADIO_OFFICERS_PATH := "res://scenes/areas/dungeons/radio_officers.tscn"
 const TEST_ROOM_PATH := "res://scenes/test_room.tscn"
 const ART_DIR := "res://assets/characters/nar_jailer/"
 const ANIMATIONS := [&"idle", &"walk", &"strike", &"low", &"unblockable", &"break", &"death"]
@@ -29,15 +28,6 @@ func test_the_jailers_placeholder_shapes_are_hidden_not_deleted() -> void:
 		var shape := jailer.get_node_or_null("Look/" + shape_name) as CanvasItem
 		assert_not_null(shape, "%s stays for the code and tests that use it" % shape_name)
 		assert_false(shape.visible, "%s is hidden under the sprite" % shape_name)
-
-
-func test_the_key_jailer_is_a_skeleton_with_its_own_tuning() -> void:
-	var room := (load(RADIO_OFFICERS_PATH) as PackedScene).instantiate()
-	add_child_autofree(room)
-	var key_jailer := room.get_node("KeyJailer")
-	assert_eq(key_jailer.scene_file_path, JAILER_PATH, "the key jailer is a skeleton jailer")
-	assert_eq(key_jailer.tuning, load("res://data/nar_key_jailer.tres"), "it keeps the key jailer's tuning")
-	assert_true(key_jailer.named, "it is still the named enemy")
 
 
 func test_the_test_room_stays_placeholder() -> void:

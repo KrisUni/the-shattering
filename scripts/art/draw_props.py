@@ -524,6 +524,233 @@ def cell_carving(w=50, h=15):
     return image
 
 
+PAPER = M("#c2b28f", tones=3, step=0.08)
+INK = (40, 34, 44)
+ROOT = M("#4a3f52", tones=4, step=0.08, lit_step=0.09)
+DARK = M("#1c1820", tones=2, step=0.04)
+CANDLE = M("#cdbf9c", tones=3, step=0.08)
+PAPER_END = M("#8a7a5e", tones=2, step=0.05)
+
+
+def desk(w=40, h=72):
+    """Radio/Officers's desk, standing lengthwise against the east wall: seen in three-quarter view,
+    its long plank top from above (north to south), its short south end face on, and its two front
+    legs; the back legs are hidden under the top. On it, bark sheets with lines of writing, an ink
+    pot, a stub of candle and the speaking-root, a dark root grown up through the north end that
+    curls over into an open mouth toward the sitter. The node stands at the front legs' feet."""
+    c = canvas(w, h)
+    x0, x1 = 3, w - 6
+    top_y, front_y = 14, h - 16
+    for x in (x0 + 1, x1 - 2):
+        c.box(x, front_y + 4, x + 2, h - 1, WOOD_OLD, 1, form="cylinder")
+    top = c.box(x0, top_y, x1, front_y - 1, WOOD_TOP, 3, form="flat")
+    top.bias = 0.1
+    for x in range(x0 + 4, x1 - 1, 7):
+        for y in range(top_y + 1, front_y - 1):
+            if (y * 5 + x) % 11:
+                c.dot(x, y, WOOD_TOP.ramp[0])
+    c.box(x0, front_y, x1, front_y + 4, WOOD, 3.2, form="cylinder")
+    # A drawer in the south end, with a pull.
+    c.box(x0 + 8, front_y + 1, x1 - 8, front_y + 3, WOOD_OLD, 3.3, form="flat", line=False)
+    c.dot((x0 + x1) // 2, front_y + 2, IRON.ramp[2])
+    # Bark sheets, a little askew, where his head lies, and more stacked by the wall.
+    c.box(x0 + 3, top_y + 24, x0 + 13, top_y + 33, PAPER, 4)
+    c.box(x0 + 6, top_y + 27, x0 + 16, top_y + 37, PAPER, 4.2)
+    for y in range(top_y + 29, top_y + 36, 2):
+        for x in range(x0 + 8, x0 + 15):
+            if (x + y) % 3:
+                c.dot(x, y, PAPER.ramp[0])
+    c.box(x1 - 9, top_y + 12, x1 - 2, top_y + 19, PAPER, 4)
+    c.box(x1 - 9, top_y + 10, x1 - 2, top_y + 13, PAPER, 4.1)
+    # The ink pot and a quill of root fibre.
+    c.ellipse(x1 - 6, top_y + 26, 2.0, 1.8, DARK, 4)
+    c.dot(x1 - 7, top_y + 25, GLINT)
+    c.capsule(x1 - 6, top_y + 25, x1 - 2, top_y + 19, 0.5, CANDLE, 4.3, line=False)
+    # A candle stub, unlit, in a clay dish.
+    c.ellipse(x0 + 6, top_y + 44, 3.0, 1.6, CLAY, 4)
+    c.box(x0 + 5, top_y + 39, x0 + 7, top_y + 43, CANDLE, 4.2, form="cylinder")
+    c.dot(x0 + 6, top_y + 38, INK)
+    # The speaking-root, rising from the north end and curling over toward the sitter.
+    rx = x0 + 20
+    c.capsule(rx, top_y + 6, rx + 1, top_y - 4, 2.4, ROOT, 4, r2=2.0)
+    c.capsule(rx + 1, top_y - 4, rx - 2, top_y - 10, 2.0, ROOT, 4.2, r2=1.7)
+    c.ellipse(rx - 6, top_y - 9, 3.6, 3.2, ROOT, 4.4)
+    c.ellipse(rx - 6.8, top_y - 8.6, 2.0, 1.8, DARK, 4.6, form="flat", line=False)
+    c.capsule(rx + 3, top_y + 7, rx + 7, top_y + 9, 0.9, ROOT, 3.5, line=False)
+    c.capsule(rx - 3, top_y + 7, rx - 6, top_y + 10, 0.8, ROOT, 3.5, line=False)
+    return out(c)
+
+
+def stool(w=16, h=14):
+    """A plain three-legged stool, the knight's, its round seat seen from above."""
+    c = canvas(w, h)
+    for x in (3, 7, 11):
+        c.box(x, 5, x + 1, h - 1 - (1 if x == 7 else 0), WOOD_OLD, 1 if x != 7 else 0.5, form="cylinder")
+    seat = c.ellipse(w / 2, 4, 6.6, 3.2, WOOD_TOP, 2, form="flat")
+    seat.bias = 0.1
+    c.box(2, 4, w - 3, 6, WOOD, 1.8, form="cylinder")
+    return out(c)
+
+
+BOOKS = [M(h, tones=3, step=0.07) for h in ("#5b4a6e", "#6e4a42", "#4a5a4c", "#7a6648", "#45506a", "#6b5a5f")]
+
+
+def bookshelf(w=60, h=64, seed=0):
+    """A tall bookshelf of dark wood stood against the north wall: its top from above, its open front
+    with three shelves of bark-bound books in muted colours, leaning and lying, rolled scrolls, a
+    jar and, on one, a small skull. The node stands at its feet."""
+    import random
+    rnd = random.Random(seed)
+    c = canvas(w, h)
+    frame = M("#5a4234", tones=4, step=0.07, lit_step=0.08)
+    back = M("#2e2329", tones=2, step=0.04)
+    c.box(2, 4, w - 3, h - 2, back, 0.5, form="flat", line=False)
+    top = c.box(1, 0, w - 2, 4, WOOD_TOP, 3)
+    top.bias = 0.1
+    c.box(1, 5, 4, h - 1, frame, 3, form="cylinder")
+    c.box(w - 5, 5, w - 2, h - 1, frame, 3, form="cylinder")
+    shelves = [5 + i * 19 for i in range(4)]
+    for y in shelves[1:]:
+        c.box(4, y - 2, w - 6, y, frame, 2.9, form="cylinder")
+    c.box(4, h - 3, w - 6, h - 1, frame, 2.9, form="cylinder")
+    for k in range(3):
+        floor = shelves[k + 1] - 3 if k < 2 else h - 4
+        x = 6
+        while x < w - 9:
+            kind = rnd.random()
+            if kind < 0.68:
+                bw = rnd.choice((2, 3, 3, 4))
+                bh = rnd.randint(10, 15)
+                mat = rnd.choice(BOOKS)
+                lean = rnd.random() < 0.12
+                if lean:
+                    c.capsule(x + 1, floor, x + 4, floor - bh + 1, bw / 2.0, mat, 2, line=True)
+                    x += bw + 4
+                else:
+                    c.box(x, floor - bh + 1, x + bw - 1, floor, mat, 2, form="cylinder")
+                    if bh > 11:
+                        c.dot(x + bw // 2, floor - bh + 4, mat.ramp[2] if bw < 3 else PAPER.ramp[1])
+                    x += bw
+            elif kind < 0.8:
+                # A pile of books lying flat.
+                for j in range(rnd.randint(2, 3)):
+                    c.box(x, floor - 2 * j - 1, x + 8, floor - 2 * j, rnd.choice(BOOKS), 2.2 + j * 0.1, form="flat")
+                x += 10
+            elif kind < 0.9:
+                c.ellipse(x + 3, floor - 2, 2.6, 2.4, PAPER, 2)
+                c.ellipse(x + 3, floor - 2, 1.0, 1.0, PAPER_END, 2.1, form="flat", line=False)
+                x += 7
+            elif seed % 2 == 0 and k == 0:
+                skull_shape(c, x + 4, floor - 3, 2.4, scale=0.55)
+                x += 9
+            else:
+                c.ellipse(x + 3, floor - 3, 2.6, 3.4, CLAY, 2)
+                c.box(x + 2, floor - 7, x + 4, floor - 6, CLAY, 2.1)
+                x += 8
+            x += rnd.choice((0, 0, 1))
+    return out(c)
+
+
+def weapon_rack(w=60, h=60):
+    """A small armoury against the north wall: a rack of dark wood with two swords and a mace hung
+    point down from its upper rail, two spears stood in its foot, and a round shield of bark and
+    iron leaning against its front."""
+    c = canvas(w, h)
+    blade = M("#9aa0b0", tones=3, step=0.11, shine=0.15, outline="#363442")
+    grip = M("#3a2c25", tones=2, step=0.05)
+    guard = M("#504a40", tones=2, step=0.06)
+    for x in (4, w - 8):
+        c.box(x, 6, x + 3, h - 1, WOOD_OLD, 1, form="cylinder")
+    c.box(2, 6, w - 3, 9, WOOD, 3, form="cylinder")
+    c.box(2, h - 12, w - 3, h - 9, WOOD, 3, form="cylinder")
+    # Spears, stood upright behind the rails.
+    for x in (12, 46):
+        c.capsule(x, h - 2, x, 4, 0.9, WOOD_OLD, 1.5, line=True)
+        c.poly([(x - 2, 6), (x, -0.5), (x + 2, 6), (x, 8)], IRON, 1.6)
+    # Two swords hung by their crossguards from the upper rail, points down.
+    for x in (20, 38):
+        c.capsule(x, 12, x, h - 14, 1.6, blade, 2, r2=0.6)
+        c.capsule(x - 3.5, 11, x + 3.5, 11, 1.0, guard, 3.4)
+        c.capsule(x, 5, x, 10, 0.8, grip, 3.3)
+        c.ellipse(x, 4, 1.3, 1.3, guard, 3.4)
+        c.dot(x, 24, GLINT)
+    # A mace of root wood with an iron head.
+    c.capsule(29, 8, 29, 32, 1.0, WOOD_OLD, 2.4)
+    c.ellipse(29, 34, 3.4, 3.4, IRON, 2.5)
+    for dx, dy in ((-3, 34), (3, 34), (0, 31), (0, 37)):
+        c.dot(29 + dx, dy, IRON.ramp[0])
+    # The shield, leaning against the rack's front at the right.
+    shield = M("#5c4a3c", tones=4, step=0.075, lit_step=0.085)
+    c.ellipse(w - 15, h - 13, 10, 11, shield, 5)
+    c.ellipse(w - 15, h - 13, 10, 11, IRON, 4.9, clip=lambda x, y: (x + 0.5 - (w - 15)) ** 2 / 100 + (y + 0.5 - (h - 13)) ** 2 / 121 > 0.72)
+    c.ellipse(w - 15.5, h - 13.5, 3.0, 3.0, IRON, 5.2)
+    c.dot(w - 17, h - 15, GLINT)
+    return out(c)
+
+
+def armour_stand(w=26, h=54):
+    """A spare suit on a stand of root wood: a helm like the knight's on top, a bark cuirass on its
+    crosspiece, and an iron pauldron."""
+    c = canvas(w, h)
+    iron = M("#646a7a", tones=4, step=0.08, lit_step=0.1, shine=0.1, outline="#20212b")
+    bark = M("#54463c", tones=4, step=0.075, lit_step=0.085)
+    c.capsule(13, h - 3, 13, 10, 1.3, WOOD_OLD, 1)
+    c.capsule(7, h - 2, 19, h - 2, 1.2, WOOD_OLD, 1.2)
+    c.capsule(5, 19, 21, 19, 1.0, WOOD_OLD, 1.5)
+    c.poly([(6, 18), (20, 18), (19, 30), (17, 38), (9, 38), (7, 30)], bark, 3, form="cylinder")
+    for y in (24, 29, 34):
+        for x in range(8, 19):
+            c.dot(x, y, bark.ramp[0])
+    c.ellipse(6.5, 19, 3.4, 3.0, iron, 3.5)
+    c.ellipse(19.5, 19, 3.4, 3.0, iron, 3.5)
+    c.ellipse(13, 9, 5.6, 6.2, iron, 4)
+    for x in range(10, 17):
+        c.dot(x, 9, (22, 22, 30))
+    c.capsule(10, 3, 16, 3, 1.2, M("#4a4a36", tones=3, step=0.07), 4.2)
+    c.dot(11, 6, GLINT)
+    return out(c)
+
+
+def scrolls(w=28, h=14):
+    """Bark scrolls and a sheet dropped on the floor by the shelves."""
+    c = canvas(w, h)
+    c.capsule(3, 9, 16, 6, 2.2, PAPER, 2)
+    c.ellipse(16, 6, 2.2, 2.2, PAPER, 2.2)
+    c.ellipse(16, 6, 0.9, 0.9, PAPER_END, 2.3, form="flat", line=False)
+    c.capsule(10, 11, 24, 11, 1.8, PAPER, 1.5)
+    c.box(17, 2, 25, 7, PAPER, 1, form="flat")
+    for x in range(19, 24):
+        if x % 2:
+            c.dot(x, 4, PAPER.ramp[0])
+    return out(c)
+
+
+def key_crate(w=32, h=34, open_=False):
+    """The crate the Jailer's key is kept in, a single crate with an iron hasp on its front. Open,
+    its lid stands against the back and its inside is dark and empty. Its foot is the bottom row."""
+    c = canvas(w, h)
+    x0, y0, cw, ch, top_h = 2, 8, w - 4, h - 8, 8
+    if open_:
+        lid = c.box(x0 + 1, 0, x0 + cw - 2, 9, WOOD_TOP, 0.5, form="flat")
+        lid.bias = -0.05
+        for x in range(x0 + 5, x0 + cw - 3, 6):
+            for y in range(1, 9):
+                c.dot(x, y, WOOD_TOP.ramp[0])
+    front = crate(c, x0, y0, cw, ch, top_h, 1)
+    if open_:
+        c.box(x0 + 2, y0 + 1, x0 + cw - 3, y0 + top_h - 2, DARK, 1.5, form="flat", line=False)
+        # The lid's grain is gone with the lid: nothing marks the dark inside.
+        for x in range(x0 + 2, x0 + cw - 2):
+            for y in range(y0 + 1, y0 + top_h - 1):
+                c.details.pop((x, y), None)
+    else:
+        # The hasp: an iron plate on the lid's edge with a ring.
+        c.box(x0 + cw // 2 - 2, y0 + top_h - 1, x0 + cw // 2 + 1, y0 + top_h + 3, IRON, 1.6)
+        c.dot(x0 + cw // 2 - 1, y0 + top_h + 4, IRON.ramp[0])
+        c.dot(x0 + cw // 2, y0 + top_h + 4, IRON.ramp[0])
+    return out(c)
+
+
 PICTURES = {
     "dungeons/furniture/barrel.png": barrel,
     "dungeons/furniture/bench.png": bench,
@@ -531,6 +758,15 @@ PICTURES = {
     "dungeons/furniture/sacks.png": sacks,
     "dungeons/furniture/spear_rack.png": spear_rack,
     "dungeons/furniture/wardrobe.png": wardrobe,
+    "dungeons/furniture/desk.png": desk,
+    "dungeons/furniture/stool.png": stool,
+    "dungeons/furniture/bookshelf_0.png": lambda: bookshelf(seed=2),
+    "dungeons/furniture/bookshelf_1.png": lambda: bookshelf(seed=7),
+    "dungeons/furniture/weapon_rack.png": weapon_rack,
+    "dungeons/furniture/armour_stand.png": armour_stand,
+    "dungeons/furniture/scrolls.png": scrolls,
+    "dungeons/furniture/key_crate.png": key_crate,
+    "dungeons/furniture/key_crate_open.png": lambda: key_crate(open_=True),
     "dungeons/pots/clay_pot.png": clay_pot,
     "dungeons/bones/bone.png": bone,
     "dungeons/bones/bone_pile.png": bone_pile,

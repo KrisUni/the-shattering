@@ -136,13 +136,24 @@ Each sheet has these fields:
 
 #### Nar jailer
 
-- **Thing:** Nar jailer (the key jailer included)
-- **Source pack and files:** Drawn for this game (no pack), `assets/characters/nar_jailer/`, by `scripts/art/draw_nar_jailer.py` at 32 px. A jailer is a fellow Nar, so he is a variation of Almos: drawn on Almos's own build and side-on poses (`scripts/art/draw_almos.py`, with its `Outfit`) in a guard's outfit: a moss-grey hood with a short tail and its mantle, a dark leather jerkin over a grey shirt, a dark leather belt with a bone buckle and a baldric, dark trousers and boots, and a sword of grey iron (crossguard, wrapped grip, pommel). He wears no Seal (only the Marked do) and carries no Flask. The same bark-grey Nar skin and pale eye as Almos. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite; the key jailer in Radio/Officers is one with its own tuning. The test room's jailers stay placeholder.
+- **Thing:** Nar jailer
+- **Source pack and files:** Drawn for this game (no pack), `assets/characters/nar_jailer/`, by `scripts/art/draw_nar_jailer.py` at 32 px. A jailer is a fellow Nar, so he is a variation of Almos: drawn on Almos's own build and side-on poses (`scripts/art/draw_almos.py`, with its `Outfit`) in a guard's outfit: a moss-grey hood with a short tail and its mantle, a dark leather jerkin over a grey shirt, a dark leather belt with a bone buckle and a baldric, dark trousers and boots, and a sword of grey iron (crossguard, wrapped grip, pommel). He wears no Seal (only the Marked do) and carries no Flask. The same bark-grey Nar skin and pale eye as Almos. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite. The test room's jailers stay placeholder.
 - **Size in art px:** 64x64 canvas, facing right, feet on row 55 (sprite offset -16 art px), the body in the middle as in Almos's attack frames, so he stands as tall as Almos.
 - **Palette notes and accents used:** Free colour, muted: moss-grey hood, dark leather browns, grey cloth, a pale steel blade with a glint. No accent; the flashes come from the shared shader.
-- **Animations and poses needed:** `idle` (2, a breath, the sword hanging at his side), `walk` (4, a stride), `strike` (sword drawn back over the shoulder, swung down, recover), `low` (crouched, a sweep along the floor), `unblockable` (sword raised high in both hands, held, slammed down), `break` (knocked back and slumped, the sword hanging), `death` (buckles, drops to his knees, falls flat with the sword fallen from his hand), `sit` (2, on the guard post's bench, the sword across his knees). Not yet: a key at the key jailer's belt, and Block and Parry poses.
+- **Animations and poses needed:** `idle` (2, a breath, the sword hanging at his side), `walk` (4, a stride), `strike` (sword drawn back over the shoulder, swung down, recover), `low` (crouched, a sweep along the floor), `unblockable` (sword raised high in both hands, held, slammed down), `break` (knocked back and slumped, the sword hanging), `death` (buckles, drops to his knees, falls flat with the sword fallen from his hand), `sit` (2, on the guard post's bench, the sword across his knees). Not yet: Block and Parry poses.
 - **Burning:** a jailer carries a `Flammable` of the creature kind, as the Root crawler does: a fireball's hit or splash sets it alight, and the shared Fire flame stands on its feet while it burns.
 - **Status:** in the game (fourth draft: a variation of Almos with a sword; the owner checks the look in the editor).
+
+#### Nar knight
+
+- **Thing:** Nar knight (in Radio/Officers)
+- **Source pack and files:** Drawn for this game (no pack), `assets/characters/nar_knight/`, by `scripts/art/draw_nar_knight.py` at 32 px. Like the jailer he is drawn on Almos's own build and side-on poses (`scripts/art/draw_almos.py`, with its `Outfit`; a `Pose` can now move the head, as when it droops), but in armour of his own so he reads as a knight: a closed helm of grey iron (the hood's shape with no tail) with a face plate, a dark visor slit and a crest of dark bark fibre; a rounded iron pauldron over the shoulders, darker than the helm; a cuirass of grown bark plates with dark bands across the chest and the tassets; mail sleeves; iron gauntlets, cuisses and greaves with knee cops, and sabatons; and a longsword, longer and broader than the jailer's (25 against 17 to 21), with a fuller, a wide crossguard and a heavy pommel. No eye shows through the helm. No Seal, no Flask. `scenes/enemies/nar_knight.tscn` is the training enemy with the knight's tuning (`data/nar_knight.tres`, the old key jailer's) and this sprite, and a `Zzz` node in its Look.
+- **Size in art px:** 64x64 canvas, facing right, feet on row 55 (sprite offset -16 art px), the body in the middle, as the jailer's.
+- **Palette notes and accents used:** Free colour, muted: grey iron (`#646a7a`, the pauldron `#545866`), dark bark-brown plates (`#54463c`), mail grey, an olive-dark bark crest, a pale steel blade with a glint. No accent; the flashes come from the shared shader.
+- **Animations and poses needed:** `idle` (2), `walk` (4), `strike` (3), `low` (3), `unblockable` (3), `break` (2), `death` (3), as the jailer's but with the longsword; and `sleep` (2, a slow breath): sitting on the stool at his desk's west end, slumped forward, his head down on his arms on the desk top, the longsword leaning against the stool behind him. `EnemyLook` plays `sleep` while he is seated and asleep at his post (`asleep` on the enemy, with `seated`), and `sit` for a seated enemy that is awake. Not yet: Block and Parry poses.
+- **Zzz:** `scenes/enemies/sleep_zzz.gd`, drawn in code on the art pixel grid: three Z letters in a pale cream (`#e9e2d0`) with a navy shadow a pixel down and right, a 4x4 Z that grows to a 5x5 one, rising 24 px from just over his head and drifting 12 px back over his shoulder (away from the desk) with a slight sway, fading in and out over 2.4 seconds each, looping while he sleeps. It mirrors with the sprite and is gone the moment he wakes.
+- **Burning:** a `Flammable` of the creature kind, as the jailer's.
+- **Status:** in the game (first draft; the owner checks the look in the editor).
 
 #### Nar guard
 
@@ -254,10 +265,17 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Source pack and files:** Drawn for this game, `assets/dungeons/furniture/`. Redrawn at 32 px in code by `scripts/art/draw_props.py` (on `scripts/art/pixelkit.py`), at the same canvas sizes, so every footprint and rim is where it was.
   - `crate_stack.png` (`scenes/world/crate_stack.tscn`, a StaticBody2D in the group "cover", its box on the lower crate's footprint)
   - `bench.png`, `spear_rack.png`, `sacks.png`: dressing with no collision
-- **Size in art px:** Crate stack 48x52, bench 60x18, spear rack 36x52, sacks 36x22.
-- **Palette notes and accents used:** Warm brown wood (lighter on the tops seen from above), crates with a framed front and a pale brace, burlap sacks tied with rope, iron spear heads with a glint. No accent.
+  - `desk.png`: the knight's desk in Radio/Officers, standing lengthwise (north to south) against the east wall: a `Desk` StaticBody2D in the Room with a box on its footprint, clear of where the knight sits, so it blocks as a wall does. Its long plank top seen from above, its short south end face on with a drawer, and two legs; on it bark sheets with writing where his head lies, a stack by the wall, an ink pot and a quill, an unlit candle stub in a clay dish, and the speaking-root (CONTEXT.md, Nar): a dark root grown up through the north end that curls over into an open mouth toward the sitter.
+  - `stool.png`: the knight's three-legged stool, dressing with no collision.
+  - `bookshelf_0.png`, `bookshelf_1.png` (`scenes/world/bookshelf.tscn`, solid on its 56x12 footprint): tall shelves of dark wood against the north wall, three shelves of bark-bound books in muted colours, standing, leaning and lying in piles, rolled scrolls, clay jars and, on one, small skulls. The two are drawn from different seeds.
+  - `weapon_rack.png` (`scenes/world/weapon_rack.tscn`, solid on its 56x12 footprint): a small armoury against the north wall, a rack of dark wood with two swords hung point down, a mace, two spears stood upright and a round bark shield with an iron rim and boss leaning against it.
+  - `armour_stand.png` (`scenes/world/armour_stand.tscn`, solid on its 16x8 footprint): a spare suit on a stand of root wood, a helm like the knight's, a bark cuirass and two pauldrons.
+  - `scrolls.png`: bark scrolls dropped by the shelves; floor dressing with no collision.
+  - `key_crate.png` and `key_crate_open.png` (`scenes/world/key_crate.tscn`, `KeyCrate`): the single crate the Jailer's key is kept in, solid on its 28x16 footprint, not liftable. Shut, an iron hasp on its lid; once the key is taken, open and empty, its lid up against its back, the inside dark. The key inside it does not show.
+- **Size in art px:** Crate stack 48x52, bench 60x18, spear rack 36x52, sacks 36x22, desk 40x72, stool 16x14, bookshelf 60x64, weapon rack 60x60, armour stand 26x54, scrolls 28x14, key crate 32x34.
+- **Palette notes and accents used:** Warm brown wood (lighter on the tops seen from above), crates with a framed front and a pale brace, burlap sacks tied with rope, iron spear heads with a glint. Radio/Officers's books in muted violet, rust, moss, ochre and slate; sand bark sheets; grey iron. No accent.
 - **Animations and poses needed:** None.
-- **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
+- **Status:** in the game in Corridor 1 and Radio/Officers (first draft; the owner checks the look in the editor)
 
 #### Path blocker
 
@@ -316,7 +334,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Jailer's key
 
 - **Thing:** Jailer's key
-- **Source pack and files:**
+- **Source pack and files:** Not drawn: it is kept in the key crate in Radio/Officers (see Furniture and cover), whose open, empty picture shows it gone. Its placeholder bar stays in `jailers_key.tscn`, hidden in the crate.
 - **Size in art px:**
 - **Palette notes and accents used:**
 - **Animations and poses needed:**
@@ -381,9 +399,18 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 - **Animations and poses needed:** None; all still pictures, decoration with no collision (the walls are their own bodies).
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
+#### Radio/Officers
+
+- **Thing:** Radio/Officers (the Room down from the hall, through Corridor 1's south doorway)
+- **Source pack and files:** The same tiles (`assets/shared/dungeon_tiles/dungeon_tiles.tres`, no new tiles), closed in to the size of a cell as Cells 2 and 3 are, but with its door in the north wall: the Room's own north face (two tiles, its doorway open at the top middle) and its own walls `CellWallLeft`, `CellWallRight` and `CellWallBottom` (a south wall one tile thick on the wall grid, in front of Almos, its strip drawn over the root below), with solid root (`RootMassLeft`, `RootMassRight`, `RootMassBottom`) filling the rest of the Room, graded root, blend and deep root as in the cells. Its furniture is in Furniture and cover.
+- **Size in art px:** The cell is 14 by 11 tiles (x 352..800, y 64..416 in units).
+- **Placement:** An officers' room with a guard's corner. On the north wall, west of the doorway, two bookshelves with scrolls dropped before them; east of it the small armoury, the weapon rack and the armour stand. The desk stands lengthwise against the east wall, and the knight sleeps on his stool at it, facing the wall, his back to the room. A side lantern hangs on each side wall (the east one above the desk), a crate stack stands in the south-east corner, and in the south-west corner the key crate with sacks beside it.
+- **Palette notes and accents used:** As Cell 3. Only the lanterns use an accent.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
 #### Deep root
 
-- **Thing:** The solid root that fills a Room around its walkable space (Corridor 1 and the three cells), made to read as deliberate darkness so the eye stays on the hall or the cell.
+- **Thing:** The solid root that fills a Room around its walkable space (Corridor 1, the three cells and Radio/Officers), made to read as deliberate darkness so the eye stays on the hall or the cell.
 - **Source pack and files:** Drawn by hand, two tiles in `assets/shared/dungeon_tiles/dungeon_tiles.png`: deep root at atlas (0,2), near-black with faint seamless strands; and a blend at (1,2), every other pixel the root tile (5,0) and deep root.
 - **Size in art px:** 32x32 per tile.
 - **Palette notes and accents used:** Deep root `#0e0d16` with strands `#181726`; the blend dithers it with the root tile's indigo. No accent.
