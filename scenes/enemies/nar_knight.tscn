@@ -1,0 +1,180 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/training_enemy.tscn" id="1_enemy"]
+[ext_resource type="Resource" path="res://data/nar_knight.tres" id="2_tuning"]
+[ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="3_flammable"]
+[ext_resource type="Script" path="res://scenes/enemies/sleep_zzz.gd" id="4_zzz"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/idle_0.png" id="t_idle_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/idle_1.png" id="t_idle_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/walk_0.png" id="t_walk_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/walk_1.png" id="t_walk_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/walk_2.png" id="t_walk_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/walk_3.png" id="t_walk_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/strike_0.png" id="t_strike_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/strike_1.png" id="t_strike_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/strike_2.png" id="t_strike_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/low_0.png" id="t_low_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/low_1.png" id="t_low_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/low_2.png" id="t_low_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/unblockable_0.png" id="t_unblockable_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/unblockable_1.png" id="t_unblockable_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/unblockable_2.png" id="t_unblockable_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/break_0.png" id="t_break_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/break_1.png" id="t_break_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/death_0.png" id="t_death_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/death_1.png" id="t_death_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/death_2.png" id="t_death_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_0.png" id="t_sleep_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_1.png" id="t_sleep_1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
+size = Vector2(32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_knight"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_idle_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_idle_1")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 2.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_sleep_0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("t_sleep_1")
+}],
+"loop": true,
+"name": &"sleep",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_walk_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_walk_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_walk_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_walk_3")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_strike_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_strike_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_strike_2")
+}],
+"loop": false,
+"name": &"strike",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_low_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_low_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_low_2")
+}],
+"loop": false,
+"name": &"low",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_unblockable_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_unblockable_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_unblockable_2")
+}],
+"loop": false,
+"name": &"unblockable",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_break_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_break_1")
+}],
+"loop": false,
+"name": &"break",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("t_death_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_death_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("t_death_2")
+}],
+"loop": false,
+"name": &"death",
+"speed": 6.0
+}]
+
+[node name="NarKnight" instance=ExtResource("1_enemy")]
+tuning = ExtResource("2_tuning")
+
+[node name="Shape" parent="Look" index="0"]
+visible = false
+
+[node name="Nose" parent="Look" index="1"]
+visible = false
+
+[node name="Art" type="AnimatedSprite2D" parent="Look"]
+sprite_frames = SubResource("SpriteFrames_knight")
+animation = &"idle"
+autoplay = "idle"
+offset = Vector2(0, -16)
+
+[node name="Zzz" type="Node2D" parent="Look"]
+script = ExtResource("4_zzz")
+
+[node name="Flammable" parent="." instance=ExtResource("3_flammable")]
+kind = 3
+
+[node name="CollisionShape2D" parent="Flammable" index="0"]
+shape = SubResource("RectangleShape2D_flammable")
+
+[node name="Art" parent="Flammable/Flame" index="0"]
+position = Vector2(-20, -56)

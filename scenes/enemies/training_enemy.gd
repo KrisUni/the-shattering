@@ -95,6 +95,11 @@ signal unblockable_cue_played
 ## is in Pursuit, hurt or away from its post, it is on its feet as usual. Only a look.
 @export var seated := false
 
+## Whether, seated, it is asleep where it sits: drawn slumped with its head down and a zzz over it.
+## It notices Almos by Sight as any seated enemy does, and wakes as it gets up: once it is in
+## Pursuit, hurt or away from its post. Back at its post it sits and sleeps again. Only a look.
+@export var asleep := false
+
 ## The way it faces, a unit vector. While it is free it turns to face its target exactly; in an
 ## attack it keeps the direction it committed the swing to. Its front is centred on it, and a
 ## hit from outside the front builds extra Stagger.
@@ -828,3 +833,8 @@ func sitting() -> bool:
 	if not velocity.is_zero_approx():
 		return false
 	return global_position.distance_to(_post) < 2.0
+
+
+## Whether it is asleep now: sitting (see sitting()) and set asleep.
+func sleeping() -> bool:
+	return asleep and sitting()
