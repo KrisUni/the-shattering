@@ -477,10 +477,14 @@ func test_a_second_way_down_loops_behind_the_barricade_over_a_gap_he_must_jump()
 	assert_true(_reaches_the_south_exit(room, [], false), "control: with the barrels gone he walks down")
 	assert_false(_reaches_the_south_exit(room, barred, false), "with them standing, no way down on foot")
 	assert_true(_reaches_the_south_exit(room, barred, true), "but a Jump takes him round them")
-	# The loop: a spur leaves the bridge westward above the barricade, turns down the west side of
-	# the chasm and back east along the bottom to the foot of the bridge, by the south exit. It is
-	# a long way round, two tiles wide, with one gap one tile across to Jump near its end.
+	# The loop: a spur comes down off the lane's west ledge, turns down the west side of the chasm and
+	# back east along the bottom to the foot of the bridge, by the south exit. It is a long way
+	# round, two tiles wide, with one gap one tile across to Jump near its end. It does not touch
+	# the bridge above the barricade.
+	assert_true(_hall_floor(room, Vector2i(6, 9)), "the spur leaves the lane at its west ledge")
 	assert_true(_hall_floor(room, Vector2i(8, 10)), "the spur, west of the barricade")
+	assert_false(_hall_floor(room, Vector2i(10, 10)), "cut off from the bridge's top")
+	assert_false(_hall_floor(room, Vector2i(11, 10)), "cut off from the bridge's top")
 	assert_true(_hall_floor(room, Vector2i(2, 15)), "down the west side of the chasm")
 	assert_false(_hall_floor(room, Vector2i(7, 18)), "the gap he jumps")
 	assert_true(_hall_floor(room, Vector2i(6, 18)), "the take-off")
