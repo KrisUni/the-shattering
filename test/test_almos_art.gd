@@ -177,12 +177,12 @@ func test_a_light_attack_plays_the_attack_for_his_side_and_strikes_on_the_active
 		await wait_physics_frames(1)
 		if attacks.swing == null:
 			break
-		assert_eq(art.animation, &"attack_up", "facing up, he swings upward")
+		assert_eq(art.animation, &"attack_sword_up", "facing up with the sword he starts with, he swings it upward")
 		if attacks.swing.is_active(attacks.swing_frame - 1) or attacks.swing.is_active(attacks.swing_frame):
 			seen_strike = seen_strike or art.frame == AlmosLook.STRIKE
 	assert_true(seen_strike, "the strike frame shows during the swing's active frames")
 	await wait_physics_frames(2)
-	assert_ne(art.animation, &"attack_up", "after the swing he stands again")
+	assert_ne(art.animation, &"attack_sword_up", "after the swing he stands again")
 
 
 func test_the_old_strike_box_draws_nothing_now_the_sprite_shows_the_swing() -> void:
@@ -190,3 +190,39 @@ func test_the_old_strike_box_draws_nothing_now_the_sprite_shows_the_swing() -> v
 	var shape := almos.get_node("Sword/Look/Shape") as Polygon2D
 	assert_not_null(shape, "the strike box shape stays for the code and tests that measure it")
 	assert_eq(shape.color.a, 0.0, "it is transparent, so only the smear shows the swing")
+
+
+func test_he_has_a_sword_swing_for_every_side_with_room_for_the_swing() -> void:
+	var almos = _almos_input.spawn_almos()
+	var art := _art(almos)
+	for side in ["down", "up", "side"]:
+		var animation_name := StringName("attack_sword_" + side)
+		assert_true(art.sprite_frames.has_animation(animation_name), "he has %s" % animation_name)
+		if not art.sprite_frames.has_animation(animation_name):
+			continue
+		assert_eq(art.sprite_frames.get_frame_count(animation_name), 5, "%s has the swing's five frames" % animation_name)
+		assert_eq(art.sprite_frames.get_frame_texture(animation_name, 0).get_size(), Vector2(64, 64), "%s is 64 by 64" % animation_name)
+
+
+func test_with_the_sword_in_hand_he_swings_the_sword_and_without_a_weapon_the_plain_swing() -> void:
+	var almos = _almos_input.spawn_almos()
+	var art := _art(almos)
+	var sword := load("res://data/sword.tres") as WeaponData
+	assert_eq(sword.look, &"sword", "control: the sword's swing goes by sword")
+	while almos.weapons.in_hand != null:
+		almos.weapons.drop()
+	_almos_input.press_action(&"move_right")
+	await wait_physics_frames(3)
+	_almos_input.release_everything()
+
+	assert_eq(await _animation_of_a_light_attack(art), &"attack_side", "unarmed, the plain swing")
+	await wait_physics_frames(40)
+	almos.weapons.pick_up(sword)
+	assert_eq(await _animation_of_a_light_attack(art), &"attack_sword_side", "with the sword, the sword swing")
+
+
+func _animation_of_a_light_attack(art: AnimatedSprite2D) -> StringName:
+	_almos_input.press_action(&"attack_light")
+	await wait_physics_frames(3)
+	_almos_input.release_action(&"attack_light")
+	return art.animation

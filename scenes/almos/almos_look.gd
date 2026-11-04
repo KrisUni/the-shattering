@@ -4,7 +4,8 @@ extends Node
 ## Look; with none it does nothing. With one, for the side he faces (`down`, `up` or `side`):
 ## - while he swings, `attack_<side>` follows the swing's own phases, whatever its length: wind-up
 ##   over its startup frames, the strike on its active frames, follow-through and recovery after.
-##   While he charges a Heavy attack it holds the coiled wind-up;
+##   While he charges a Heavy attack it holds the coiled wind-up. With a Weapon in hand whose look
+##   names a swing of its own (the sword's is `sword`), it plays `attack_<look>_<side>` instead;
 ## - while he winds up a Spell (drawing a flame, gripping a prop) it holds the coiled wind-up of
 ##   `attack_<side>`, and when he throws (a fireball, a prop) it shows the strike and follow-through
 ##   for a moment;
@@ -96,7 +97,7 @@ static func attack_frame_for(swing: AttackData, frame: int) -> int:
 func _show_attack(side: StringName) -> bool:
 	if _attacks == null:
 		return false
-	var attack := StringName("attack_" + side)
+	var attack := _attack_for(side)
 	if _art.sprite_frames == null or not _art.sprite_frames.has_animation(attack):
 		return false
 	var swing: AttackData = _attacks.swing
@@ -112,6 +113,17 @@ func _show_attack(side: StringName) -> bool:
 	_art.pause()
 	_art.frame = frame
 	return true
+
+
+# The attack animation for the side: the Weapon in hand's own, if it has one drawn, or the plain one.
+func _attack_for(side: StringName) -> StringName:
+	var weapons: Node = _almos.get_node_or_null("Weapons")
+	var weapon: WeaponData = weapons.get(&"in_hand") if weapons != null else null
+	if weapon != null and weapon.look != &"" and _art.sprite_frames != null:
+		var own := StringName("attack_%s_%s" % [weapon.look, side])
+		if _art.sprite_frames.has_animation(own):
+			return own
+	return StringName("attack_" + side)
 
 
 # Shows the wind-up of a Spell, or a throw just made. Whether it did.

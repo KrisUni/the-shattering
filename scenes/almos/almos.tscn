@@ -92,6 +92,22 @@
 [ext_resource type="Script" path="res://scenes/almos/spell_look.gd" id="28_spell_look"]
 [ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="29_flammable"]
 
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_0.png" id="sw_attack_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_1.png" id="sw_attack_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_2.png" id="sw_attack_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_3.png" id="sw_attack_down_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_4.png" id="sw_attack_down_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_up_0.png" id="sw_attack_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_up_1.png" id="sw_attack_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_up_2.png" id="sw_attack_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_up_3.png" id="sw_attack_up_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_up_4.png" id="sw_attack_up_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_side_0.png" id="sw_attack_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_side_1.png" id="sw_attack_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_side_2.png" id="sw_attack_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_side_3.png" id="sw_attack_side_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_side_4.png" id="sw_attack_side_4"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(32, 32)
 
@@ -404,6 +420,78 @@ animations = [{
 }],
 "loop": false,
 "name": &"attack_side",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_down_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_down_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_down_4")
+}],
+"loop": false,
+"name": &"attack_sword_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_up_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_up_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_up_4")
+}],
+"loop": false,
+"name": &"attack_sword_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_side_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_side_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("sw_attack_side_4")
+}],
+"loop": false,
+"name": &"attack_sword_side",
 "speed": 0.0
 }]
 
