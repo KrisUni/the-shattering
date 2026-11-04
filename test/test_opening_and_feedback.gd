@@ -143,13 +143,14 @@ func test_a_press_while_the_thought_types_shows_it_all_first() -> void:
 
 # --- Cell 3 ---
 
-func test_cell_3s_lamp_hangs_on_its_north_wall_and_it_has_a_bed() -> void:
+func test_cell_3s_lamps_hang_on_its_side_walls_and_it_has_a_bed() -> void:
 	var cell := (load(CELL_3_PATH) as PackedScene).instantiate() as Node2D
 	add_child_autofree(cell)
-	var torch := cell.get_node("Torch") as Torch
-	var wall := cell.get_node("Walls/CellWallTop") as Node2D
-	var wall_bottom := wall.position.y + 32.0
-	assert_between(torch.position.y, wall_bottom - 40.0, wall_bottom, "on the face of the cell's north wall")
+	for side in [["LampLeft", "Walls/CellWallLeft", 1.0], ["LampRight", "Walls/CellWallRight", -1.0]]:
+		var torch := cell.get_node(side[0]) as Torch
+		var wall := cell.get_node(side[1]) as Node2D
+		var inner_edge: float = wall.position.x + 16.0 * side[2]
+		assert_between((torch.position.x - inner_edge) * side[2], 0.0, 16.0, "%s hangs off its side wall" % side[0])
 	assert_true(cell.get_node("Bed") is StaticBody2D, "a bed, solid")
 	assert_not_null(cell.get_node_or_null("Bed/WakeSpot"), "where he lies")
 	assert_not_null(cell.get_node_or_null("Bed/GetUpSpot"), "where he stands up")

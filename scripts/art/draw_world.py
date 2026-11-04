@@ -4,6 +4,7 @@
 
 - assets/shared/lamp/lamp_wall.png (24x32): an iron lantern hanging from a short chain
 - assets/shared/lamp/lamp_standing.png (24x56): the same lantern on a stem and foot
+- assets/shared/lamp/lamp_side.png (24x32): the same lantern hung on an arm off a side wall
 - assets/shared/lamp/lamp_lit_0-3.png (24x32): the glass lit from within, four flickers; laid over
   either lantern, whose glass is in the same place (x 4-19, y 14-23)
 - assets/dungeons/gates/metal_gate.png (128x56): iron bars between a top rail and a cross rail
@@ -59,6 +60,19 @@ def lamp_wall():
     c = pk.Canvas(24, 32)
     for y in range(0, 8, 2):
         c.ellipse(12 + (0.5 if (y // 2) % 2 else -0.5), y + 1, 1.1, 1.4, IRON_DARK, 1)
+    lantern(c, 8)
+    c.ellipse(12, 29.8, 1.4, 1.6, IRON, 3.3)
+    return out(c)
+
+
+def lamp_side():
+    """The lantern hung off a side wall: an iron arm out from the wall's edge (the picture's left
+    edge; flip it for a right wall), a strut under it, and the lantern on a hook at its end."""
+    c = pk.Canvas(24, 32)
+    c.capsule(0.5, 3.5, 12.5, 3.5, 1.2, IRON, 1.5)
+    c.capsule(1, 11, 9, 4.5, 0.8, IRON_DARK, 1.2)
+    c.box(0, 1, 1, 12, IRON_DARK, 1.4, form="cylinder")
+    c.capsule(12, 4, 12, 7.5, 0.8, IRON_DARK, 1.6)
     lantern(c, 8)
     c.ellipse(12, 29.8, 1.4, 1.6, IRON, 3.3)
     return out(c)
@@ -159,6 +173,7 @@ def fungus(w, h, caps):
 PICTURES = {
     "shared/lamp/lamp_wall.png": lamp_wall,
     "shared/lamp/lamp_standing.png": lamp_standing,
+    "shared/lamp/lamp_side.png": lamp_side,
     "shared/lamp/lamp_lit_0.png": lambda: lamp_lit(0),
     "shared/lamp/lamp_lit_1.png": lambda: lamp_lit(1),
     "shared/lamp/lamp_lit_2.png": lambda: lamp_lit(2),

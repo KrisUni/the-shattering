@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/rooms/room.gd" id="1_room"]
 [ext_resource type="Script" path="res://scripts/rooms/room_exit.gd" id="2_exit"]
 [ext_resource type="PackedScene" path="res://scenes/world/metal_gate.tscn" id="3_blocker"]
-[ext_resource type="PackedScene" path="res://scenes/world/lamp.tscn" id="4_torch"]
+[ext_resource type="PackedScene" path="res://scenes/world/lamp_side.tscn" id="97_lamp_side"]
 [ext_resource type="TileSet" path="res://assets/shared/dungeon_tiles/dungeon_tiles.tres" id="5_tiles"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_bars_80.png" id="p_cell_bars"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/cells/cell_window.png" id="p_cell_window"]
@@ -216,8 +216,17 @@ id = &"dungeons/cell_3/gate"
 [node name="Art" parent="Gate/Look" index="1"]
 position = Vector2(0, 0)
 
-[node name="Torch" parent="." instance=ExtResource("4_torch")]
-position = Vector2(544, 228)
+[node name="LampLeft" parent="." instance=ExtResource("97_lamp_side")]
+position = Vector2(364, 420)
+
+[node name="LampRight" parent="." instance=ExtResource("97_lamp_side")]
+position = Vector2(788, 420)
+
+[node name="Art" parent="LampRight/Look" index="1"]
+flip_h = true
+
+[node name="Glow" parent="LampRight/Flame" index="1"]
+position = Vector2(-18, 26)
 
 [node name="Bed" type="StaticBody2D" parent="."]
 z_index = -1
