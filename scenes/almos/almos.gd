@@ -549,7 +549,7 @@ func _drop_step(t: float, lean: float) -> void:
 	var size := 1.0 / (1.0 + DROP_SHRINK * fall)
 	_look.scale = Vector2(size, size)
 	var from := Vector2(_drop_way.x * 4.0, -4.0)
-	_look.position = (from + Vector2(_drop_way.x * DROP_CARRY * t, DROP_DEPTH * fall)).snappedf(2.0)
+	_look.position = (from + Vector2(_drop_way.x * DROP_CARRY * t, DROP_DEPTH * fall)).snappedf(OpenMapCamera.ART_PIXEL)
 	_look.rotation = lean + signf(lean) * DROP_TUMBLE * fall
 	var art := _look.get_node_or_null(^"Art") as CanvasItem
 	if art != null:
@@ -746,13 +746,13 @@ func _advance_interact(free: bool, delta: float) -> void:
 
 # A tap of Interact: in a Hiding spot he leaves it. Otherwise he rests if a Checkpoint is in reach,
 # or else hides if a Hiding spot is, or else picks up a Weapon or Armour, or else takes the Jailer's
-# key, and opens the Main entrance only if there is none of those, so a pickup lying beside a
-# Checkpoint or a Hiding spot stays where it is.
+# key, or else looks at an Inspect spot, and opens the Main entrance only if there is none of
+# those, so a pickup lying beside a Checkpoint or a Hiding spot stays where it is.
 func _on_interact_tapped() -> void:
 	if _hiding:
 		_leave_hiding()
 	elif not _rest_at_a_checkpoint_in_reach() and not _hide_in_a_spot_in_reach() and not _pick_up_a_pickup_in_reach() \
-			and not _take_a_key_in_reach():
+			and not _take_a_key_in_reach() and not _inspect_a_spot_in_reach():
 		_open_a_main_entrance_in_reach()
 
 
@@ -921,6 +921,25 @@ func _take_a_key_in_reach() -> bool:
 		return false
 	WorldState.record_kept(nearest.id)
 	nearest.queue_free()
+	return true
+
+
+# Looks at the nearest Inspect spot within pickup_reach of him, if there is one, and says whether he
+# did: his thought about it shows.
+func _inspect_a_spot_in_reach() -> bool:
+	var nearest: InspectSpot = null
+	var nearest_distance := tuning.pickup_reach
+	for node in get_tree().get_nodes_in_group(&"inspect_spots"):
+		var spot := node as InspectSpot
+		if spot == null or spot.is_queued_for_deletion():
+			continue
+		var distance := global_position.distance_to(spot.global_position)
+		if distance <= nearest_distance:
+			nearest = spot
+			nearest_distance = distance
+	if nearest == null:
+		return false
+	nearest.inspect()
 	return true
 
 

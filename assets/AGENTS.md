@@ -7,10 +7,11 @@ Sound is out of scope for now. The HUD's bars are drawn in code (`scenes/hud/hud
 ## Direction in short
 
 - **View:** three-quarter view. Floors are seen from above; wall faces and character fronts are visible. What is lower on screen draws in front (Y-sort).
-- **Scale:** pixel art. One art pixel is 2 world units. A tile is 16 art pixels, so 32 units, and a Room of 1152×648 units is 36 by 20 tiles plus a quarter-tile strip for the south wall. Characters are about 16×24 art pixels, with their feet on the collision body (radius 12 units).
-- **Pixel-exact:** the game is drawn at 576×324 and scaled up by whole numbers, so everything lands on whole art pixels. Gameplay positions stay exact. Every camera has zoom 0.5, so it shows 1152×648 units through the 576×324 view, and its position is a multiple of 2 units (one art pixel).
+- **Scale:** pixel art at 32 px. One art pixel is 1 world unit. A tile is 32 art pixels, so 32 units, and a Room of 1152×648 units is 36 by 20 tiles plus a quarter-tile strip for the south wall. Characters are about 32×48 art pixels, with their feet on the collision body (radius 12 units).
+- **Pixel-exact:** the game is drawn at 1152×648 and scaled up by whole numbers, so everything lands on whole art pixels. Gameplay positions stay exact. Every camera has zoom 1, so it shows 1152×648 units through the 1152×648 view, and its position is a whole unit (one art pixel). A Room that follows Almos zooms to 2 (`Room.follow_zoom`). The HUD and the thoughts are drawn on CanvasLayers at scale 2 (`PixelText.UI_SCALE`), so a HUD pixel is 2 screen pixels.
+- **Code-drawn looks:** effects drawn in code (dust, debris, sparks, the chasm rim, the lamp glow, the darkness dither, the spell effects) draw on the art grid too. Those not yet redrawn at 32 px still draw in 2-unit blocks (their `PIXEL` constant), as they did at 16 px.
 - **Colour:** free. There is no master palette: use as many colours as an asset needs. Keep the mood (muted and dark, fire warm against it), and never use Danger red (`#d62839`) outside the Unblockable warning. `docs/art.md` has the details.
-- **Walls:** walls snap to the 32-unit tile grid (one 16-art-px tile). North-facing walls, seen face-on, get collision as tall as their drawn face, about two tiles (64 units); side and south walls stay thin. So a north wall's drawn face is about two tiles tall and must match its collision. The wall grid is set by #74; changing it needs the owner's say.
+- **Walls:** walls snap to the 32-unit tile grid (one 32-art-px tile). North-facing walls, seen face-on, get collision as tall as their drawn face, about two tiles (64 units); side and south walls stay thin. So a north wall's drawn face is about two tiles tall and must match its collision. The wall grid is set by #74; changing it needs the owner's say.
 - **Combat cues:** a pose plus a short flash, never colour alone.
 - **References:** Hyper Light Drifter (the view, a muted palette with sharp accents, readable wind-ups) and Blasphemous (grim and devotional).
 - **Avoid:** cute or chibi proportions, bright saturated fantasy colours, outlines heavier than one pixel.
@@ -45,12 +46,12 @@ Art never changes code or tests. Each thing draws itself inside its `Look` node 
 - Put an AnimatedSprite2D, or a Sprite2D, inside the `Look`. A Room's floor and walls use a TileMapLayer.
 - Hide the placeholder polygon; do not delete what the code or tests use.
 - Line the art up with the collision body; do not move the body to fit the art.
-- Draw sprites at scale 2 (one art pixel is 2 world units).
+- Draw sprites at scale 1 (one art pixel is 1 world unit).
 - Code shows and hides a `Flame` by its visibility, so the `Flame` stays a polygon child of the thing: give the polygon a colour alpha of 0 and put the AnimatedSprite2D under it as a child. (Setting the polygon's `visible` off would hide the sprite too.)
 
 ### Almos's sprite
 
-Almos's sprite is an AnimatedSprite2D named `Art` inside his `Look`. The `AlmosLook` node under `Look` plays `walk_<side>` while he moves and `idle_<side>` while he stands, where the side is `down`, `up` or `side` from his facing (a diagonal shows the side). A roll plays `roll_<side>` once from its first frame each time one starts. A swing shows `attack_<side>` (5 frames: wind-up, coil, strike, follow-through, recover), with the frame picked from the swing's startup, active and recovery frames rather than a frame rate; attack frames are 32x32 with the body centred and the feet on row 27. Draw the side frames facing right; `Art` is flipped for left. His facing arrow (`Look/Facing/Shape`) is hidden, not deleted; the Block and Parry shapes still show over the sprite.
+Almos's sprite is an AnimatedSprite2D named `Art` inside his `Look`. The `AlmosLook` node under `Look` plays `walk_<side>` while he moves and `idle_<side>` while he stands, where the side is `down`, `up` or `side` from his facing (a diagonal shows the side). A roll plays `roll_<side>` once from its first frame each time one starts. A swing shows `attack_<side>` (5 frames: wind-up, coil, strike, follow-through, recover), with the frame picked from the swing's startup, active and recovery frames rather than a frame rate; attack frames are 64x64 with the body centred and the feet on row 55. Draw the side frames facing right; `Art` is flipped for left. His facing arrow (`Look/Facing/Shape`) is hidden, not deleted; the Block and Parry shapes still show over the sprite.
 
 ### Enemy sprites
 

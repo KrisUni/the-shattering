@@ -1,7 +1,7 @@
 extends GutTest
 ## The Dungeons' two cells are cells: each closes its walkable space in with its own north face and
 ## side walls and solid root around it, keeps its door, its Entrance and where Almos wakes inside, is
-## dressed with root bars either side of the door and a few props, and is lit by a lamp. They differ:
+## dressed with root bars either side of the door and a few props, and is lit by a pair of lamps on its side walls. They differ:
 ## each has its own size and its own dressing.
 ##
 ## And the Dungeons are lit by lamps, not pole torches: a lamp is a Torch (its flame can be Pulled
@@ -11,6 +11,7 @@ const DUNGEONS_DIR := "res://scenes/areas/dungeons/"
 const CELLS := ["cell_2", "cell_3"]
 const LAMP_PATH := "res://scenes/world/lamp.tscn"
 const STANDING_LAMP_PATH := "res://scenes/world/lamp_standing.tscn"
+const SIDE_LAMP_PATH := "res://scenes/world/lamp_side.tscn"
 
 
 func _room(room_name: String) -> Node2D:
@@ -60,12 +61,11 @@ func test_every_cell_has_bars_props_and_a_lit_lamp_inside() -> void:
 		assert_eq(room.get_node("Bars").get_child_count(), 2, "%s has bars either side of its door" % cell_name)
 		assert_gte(room.get_node("Props").get_child_count(), 6, "%s is dressed" % cell_name)
 		var lamps := room.get_children().filter(func(child: Node) -> bool: return child is Torch)
-		assert_eq(lamps.size(), 1, "%s has one lamp" % cell_name)
-		if not lamps.is_empty():
-			var lamp := lamps[0] as Torch
-			assert_true(lamp.lit, "%s's lamp burns" % cell_name)
-			var on_its_face := lamp.position.x > inner.position.x and lamp.position.x < inner.end.x and lamp.position.y >= inner.position.y - 64.0
-			assert_true(on_its_face, "%s's lamp is in the cell or on its north face" % cell_name)
+		assert_eq(lamps.size(), 2, "%s has a pair of lamps" % cell_name)
+		for lamp: Torch in lamps:
+			assert_true(lamp.lit, "%s's %s burns" % [cell_name, lamp.name])
+			var by_a_side := absf(lamp.position.x - inner.position.x) <= 16.0 or absf(lamp.position.x - inner.end.x) <= 16.0
+			assert_true(by_a_side and inner.has_point(Vector2(inner.get_center().x, lamp.position.y)), "%s's %s hangs on a side wall" % [cell_name, lamp.name])
 
 
 func test_the_two_cells_differ() -> void:
@@ -90,18 +90,18 @@ func test_the_dungeons_are_lit_by_lamps_not_pole_torches() -> void:
 		var room := _room(file_name.get_basename())
 		for child in room.get_children():
 			if child is Torch:
-				assert_true(child.scene_file_path in [LAMP_PATH, STANDING_LAMP_PATH], "%s %s is a lamp" % [file_name, child.name])
+				assert_true(child.scene_file_path in [LAMP_PATH, STANDING_LAMP_PATH, SIDE_LAMP_PATH], "%s %s is a lamp" % [file_name, child.name])
 
 
 func test_a_lamp_is_a_torch_drawn_as_a_lantern() -> void:
-	for path in [LAMP_PATH, STANDING_LAMP_PATH]:
+	for path in [LAMP_PATH, STANDING_LAMP_PATH, SIDE_LAMP_PATH]:
 		var lamp := (load(path) as PackedScene).instantiate()
 		add_child_autofree(lamp)
 		assert_true(lamp is Torch, "%s can be drawn from and lights the way" % path)
 		assert_true(lamp.is_in_group(&"torches"), "%s is with the torches" % path)
 		var art := lamp.get_node("Look/Art") as Sprite2D
 		assert_string_contains(art.texture.resource_path, "assets/shared/lamp/", "%s is drawn as a lantern" % path)
-		assert_eq(art.scale, Vector2(2, 2), "one art px is 2 units")
+		assert_eq(art.scale, Vector2(1, 1), "one art px is 1 unit")
 		var flame := lamp.get_node("Flame/Art") as AnimatedSprite2D
 		assert_string_contains(flame.sprite_frames.get_frame_texture(&"burn", 0).resource_path, "lamp_lit", "%s's flame glows in its glass" % path)
 

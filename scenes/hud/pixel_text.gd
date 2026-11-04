@@ -3,6 +3,9 @@ extends RefCounted
 ## the art does (the project has no font file). Capitals, digits and a little punctuation, each 5
 ## wide and 7 high; anything else is drawn as a space. Only a look.
 
+## How many screen pixels one HUD pixel is drawn as: the HUD layers are drawn at this scale, so
+## the HUD keeps its size in a view drawn one art pixel to a screen pixel.
+const UI_SCALE := 2
 const WIDTH := 5
 const HEIGHT := 7
 # Columns between letters.

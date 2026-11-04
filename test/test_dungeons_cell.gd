@@ -13,9 +13,11 @@ const FIRE_PATH := "res://data/fire.tres"
 const AREA_LOAD_PATH := "res://data/area_load.tres"
 # In pixels. The size of the view the Dungeons is shown in: the project's default window.
 const VIEW_SIZE := Vector2i(1152, 648)
-# In pixels, in Cell 3. Where Almos stands to Pull the flame of the lamp on the cell's north wall and
-# Shove it down at the roots: within Pull's flame range of the lamp, and the roots within the
-# fireball's range below.
+# In pixels, in Cell 3. Where Almos stands to Pull the flame of the lamp on the cell's left wall:
+# within Pull's flame range of it, and nearer it than the lamp on the right wall.
+const PULL_SPOT := Vector2(440.0, 420.0)
+# In pixels, in Cell 3. Where he carries the flame to and Shoves it down at the roots: the roots
+# within the fireball's range below.
 const STANDING_SPOT := Vector2(560.0, 340.0)
 # In pixels, in Cell 3. Beside the standing spot, out of the fireball's way down to the roots, and
 # far enough from them that a Fire there does not spread to them.
@@ -96,15 +98,19 @@ func test_almos_pulls_the_torchs_flame_and_shoves_it_at_the_roots_to_burn_them_o
 	var dungeons := host.current_space as DungeonsBuilding
 	var cell := dungeons.room(&"cell_3")
 	var roots := cell.get_node("Gate") as PathBlocker
-	var torch := cell.get_node("Torch") as Torch
-	host.almos.global_position = cell.to_global(STANDING_SPOT)
-	host.almos.facing = Vector2.DOWN
+	var torch := cell.get_node("LampLeft") as Torch
+	host.almos.global_position = cell.to_global(PULL_SPOT)
 
 	await _tap(&"cast_spell")
 	await wait_physics_frames((load(FIREBALL_PATH) as SpellData).wind_up_frames + MARGIN_FRAMES)
-	assert_true(host.almos.spell.holding, "he should hold the torch's flame")
-	assert_false(torch.lit, "the torch's flame was taken")
+	assert_true(host.almos.spell.holding, "he should hold the lamp's flame")
+	assert_false(torch.lit, "the lamp's flame was taken")
 	assert_false(roots.open, "the roots are whole while he only holds the flame")
+	# He carries it to above the roots.
+	host.almos.global_position = cell.to_global(STANDING_SPOT)
+	host.almos.facing = Vector2.DOWN
+	await wait_physics_frames(2)
+	assert_true(host.almos.spell.holding, "he still holds the flame")
 	await _tap(&"cast_spell")
 	await _wait_for_the_fire_to_burn_out()
 
@@ -120,8 +126,9 @@ func test_a_flame_pulled_from_a_fire_and_shoved_at_the_roots_also_burns_them_ope
 	var dungeons := host.current_space as DungeonsBuilding
 	var cell := dungeons.room(&"cell_3")
 	var roots := cell.get_node("Gate") as PathBlocker
-	# The torch is put out: the nearest lit torch's flame is taken before a Fire's.
-	(cell.get_node("Torch") as Torch).extinguish()
+	# The lamps are put out: the nearest lit torch's flame is taken before a Fire's.
+	(cell.get_node("LampLeft") as Torch).extinguish()
+	(cell.get_node("LampRight") as Torch).extinguish()
 	var fire := (load(FLAMMABLE_PATH) as PackedScene).instantiate() as Flammable
 	cell.add_child(fire)
 	fire.global_position = cell.to_global(FIRE_SPOT)
@@ -178,7 +185,7 @@ func test_almos_burns_the_roots_out_again_after_a_death_before_a_checkpoint() ->
 	await wait_physics_frames(2)
 	await _burn_the_roots_out_and_die_in_the_corridor(host)
 	var cell := (host.current_space as DungeonsBuilding).room(&"cell_3")
-	assert_true((cell.get_node("Torch") as Torch).lit, "the torch should be lit again")
+	assert_true((cell.get_node("LampLeft") as Torch).lit, "the lamp should be lit again")
 
 	await _pull_and_shove_the_torchs_flame_at_the_roots(host)
 
@@ -222,10 +229,12 @@ func _burn_the_roots_out_and_die_in_the_corridor(host: AreaHost) -> void:
 
 func _pull_and_shove_the_torchs_flame_at_the_roots(host: AreaHost) -> void:
 	var cell := (host.current_space as DungeonsBuilding).room(&"cell_3")
-	host.almos.global_position = cell.to_global(STANDING_SPOT)
-	host.almos.facing = Vector2.DOWN
+	host.almos.global_position = cell.to_global(PULL_SPOT)
 	await _tap(&"cast_spell")
 	await wait_physics_frames((load(FIREBALL_PATH) as SpellData).wind_up_frames + MARGIN_FRAMES)
+	host.almos.global_position = cell.to_global(STANDING_SPOT)
+	host.almos.facing = Vector2.DOWN
+	await wait_physics_frames(2)
 	await _tap(&"cast_spell")
 	await _wait_for_the_fire_to_burn_out()
 

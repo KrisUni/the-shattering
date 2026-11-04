@@ -9,7 +9,8 @@ const PULL_PATH := "res://data/pull.tres"
 const TILE := 32.0
 # In units, in Cell 3. Where Almos stands to Pull the torch's flame and Shove it at the roots
 # (as in test_dungeons_cell.gd).
-const CELL_3_STANDING_SPOT := Vector2(560.0, 340.0)
+# In Cell 3, where Almos stands to Pull the flame of the lamp on its left wall.
+const CELL_3_STANDING_SPOT := Vector2(440.0, 420.0)
 
 
 func _rooms() -> Array[Node2D]:
@@ -76,7 +77,7 @@ func test_no_torch_bracket_is_hidden_behind_a_south_wall() -> void:
 					assert_eq(front.get_cell_source_id(Vector2i(x, y)), -1, "%s %s is not behind a south wall at %d, %d" % [room.name, torch.name, x, y])
 
 
-func test_cell_3s_torch_is_within_pull_reach_of_the_spot_by_the_roots() -> void:
+func test_cell_3s_torch_is_within_pull_reach_of_a_spot_in_the_cell() -> void:
 	var cell := (load(DUNGEONS_DIR + "cell_3.tscn") as PackedScene).instantiate() as Node2D
 	add_child_autofree(cell)
 	var reach: float = (load(PULL_PATH) as Resource).get("flame_range")

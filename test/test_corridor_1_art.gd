@@ -70,11 +70,11 @@ func test_corridor_1_has_wall_layers_with_used_cells() -> void:
 	assert_eq(_layer("WallTilesFront").get_used_cells().size(), 0, "no south wall in front of Almos")
 
 
-func test_the_tile_layers_draw_a_tile_of_16_art_px_at_scale_2() -> void:
+func test_the_tile_layers_draw_a_tile_of_32_art_px_at_scale_1() -> void:
 	for layer_name in ["FloorTiles", "WallTiles", "WallTilesFront"]:
 		var layer := _layer(layer_name)
-		assert_eq(layer.tile_set.tile_size, Vector2i(16, 16), "%s tile is 16 art px" % layer_name)
-		assert_eq(layer.scale, Vector2(2, 2), "%s draws one art px as 2 units" % layer_name)
+		assert_eq(layer.tile_set.tile_size, Vector2i(32, 32), "%s tile is 32 art px" % layer_name)
+		assert_eq(layer.scale, Vector2(1, 1), "%s draws one art px as 1 unit" % layer_name)
 		assert_eq(layer.position, Vector2.ZERO, "%s starts on the Room's corner" % layer_name)
 		assert_eq(layer.tile_set.tile_size.x * layer.scale.x, TILE, "a tile is 32 units")
 

@@ -74,10 +74,10 @@ func test_the_deep_root_is_near_black_and_the_blend_lies_between() -> void:
 	var image := Image.load_from_file(ProjectSettings.globalize_path(TILES_PATH))
 	var brightness := func(tile: Vector2i) -> float:
 		var total := 0.0
-		for y in 16:
-			for x in 16:
-				total += image.get_pixel(tile.x * 16 + x, tile.y * 16 + y).get_luminance()
-		return total / 256.0
+		for y in 32:
+			for x in 32:
+				total += image.get_pixel(tile.x * 32 + x, tile.y * 32 + y).get_luminance()
+		return total / 1024.0
 	var deep: float = brightness.call(DEEP)
 	var blend: float = brightness.call(BLEND)
 	var mass: float = brightness.call(MASS)

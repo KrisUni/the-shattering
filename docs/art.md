@@ -84,7 +84,7 @@ The Health, Stamina and Mana bars share `scenes/hud/hud_bar.gd`, a ProgressBar t
   - Health is blood red (`#9b3a46`), kept well apart from Danger red.
   - Stamina is sage green (`#7f9a5a`).
   - Mana is steel blue (`#4a6fb5`).
-- **Placement:** top left, in HUD pixels on the 576x324 view. Health is on top and longest (84x7), Stamina under it (64x5), and Mana under that (64x5) once Almos has it.
+- **Placement:** top left, in HUD pixels (a HUD pixel is 2 screen pixels: the HUD layer is drawn at scale 2 on the 1152x648 view). Health is on top and longest (84x7), Stamina under it (64x5), and Mana under that (64x5) once Almos has it.
 
 The text labels in the test room are still placeholders.
 
@@ -102,7 +102,7 @@ A Pull or Shove on ordinary things (not a flame, which keeps its fire look) show
 
 ### Enemy Health bars
 
-Each enemy carries a small Health bar over its head (`scenes/enemies/enemy_health_bar.gd`, node `OverheadHealthBar`). It is 16x3 art px, drawn like the HUD's: a frame, a blood-red fill lit along its top, and a pale trail where a loss took it from. It shows once the enemy is hurt or in Pursuit, and hides while it is whole and at rest, and once it is dead.
+Each enemy carries a small Health bar over its head (`scenes/enemies/enemy_health_bar.gd`, node `OverheadHealthBar`). It is 32x6 art px, drawn like the HUD's: a frame, a blood-red fill lit along its top, and a pale trail where a loss took it from. It shows once the enemy is hurt or in Pursuit, and hides while it is whole and at rest, and once it is dead.
 
 ## Look sheets
 
@@ -122,8 +122,8 @@ Each sheet has these fields:
 #### Almos
 
 - **Thing:** Almos
-- **Source pack and files:** Drawn by hand for this game (no pack), `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young wanderer in the spirit the owner asked for (a classic hooded hero with a long cap), not a copy of any existing character.
-- **Size in art px:** 16x24 for every frame but the attacks, which are 32x32 with the body in the middle (feet on row 27) so the swing's smear has room; feet always on the body (sprite offset -8 art px).
+- **Source pack and files:** Drawn in code for this game (no pack) by `scripts/art/draw_almos.py` at 32 px, on the shared kit `scripts/art/pixelkit.py` (parts lit from the top left, hue-shifted ramps, selective outlines), into `assets/characters/almos/`. Driven by `AlmosLook` (`scenes/almos/almos_look.gd`). An original young wanderer in the spirit the owner asked for (a classic hooded hero with a long cap), not a copy of any existing character: a deep indigo hood with a long tail and a short mantle over the shoulders, so the head and body read as one silhouette.
+- **Size in art px:** 32x48 for every frame but the attacks, which are 64x64 with the body in the middle (feet on row 55) so the swing's smear has room; feet always on the body (sprite offset -16 art px).
 - **Palette notes and accents used:** Free colour, each material shaded from the top left with a lit and a shaded tone, and selective outlines: the silhouette is outlined in near-black, lines inside it take the deep tone of the material they sit on. Bark-grey skin (`#6c6966`, lit `#8a8682`, shade `#4e4b49`), pale cream eyes and root hair; an indigo hood (`#3e4573` with `#59639c` and `#2c3155`), a violet seam and sand stitches; a warm fibre robe (`#b38c76`, lit `#d4b298`, shade `#86634f`); a dark leather strap, a sand rope belt, a pale glass Flask; sand bandage and foot wraps; indigo trousers, the far leg in shadow so a stride reads. The Seal is near-black with a glint. The swing's smear runs from cream to warm sand. No accent.
 - **Animations and poses needed:** Now, each for `down`, `up` and `side`:
   - `idle` (4 frames: breath, hood tail sway, a blink)
@@ -137,12 +137,12 @@ Each sheet has these fields:
 #### Nar jailer
 
 - **Thing:** Nar jailer (the key jailer included)
-- **Source pack and files:** Drawn for this game (no pack), `assets/characters/nar_jailer/`, made from parts by `scripts/art/draw_nar_jailer.py` so every pose shares one build. A warder of his own, not a recoloured Almos: heavy-set, in a carved bark helm with a ridged crest and a forward brim, a cuirass of overlapping bark plates and a bark pauldron on the near shoulder over a moss-grey fibre tunic, a leather belt with a bone buckle, dark trousers and boots, root-like hair spilling from under the helm, and a knotted club of grown root. The same bark-grey Nar skin as Almos. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite; the key jailer in Radio/Officers is one with its own tuning. The test room's jailers stay placeholder.
-- **Size in art px:** 32x32 canvas, facing right, feet on row 27 (sprite offset -8 art px). Each part is outlined on its own in near-black, the far arm and leg darker, so the limbs read against the body.
-- **Palette notes and accents used:** Free colour, muted: warm bark browns for the helm, plates and club, moss-grey cloth, bark-grey skin with a pale eye under the brim. No accent; the flashes come from the shared shader.
-- **Animations and poses needed:** `idle` (2, a breath, the club held low), `walk` (4, a heavy stride), `strike` (club drawn back over the shoulder, swung down, recover), `low` (crouched, a sweep along the floor), `unblockable` (club raised high in both hands, held, slammed down), `break` (knocked back and slumped, the club hanging), `death` (buckles, drops to his knees, falls flat with the club rolled from his hand), `sit` (2, on the guard post's bench, the club across his knees). Not yet: a key at the key jailer's belt, and Block and Parry poses.
+- **Source pack and files:** Drawn for this game (no pack), `assets/characters/nar_jailer/`, by `scripts/art/draw_nar_jailer.py` at 32 px. A jailer is a fellow Nar, so he is a variation of Almos: drawn on Almos's own build and side-on poses (`scripts/art/draw_almos.py`, with its `Outfit`) in a guard's outfit: a moss-grey hood with a short tail and its mantle, a dark leather jerkin over a grey shirt, a dark leather belt with a bone buckle and a baldric, dark trousers and boots, and a sword of grey iron (crossguard, wrapped grip, pommel). He wears no Seal (only the Marked do) and carries no Flask. The same bark-grey Nar skin and pale eye as Almos. `scenes/enemies/nar_jailer.tscn` is the training enemy with the jailer's tuning and this sprite; the key jailer in Radio/Officers is one with its own tuning. The test room's jailers stay placeholder.
+- **Size in art px:** 64x64 canvas, facing right, feet on row 55 (sprite offset -16 art px), the body in the middle as in Almos's attack frames, so he stands as tall as Almos.
+- **Palette notes and accents used:** Free colour, muted: moss-grey hood, dark leather browns, grey cloth, a pale steel blade with a glint. No accent; the flashes come from the shared shader.
+- **Animations and poses needed:** `idle` (2, a breath, the sword hanging at his side), `walk` (4, a stride), `strike` (sword drawn back over the shoulder, swung down, recover), `low` (crouched, a sweep along the floor), `unblockable` (sword raised high in both hands, held, slammed down), `break` (knocked back and slumped, the sword hanging), `death` (buckles, drops to his knees, falls flat with the sword fallen from his hand), `sit` (2, on the guard post's bench, the sword across his knees). Not yet: a key at the key jailer's belt, and Block and Parry poses.
 - **Burning:** a jailer carries a `Flammable` of the creature kind, as the Root crawler does: a fireball's hit or splash sets it alight, and the shared Fire flame stands on its feet while it burns.
-- **Status:** in the game (second draft; the owner checks the look in the editor).
+- **Status:** in the game (fourth draft: a variation of Almos with a sword; the owner checks the look in the editor).
 
 #### Nar guard
 
@@ -161,7 +161,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 - **Thing:** Root crawler
 - **Source pack and files:** Tiny RPG Character Asset Pack 02, Blood Monster_A (plain strips). `assets/creatures/root_crawler/`. See `assets/CREDITS.md`.
-- **Size in art px:** 32x28 canvas for every frame, body about 20x16, feet on the bottom row of the body (sprite offset puts them on the 12-unit collision body's foot).
+- **Size in art px:** 64x56 canvas for every frame, body about 40x32, feet on the bottom row of the body (sprite offset puts them on the 12-unit collision body's foot).
 - **Palette notes and accents used:** Base only: navy outline, indigo and violet body, sand and cream teeth. The pack's crimson is mapped away from Danger red and Fire amber. While it burns, the shared Fire flame stands on its feet (Fire amber).
 - **Animations and poses needed:** `idle`, `walk` (loop); `strike` (arm raised, then swing); `low` (crouched flat, maw open, then a low lunge); `unblockable` (reared tall with the arm overhead, held, then the slam); `break` (leaning back and slumped, held); `death`. The sprite faces right and turns with the crawler by `flip_h` (left or right).
 - **Status:** in the game (first draft; the owner checks the look in the editor).
@@ -171,33 +171,33 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Torch
 
 - **Thing:** Torch (see Pull)
-- **Source pack and files:** Drawn for this game (no pack) by `scripts/art/draw_fire.py`: the bracket `assets/shared/torch/torch.png`, a shaft of grown root with a bowl of woven bark bound in dark cord, and the flame `assets/shared/torch/flame_0-4.png`.
-- **Size in art px:** Bracket 10×37; flame 16×24 (5 frames).
+- **Source pack and files:** Drawn for this game (no pack) by `scripts/art/draw_fire.py`: the bracket `assets/shared/torch/torch.png`, a shaft of grown root with a bowl of woven bark bound in dark cord, and the flame `assets/shared/torch/flame_0-4.png`. Drawn natively at 32 px (the flame's shape at its first size, scaled, with a stray-pixel cleanup); the bracket on `scripts/art/pixelkit.py`.
+- **Size in art px:** Bracket 20×74; flame 32×48 (5 frames).
 - **Palette notes and accents used:** Bracket in warm root browns. Flame in hard bands from a deep amber rim through Fire amber and sand to a cream core, no anti-aliasing. A small, steady flame, so a lit torch stays apart from Fire.
 - **Animations and poses needed:** One looping burn (5 frames, 8 per second). Lit shows it; out hides it (the Flame node's visibility). The bracket's polygon is hidden, not deleted. The Dungeons no longer use the torch: their light sources are lamps (below). `torch.tscn` stays for the test room and for the flames Almos carries; his carried torch and held flame hide the bracket.
-- **Status:** in the game (second draft; the owner checks the look in the editor)
+- **Status:** in the game (third draft, the first at 32 px; the owner checks the look in the editor)
 
 #### Lamp
 
 - **Thing:** Torch (see Pull): the Dungeons' light sources are lamps, which are torches in every way that matters to play (their flame can be Pulled, they light the way, they are in the group "torches"), drawn as lanterns.
-- **Source pack and files:** Drawn by hand for this game, in the style of the owner's lantern reference (harusha's Pixel Lanterns on itch.io, which could not be downloaded here; if its files arrive and its licence allows, its lanterns can be swapped in as drawn). `assets/shared/lamp/`:
+- **Source pack and files:** Drawn in code for this game by `scripts/art/draw_world.py` at 32 px (on `scripts/art/pixelkit.py`), in the style of the owner's lantern reference (harusha's Pixel Lanterns on itch.io, which could not be downloaded here; if its files arrive and its licence allows, its lanterns can be swapped in as drawn). `assets/shared/lamp/`:
   - `lamp_wall.png`: a lantern hung on a short chain from a hook, for north walls (`scenes/world/lamp.tscn`)
-  - `lamp_standing.png`: the same lantern on a wooden post in a stone base, for floors (`scenes/world/lamp_standing.tscn`)
+  - `lamp_standing.png`: the same lantern on an iron stem and foot, for floors (`scenes/world/lamp_standing.tscn`)
   - `lamp_lit_0-3.png`: the glowing glass and flame, drawn over the lantern while it burns
-- **Size in art px:** The wall lantern is 12x16 and the standing one 12x29, both with the glass in the same place.
-- **Palette notes and accents used:** The frame is navy, with a dusty-rose and sand cap and base. Unlit glass is indigo with a violet glint. Lit glass glows cream at the heart and sand at the edge, around a small Fire-amber flame. The post is dusty rose and the base stones slate and indigo.
+- **Size in art px:** The wall lantern is 24x32 and the standing one 24x56, both with the glass in the same place (x 4-19, y 14-23).
+- **Palette notes and accents used:** A slate iron frame, cap, ribs and foot, lit on the top left. Unlit glass is dark indigo with a pale glint. Lit glass glows cream at a heart that drifts with the flicker, through sand and Fire amber to a deep amber rim, the ribs dark over it.
 - **Animations and poses needed:** One looping flicker (4 frames, 6 a second) while lit; dark glass when its flame is taken.
-- **Placement:** Wall lanterns hang on north wall faces, the node at y 36 so the lantern sits on the face. In a cell the lamp hangs on the cell's own north face, or stands on its floor. Cell 3's standing lamp keeps the old torch's spot, within Pull's reach of the roots.
+- **Placement:** Wall lanterns hang on north wall faces, the node at y 36 so the lantern sits on the face. In Cells 2 and 3 a pair of side lanterns (`lamp_side.png`, `scenes/world/lamp_side.tscn`: the same lantern hung on an iron arm with a strut, out from the wall's edge) hang one on each side wall, halfway down, the right one flipped, each node 12 units in from its wall so the arm meets the wall; their pools of light fall inward on the floor. In Cell 3 Almos Pulls a flame from one of them and carries it to above the Roots to Shove it at them.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Fire
 
 - **Thing:** Fire
 - **Source pack and files:** Drawn for this game (no pack) by `scripts/art/draw_fire.py`, `assets/shared/fire/flame_0-14.png`: a teardrop flame with a rounded foot whose sides sway with looping waves, a ragged edge where its tongues lick up, tongues breaking off its top, and a wisp of violet smoke above.
-- **Size in art px:** 20×32 (15 frames), drawn over the 16×20 body of a Flammable, its foot on the body's foot.
+- **Size in art px:** 40×64 (15 frames), drawn over the 32×40 body of a Flammable, its foot on the body's foot.
 - **Palette notes and accents used:** Hard bands from a deep amber rim through Fire amber and sand to a cream core low in the flame; the smoke in muted violets. Larger than a torch flame, with smoke, so a burning thing and a lit torch read apart.
 - **Animations and poses needed:** One seamless looping burn (15 frames, 12 per second), shown only while the thing burns (the Flame node's visibility).
-- **Status:** in the game (second draft; the owner checks the look in the editor). Used by every Flammable, the Root crawler's burning look included (root_crawler.tscn places the shared flame at `Flammable/Flame/Art`).
+- **Status:** in the game (third draft, drawn natively at 32 px; the owner checks the look in the editor). Used by every Flammable, the Root crawler's burning look included (root_crawler.tscn places the shared flame at `Flammable/Flame/Art`).
 #### Pull and the fireball
 
 - **Thing:** Pull (taking a torch's or a Fire's flame), the held flame, and the Fireball (see Shove)
@@ -205,7 +205,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
   - `scenes/almos/spell_look.gd` (`SpellLook` on Almos): the Pull and the flame in his hand
   - `scenes/almos/fireball_trail.gd` (`FireballTrail`): the fireball in flight
   - `scenes/almos/fire_burst.gd` (`FireBurst`, left where a fireball hits): the impact and its scorch
-- **Size in art px:** The tongue runs from the flame to Almos's hand, 6 art px thick at the source, thinning to 1. The flame in his hand is about 5 by 7. The fireball's head is a blob about 9 across, with a 16-step trail. The burst's ring runs out to the fireball's splash radius, so it shows what the splash reaches.
+- **Size in art px:** The tongue runs from the flame to Almos's hand, 6 art px thick at the source, thinning to 1 (these effects are drawn in code, still in 2-unit blocks). The flame in his hand is about 10 by 14. The fireball's head is a blob about 18 across, with a 16-step trail. The burst's ring runs out to the fireball's splash radius, so it shows what the splash reaches.
 - **Palette notes and accents used:** Fire amber, sand and cream for the fire; dusty rose and slate for smoke; navy and slate for the scorch. No magic glow: the owner wants it to read as fire, not magic, so no magenta.
 - **Animations and poses needed:**
   - **Pull:** while Almos winds up, the flame is torn from the torch toward his hand as a wavering tongue of fire that stretches out with the wind-up, shedding embers. It is drawn into his hand for a moment after the release, the torch is left smoking, and the flame lands with a splash of embers.
@@ -235,27 +235,27 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Hiding spot
 
 - **Thing:** Hiding spot
-- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+- **Source pack and files:** Drawn for this game, `assets/dungeons/furniture/`. Redrawn at 32 px in code by `scripts/art/draw_props.py` (on `scripts/art/pixelkit.py`), at the same canvas sizes, so every footprint and rim is where it was.
   - `wardrobe.png` (`scenes/world/wardrobe.tscn`): a tall wardrobe of grown wood, two doors with a gap between them, a sand lip on top
   - `barrel.png` (`scenes/world/barrel.tscn`): a barrel with bark hoops
 
   Both inherit `hiding_spot.tscn`. The placeholder shape is hidden, and the spot is at the foot of the furniture. The test room's spots stay placeholder.
-- **Size in art px:** Wardrobe 20x30; barrel 14x18.
-- **Palette notes and accents used:** Dusty-rose wood with sand highlights, navy outline and seams, indigo shadow at the foot. No accent; a burning one shows the shared Fire flame.
+- **Size in art px:** Wardrobe 40x60; barrel 28x36.
+- **Palette notes and accents used:** Warm brown grown wood, lit on the top left, its staves and planks in its own deep tone, iron hoops in slate; the barrel's lid is open, a dark rim round a lighter top. No accent; a burning one shows the shared Fire flame.
 - **Animations and poses needed:** No frames. Getting in, Almos is seen hopping in (`scenes/world/hide_hop.gd`, only a look: he is in the spot at once): he crouches, springs up in an arc and drops into a barrel feet first, cut away row by row below its rim (`open_top`), or squeezes in between a wardrobe's doors; the spot squashes and wobbles back as he lands. Getting out, he springs out of it from its rim and lands on his feet in front of it, and it squashes again. Almos inside is not drawn at all, and the spot rattles every three seconds or so, each on its own rhythm: its look hops and jolts for a third of a second. Pulled, it shudders through the wind-up and floats up over Almos's head, bobbing while held. Thrown, it falls in an arc with a dust trail (`scenes/world/throw_dust.gd`) and bursts in dust and wood splinters where it lands (`scenes/world/impact_burst.gd`). Too heavy, it jolts harder and stays put. Almos holds his coiled wind-up pose while gripping, and strikes as he throws.
 - **Placement:** Corridor 1 has no wardrobes any more: big rocks stand in their place (`assets/dungeons/rocks/rock_big.png`, a grey lumpy boulder with moss on top, `scenes/world/big_rock.tscn`), and barrels to hide in sit between them and the two cell doors, one a few steps from Cell 3's. A rock crushed against the wall bursts in pieces of its own art and leaves small rocks (`rock_small_0-2.png`).
-- **Loose things and growth:** The hall is laid out as a place people use, not scattered: a rockfall in the west corner (two big rocks and their rubble of small rocks), the prisoners' water barrel and bucket by Cell 3's door, the stores against the middle wall (barrels in a row, a pot, a crate stack, burlap sacks), and the guard post east of Cell 2's door (a barrel, a bench with a bowl, a bucket and the spear rack) where a second guard sits on the bench (`sit`, two frames of a slow breath, played while he is at rest at his post; he gets up once he is hurt or in Pursuit). Bones and skulls lie only along the chasm's lip and on its ledges. Everything that is not a plant can be lifted and thrown (barrels, bone piles, pots and bowls break where a throw ends; the bench, rack and crates are too heavy yet and shudder). Plants are only a look, kept sparse: floor moss, small glowing fungus and moss hanging from the north wall (`assets/dungeons/growth/`). The cells' lamps hang on their north walls; no lamp stands on a pole in the Dungeons' hall or cells. Cell 3 has a bowl by the bed and a puddle under a drip.
-- **Metal gate:** `assets/dungeons/gates/metal_gate.png`, 64x28 art px: iron bars between a top rail and a cross rail, rivets and rust flecks, posts at each end. It stands on its doorway's footprint. Melting, it glows from white to a hot orange and melts away from the top down, a molten edge eating down the bars and dripping, their feet last; crashed, it bursts in pieces of its own art.
+- **Loose things and growth:** The hall is laid out as a place people use, not scattered: a rockfall in the west corner (two big rocks and their rubble of small rocks), the prisoners' water barrel and bucket by Cell 3's door, the stores against the middle wall (barrels in a row, a pot, a crate stack, burlap sacks), and the guard post east of Cell 2's door (a barrel, a bench with a bowl, a bucket and the spear rack) where a second guard sits on the bench (`sit`, two frames of a slow breath, played while he is at rest at his post; he gets up once he is hurt or in Pursuit). Bones and skulls lie only along the chasm's lip and on its ledges. Everything that is not a plant can be lifted and thrown (barrels, bone piles, pots and bowls break where a throw ends; the bench, rack and crates are too heavy yet and shudder). Plants are only a look, kept sparse: floor moss, small glowing fungus and moss hanging from the north wall (`assets/dungeons/growth/`, drawn by `scripts/art/draw_world.py`: moss in low cushions of touching lumps, the fungus caps in the arch-tree glow on pale stems). The cells' lamps hang on their north walls; no lamp stands on a pole in the Dungeons' hall or cells. Cell 3 has a bowl by the bed and a puddle under a drip.
+- **Metal gate:** `assets/dungeons/gates/metal_gate.png`, 128x56 art px, drawn by `scripts/art/draw_world.py`: iron bars between a top rail and a cross rail, rivets with a glint and rust flecks on the bars, darker posts at each end. It stands on its doorway's footprint. Melting, it glows from white to a hot orange and melts away from the top down, a molten edge eating down the bars and dripping, their feet last; crashed, it bursts in pieces of its own art.
 - **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
 #### Furniture and cover
 
 - **Thing:** The Dungeons' furniture. Crate stacks are cover: solid, on the walls layer, so they block Sight and movement as a wall does.
-- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/furniture/`:
+- **Source pack and files:** Drawn for this game, `assets/dungeons/furniture/`. Redrawn at 32 px in code by `scripts/art/draw_props.py` (on `scripts/art/pixelkit.py`), at the same canvas sizes, so every footprint and rim is where it was.
   - `crate_stack.png` (`scenes/world/crate_stack.tscn`, a StaticBody2D in the group "cover", its box on the lower crate's footprint)
   - `bench.png`, `spear_rack.png`, `sacks.png`: dressing with no collision
-- **Size in art px:** Crate stack 24x26, bench 30x9, spear rack 18x26, sacks 18x11.
-- **Palette notes and accents used:** Dusty-rose wood and cloth with sand highlights, navy outline; spear heads in cream and sand. No accent.
+- **Size in art px:** Crate stack 48x52, bench 60x18, spear rack 36x52, sacks 36x22.
+- **Palette notes and accents used:** Warm brown wood (lighter on the tops seen from above), crates with a framed front and a pale brace, burlap sacks tied with rope, iron spear heads with a glint. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game in Corridor 1 (first draft; the owner checks the look in the editor)
 
@@ -263,7 +263,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 - **Thing:** Path blocker (living roots or a door that close a passage; see Fire)
 - **Source pack and files:** Cell 3's Roots only: CRAWLING DEPTHS `root_vein_column`, rotated and squeezed by hand into a horizontal root, `assets/shared/dungeon_tiles/roots_blocker.png`. Set in `cell_3.tscn` under `Roots/Look/Art`; the shared `path_blocker.tscn` and the test room stay placeholder. See `assets/CREDITS.md`.
-- **Size in art px:** 64x8 (the 128x16 unit footprint of Cell 3's Roots; a Sprite2D at scale 2).
+- **Size in art px:** 128x16 (the 128x16 unit footprint of Cell 3's Roots; a Sprite2D at scale 1).
 - **Palette notes and accents used:** Navy body, indigo top edge, a few base violet flecks. No accent; the burning shows Fire's own flame.
 - **Animations and poses needed:** One still picture. It goes with the path blocker's Look when the roots burn out.
 - **Status:** in the game for Cell 3 (first draft; the owner checks the look in the editor)
@@ -351,13 +351,13 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 
 ### Rooms
 
-The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_tiles.tres`, from one 16x16 art px atlas, `dungeon_tiles.png`. A Room draws its floor and walls with TileMapLayers at scale 2. The floor sits behind Almos, the north and side walls behind him, and the south walls in front of him (by `z_index`).
+The Dungeons tiles live in one TileSet, `assets/shared/dungeon_tiles/dungeon_tiles.tres`, from one 32x32 art px atlas, `dungeon_tiles.png`. A Room draws its floor and walls with TileMapLayers at scale 1. The floor sits behind Almos, the north and side walls behind him, and the south walls in front of him (by `z_index`).
 
 #### The cells
 
 All three cells (Cells 1, 2 and 3) are closed in and dressed the same way, from the same pictures in `assets/dungeons/cells/`. Each differs:
 - **Cell 1:** smaller (13 by 10 tiles), older and overgrown. Roots break through its wall and it has no window. Its lamp hangs on its wall, with bones, shackles, a bucket, and the pallet in the far corner.
-- **Cell 2:** wider (14 by 11 tiles) and damp. A window to the left with its shaft of light, a puddle of seep water (`cell_puddle.png`), a cracked bowl (`cell_bowl.png`), three rows of tallies, and a standing lamp in the corner.
+- **Cell 2:** wider (14 by 11 tiles) and damp. A window to the left with its shaft of light, a puddle of seep water (`cell_puddle.png`), a cracked bowl (`cell_bowl.png`), three rows of tallies, and a lantern on each side wall. A dead prisoner's remains are its Inspect spots (`scenes/world/inspect_spot.gd`), drawn by `scripts/art/draw_props.py`: his skeleton slumped in the north-west corner with an arm fallen to the floor (`cell_skeleton.png`, 44x34), a black ring by his hand (`cell_ring.png`, 10x8, near black with a glint), and writing cut into the north wall just above him (`cell_carving.png`, 50x15): two lines of made-up letters in a shaky hand, the shape of I SAW THE / SERPENT GOD, so it looks like writing and is read only in the text box.
 - **Cell 3:** described below.
 
 The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.png` and `cell_bars_96.png`.
@@ -365,7 +365,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 #### Cell 3, the cell
 
 - **Thing:** Cell 3 (where Almos wakes; see Dungeons)
-- **Source pack and files:** Drawn by hand for this game, `assets/dungeons/cells/`:
+- **Source pack and files:** Drawn for this game, `assets/dungeons/cells/`. Redrawn at 32 px in code by `scripts/art/draw_props.py` (on `scripts/art/pixelkit.py`), at the same canvas sizes, so every footprint and rim is where it was. The light shaft (`cell_light.png`) is the old dither, doubled.
   - `cell_bars_80.png`: root bars along the front either side of the door, in front of Almos
   - `cell_window.png` and `cell_light.png`: a barred window slit high in the north wall, and the pale shaft of light it throws on the floor
   - `cell_pallet.png`, `cell_bucket.png`, `cell_bones.png`, `cell_straw.png`: a straw pallet, a bucket, old bones and scattered straw
@@ -385,7 +385,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 
 - **Thing:** The solid root that fills a Room around its walkable space (Corridor 1 and the three cells), made to read as deliberate darkness so the eye stays on the hall or the cell.
 - **Source pack and files:** Drawn by hand, two tiles in `assets/shared/dungeon_tiles/dungeon_tiles.png`: deep root at atlas (0,2), near-black with faint seamless strands; and a blend at (1,2), every other pixel the root tile (5,0) and deep root.
-- **Size in art px:** 16x16 per tile.
+- **Size in art px:** 32x32 per tile.
 - **Palette notes and accents used:** Deep root `#0e0d16` with strands `#181726`; the blend dithers it with the root tile's indigo. No accent.
 - **Placement:** Graded by distance from walkable floor: the root tile up to two tiles out, the blend at three, deep root beyond. This acts as a vignette. When the darkness overlay (#78) lands, these areas sit in its shadow too.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
@@ -393,8 +393,8 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 #### Cell 3 floor
 
 - **Thing:** Cell 3 (the floor of the Room)
-- **Source pack and files:** Hand-drawn packed earth in the palette, guided by CRAWLING DEPTHS `earth_floor` (its violet came out wrong, so the pixels are new). `assets/shared/dungeon_tiles/dungeon_tiles.png`, tiles 0-3 of row 0 (four floor variants) and tile 4 (the 4 art px strip at the south wall). See `assets/CREDITS.md`.
-- **Size in art px:** 16x16 per tile; the Room is 36x20 tiles plus the strip.
+- **Source pack and files:** Packed earth drawn in code by `scripts/art/draw_tiles.py` (no pack): tileable value noise in clustered tones, a few lit pebbles and a rootlet; the four variants share their edges, so any one can lie by any other. `assets/shared/dungeon_tiles/dungeon_tiles.png`, tiles 0-3 of row 0 (four floor variants) and tile 4 (the 8 art px strip at the south wall).
+- **Size in art px:** 32x32 per tile; the Room is 36x20 tiles plus the strip.
 - **Palette notes and accents used:** Dusty rose ground, a few base violet and sand flecks. No accent.
 - **Animations and poses needed:** None; four variants laid in a fixed pattern.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
@@ -402,8 +402,8 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 #### Cell 3 walls
 
 - **Thing:** Cell 3 (the walls of the Room)
-- **Source pack and files:** Dead Swamp (Sevarihk / Aurora) `woven_wall`, one 16x16 weave cut from it and edged by hand; `assets/shared/dungeon_tiles/dungeon_tiles.png`, row 1: north face top (sand lip), north face base (navy shadow), left side, right side, south wall top, south wall strip. The tiles follow the wall grid: north face 2 tiles, sides 1, south 1 plus the strip. See `assets/CREDITS.md`.
-- **Size in art px:** 16x16 per tile.
+- **Source pack and files:** Woven bark drawn in code by `scripts/art/draw_tiles.py` (no pack): waving strips that rise over one upright stake and dip under the next, row by row, lit from the top left; `assets/shared/dungeon_tiles/dungeon_tiles.png`, row 1: north face top (sand lip), north face base (navy shadow), left side, right side, south wall top, south wall strip. The tiles follow the wall grid: north face 2 tiles, sides 1, south 1 plus the strip. Row 0's last tile and row 2 are the root mass, deep root and their dithered blend, drawn by the same script.
+- **Size in art px:** 32x32 per tile.
 - **Palette notes and accents used:** Woven bark in base violet and indigo with navy shadows; the south wall seen from above is darker. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
@@ -412,7 +412,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 
 - **Thing:** Corridor 1 (the floor and walls of the Room)
 - **Source pack and files:** The same tiles as Cell 3 (`assets/shared/dungeon_tiles/dungeon_tiles.tres`, no new tiles). Floor under the whole Room; north walls are two tiles of face (sand lip, navy base) in four runs between the three north doorways; south walls are one tile plus the strip in two runs either side of the south doorway. The east and west edges are exits, so they have no wall tiles.
-- **Size in art px:** 16x16 per tile; the Room is 36x20 tiles plus the strip.
+- **Size in art px:** 32x32 per tile; the Room is 36x20 tiles plus the strip.
 - **Palette notes and accents used:** As Cell 3. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
@@ -421,7 +421,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 
 - **Thing:** Every other Room of the Dungeons (Cells 1 and 2, Corridors 2 to 4, the Lobby, Reception, the offices, Interviews, the meeting and staff rooms, the Store room, the back corridors and the Cave)
 - **Source pack and files:** The same tiles as Cell 3 (`assets/shared/dungeon_tiles/dungeon_tiles.tres`, no new tiles), laid by the same rule from each Room's walls: floor under the whole Room (plus the strip under a south doorway), north walls two tiles of face, side walls one tile, south walls one tile plus the strip, every doorway open. Two root columns (`root_vein_column.png`) on each Room's north wall, clear of the doorways.
-- **Size in art px:** 16x16 per tile; each Room is 36x20 tiles plus the strip.
+- **Size in art px:** 32x32 per tile; each Room is 36x20 tiles plus the strip.
 - **Palette notes and accents used:** As Cell 3. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor). Not yet: each Room's own props (the speaking-root, listening slit, root-fed trough, woven bins), the Main entrance and Cave door art, and the tree's glow in the veins.
@@ -430,7 +430,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 
 - **Thing:** Back entrance seal (a path blocker of living roots across the west end of Corridor 1; see Fire)
 - **Source pack and files:** `assets/shared/dungeon_tiles/root_seal.png`, drawn by hand after CRAWLING DEPTHS `root_vein_column`'s silhouette. Set in `corridor_1.tscn` under `BackEntranceSeal/Look/Art`; the shared `path_blocker.tscn` stays placeholder. See `assets/CREDITS.md`.
-- **Size in art px:** 8x308 (the 16x616 unit footprint; a Sprite2D at scale 2). One 44 row pattern repeated seven times; the joins fall on a narrow neck of the root.
+- **Size in art px:** 16x616 (the 16x616 unit footprint; a Sprite2D at scale 1). One 88 row pattern repeated seven times; the joins fall on a narrow neck of the root.
 - **Palette notes and accents used:** Navy body, indigo right edge, a few base violet flecks. No accent; the glowing veins are not drawn.
 - **Animations and poses needed:** One still picture.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
@@ -439,7 +439,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 
 - **Thing:** Root wall (the Dungeons' wall of grown roots, in Cell 3 the Roots over the south doorway)
 - **Source pack and files:** CRAWLING DEPTHS `root_vein_column`: Cell 3's Roots (`roots_blocker.png`); Corridor 1's Back entrance seal (`root_seal.png`, drawn by hand from the column's silhouette); and the two root columns on Corridor 1's north wall (`root_vein_column.png`, the column's top bulge cropped and edged by hand). All in `assets/shared/dungeon_tiles/`. See `assets/CREDITS.md`.
-- **Size in art px:** 64x8 for the Roots; 8x308 for the seal; 20x30 for a column.
+- **Size in art px:** 128x16 for the Roots; 16x616 for the seal; 40x60 for a column.
 - **Palette notes and accents used:** Navy and indigo with violet flecks. The glowing veins (arch-tree glow) are not drawn yet.
 - **Animations and poses needed:** None yet.
 - **Status:** in the game for Cell 3's Roots, Corridor 1's seal and columns (first draft; the owner checks the look in the editor)

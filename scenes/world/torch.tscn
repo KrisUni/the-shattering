@@ -50,7 +50,6 @@ polygon = PackedVector2Array(-2, -2, 2, -2, 2, 12, -2, 12)
 
 [node name="Art" type="Sprite2D" parent="Look"]
 position = Vector2(-10, 0)
-scale = Vector2(2, 2)
 texture = ExtResource("2_bracket")
 centered = false
 
@@ -60,7 +59,6 @@ polygon = PackedVector2Array(0, -16, 6, -8, 4, -2, -4, -2, -6, -8)
 
 [node name="Art" type="AnimatedSprite2D" parent="Flame"]
 position = Vector2(-16, -46)
-scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_flame")
 animation = &"burn"
 autoplay = "burn"

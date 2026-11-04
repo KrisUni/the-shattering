@@ -5,9 +5,9 @@ extends Camera2D
 ## is off-centre. It is a script of its own so that a Room, whose camera is fixed to the Room,
 ## can use another one in its place without the rest of the area noticing.
 
-## One art pixel in world units: the game is drawn at 576×324 over a 1152×648 view, so the camera
-## sits on a multiple of this and the picture never lands between two art pixels.
-const ART_PIXEL := 2.0
+## One art pixel in world units: the game is drawn at 1152×648, one art pixel to a unit, so the
+## camera sits on a multiple of this and the picture never lands between two art pixels.
+const ART_PIXEL := 1.0
 
 ## The node the view is centred on.
 @export var target: Node2D

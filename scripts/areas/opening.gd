@@ -107,7 +107,7 @@ func _process(delta: float) -> void:
 				# Sits up, then swings his feet off the bed and stands, with a little hop.
 				_art.rotation = lerpf(-PI / 2.0, 0.0, clampf(t * 1.6, 0.0, 1.0))
 				_art.position = _art_position
-			_almos.global_position = (_lie_at.lerp(_stand_at, eased) + Vector2(0.0, -sin(t * PI) * 10.0)).snapped(Vector2(2.0, 2.0))
+			_almos.global_position = (_lie_at.lerp(_stand_at, eased) + Vector2(0.0, -sin(t * PI) * 10.0)).snappedf(OpenMapCamera.ART_PIXEL)
 			if t >= 1.0:
 				_stand_up()
 				_think()
@@ -159,6 +159,7 @@ func _think() -> void:
 	_stage = Stage.THINKING
 	var layer := CanvasLayer.new()
 	layer.layer = 50
+	layer.scale = Vector2.ONE * ThoughtText.PixelText.UI_SCALE
 	add_child(layer)
 	var text := ThoughtText.new()
 	text.lines = thought

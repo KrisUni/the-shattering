@@ -14,7 +14,7 @@ extends Node2D
 ## Whether the camera follows Almos in this Room, closer in, instead of showing all of it.
 @export var follows_almos := false
 ## The camera's zoom while it follows him here.
-@export var follow_zoom := Vector2(1.0, 1.0)
+@export var follow_zoom := Vector2(2.0, 2.0)
 
 
 ## The Room's extent, in global coordinates.
