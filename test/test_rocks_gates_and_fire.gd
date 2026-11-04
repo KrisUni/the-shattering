@@ -421,10 +421,11 @@ func test_the_hall_teaches_pull_and_shove_without_words() -> void:
 	assert_eq(barricade.size(), 2, "two barrels across the bridge")
 	for barrel in barricade:
 		assert_lt((barrel.get_node("Liftable").weight as float), (load("res://data/player_tuning.tres") as PlayerTuning).greatest_weight(), "light enough to Pull")
-	# The walking guard keeps to the east half: the west is quiet ground to learn in.
+	# The walking guard keeps to the west half, where Almos learns, and the seated guard has the
+	# post in the east: the lessons are learnt under his eye.
 	var guard = room.get_node("Guards/Guard")
 	for point in guard.patrol:
-		assert_gt(point.x, 640.0, "the walking guard stays east of the bridge")
+		assert_lt(point.x, 640.0, "the walking guard stays west of the bridge")
 
 
 # In tiles of 32 units: whether the tile is firm ground, outside every Drop of the hall.
@@ -476,11 +477,19 @@ func test_a_second_way_down_loops_behind_the_barricade_over_a_gap_he_must_jump()
 	assert_true(_reaches_the_south_exit(room, [], false), "control: with the barrels gone he walks down")
 	assert_false(_reaches_the_south_exit(room, barred, false), "with them standing, no way down on foot")
 	assert_true(_reaches_the_south_exit(room, barred, true), "but a Jump takes him round them")
-	# The loop: a spur off the bridge above the barricade, down to a gap one tile across, and firm
-	# ground beyond it that joins the bridge below the barricade.
-	assert_true(_hall_floor(room, Vector2i(12, 10)), "the spur, west of the barricade")
-	assert_false(_hall_floor(room, Vector2i(12, 11)), "the gap he jumps")
-	assert_true(_hall_floor(room, Vector2i(12, 12)), "the landing beyond it")
+	# The loop: a spur leaves the bridge westward above the barricade, turns down the west side of
+	# the chasm and back east along the bottom to the foot of the bridge, by the south exit. It is
+	# a long way round, two tiles wide, with one gap one tile across to Jump near its end.
+	assert_true(_hall_floor(room, Vector2i(8, 10)), "the spur, west of the barricade")
+	assert_true(_hall_floor(room, Vector2i(2, 15)), "down the west side of the chasm")
+	assert_false(_hall_floor(room, Vector2i(7, 18)), "the gap he jumps")
+	assert_true(_hall_floor(room, Vector2i(6, 18)), "the take-off")
+	assert_true(_hall_floor(room, Vector2i(8, 18)), "the landing beyond it")
+	assert_true(_hall_floor(room, Vector2i(15, 18)), "the way on east to the bridge")
+	# That gap is the only Jump that gets him round: with the landing barred too, he cannot.
+	var past_the_gap: Array[Vector2i] = barred.duplicate()
+	past_the_gap.append_array([Vector2i(8, 18), Vector2i(8, 19)])
+	assert_false(_reaches_the_south_exit(room, past_the_gap, true), "no shorter Jump cuts the spur")
 	# A walking Jump clears the gap: one tile of chasm is less than a Jump carries him.
 	var tuning := load("res://data/player_tuning.tres") as PlayerTuning
 	var body_radius := 12.0

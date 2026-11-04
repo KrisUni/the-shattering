@@ -98,9 +98,10 @@ func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_south_exit() -
 			columns[cell.x] = true
 	assert_gte(columns.size(), 5, "it winds: its spans do not all run down one line")
 	var narrowest := 99
+	# The bridge alone, east of the spur that leaves it westward above the barricade.
 	for row in range(9, 18):
 		var width := 0
-		for x in 36:
+		for x in range(13, 36):
 			if reached.has(Vector2i(x, row)):
 				width += 1
 		narrowest = mini(narrowest, width)
@@ -171,10 +172,13 @@ func test_an_enemy_shoved_into_a_drop_falls_to_its_death() -> void:
 
 
 func test_a_barrel_knocked_into_a_drop_is_gone_until_enemies_return() -> void:
-	var almos = _almos_at(ON_THE_LANE + Vector2(0, -70))
+	# On the east of the lane, where nothing but chasm is below it: under the west of the lane the
+	# spur round the barricade runs close enough to catch a barrel knocked off.
+	var east_of_the_lane := Vector2(1152.0 - ON_THE_LANE.x, ON_THE_LANE.y)
+	var almos = _almos_at(east_of_the_lane + Vector2(0, -70))
 	almos.facing = Vector2.DOWN
 	var barrel := BARREL_SCENE.instantiate() as HidingSpot
-	barrel.position = ON_THE_LANE + Vector2(0, -20)
+	barrel.position = east_of_the_lane + Vector2(0, -20)
 	_room.add_child(barrel)
 	var lift := barrel.get_node("Liftable")
 	await wait_physics_frames(2)
