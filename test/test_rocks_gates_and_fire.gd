@@ -283,7 +283,7 @@ func test_almos_is_not_set_alight_by_a_fire_he_does_not_touch() -> void:
 
 # --- the guards' look ---
 
-func test_the_guards_are_drawn_as_warders_of_their_own_not_as_almos() -> void:
+func test_the_guards_are_fellow_nar_in_an_outfit_of_their_own() -> void:
 	var guard := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/nar_jailer/idle_0.png"))
 	var almos := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/almos/idle_side_0.png"))
 	var same_shape := true
@@ -292,7 +292,7 @@ func test_the_guards_are_drawn_as_warders_of_their_own_not_as_almos() -> void:
 	for y in almos.get_height():
 		for x in almos.get_width():
 			same_shape = same_shape and (almos.get_pixel(x, y).a > 0.0) == (guard.get_pixel(x + dx, y + dy).a > 0.0)
-	assert_false(same_shape, "the guard has an outline of his own, not Almos's")
+	assert_false(same_shape, "the guard is on Almos's build but his outfit and club change his outline")
 	# Standing on the foot row, as every 64x64 enemy frame does.
 	var lowest := -1
 	for y in guard.get_height():

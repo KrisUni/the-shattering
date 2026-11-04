@@ -37,6 +37,26 @@ SEAL = M("#25232e", tones=2, step=0.05, outline="#141219")
 HAIR = M("#a39a8c", tones=2, step=0.08)
 FLASK = M("#8fa7ad", tones=3, step=0.1, shine=0.1)
 
+
+
+class Outfit:
+    """What a Nar wears, drawn on Almos's build: the materials of each part, and whether there is a
+    hood tail (and how long), a Seal at the neck (only the Marked wear one) and a Flask at the hip."""
+
+    def __init__(self, **kw):
+        self.skin, self.hood, self.hood_in, self.robe = SKIN, HOOD, HOOD_IN, ROBE
+        self.sleeve, self.sleeve_far = SLEEVE, SLEEVE_FAR
+        self.trousers, self.trousers_far = TROUSERS, TROUSERS_FAR
+        self.wraps, self.wraps_far = WRAPS, WRAPS_FAR
+        self.strap, self.rope, self.seal, self.hair, self.flask = STRAP, ROPE, SEAL, HAIR, FLASK
+        self.tail_len = 1.0
+        self.has_seal = True
+        self.has_flask = True
+        self.__dict__.update(kw)
+
+
+ALMOS = Outfit()
+
 EYE = "#e9e2d0"
 GLINT = "#d9d3e6"
 # The swing's smear, its leading edge first.
@@ -55,11 +75,13 @@ class Pose:
         self.lean = 0  # the head and chest forward
         self.crouch = 0  # how far the hips sink
         self.robe_flare = 0
+        self.outfit = ALMOS
         self.__dict__.update(kw)
 
 
-def mantle(c, cx, y, side=False):
+def mantle(c, cx, y, side=False, o=None):
     """The hood's mantle over his shoulders, a short cape the hood grows from."""
+    o = o or ALMOS
     if side:
         pts = [(cx - 4.5, y - 3), (cx + 3, y - 3), (cx + 5.2, y + 1.5), (cx + 4.4, y + 4.4),
                (cx + 1.5, y + 5.4), (cx - 1.5, y + 4.6), (cx - 4.5, y + 5.4), (cx - 6.6, y + 3.6),
@@ -68,44 +90,53 @@ def mantle(c, cx, y, side=False):
         pts = [(cx - 5, y - 3), (cx + 5, y - 3), (cx + 7.6, y + 1.5), (cx + 7.4, y + 3.5),
                (cx + 4, y + 5.2), (cx + 1.5, y + 4.4), (cx - 1.5, y + 5.4), (cx - 4.5, y + 4.4),
                (cx - 7.4, y + 3.5), (cx - 7.6, y + 1.5)]
-    c.poly(pts, HOOD, 7, form="cylinder")
+    c.poly(pts, o.hood, 7, form="cylinder")
 
 
 def head(c, pose, cx, cy, view):
     """The head in its hood, its centre at (cx, cy). The hood's long tail hangs behind."""
+    o = pose.outfit
     cy = round(cy * 2) / 2
     tail = pose.tail
     if view == "down":
-        c.capsule(cx + 3.5, cy - 4.5, cx + 8 + tail * 0.5, cy + 6 + abs(tail) * 0.3, 2.4, HOOD, 0.5, r2=1.1)
-        c.ellipse(cx, cy, 6.6, 7.0, HOOD, 8)
-        c.ellipse(cx, cy + 2.0, 3.9, 4.0, HOOD_IN, 8.5, form="flat", line=False)
-        c.ellipse(cx, cy + 2.8, 3.1, 3.4, SKIN, 9)
-        rim = c.ellipse(cx, cy - 3.2, 6.0, 3.6, HOOD, 10, clip=lambda x, y: y < cy + 0.5)
+        if o.tail_len > 0:
+            c.capsule(cx + 3.5, cy - 4.5, cx + 3.5 + (4.5 + tail * 0.5) * o.tail_len,
+                      cy - 4.5 + (10.5 + abs(tail) * 0.3) * o.tail_len, 2.4, o.hood, 0.5, r2=1.1 + 0.8 * (1 - o.tail_len))
+        c.ellipse(cx, cy, 6.6, 7.0, o.hood, 8)
+        c.ellipse(cx, cy + 2.0, 3.9, 4.0, o.hood_in, 8.5, form="flat", line=False)
+        c.ellipse(cx, cy + 2.8, 3.1, 3.4, o.skin, 9)
+        rim = c.ellipse(cx, cy - 3.2, 6.0, 3.6, o.hood, 10, clip=lambda x, y: y < cy + 0.5)
         rim.bias = 0.05
         ey = int(cy + 2.5)
         if pose.blink:
             for ex in (-2, 1):
-                c.dot(int(cx + ex), ey, SKIN.ramp[0])
+                c.dot(int(cx + ex), ey, o.skin.ramp[0])
         else:
             c.dot(int(cx - 2), ey, EYE)
             c.dot(int(cx + 1), ey, EYE)
-        c.capsule(cx - 2.2, cy + 7.6, cx + 2.2, cy + 7.6, 1.0, SEAL, 9.5)
-        c.dot(int(cx - 1), int(cy + 7.6), GLINT)
+        if o.has_seal:
+            c.capsule(cx - 2.2, cy + 7.6, cx + 2.2, cy + 7.6, 1.0, o.seal, 9.5)
+            c.dot(int(cx - 1), int(cy + 7.6), GLINT)
     elif view == "up":
-        c.ellipse(cx, cy, 6.6, 7.0, HOOD, 8)
-        c.capsule(cx + 0.5, cy + 3, cx + 1.5 + tail * 0.6, cy + 13.5 + abs(tail) * 0.2, 2.5, HOOD, 8.5, r2=1.1)
+        c.ellipse(cx, cy, 6.6, 7.0, o.hood, 8)
+        if o.tail_len > 0:
+            c.capsule(cx + 0.5, cy + 3, cx + 0.5 + (1 + tail * 0.6) * o.tail_len,
+                      cy + 3 + (10.5 + abs(tail) * 0.2) * o.tail_len, 2.5, o.hood, 8.5, r2=1.1 + 0.8 * (1 - o.tail_len))
     else:
-        c.capsule(cx - 3.5, cy - 3, cx - 9.5 - tail * 0.5, cy + 4 + abs(tail) * 0.3, 2.4, HOOD, 0.5, r2=1.0)
-        c.ellipse(cx, cy, 6.3, 7.0, HOOD, 8)
-        c.ellipse(cx + 3.0, cy + 2.2, 3.0, 4.2, HOOD_IN, 8.5, form="flat", line=False)
-        c.ellipse(cx + 3.4, cy + 2.9, 2.4, 3.4, SKIN, 9)
+        if o.tail_len > 0:
+            c.capsule(cx - 3.5, cy - 3, cx - 3.5 - (6 + tail * 0.5) * o.tail_len,
+                      cy - 3 + (7 + abs(tail) * 0.3) * o.tail_len, 2.4, o.hood, 0.5, r2=1.0 + 0.9 * (1 - o.tail_len))
+        c.ellipse(cx, cy, 6.3, 7.0, o.hood, 8)
+        c.ellipse(cx + 3.0, cy + 2.2, 3.0, 4.2, o.hood_in, 8.5, form="flat", line=False)
+        c.ellipse(cx + 3.4, cy + 2.9, 2.4, 3.4, o.skin, 9)
         # The hood's front edge comes down past the cheek, so the face sits inside it.
-        c.capsule(cx + 0.5, cy - 4.5, cx + 0.8, cy + 5.5, 1.6, HOOD, 10)
-        rim = c.ellipse(cx + 1.5, cy - 3.4, 5.4, 3.0, HOOD, 10, clip=lambda x, y: y < cy + 0.5)
+        c.capsule(cx + 0.5, cy - 4.5, cx + 0.8, cy + 5.5, 1.6, o.hood, 10)
+        rim = c.ellipse(cx + 1.5, cy - 3.4, 5.4, 3.0, o.hood, 10, clip=lambda x, y: y < cy + 0.5)
         rim.bias = 0.05
         ey = int(cy + 2.5)
-        c.dot(int(cx + 4), ey, SKIN.ramp[0] if pose.blink else EYE)
-        c.capsule(cx + 0.5, cy + 7.4, cx + 3.4, cy + 7.4, 1.0, SEAL, 9.5)
+        c.dot(int(cx + 4), ey, o.skin.ramp[0] if pose.blink else EYE)
+        if o.has_seal:
+            c.capsule(cx + 0.5, cy + 7.4, cx + 3.4, cy + 7.4, 1.0, o.seal, 9.5)
 
 
 # --- down and up ---------------------------------------------------------------------------------
@@ -113,14 +144,15 @@ def head(c, pose, cx, cy, view):
 def front(pose, c=None, ox=0, oy=0, back=False):
     """Almos facing the viewer (or, with back, facing away). ox, oy move him on a bigger canvas."""
     c = c or pk.Canvas(W, H)
+    o = pose.outfit
     b = pose.bob + pose.crouch
     hip_y = 36 + b + oy
     for i, sx in enumerate((13.4, 18.6)):
         fdx, lift = pose.feet[i]
         foot_y = 45.6 - lift + oy
         x = sx + ox + fdx
-        c.capsule(sx + ox, hip_y, x, foot_y - 1.6, 2.2, TROUSERS, 2, r2=1.9)
-        c.ellipse(x + (-0.4 if i == 0 else 0.4), foot_y + 0.5, 2.5, 1.6, WRAPS, 3)
+        c.capsule(sx + ox, hip_y, x, foot_y - 1.6, 2.2, o.trousers, 2, r2=1.9)
+        c.ellipse(x + (-0.4 if i == 0 else 0.4), foot_y + 0.5, 2.5, 1.6, o.wraps, 3)
     top = 19 + b + oy
     hem = 39 + b + oy - min(pose.crouch, 2)
     f = pose.robe_flare
@@ -128,7 +160,7 @@ def front(pose, c=None, ox=0, oy=0, back=False):
             (23.2 + ox + f, hem - 1.5), (23.6 + ox + f, hem), (20.5 + ox, hem + 0.6), (17.5 + ox, hem - 0.5),
             (14.5 + ox, hem + 0.7), (11.5 + ox, hem - 0.3), (8.4 + ox - f, hem), (8.8 + ox - f, hem - 1.5),
             (10.6 + ox, top + 10), (10.4 + ox, top + 2)]
-    c.poly(robe, ROBE, 4, form="cylinder")
+    c.poly(robe, o.robe, 4, form="cylinder")
     belt_y = 29 + b + oy
     strap = set()
     for t in range(0, 13):
@@ -138,22 +170,23 @@ def front(pose, c=None, ox=0, oy=0, back=False):
         else:
             x = round(12 + ox + t * 0.75)
             strap.update({(x, round(top + 2 + t * 0.66)), (x + 1, round(top + 2 + t * 0.66))})
-    c.mask(strap, STRAP, 5, line=False)
+    c.mask(strap, o.strap, 5, line=False)
     if not back:
-        c.ellipse(20.2 + ox, belt_y + 4, 1.6, 2.1, FLASK, 7)
-        c.dot(int(19.7 + ox), int(belt_y + 3), GLINT)
-        c.capsule(13 + ox, belt_y + 1.5, 12.6 + ox + pose.tail * 0.3, belt_y + 5, 0.7, ROPE, 6, line=False)
-    c.capsule(10.4 + ox, belt_y + 0.5, 21.6 + ox, belt_y + 0.5, 0.9, ROPE, 6)
+        if o.has_flask:
+            c.ellipse(20.2 + ox, belt_y + 4, 1.6, 2.1, o.flask, 7)
+            c.dot(int(19.7 + ox), int(belt_y + 3), GLINT)
+        c.capsule(13 + ox, belt_y + 1.5, 12.6 + ox + pose.tail * 0.3, belt_y + 5, 0.7, o.rope, 6, line=False)
+    c.capsule(10.4 + ox, belt_y + 0.5, 21.6 + ox, belt_y + 0.5, 0.9, o.rope, 6)
     for i, (sx, side) in enumerate(((10.0, -1), (22.0, 1))):
         hdx, hdy = pose.hands[i]
         hx = sx + side * 1.2 + ox + hdx
         hy = 31 + b + oy + hdy
         ex, ey = sx + side * 0.8 + ox + hdx * 0.4, top + 6.5 + hdy * 0.4
         z = 5.5 if -6 < hdy < 6 else (7.6 if back else 8.6)
-        c.capsule(sx + ox, top + 2.5, ex, ey, 2.2, SLEEVE, z, r2=2.0)
-        c.capsule(ex, ey, hx, hy - 1.2, 1.7, WRAPS, z + 0.1, r2=1.5)
-        c.ellipse(hx, hy, 1.6, 1.5, SKIN, z + 0.5)
-    mantle(c, 16 + ox, top + 0.5)
+        c.capsule(sx + ox, top + 2.5, ex, ey, 2.2, o.sleeve, z, r2=2.0)
+        c.capsule(ex, ey, hx, hy - 1.2, 1.7, o.wraps, z + 0.1, r2=1.5)
+        c.ellipse(hx, hy, 1.6, 1.5, o.skin, z + 0.5)
+    mantle(c, 16 + ox, top + 0.5, o=o)
     head(c, pose, 16 + ox, 11 + b * 0.5 + oy, view="up" if back else "down")
     return c
 
@@ -162,12 +195,13 @@ def front(pose, c=None, ox=0, oy=0, back=False):
 
 def side(pose, c=None, ox=0, oy=0):
     c = c or pk.Canvas(W, H)
+    o = pose.outfit
     b = pose.bob + pose.crouch
     lean = pose.lean
     hip_x = 16 + ox
     hip_y = 36 + b + oy
     # Far leg first, darker, then the near one.
-    for i, (mat, wrap, z) in enumerate(((TROUSERS, WRAPS, 3), (TROUSERS_FAR, WRAPS_FAR, 1))):
+    for i, (mat, wrap, z) in enumerate(((o.trousers, o.wraps, 3), (o.trousers_far, o.wraps_far, 1))):
         fdx, lift = pose.feet[i]
         fx = hip_x + fdx
         fy = 45.6 - lift + oy
@@ -183,20 +217,21 @@ def side(pose, c=None, ox=0, oy=0):
             (hip_x + 4.4 + lean * 0.5, top + 11), (hip_x + 5.6 + f * 0.5, hem - 0.5), (hip_x + 3, hem + 0.6),
             (hip_x, hem - 0.4), (hip_x - 3, hem + 0.6), (hip_x - 6.2 - f, hem - 0.2), (hip_x - 5.4 - f, hem - 2),
             (hip_x - 4.6, top + 10), (hip_x - 4.8 + lean, top + 2.5)]
-    c.poly(robe, ROBE, 4, form="cylinder")
+    c.poly(robe, o.robe, 4, form="cylinder")
     belt_y = 29 + b + oy
-    c.capsule(hip_x - 4.4, belt_y + 0.5, hip_x + 4.4 + lean * 0.5, belt_y + 0.5, 0.9, ROPE, 6)
+    c.capsule(hip_x - 4.4, belt_y + 0.5, hip_x + 4.4 + lean * 0.5, belt_y + 0.5, 0.9, o.rope, 6)
     strap = set()
     for t in range(0, 12):
         x = round(hip_x + 2 + lean - t * 0.4)
         strap.update({(x, round(top + 2 + t * 0.7)), (x + 1, round(top + 2 + t * 0.7))})
-    c.mask(strap, STRAP, 5, line=False)
-    c.ellipse(hip_x + 3.6, belt_y + 3.8, 1.5, 2.0, FLASK, 6.5)
-    c.dot(int(hip_x + 3), int(belt_y + 3), GLINT)
-    c.capsule(hip_x - 3.4, belt_y + 1.5, hip_x - 4.4 - pose.tail * 0.3, belt_y + 5, 0.7, ROPE, 6, line=False)
+    c.mask(strap, o.strap, 5, line=False)
+    if o.has_flask:
+        c.ellipse(hip_x + 3.6, belt_y + 3.8, 1.5, 2.0, o.flask, 6.5)
+        c.dot(int(hip_x + 3), int(belt_y + 3), GLINT)
+    c.capsule(hip_x - 3.4, belt_y + 1.5, hip_x - 4.4 - pose.tail * 0.3, belt_y + 5, 0.7, o.rope, 6, line=False)
     # Arms: the far one behind the body, the near one in front.
     sh_x, sh_y = hip_x + lean + 0.5, top + 3
-    for i, (sleeve, wrap, z) in enumerate(((SLEEVE, WRAPS, 6.8), (SLEEVE_FAR, WRAPS_FAR, 0.8))):
+    for i, (sleeve, wrap, z) in enumerate(((o.sleeve, o.wraps, 6.8), (o.sleeve_far, o.wraps_far, 0.8))):
         hdx, hdy = pose.hands[i]
         hx, hy = sh_x + hdx + (0 if i == 0 else 1), 31 + b + oy + hdy
         ex = sh_x + hdx * 0.45 + (0 if i == 0 else 1)
@@ -204,17 +239,20 @@ def side(pose, c=None, ox=0, oy=0):
         fz = z if i == 1 else 7.6
         c.capsule(sh_x + (0 if i == 0 else 1), sh_y, ex, ey, 2.1, sleeve, z, r2=1.9)
         c.capsule(ex, ey, hx, hy - 1.0, 1.6, wrap, fz + 0.1, r2=1.4)
-        c.ellipse(hx + 0.3, hy, 1.6, 1.5, SKIN, fz + 0.5)
-    mantle(c, hip_x + lean, top + 0.5, side=True)
+        c.ellipse(hx + 0.3, hy, 1.6, 1.5, o.skin, fz + 0.5)
+        if i == 0:
+            c.hand = (hx + 0.3, hy)
+    mantle(c, hip_x + lean, top + 0.5, side=True, o=o)
     head(c, pose, hip_x + lean + 0.5, 11 + b * 0.5 + oy, view="side")
     return c
 
 
 # --- the roll: tucked into a ball ----------------------------------------------------------------
 
-def ball(angle, view, c=None, ox=0, oy=0, squash=0.0):
+def ball(angle, view, c=None, ox=0, oy=0, squash=0.0, o=None):
     """Almos tucked, rolling: a ball of hood and robe turned by angle (radians), on the ground."""
     c = c or pk.Canvas(W, H)
+    o = o or ALMOS
     cx, cy = 16 + ox, 39.5 + oy
     rx, ry = 7.8 + squash, 7.8 - squash
     cy += squash
@@ -225,16 +263,16 @@ def ball(angle, view, c=None, ox=0, oy=0, squash=0.0):
     def hood_side(x, y):
         return (x + 0.5 - cx) * dx + (y + 0.5 - cy) * dy > -1.0
 
-    c.ellipse(cx, cy, rx, ry, ROBE, 2)
-    c.ellipse(cx, cy, rx, ry, HOOD, 3, clip=hood_side)
+    c.ellipse(cx, cy, rx, ry, o.robe, 2)
+    c.ellipse(cx, cy, rx, ry, o.hood, 3, clip=hood_side)
     # The wrapped feet and the strap show on the robe side, turning with it.
     fx, fy = cx - dx * 5.2 + dy * 2.4, cy - dy * 5.2 - dx * 2.4
-    c.ellipse(fx, fy, 2.0, 1.6, WRAPS, 4)
+    c.ellipse(fx, fy, 2.0, 1.6, o.wraps, 4)
     sx, sy = cx - dx * 2.0, cy - dy * 2.0
-    c.capsule(sx - dy * 4, sy + dx * 4, sx + dy * 4, sy - dx * 4, 0.8, STRAP, 3.5, line=False)
+    c.capsule(sx - dy * 4, sy + dx * 4, sx + dy * 4, sy - dx * 4, 0.8, o.strap, 3.5, line=False)
     # The tail flicks out behind the turn.
     tx, ty = cx + dx * 6.0 - dy * 3.0, cy + dy * 6.0 + dx * 3.0
-    c.capsule(cx + dx * 4.5, cy + dy * 4.5, tx - dy * 2.0, ty + dx * 2.0, 1.6, HOOD, 1, r2=0.9)
+    c.capsule(cx + dx * 4.5, cy + dy * 4.5, tx - dy * 2.0, ty + dx * 2.0, 1.6, o.hood, 1, r2=0.9)
     return c
 
 
