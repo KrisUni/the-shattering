@@ -75,6 +75,7 @@ class Pose:
         self.lean = 0  # the head and chest forward
         self.crouch = 0  # how far the hips sink
         self.robe_flare = 0
+        self.head = (0, 0)  # the head moved from its place on the neck (dx, dy), as when it droops
         self.outfit = ALMOS
         self.__dict__.update(kw)
 
@@ -243,7 +244,8 @@ def side(pose, c=None, ox=0, oy=0):
         if i == 0:
             c.hand = (hx + 0.3, hy)
     mantle(c, hip_x + lean, top + 0.5, side=True, o=o)
-    head(c, pose, hip_x + lean + 0.5, 11 + b * 0.5 + oy, view="side")
+    c.head = (hip_x + lean + 0.5 + pose.head[0], 11 + b * 0.5 + oy + pose.head[1])
+    head(c, pose, c.head[0], c.head[1], view="side")
     return c
 
 
