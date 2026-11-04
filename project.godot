@@ -20,8 +20,8 @@ WorldState="*res://scripts/world_state.gd"
 
 [display]
 
-window/size/viewport_width=576
-window/size/viewport_height=324
+window/size/viewport_width=1152
+window/size/viewport_height=648
 window/size/window_width_override=1152
 window/size/window_height_override=648
 window/stretch/mode="viewport"

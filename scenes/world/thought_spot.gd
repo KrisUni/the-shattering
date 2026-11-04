@@ -42,6 +42,7 @@ func _on_body_entered(body: Node2D) -> void:
 	_spoken[id] = true
 	_layer = CanvasLayer.new()
 	_layer.layer = 40
+	_layer.scale = Vector2.ONE * ThoughtText.PixelText.UI_SCALE
 	add_child(_layer)
 	var text := ThoughtText.new()
 	text.lines = lines

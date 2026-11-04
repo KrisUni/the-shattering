@@ -279,11 +279,10 @@ visible = false
 visible = false
 
 [node name="Art" type="AnimatedSprite2D" parent="Look" index="2"]
-scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_crawler")
 animation = &"idle"
 autoplay = "idle"
-offset = Vector2(0, -4)
+offset = Vector2(0, -8)
 
 [node name="Flammable" parent="." instance=ExtResource("3_flammable")]
 kind = 3

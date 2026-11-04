@@ -92,7 +92,8 @@ static func _is_a_press(event: InputEvent) -> bool:
 
 
 func _draw() -> void:
-	var view := get_viewport_rect().size
+	# The view as the HUD layer draws it, which may be scaled up.
+	var view := get_viewport_rect().size / get_canvas_transform().get_scale()
 	var widest := 0
 	for line in lines:
 		widest = maxi(widest, PixelText.width_of(line))

@@ -35,7 +35,7 @@ func test_the_cell_is_seen_whole() -> void:
 func test_the_hall_is_seen_at_the_cells_scale() -> void:
 	var hall := _put_in(&"corridor_1", Vector2(576, 150))
 	await wait_process_frames(2)
-	assert_almost_eq(_camera().zoom, Vector2(0.5, 0.5), Vector2(0.01, 0.01), "no closer than the cell")
+	assert_almost_eq(_camera().zoom, Vector2(1.0, 1.0), Vector2(0.01, 0.01), "no closer than the cell")
 	assert_almost_eq(_camera().get_screen_center_position(), hall.get_view_center(), Vector2(2, 2), "the room in view")
 
 

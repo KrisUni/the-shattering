@@ -15,7 +15,7 @@ func test_the_jailer_has_a_skeleton_sprite_with_every_animation_the_driver_plays
 	add_child_autofree(jailer)
 	var art := jailer.get_node_or_null("Look/Art") as AnimatedSprite2D
 	assert_not_null(art, "the jailer has an Art sprite")
-	assert_eq(art.scale, Vector2(2, 2), "one art px is 2 units")
+	assert_eq(art.scale, Vector2(1, 1), "one art px is 1 unit")
 	for animation_name in ANIMATIONS:
 		assert_true(art.sprite_frames.has_animation(animation_name), "the jailer has %s" % animation_name)
 	assert_not_null(jailer.get_node_or_null("Look/EnemyLook"), "EnemyLook drives the sprite")

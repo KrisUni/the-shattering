@@ -1,14 +1,14 @@
 extends GutTest
 ## The cameras sit on the art pixel grid (a multiple of OpenMapCamera.ART_PIXEL world units), and an
-## Open map's view stays inside its bounds, at the 576×324 view the game is drawn in.
+## Open map's view stays inside its bounds, at the 1152×648 view the game is drawn in.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
 const BUILDING_PATH := "res://scenes/areas/test_building.tscn"
 # In pixels. The size of the view the game is drawn in.
-const VIEW_SIZE := Vector2i(576, 324)
+const VIEW_SIZE := Vector2i(1152, 648)
 # The zoom that shows 1152×648 world units in that view.
-const ZOOM := Vector2(0.5, 0.5)
+const ZOOM := Vector2(1.0, 1.0)
 # In world units. The map: big enough for the view to move in, on whole units.
 const BOUNDS := Rect2(-400, -300, 2000, 1500)
 # In world units. Where the target is put: off the grid, and near each edge and corner of the
@@ -43,7 +43,7 @@ func after_each() -> void:
 	_almos_input.release_everything()
 
 
-# An OpenMapCamera at zoom 0.5 in a view of VIEW_SIZE, following a target. The test frees them.
+# An OpenMapCamera at zoom 1 in a view of VIEW_SIZE, following a target. The test frees them.
 func _spawn_camera(bounds := BOUNDS) -> OpenMapCamera:
 	var view := SubViewport.new()
 	view.size = VIEW_SIZE
@@ -112,11 +112,11 @@ func test_open_map_camera_view_stays_inside_odd_bounds_on_the_art_grid() -> void
 
 func test_open_map_camera_follows_a_target_in_the_middle_to_the_nearest_art_pixel() -> void:
 	var camera := _spawn_camera()
-	camera.target.global_position = Vector2(500.6, 300.2)
+	camera.target.global_position = Vector2(500.4, 300.2)
 
 	camera.snap_to_target()
 
-	assert_eq(camera.global_position, Vector2(500, 300), "500.6 and 300.2 should land on 500 and 300")
+	assert_eq(camera.global_position, Vector2(500, 300), "500.4 and 300.2 should land on 500 and 300")
 
 
 func test_building_camera_sits_on_the_art_grid_at_a_room_whose_view_centre_is_off_grid() -> void:

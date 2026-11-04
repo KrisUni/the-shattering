@@ -22,15 +22,15 @@ func _art(almos: Node) -> AnimatedSprite2D:
 	return almos.get_node("Look/Art") as AnimatedSprite2D
 
 
-func test_he_has_a_sprite_with_idle_and_walk_at_scale_2() -> void:
+func test_he_has_a_sprite_with_idle_and_walk_at_scale_1() -> void:
 	var almos = _almos_input.spawn_almos()
 	var art := _art(almos)
 	assert_not_null(art, "Almos has an Art sprite on his Look")
-	assert_eq(art.scale, Vector2(2, 2), "one art px is 2 units")
+	assert_eq(art.scale, Vector2(1, 1), "one art px is 1 unit")
 	for animation_name in [&"idle_down", &"walk_down", &"idle_up", &"walk_up", &"idle_side", &"walk_side"]:
 		assert_true(art.sprite_frames.has_animation(animation_name), "he has %s" % animation_name)
 	var size := art.sprite_frames.get_frame_texture(&"idle_down", 0).get_size()
-	assert_eq(size, Vector2(16, 24), "he is 16 by 24 art px")
+	assert_eq(size, Vector2(32, 48), "he is 32 by 48 art px")
 
 
 func test_his_placeholder_arrow_is_hidden_not_deleted() -> void:
@@ -137,7 +137,7 @@ func test_he_has_an_attack_for_every_side_with_room_for_the_swing() -> void:
 		var attack := StringName("attack_" + side)
 		assert_true(frames.has_animation(attack), "he has %s" % attack)
 		assert_eq(frames.get_frame_count(attack), 5, "%s has five frames" % attack)
-		assert_eq(frames.get_frame_texture(attack, 0).get_size(), Vector2(32, 32), "%s has room for the smear" % attack)
+		assert_eq(frames.get_frame_texture(attack, 0).get_size(), Vector2(64, 64), "%s has room for the smear" % attack)
 
 
 func test_an_attack_frame_follows_the_swings_phases_whatever_its_length() -> void:

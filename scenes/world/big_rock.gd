@@ -101,7 +101,7 @@ func shatter() -> void:
 	for i in count:
 		var angle := TAU * i / count + 0.4
 		var at := global_position + Vector2(cos(angle) * half_size.x * 1.1, sin(angle) * half_size.y * 1.1 + 4.0)
-		at = at.snapped(Vector2(2.0, 2.0))
+		at = at.snappedf(OpenMapCamera.ART_PIXEL)
 		if _over_a_drop(at):
 			continue
 		var piece: Node2D = SMALL_ROCK_SCENE.instantiate()
@@ -125,7 +125,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	var strain := _budge_way * BUDGE_LEAN * (float(_budge_left) / BUDGE_FRAMES)
 	var jolt := 2.0 if _budge_left % 4 < 2 else -2.0
-	look.position = (strain + Vector2(jolt, 0.0)).snapped(Vector2(2.0, 2.0)) if _budge_left > 0 else Vector2.ZERO
+	look.position = (strain + Vector2(jolt, 0.0)).snappedf(OpenMapCamera.ART_PIXEL) if _budge_left > 0 else Vector2.ZERO
 
 
 func _over_a_drop(point: Vector2) -> bool:

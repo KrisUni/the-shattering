@@ -53,7 +53,7 @@ func test_there_are_all_the_rooms() -> void:
 	assert_eq(_room_paths().size(), 24, "the Dungeons have 24 Rooms")
 
 
-func test_every_room_has_the_three_tile_layers_at_scale_2_in_the_right_order() -> void:
+func test_every_room_has_the_three_tile_layers_at_scale_1_in_the_right_order() -> void:
 	for room in _rooms():
 		var floor_layer := room.get_node_or_null("FloorTiles") as TileMapLayer
 		var back := room.get_node_or_null("WallTiles") as TileMapLayer
@@ -64,9 +64,9 @@ func test_every_room_has_the_three_tile_layers_at_scale_2_in_the_right_order() -
 		if floor_layer == null or back == null or front == null:
 			continue
 		for layer in [floor_layer, back, front]:
-			assert_eq(layer.scale, Vector2(2, 2), "%s %s draws one art px as 2 units" % [room.name, layer.name])
+			assert_eq(layer.scale, Vector2(1, 1), "%s %s draws one art px as 1 unit" % [room.name, layer.name])
 			assert_eq(layer.position, Vector2.ZERO, "%s %s starts on the Room's corner" % [room.name, layer.name])
-			assert_eq(layer.tile_set.tile_size, Vector2i(16, 16), "%s %s tile is 16 art px" % [room.name, layer.name])
+			assert_eq(layer.tile_set.tile_size, Vector2i(32, 32), "%s %s tile is 32 art px" % [room.name, layer.name])
 		assert_lt(floor_layer.z_index, back.z_index, "%s floor is behind the north walls" % room.name)
 		assert_lt(back.z_index, 0, "%s north walls are behind Almos" % room.name)
 		assert_gt(front.z_index, 0, "%s south walls are in front of Almos" % room.name)

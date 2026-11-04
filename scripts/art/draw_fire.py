@@ -87,15 +87,20 @@ def flame(width, height, frames, frame, sway, tongues, smoke, base_ratio, seed):
     return image
 
 
+def doubled(image):
+    """The image at the game's 32 px scale: every pixel drawn here as 2x2 (it is drawn at 16 px)."""
+    return image.resize((image.width * 2, image.height * 2), Image.NEAREST)
+
+
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else "assets/shared"
     os.makedirs(os.path.join(root, "fire"), exist_ok=True)
     os.makedirs(os.path.join(root, "torch"), exist_ok=True)
     for f in range(15):
-        flame(20, 32, 15, f, sway=2.6, tongues=3, smoke=True, base_ratio=0.8, seed=0.7).save(
+        doubled(flame(20, 32, 15, f, sway=2.6, tongues=3, smoke=True, base_ratio=0.8, seed=0.7)).save(
             os.path.join(root, "fire", "flame_%d.png" % f))
     for f in range(5):
-        flame(16, 24, 5, f, sway=1.2, tongues=1, smoke=False, base_ratio=0.55, seed=1.9).save(
+        doubled(flame(16, 24, 5, f, sway=1.2, tongues=1, smoke=False, base_ratio=0.55, seed=1.9)).save(
             os.path.join(root, "torch", "flame_%d.png" % f))
 
 
@@ -163,4 +168,4 @@ def bracket():
 
 if __name__ == "__main__":
     root = sys.argv[1] if len(sys.argv) > 1 else "assets/shared"
-    bracket().save(os.path.join(root, "torch", "torch.png"))
+    doubled(bracket()).save(os.path.join(root, "torch", "torch.png"))

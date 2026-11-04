@@ -107,7 +107,6 @@ polygon = PackedVector2Array(0, -26, 10, -10, 6, 0, -6, 0, -10, -10)
 
 [node name="Art" type="AnimatedSprite2D" parent="Flame"]
 position = Vector2(-20, -44)
-scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_flame")
 animation = &"burn"
 autoplay = "burn"

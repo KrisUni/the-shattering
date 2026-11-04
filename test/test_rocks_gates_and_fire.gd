@@ -225,7 +225,7 @@ func test_a_thrown_flame_melts_a_metal_gate_open() -> void:
 	assert_gt(gate.melted(), 0, "it melts away from the top")
 	assert_true(art.region_enabled, "only what is left of the bars is drawn")
 	assert_almost_eq(art.position.y + art.region_rect.size.y * art.scale.y / 2.0, foot, 0.01, "their feet stand where they stood: it melts top to bottom")
-	assert_almost_eq(art.scale, Vector2(2.0, 2.0), Vector2(0.01, 0.01), "not squashed from both ends")
+	assert_almost_eq(art.scale, Vector2.ONE, Vector2(0.01, 0.01), "not squashed from both ends")
 	await wait_seconds((load(FIRE_PATH) as FireTuning).burn_time * 0.6)
 	assert_true(gate.open, "melted open")
 
@@ -288,18 +288,18 @@ func test_the_guards_are_drawn_as_warders_of_their_own_not_as_almos() -> void:
 	var almos := Image.load_from_file(ProjectSettings.globalize_path("res://assets/characters/almos/idle_side_0.png"))
 	var same_shape := true
 	var dx := (guard.get_width() - almos.get_width()) / 2
-	var dy := 28 - almos.get_height()
+	var dy := 56 - almos.get_height()
 	for y in almos.get_height():
 		for x in almos.get_width():
 			same_shape = same_shape and (almos.get_pixel(x, y).a > 0.0) == (guard.get_pixel(x + dx, y + dy).a > 0.0)
 	assert_false(same_shape, "the guard has an outline of his own, not Almos's")
-	# Standing on the foot row, as every 32x32 enemy frame does.
+	# Standing on the foot row, as every 64x64 enemy frame does.
 	var lowest := -1
 	for y in guard.get_height():
 		for x in guard.get_width():
 			if guard.get_pixel(x, y).a > 0.0:
 				lowest = y
-	assert_eq(lowest, 27, "his feet on row 27")
+	assert_eq(lowest, 55, "his feet on row 55")
 
 
 # --- the hall and its cells ---

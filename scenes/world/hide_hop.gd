@@ -18,7 +18,7 @@ const ARC_HEIGHT := 26.0
 const POP_TIME := 0.26
 const POP_HEIGHT := 22.0
 ## One art pixel in world units.
-const PIXEL := 2.0
+const PIXEL := 1.0
 
 var _sprite: Sprite2D
 var _texture: Texture2D
@@ -28,6 +28,8 @@ var _rim := 0.0
 var _from_top := true
 var _spot: HidingSpot
 var _art_position := Vector2.ZERO
+# The scale his sprite is drawn at.
+var _base := Vector2.ONE
 
 
 ## Draws Almos (his sprite `art`, as it is drawn now) hopping from where he stood, `from`, into the
@@ -77,6 +79,7 @@ func _begin(art: AnimatedSprite2D) -> void:
 	_sprite.centered = art.centered
 	_sprite.offset = art.offset
 	_sprite.scale = art.scale
+	_base = art.scale
 	_sprite.position = art.position
 	_art_position = art.position
 	add_child(_sprite)
@@ -92,7 +95,7 @@ func _begin(art: AnimatedSprite2D) -> void:
 
 # He crouches, gathering himself for the spring.
 func _crouch(t: float) -> void:
-	_sprite.scale = Vector2(PIXEL * (1.0 + 0.15 * t), PIXEL * (1.0 - 0.2 * t))
+	_sprite.scale = _base * Vector2(1.0 + 0.15 * t, 1.0 - 0.2 * t)
 
 
 # Up in an arc over to the spot's rim: stretched as he leaves the ground, tucked at the top.
@@ -102,7 +105,7 @@ func _fly(t: float) -> void:
 	var at := _from.lerp(land, t) + Vector2(0.0, -4.0 * height * t * (1.0 - t))
 	global_position = at.snappedf(PIXEL)
 	var stretch := 1.0 + 0.2 * (1.0 - t) * (1.0 - t) - 0.1 * sin(t * PI)
-	_sprite.scale = Vector2(PIXEL / stretch, PIXEL * stretch)
+	_sprite.scale = _base * Vector2(1.0 / stretch, stretch)
 	_sprite.rotation = 0.0 if _from_top else 0.12 * sin(t * PI)
 
 
@@ -111,14 +114,14 @@ func _sink(t: float) -> void:
 	if _texture == null:
 		return
 	if not _from_top:
-		_sprite.scale = Vector2(PIXEL * (1.0 - t), PIXEL * (1.0 + 0.1 * t))
+		_sprite.scale = _base * Vector2(1.0 - t, 1.0 + 0.1 * t)
 		return
 	var size := _texture.get_size()
 	# How many of his art rows are below the rim now: they are cut away, and the rows left go down
 	# with him, so that his cut edge stays on the rim.
 	var sunk := clampi(roundi(t * size.y), 0, int(size.y))
-	_sprite.scale = Vector2(PIXEL, PIXEL)
+	_sprite.scale = _base
 	_sprite.rotation = 0.0
 	_sprite.region_enabled = true
 	_sprite.region_rect = Rect2(0.0, 0.0, size.x, size.y - sunk)
-	_sprite.position = _art_position + Vector2(0.0, sunk)
+	_sprite.position = _art_position + Vector2(0.0, sunk * _base.y / 2.0)

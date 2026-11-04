@@ -214,7 +214,7 @@ func _physics_process(delta: float) -> void:
 		# It strains the way it is drawn or pushed, most at the start, and rocks back as it gives up.
 		var strain := _shudder_way * SHUDDER_LEAN * (float(_shudder_left) / SHUDDER_FRAMES)
 		var offset := Vector2(jolt, -2.0 if _shudder_left % 8 < 2 else 0.0) + strain
-		_set_look_offset(offset.snapped(Vector2(2.0, 2.0)) if _shudder_left > 0 else Vector2.ZERO)
+		_set_look_offset(offset.snappedf(OpenMapCamera.ART_PIXEL) if _shudder_left > 0 else Vector2.ZERO)
 	match _state:
 		State.GRIPPED:
 			_set_look_offset(Vector2(GRIP_SHAKE if Engine.get_physics_frames() % 2 == 0 else -GRIP_SHAKE, 0.0))
@@ -344,7 +344,7 @@ func _break_apart(at: Vector2) -> void:
 		pieces.call(&"shatter", art.texture, art.position + (_prop.global_position - at), art.scale, _direction)
 	else:
 		_burst(at)
-	_prop.global_position = at.snapped(Vector2(2.0, 2.0))
+	_prop.global_position = at.snappedf(OpenMapCamera.ART_PIXEL)
 	_go()
 
 
@@ -409,7 +409,7 @@ func _come_to_rest() -> void:
 		return
 	_state = State.RESTING
 	_holder = null
-	_prop.global_position = _prop.global_position.snapped(Vector2(2.0, 2.0))
+	_prop.global_position = _prop.global_position.snappedf(OpenMapCamera.ART_PIXEL)
 	for i in _bodies.size():
 		_bodies[i].collision_layer = _home_layers[i]
 	if _prop is HidingSpot:

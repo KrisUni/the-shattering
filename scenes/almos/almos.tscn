@@ -447,11 +447,10 @@ color = Color(1, 0.55, 0.1, 1)
 polygon = PackedVector2Array(0, 0, 0, -30, 11.48, -27.72, 21.21, -21.21, 27.72, -11.48, 30, 0, 27.72, 11.48, 21.21, 21.21, 11.48, 27.72, 0, 30)
 
 [node name="Art" type="AnimatedSprite2D" parent="Look"]
-scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_almos")
 animation = &"idle_down"
 autoplay = "idle_down"
-offset = Vector2(0, -8)
+offset = Vector2(0, -16)
 
 [node name="AlmosLook" type="Node" parent="Look"]
 script = ExtResource("26_look")

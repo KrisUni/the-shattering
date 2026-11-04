@@ -11,7 +11,7 @@ const POSES: Array[StringName] = [&"idle", &"walk", &"strike", &"low", &"unblock
 # Only these two repeat; every other pose plays once and holds its last frame.
 const LOOPING: Array[StringName] = [&"idle", &"walk"]
 # In art pixels: every frame is drawn on one canvas, so the feet stay put from frame to frame.
-const CANVAS := Vector2i(32, 28)
+const CANVAS := Vector2i(64, 56)
 # In Stagger points. A hit that takes no Health.
 const NO_DAMAGE := 0.0
 const SETTLE_FRAMES := 10
@@ -41,14 +41,14 @@ func _crawler() -> Node:
 	return crawler
 
 
-func test_the_root_crawler_has_an_art_sprite_with_all_its_poses_at_scale_two() -> void:
+func test_the_root_crawler_has_an_art_sprite_with_all_its_poses_at_scale_one() -> void:
 	var crawler := _crawler()
 	var art := crawler.get_node_or_null("Look/Art") as AnimatedSprite2D
 
 	assert_not_null(art, "the Look should hold an AnimatedSprite2D named Art")
 	if art == null:
 		return
-	assert_eq(art.scale, Vector2(2, 2), "one art pixel is two world units")
+	assert_eq(art.scale, Vector2(1, 1), "one art pixel is one world unit")
 	for pose in POSES:
 		assert_true(art.sprite_frames.has_animation(pose), "pose %s" % pose)
 		assert_gt(art.sprite_frames.get_frame_count(pose), 0, "pose %s has frames" % pose)

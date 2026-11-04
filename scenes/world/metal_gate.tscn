@@ -13,5 +13,4 @@ visible = false
 
 [node name="Art" type="Sprite2D" parent="Look" index="1"]
 position = Vector2(0, -20)
-scale = Vector2(2, 2)
 texture = ExtResource("3_art")

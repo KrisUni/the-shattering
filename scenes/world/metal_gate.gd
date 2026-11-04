@@ -16,9 +16,9 @@ const MELT_GLOW := Color(1.0, 0.62, 0.38)
 const MOLTEN := Color(1.0, 0.78, 0.42)
 const MOLTEN_DEEP := Color(0.92, 0.36, 0.16)
 ## In art pixels: how much of the bars is left standing at the end of the burn time, as a stub.
-const MELT_STUB := 2
+const MELT_STUB := 4
 ## One art pixel in world units.
-const PIXEL := 2.0
+const PIXEL := 1.0
 const BUDGE_FRAMES := 16
 const BUDGE_LEAN := 3.0
 
@@ -161,7 +161,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	var strain := _budge_way * BUDGE_LEAN * (float(_budge_left) / BUDGE_FRAMES)
 	var jolt := 2.0 if _budge_left % 2 == 0 else -2.0
-	look.position = (strain + Vector2(jolt, 0.0)).snapped(Vector2(2.0, 2.0)) if _budge_left > 0 else Vector2.ZERO
+	look.position = (strain + Vector2(jolt, 0.0)).snappedf(OpenMapCamera.ART_PIXEL) if _budge_left > 0 else Vector2.ZERO
 
 
 func _reset_look() -> void:
@@ -171,6 +171,6 @@ func _reset_look() -> void:
 	var art := get_node_or_null("Look/Art") as Sprite2D
 	if art != null:
 		art.modulate = Color.WHITE
-		art.scale = Vector2(2.0, 2.0)
+		art.scale = Vector2.ONE
 		art.region_enabled = false
 		art.position = _art_home

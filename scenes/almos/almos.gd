@@ -549,7 +549,7 @@ func _drop_step(t: float, lean: float) -> void:
 	var size := 1.0 / (1.0 + DROP_SHRINK * fall)
 	_look.scale = Vector2(size, size)
 	var from := Vector2(_drop_way.x * 4.0, -4.0)
-	_look.position = (from + Vector2(_drop_way.x * DROP_CARRY * t, DROP_DEPTH * fall)).snappedf(2.0)
+	_look.position = (from + Vector2(_drop_way.x * DROP_CARRY * t, DROP_DEPTH * fall)).snappedf(OpenMapCamera.ART_PIXEL)
 	_look.rotation = lean + signf(lean) * DROP_TUMBLE * fall
 	var art := _look.get_node_or_null(^"Art") as CanvasItem
 	if art != null:

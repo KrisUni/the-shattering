@@ -328,7 +328,9 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     for name, images in frames().items():
         for i, image in enumerate(images):
-            image.save(os.path.join(out_dir, "%s_%d.png" % (name, i)))
+            # Drawn at 16 px; saved at the game's 32 px scale, every pixel as 2x2.
+            image.resize((image.width * 2, image.height * 2), Image.NEAREST).save(
+                os.path.join(out_dir, "%s_%d.png" % (name, i)))
 
 
 if __name__ == "__main__":

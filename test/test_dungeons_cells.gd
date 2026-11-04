@@ -101,7 +101,7 @@ func test_a_lamp_is_a_torch_drawn_as_a_lantern() -> void:
 		assert_true(lamp.is_in_group(&"torches"), "%s is with the torches" % path)
 		var art := lamp.get_node("Look/Art") as Sprite2D
 		assert_string_contains(art.texture.resource_path, "assets/shared/lamp/", "%s is drawn as a lantern" % path)
-		assert_eq(art.scale, Vector2(2, 2), "one art px is 2 units")
+		assert_eq(art.scale, Vector2(1, 1), "one art px is 1 unit")
 		var flame := lamp.get_node("Flame/Art") as AnimatedSprite2D
 		assert_string_contains(flame.sprite_frames.get_frame_texture(&"burn", 0).resource_path, "lamp_lit", "%s's flame glows in its glass" % path)
 

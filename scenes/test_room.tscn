@@ -50,7 +50,6 @@ script = ExtResource("4_room")
 
 [node name="Camera" type="Camera2D" parent="."]
 position = Vector2(576, 324)
-zoom = Vector2(0.5, 0.5)
 
 [node name="Floor" type="Polygon2D" parent="."]
 color = Color(0.16, 0.16, 0.2, 1)
@@ -245,6 +244,7 @@ target = NodePath("../Almos")
 post_facing = Vector2(-1, 0)
 
 [node name="Hud" type="CanvasLayer" parent="."]
+scale = Vector2(2, 2)
 
 [node name="StaminaBar" type="ProgressBar" parent="Hud" node_paths=PackedStringArray("stamina")]
 offset_left = 6.0

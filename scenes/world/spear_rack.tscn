@@ -17,7 +17,6 @@ shape = SubResource("RectangleShape2D_body")
 
 [node name="Art" type="Sprite2D" parent="Look"]
 position = Vector2(0, -26)
-scale = Vector2(2, 2)
 texture = ExtResource("3_art")
 
 [node name="Liftable" type="Node" parent="."]
