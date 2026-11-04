@@ -393,7 +393,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 #### Cell 3 floor
 
 - **Thing:** Cell 3 (the floor of the Room)
-- **Source pack and files:** Hand-drawn packed earth in the palette, guided by CRAWLING DEPTHS `earth_floor` (its violet came out wrong, so the pixels are new). `assets/shared/dungeon_tiles/dungeon_tiles.png`, tiles 0-3 of row 0 (four floor variants) and tile 4 (the 8 art px strip at the south wall). See `assets/CREDITS.md`.
+- **Source pack and files:** Packed earth drawn in code by `scripts/art/draw_tiles.py` (no pack): tileable value noise in clustered tones, a few lit pebbles and a rootlet; the four variants share their edges, so any one can lie by any other. `assets/shared/dungeon_tiles/dungeon_tiles.png`, tiles 0-3 of row 0 (four floor variants) and tile 4 (the 8 art px strip at the south wall).
 - **Size in art px:** 32x32 per tile; the Room is 36x20 tiles plus the strip.
 - **Palette notes and accents used:** Dusty rose ground, a few base violet and sand flecks. No accent.
 - **Animations and poses needed:** None; four variants laid in a fixed pattern.
@@ -402,7 +402,7 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 #### Cell 3 walls
 
 - **Thing:** Cell 3 (the walls of the Room)
-- **Source pack and files:** Dead Swamp (Sevarihk / Aurora) `woven_wall`, one 16x16 weave cut from it and edged by hand; `assets/shared/dungeon_tiles/dungeon_tiles.png`, row 1: north face top (sand lip), north face base (navy shadow), left side, right side, south wall top, south wall strip. The tiles follow the wall grid: north face 2 tiles, sides 1, south 1 plus the strip. See `assets/CREDITS.md`.
+- **Source pack and files:** Woven bark drawn in code by `scripts/art/draw_tiles.py` (no pack): waving strips that rise over one upright stake and dip under the next, row by row, lit from the top left; `assets/shared/dungeon_tiles/dungeon_tiles.png`, row 1: north face top (sand lip), north face base (navy shadow), left side, right side, south wall top, south wall strip. The tiles follow the wall grid: north face 2 tiles, sides 1, south 1 plus the strip. Row 0's last tile and row 2 are the root mass, deep root and their dithered blend, drawn by the same script.
 - **Size in art px:** 32x32 per tile.
 - **Palette notes and accents used:** Woven bark in base violet and indigo with navy shadows; the south wall seen from above is darker. No accent.
 - **Animations and poses needed:** None.
