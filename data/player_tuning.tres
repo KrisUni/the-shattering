@@ -4,12 +4,12 @@
 
 [resource]
 script = ExtResource("1_tuning")
-walk_speed = 120.0
+walk_speed = 96.0
 health_maximum = 100.0
 stamina_maximum = 120.0
 stamina_refill_rate = 40.0
 stamina_refill_pause = 1.0
-sprint_speed = 200.0
+sprint_speed = 160.0
 sprint_stamina_per_second = 30.0
 roll_hold_threshold = 0.4
 roll_distance = 96.0
@@ -24,7 +24,7 @@ lock_on_relatch_degrees = 15.0
 block_damage_reduction = 0.7
 block_stamina_cost = 25.0
 block_arc_degrees = 180.0
-block_walk_speed = 60.0
+block_walk_speed = 48.0
 block_stamina_refill_factor = 0.5
 guard_break_duration = 1.3
 parry_window_frames = 8
@@ -32,7 +32,7 @@ parry_recovery_frames = 24
 parry_arc_degrees = 180.0
 parry_stagger = 40.0
 parried_recoil_frames = 30
-jump_duration = 0.45
+jump_duration = 0.5625
 jump_height = 24.0
 jump_stamina_cost = 10.0
 rest_reach = 40.0
