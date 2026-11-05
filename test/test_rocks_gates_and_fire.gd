@@ -482,17 +482,17 @@ func test_a_second_way_down_loops_behind_the_barricade_over_a_gap_he_must_jump()
 	# round, two tiles wide, with one gap one tile across to Jump near its end. It does not touch
 	# the bridge above the barricade.
 	assert_true(_hall_floor(room, Vector2i(6, 9)), "the spur leaves the lane at its west ledge")
-	assert_true(_hall_floor(room, Vector2i(8, 10)), "the spur, west of the barricade")
-	assert_false(_hall_floor(room, Vector2i(10, 10)), "cut off from the bridge's top")
-	assert_false(_hall_floor(room, Vector2i(11, 10)), "cut off from the bridge's top")
-	assert_true(_hall_floor(room, Vector2i(2, 15)), "down the west side of the chasm")
-	assert_false(_hall_floor(room, Vector2i(7, 18)), "the gap he jumps")
-	assert_true(_hall_floor(room, Vector2i(6, 18)), "the take-off")
-	assert_true(_hall_floor(room, Vector2i(8, 18)), "the landing beyond it")
-	assert_true(_hall_floor(room, Vector2i(15, 18)), "the way on east to the bridge")
+	assert_true(_hall_floor(room, Vector2i(4, 10)), "the spur, well west of the barricade")
+	for x in range(8, 12):
+		assert_false(_hall_floor(room, Vector2i(x, 10)), "cut off from the bridge's top at %d" % x)
+	assert_true(_hall_floor(room, Vector2i(1, 14)), "down the west side of the chasm")
+	assert_true(_hall_floor(room, Vector2i(5, 18)), "the take-off")
+	assert_false(_hall_floor(room, Vector2i(6, 18)), "the gap he jumps")
+	assert_true(_hall_floor(room, Vector2i(7, 18)), "the landing beyond it")
+	assert_true(_hall_floor(room, Vector2i(15, 19)), "the way on east to the bridge")
 	# That gap is the only Jump that gets him round: with the landing barred too, he cannot.
 	var past_the_gap: Array[Vector2i] = barred.duplicate()
-	past_the_gap.append_array([Vector2i(8, 18), Vector2i(8, 19)])
+	past_the_gap.append(Vector2i(7, 18))
 	assert_false(_reaches_the_south_exit(room, past_the_gap, true), "no shorter Jump cuts the spur")
 	# A walking Jump clears the gap: one tile of chasm is less than a Jump carries him.
 	var tuning := load("res://data/player_tuning.tres") as PlayerTuning
