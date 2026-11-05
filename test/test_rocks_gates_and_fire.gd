@@ -456,10 +456,20 @@ func _reaches(room: Node2D, goal: Vector2i, barred: Array[Vector2i], jumps: bool
 			for next in steps:
 				if next.x < 0 or next.x >= 36 or next.y < 2 or next.y > 19 or seen.has(next):
 					continue
-				if not _hall_floor(room, next) or barred.has(next):
+				if not _hall_floor(room, next) or barred.has(next) or _in_a_wall(room, next):
 					continue
 				seen[next] = true
 				queue.append(next)
+	return false
+
+
+# Whether this tile of the hall is inside one of its walls.
+func _in_a_wall(room: Node2D, cell: Vector2i) -> bool:
+	var centre := (Vector2(cell) + Vector2(0.5, 0.5)) * 32.0
+	for wall in room.get_node("Walls").get_children():
+		var shape := (wall.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D
+		if Rect2((wall as Node2D).position - shape.size / 2.0, shape.size).has_point(centre):
+			return true
 	return false
 
 
@@ -537,3 +547,35 @@ func test_a_lesson_speaks_once_and_fades_by_itself() -> void:
 	assert_not_null(spot.find_children("*", "Control", true, false).front() if not spot.find_children("*", "Control", true, false).is_empty() else null, "it shows")
 	await wait_seconds(2.0)
 	assert_true(spot.find_children("*", "Control", true, false).is_empty(), "and fades by itself")
+
+
+func test_behind_the_barrels_a_fallen_jailer_left_his_sword() -> void:
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var pickup := room.get_node("FallenJailerSword") as WeaponPickup
+	assert_eq(pickup.weapon, load("res://data/sword.tres"), "a sword, the other way to one than the knight's rack")
+	assert_ne(pickup.id, &"", "tracked: once taken and kept by a rest it stays taken")
+	assert_not_null(pickup.art, "drawn lying on the floor")
+	var cell := Vector2i((pickup.position / 32.0).floor())
+	var barred := _barricade(room)
+	assert_gt(cell.y, barred[0].y, "it lies below the barrels, on the stretch of bridge behind them")
+	assert_true(_hall_floor(room, cell), "on firm ground")
+	assert_true(_reaches(room, cell, barred, false), "reached round by the east ledge with the barrels standing")
+	var remains := room.get_node("FallenJailer") as Node2D
+	assert_lt(remains.position.distance_to(pickup.position), 80.0, "beside his remains")
+
+
+func test_the_way_to_radio_officers_is_a_doorway_in_a_short_west_wall() -> void:
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var exit := room.get_node("Exits/to_radio_officers") as Node2D
+	var north := room.get_node("Walls/WallDoorNorth") as Node2D
+	var south := room.get_node("Walls/WallDoorSouth") as Node2D
+	var north_rect := Rect2(north.position - ((north.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size / 2.0, ((north.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size)
+	var south_rect := Rect2(south.position - ((south.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size / 2.0, ((south.get_node("CollisionShape2D") as CollisionShape2D).shape as RectangleShape2D).size)
+	assert_eq(north_rect.position.x, 0.0, "the wall stands on the west edge")
+	assert_gt(exit.position.y, north_rect.end.y, "the doorway is below the north part of the wall")
+	assert_lt(exit.position.y, south_rect.position.y, "and above its south part")
+	assert_eq(south_rect.position.y - north_rect.end.y, 64.0, "an opening two tiles wide")
+	assert_not_null((room.get_node("DoorFrame") as Sprite2D).texture, "framed in oak")
+	assert_true(room.get_node("DoorLamp") is Torch, "with a lantern hung beside it")

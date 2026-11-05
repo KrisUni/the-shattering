@@ -754,6 +754,91 @@ def key_crate(w=32, h=34, open_=False):
     return out(c)
 
 
+# A jailer's colours (scripts/art/draw_nar_jailer.py), for the one who fell on the bridge.
+JAILER_HOOD = M("#4d5a4b", tones=4, step=0.07, lit_step=0.09, shine=0.05)
+JAILER_JERKIN = M("#5c483c", tones=3, step=0.07)
+JAILER_BOOT = M("#2f2420", tones=2, step=0.05)
+SWORD_BLADE = M("#a3a8b8", tones=3, step=0.11, shine=0.15, outline="#3a3848")
+SWORD_GUARD = M("#4a4652", tones=2, step=0.06)
+SWORD_GRIP = M("#3f2f28", tones=2, step=0.05)
+
+
+def fallen_jailer(w=48, h=26):
+    """A jailer who fell where the bridge narrows below the barrels and was left there: his bones
+    lying on their back along the floor in his torn moss-grey hood and mantle, a rotten leather
+    jerkin over the ribs, his boots still on, one arm flung out to where his sword fell."""
+    c = canvas(w, h)
+    hole = (42, 36, 48)
+    # The mantle spread under him, torn at its hem.
+    c.poly([(5, 8), (21, 5), (30, 9), (31, 19), (20, 22), (7, 20), (3, 14)], JAILER_HOOD, 0.5)
+    for x in (8, 12, 17, 24):
+        c.dot(x, 21 if x % 2 else 20, hole)
+    # Legs out to the right, boots on.
+    bone_shape(c, 27, 12, 37, 10.5, 1, r=1.1)
+    bone_shape(c, 27, 16, 37, 17.5, 1.2, r=1.1)
+    c.box(37, 8, 42, 12, JAILER_BOOT, 1.5, form="cylinder")
+    c.box(37, 15, 42, 19, JAILER_BOOT, 1.6, form="cylinder")
+    # Pelvis, and the rotten jerkin over the ribs.
+    c.ellipse(26, 14, 2.6, 2.4, BONE, 2)
+    c.dot(26, 14, hole)
+    c.ellipse(17, 13.5, 6.4, 5.4, JAILER_JERKIN, 2.5)
+    for row in (11, 14, 17):
+        for x in range(13, 22, 2):
+            c.dot(x, row, BONE.ramp[1] if x % 4 == 1 else hole)
+    # The near arm flung up and out, its hand open, toward the sword (which lies on its own).
+    bone_shape(c, 14, 8, 12, 2.5, 3, r=0.9)
+    for fx in (9.5, 11.5, 13.5):
+        c.capsule(12, 2.5, fx, 0.8, 0.5, BONE, 3.1, line=False)
+    # The far arm along his side.
+    bone_shape(c, 15, 18.5, 23, 20.5, 3, r=0.9)
+    # The skull in the hood, tipped back, the hood's dark inside around it.
+    c.ellipse(7, 13.5, 5.0, 5.6, JAILER_HOOD, 3)
+    c.ellipse(7.5, 13.0, 3.6, 4.0, M("#262b26", tones=2, step=0.05), 3.2, line=False)
+    skull_shape(c, 7.5, 11.5, 3.5, scale=0.55)
+    return out(c)
+
+
+def sword_floor(w=32, h=10):
+    """The fallen jailer's sword lying on the floor: a straight blade of grey iron pointing right,
+    a crossguard, a wrapped grip and a pommel, a glint along its lit flat."""
+    c = canvas(w, h)
+    c.capsule(9, 5, 29, 4.5, 1.8, SWORD_BLADE, 1, r2=0.7)
+    c.capsule(8, 0.8, 8, 9.2, 1.2, SWORD_GUARD, 2)
+    c.capsule(3, 5, 7, 5, 0.9, SWORD_GRIP, 1.5)
+    c.ellipse(2, 5, 1.4, 1.4, SWORD_GUARD, 2)
+    c.dot(16, 4, GLINT)
+    c.dot(17, 4, GLINT)
+    return out(c)
+
+
+def door_frame(w=44, h=104):
+    """The doorway to Radio/Officers in the hall's short west wall, seen from above. Its opening is
+    two tiles (64 px) from row 12 of the picture to row 76: under the wall the passage runs on into
+    the dark, its floor sunk in shadow; an oak frame stands round it, a heavy lintel beam laid across
+    the wall's top over its north end and a sill beam at its south end, each capped by a squared post
+    at the hall side; the door itself, iron-banded, stands swung open back against the wall's foot
+    below it. The lantern hung beside it (scenes/world/lamp_side.tscn) gives it its light."""
+    c = canvas(w, h)
+    shadow = M("#1f1b26", tones=2, step=0.04, outline="#141019")
+    # The passage under the wall, running on into the dark.
+    c.box(0, 12, 24, 76, shadow, 0.5)
+    # The lintel and the sill: beams across the wall's top, their ends set in the wall.
+    c.box(0, 2, 26, 12, WOOD, 4, form="cylinder")
+    c.box(0, 76, 26, 85, WOOD, 4, form="cylinder")
+    for y in (6, 80):
+        for x in range(3, 24, 6):
+            c.dot(x, y, WOOD.ramp[0])
+    # The jambs, squared posts at the hall side of each beam, their tops seen from above.
+    c.box(22, 0, 32, 14, WOOD_OLD, 4.5, form="cylinder")
+    c.box(22, 74, 32, 88, WOOD_OLD, 4.5, form="cylinder")
+    # The door leaf, swung open and lying back along the wall's foot below the doorway, banded in iron.
+    c.box(33, 86, 41, 103, WOOD_OLD, 3, form="cylinder")
+    for y in (89, 99):
+        c.box(33, y, 41, y + 1, IRON_DARK, 3.2)
+    c.dot(39, 94, GLINT)
+    return out(c)
+
+
 PICTURES = {
     "dungeons/furniture/barrel.png": barrel,
     "dungeons/furniture/bench.png": bench,
@@ -795,6 +880,9 @@ PICTURES = {
     "dungeons/cells/cell_skeleton.png": cell_skeleton,
     "dungeons/cells/cell_ring.png": cell_ring,
     "dungeons/cells/cell_carving.png": cell_carving,
+    "dungeons/bones/fallen_jailer.png": fallen_jailer,
+    "dungeons/furniture/sword_floor.png": sword_floor,
+    "dungeons/furniture/door_frame.png": door_frame,
 }
 
 

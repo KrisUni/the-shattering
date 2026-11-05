@@ -1,6 +1,6 @@
 class_name WeaponPickup
 extends Node2D
-## A Weapon lying in a room, drawn as a placeholder bar. It holds the Weapon's data file in
+## A Weapon lying in a room, drawn as a placeholder bar, or as its `art` where it has some. It holds the Weapon's data file in
 ## `weapon`, which is what Almos takes up when he picks it up with a tap of Interact; the pickup
 ## is then gone. Almos leaves one where he stands when he drops the Weapon in hand. It is in the
 ## group "weapon_pickups", which is where Almos looks for one, and has no body, so he walks
@@ -18,7 +18,20 @@ extends Node2D
 ## is not tracked.
 @export var id: StringName
 
+## How it lies on the floor, drawn in place of the placeholder bar: a picture centred on it, such
+## as the fallen jailer's sword (assets/dungeons/furniture/sword_floor.png). Left empty, the bar shows.
+@export var art: Texture2D
+
 
 func _ready() -> void:
 	if id != &"" and WorldState.is_taken(id):
 		queue_free()
+		return
+	if art != null:
+		var bar := get_node_or_null("Look/Bar") as CanvasItem
+		if bar != null:
+			bar.visible = false
+		var sprite := Sprite2D.new()
+		sprite.name = "Art"
+		sprite.texture = art
+		get_node("Look").add_child(sprite)
