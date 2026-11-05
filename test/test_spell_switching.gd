@@ -69,6 +69,9 @@ func after_each() -> void:
 
 
 func test_each_spell_costs_health_and_stamina() -> void:
+	if _pull.health_cost == 0.0 and _shove.health_cost == 0.0:
+		pending("For the demo, spells cost no Health: turn this back on when the costs return")
+		return
 	for cost in [_pull, _shove]:
 		assert_gt(cost.health_cost, 0.0, "Health cost")
 		assert_gt(cost.stamina_cost, 0.0, "Stamina cost")
@@ -280,6 +283,9 @@ func test_a_throw_with_too_little_stamina_does_nothing_and_the_flame_stays_held(
 
 
 func test_a_throw_with_health_that_would_not_stay_above_the_cost_does_nothing() -> void:
+	if _pull.health_cost == 0.0 and _shove.health_cost == 0.0:
+		pending("For the demo, spells cost no Health: turn this back on when the costs return")
+		return
 	_set_up_room()
 	_almos.health.take_damage(_almos.health.maximum - _pull.health_cost - _shove.health_cost)
 	await _draw()
