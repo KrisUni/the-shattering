@@ -220,22 +220,22 @@ func test_a_knocked_barrel_that_hits_nothing_comes_to_rest_whole() -> void:
 	assert_true(barrel.is_in_group(&"hiding_spots"), "a hiding spot still")
 
 
-func test_pull_takes_the_nearest_thing_all_round_him_not_only_ahead() -> void:
+func test_pull_takes_what_he_aims_at_not_a_nearer_thing_behind_him() -> void:
 	var almos = _almos_input.spawn_almos()
 	almos.facing = Vector2.RIGHT
-	var near := _place(BARREL_SCENE, almos, Vector2(-60, 0))
-	var far := _place(BARREL_SCENE, almos, Vector2(120, 0))
+	var behind := _place(BARREL_SCENE, almos, Vector2(-60, 0))
+	var ahead := _place(BARREL_SCENE, almos, Vector2(120, 0))
 	await wait_physics_frames(2)
 	await _tap(&"cast_spell")
 	await wait_physics_frames(_wind_up_frames())
 	var spell := almos.get_node("Spell") as AlmosSpell
-	assert_eq(spell.held_object, near.get_node("Liftable"), "the barrel behind him, being nearer")
-	assert_eq(far.get_node("Liftable").state, Liftable.State.RESTING, "not the one ahead")
+	assert_eq(spell.held_object, ahead.get_node("Liftable"), "the barrel ahead of him, which he aims at")
+	assert_eq(behind.get_node("Liftable").state, Liftable.State.RESTING, "not the nearer one behind him")
 
 
 func test_pull_takes_a_nearer_barrel_before_a_torch_further_off() -> void:
 	var almos = _almos_input.spawn_almos()
-	almos.facing = Vector2.RIGHT
+	almos.facing = Vector2.DOWN
 	var barrel := _place(BARREL_SCENE, almos, Vector2(0, 40))
 	var torch := _place(preload("res://scenes/world/torch.tscn"), almos, Vector2(-100, 0))
 	await wait_physics_frames(2)
@@ -313,3 +313,15 @@ func test_an_enemys_health_bar_shows_once_it_is_hurt_with_a_trail() -> void:
 	# It drains down to the bar (which a jailer at rest slowly refills, so not to a fixed share).
 	assert_almost_eq(bar.trail_share(), health.current / health.maximum, 0.01, "then drains to the bar")
 	assert_lt(bar.trail_share(), 1.0, "having come down from where it was")
+
+
+func test_a_shove_knocks_a_light_prop_further_than_a_heavy_one() -> void:
+	var throw := load("res://data/throw.tres") as ThrowTuning
+	var barrel := (load("res://data/barrel_lift.tres") as LiftTuning).weight
+	var bowl := (load("res://data/bowl_lift.tres") as LiftTuning).weight
+	var bench := (load("res://data/bench_lift.tres") as LiftTuning).weight
+	assert_almost_eq(throw.knock_range_for(barrel), throw.knock_range, 0.01, "a barrel goes the knock range")
+	assert_gt(throw.knock_range_for(bowl), throw.knock_range_for(barrel), "a bowl further")
+	assert_lt(throw.knock_range_for(bench), throw.knock_range_for(barrel), "a bench less far")
+	assert_almost_eq(throw.knock_range_for(0.5), throw.knock_range * throw.knock_scale_max, 0.01, "never more than the most")
+	assert_almost_eq(throw.knock_range_for(1000.0), throw.knock_range * throw.knock_scale_min, 0.01, "never less than the least")
