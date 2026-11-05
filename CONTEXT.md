@@ -55,7 +55,7 @@ The prison in the roots beneath the arch tree, where Almos is held after his Sea
 _Avoid_: Prison, cells, roots
 
 **Store cupboard**:
-A small Room off Corridor 2's low road, through a door at the top of its first flight of stairs: a cramped store of barrels, sacks, a crate stack, a pot and a bucket, lit by a side lantern. A barrel there is a Hiding spot. Nothing in it is needed.
+A small Room off Corridor 2's low road, through a door at the top of its first flight of stairs, smaller inside than a cell: a cramped store of barrels, sacks, a pot and a bucket, lit by a side lantern. A barrel there is a Hiding spot. A greatsword lies among the stores, a Weapon Almos takes up with a tap of Interact without rousing anyone; it is not needed to go on.
 _Avoid_: Closet, larder, Store room (that is where his gear is kept)
 
 **Store room**:

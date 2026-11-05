@@ -811,6 +811,24 @@ def sword_floor(w=32, h=10):
     return out(c)
 
 
+def greatsword_floor(w=48, h=14):
+    """A greatsword left lying among the stores: a long, broad blade of grey iron pointing right
+    with a fuller down its middle, a wide crossguard, a long two-handed grip bound in leather and a
+    heavy pommel, a glint along its lit flat."""
+    c = canvas(w, h)
+    c.capsule(14, 7, 45, 6.5, 2.6, SWORD_BLADE, 1, r2=0.9)
+    for x in range(16, 38):
+        c.dot(x, 7, SWORD_BLADE.ramp[0])
+    c.capsule(13, 1, 13, 13, 1.4, SWORD_GUARD, 2)
+    c.capsule(4, 7, 12, 7, 1.1, SWORD_GRIP, 1.5)
+    for x in (6, 9):
+        c.dot(x, 7, SWORD_GRIP.ramp[0])
+    c.ellipse(2.5, 7, 2.0, 2.0, SWORD_GUARD, 2)
+    for x in (22, 23, 24):
+        c.dot(x, 5, GLINT)
+    return out(c)
+
+
 def door_frame(w=44, h=104):
     """The doorway to Radio/Officers in the hall's short west wall, seen from above. Its opening is
     two tiles (64 px) from row 12 of the picture to row 76: under the wall the passage runs on into
@@ -924,6 +942,7 @@ PICTURES = {
     "dungeons/cells/cell_carving.png": cell_carving,
     "dungeons/bones/fallen_jailer.png": fallen_jailer,
     "dungeons/furniture/sword_floor.png": sword_floor,
+    "dungeons/furniture/greatsword_floor.png": greatsword_floor,
     "dungeons/furniture/door_frame.png": door_frame,
 }
 
