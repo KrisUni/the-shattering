@@ -28,11 +28,10 @@ const NORTH_OPENINGS := {
 	"lobby": [576.0],
 	"cell_3": [],
 }
-# In pixels. The centre of the opening in Corridor 1's south wall. (Cell 3's south opening is shut
-# by its Roots, a path blocker, so it is not walkable until the Roots are burned.)
-const SOUTH_OPENINGS := {
-	"corridor_1": [576.0],
-}
+# In pixels. The centre of each opening in a south wall. Corridor 1 has none now: Radio/Officers is
+# off its west edge. (Cell 3's south opening is shut by its Roots, a path blocker, so it is not
+# walkable until the Roots are burned.)
+const SOUTH_OPENINGS := {}
 
 
 func _dungeons_room_names() -> Array[String]:

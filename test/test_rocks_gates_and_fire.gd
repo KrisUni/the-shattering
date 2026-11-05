@@ -438,12 +438,11 @@ func _hall_floor(room: Node2D, cell: Vector2i) -> bool:
 	return true
 
 
-# Whether firm ground joins the lane (at Cell 3's door) to the hall's south exit, on foot, with the
-# barricade standing, and with Jumps over one tile of chasm if `jumps` is set. A Jump cannot go over
-# the barricade: barrels are solid in the air too.
-func _reaches_the_south_exit(room: Node2D, barred: Array[Vector2i], jumps: bool) -> bool:
+# Whether firm ground joins the lane (at Cell 3's door) to this cell of the hall, on foot, with
+# these cells barred, and with Jumps over one tile of chasm if `jumps` is set. A Jump cannot go over
+# a barred cell: barrels are solid in the air too.
+func _reaches(room: Node2D, goal: Vector2i, barred: Array[Vector2i], jumps: bool) -> bool:
 	var start := Vector2i(12, 2)
-	var goal := Vector2i(18, 19)
 	var seen := {start: true}
 	var queue: Array[Vector2i] = [start]
 	while not queue.is_empty():
@@ -464,36 +463,57 @@ func _reaches_the_south_exit(room: Node2D, barred: Array[Vector2i], jumps: bool)
 	return false
 
 
-func test_a_second_way_down_loops_behind_the_barricade_over_a_gap_he_must_jump() -> void:
-	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
-	add_child_autofree(room)
+func _barricade(room: Node2D) -> Array[Vector2i]:
 	var barred: Array[Vector2i] = []
 	for node in room.get_node("Furniture").get_children():
 		if String(node.name).begins_with("BarricadeBarrel"):
 			var cell := Vector2i(((node as Node2D).position / 32.0).floor())
 			if not barred.has(cell):
 				barred.append(cell)
+	return barred
+
+
+func test_the_barricade_shuts_the_bridge_but_the_east_ledge_goes_round() -> void:
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var barred := _barricade(room)
 	assert_eq(barred.size(), 2, "the barricade fills the neck of the bridge, two tiles across")
-	assert_true(_reaches_the_south_exit(room, [], false), "control: with the barrels gone he walks down")
-	assert_false(_reaches_the_south_exit(room, barred, false), "with them standing, no way down on foot")
-	assert_true(_reaches_the_south_exit(room, barred, true), "but a Jump takes him round them")
-	# The loop: a spur comes down off the lane's west ledge, turns down the west side of the chasm and
-	# back east along the bottom to the foot of the bridge, by the south exit. It is a long way
-	# round, two tiles wide, with one gap one tile across to Jump near its end. It does not touch
-	# the bridge above the barricade.
+	# Below the barrels the bridge turns east to the platform, which the path off the lane's east ledge
+	# also comes down to: both ways reach it, and the barrels only shut the bridge.
+	var below := Vector2i(16, 13)
+	var platform := Vector2i(26, 16)
+	assert_true(_reaches(room, below, [], false), "control: with the barrels gone he walks down the bridge")
+	assert_true(_reaches(room, platform, barred, false), "with them standing, the east ledge still takes him to the platform")
+	assert_true(_reaches(room, below, barred, false), "and from it back up the bridge to the barrels' far side")
+	var east_exit := room.get_node("Exits/east_low") as Node2D
+	assert_true(_hall_floor(room, Vector2i(35, floori(east_exit.position.y / 32.0))), "the platform runs on to Corridor 2")
+
+
+func test_the_way_down_to_radio_officers_is_a_spur_off_the_west_ledge_over_a_gap_he_must_jump() -> void:
+	var room := (load("res://scenes/areas/dungeons/corridor_1.tscn") as PackedScene).instantiate() as Node2D
+	add_child_autofree(room)
+	var exit := room.get_node("Exits/to_radio_officers") as Node2D
+	var entrance := exit.get_node("Entrance") as Node2D
+	var goal := Vector2i(((exit.position + entrance.position) / 32.0).floor())
+	assert_lt(exit.position.x, 32.0, "Radio/Officers is off the hall's west edge")
+	assert_true(_hall_floor(room, goal), "his way in from Radio/Officers is firm ground")
+	assert_false(_reaches(room, goal, [], false), "no way down to it on foot")
+	assert_true(_reaches(room, goal, [], true), "but one Jump takes him there")
+	# The spur comes down off the lane's west ledge, steps west in ragged ledges with a dead-end
+	# lookout over the chasm, and down the west side to a gap one tile across, then the landing and
+	# the way off the west edge. It does not touch the bridge.
 	assert_true(_hall_floor(room, Vector2i(6, 9)), "the spur leaves the lane at its west ledge")
 	assert_true(_hall_floor(room, Vector2i(4, 10)), "the spur, well west of the barricade")
-	for x in range(8, 12):
-		assert_false(_hall_floor(room, Vector2i(x, 10)), "cut off from the bridge's top at %d" % x)
-	assert_true(_hall_floor(room, Vector2i(1, 14)), "down the west side of the chasm")
-	assert_true(_hall_floor(room, Vector2i(5, 18)), "the take-off")
-	assert_false(_hall_floor(room, Vector2i(6, 18)), "the gap he jumps")
-	assert_true(_hall_floor(room, Vector2i(7, 18)), "the landing beyond it")
-	assert_true(_hall_floor(room, Vector2i(15, 19)), "the way on east to the bridge")
-	# That gap is the only Jump that gets him round: with the landing barred too, he cannot.
-	var past_the_gap: Array[Vector2i] = barred.duplicate()
-	past_the_gap.append(Vector2i(7, 18))
-	assert_false(_reaches_the_south_exit(room, past_the_gap, true), "no shorter Jump cuts the spur")
+	for x in range(8, 14):
+		assert_false(_hall_floor(room, Vector2i(x, 10)), "apart from the bridge at %d" % x)
+	assert_true(_hall_floor(room, Vector2i(2, 14)), "the take-off")
+	assert_false(_hall_floor(room, Vector2i(2, 15)), "the gap he jumps")
+	assert_true(_hall_floor(room, Vector2i(2, 16)), "the landing beyond it")
+	# That gap is the only Jump that gets him there: with the landing barred, he cannot.
+	var landing: Array[Vector2i] = []
+	for x in range(0, 5):
+		landing.append(Vector2i(x, 16))
+	assert_false(_reaches(room, goal, landing, true), "no other Jump reaches it")
 	# A walking Jump clears the gap: one tile of chasm is less than a Jump carries him.
 	var tuning := load("res://data/player_tuning.tres") as PlayerTuning
 	var body_radius := 12.0

@@ -1,6 +1,6 @@
 extends GutTest
 ## Corridor 1's lane runs above a chasm, crossed by one winding bridge (narrow spans either side of a
-## landing) to the south exit: the chasm is made of Drops, open edges Almos can walk off, with a ragged
+## landing) down to a platform out in the chasm and on east to Corridor 2: the chasm is made of Drops, open edges Almos can walk off, with a ragged
 ## lip mirrored along the lane, and it runs off the Room's west, east and south edges with no wall. Walking or rolling off one is a Deadly fall (he drops out of sight and dies,
 ## and his Remains are left at the edge); an enemy Shoved or Pulled into one falls to its death and
 ## no enemy walks into one by itself; a barrel knocked into one is gone until enemies return. A
@@ -76,8 +76,8 @@ func test_the_chasm_has_a_mirrored_lip_and_runs_off_the_room() -> void:
 	assert_true(_in_the_chasm(Vector2(200, 644)), "off the south edge")
 
 
-func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_south_exit() -> void:
-	var exit := _room.get_node("Exits/to_radio_officers") as Node2D
+func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_east_platform() -> void:
+	var exit := _room.get_node("Exits/east_low") as Node2D
 	# A walk of firm ground from the lane down to the exit, a tile at a time, never stepping into the chasm.
 	var reached := {}
 	var frontier := [Vector2i(18, 6)]
@@ -90,15 +90,16 @@ func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_south_exit() -
 		reached[cell] = true
 		for step in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
 			frontier.append(cell + step)
-	var exit_cell := Vector2i(floori(exit.position.x / 32.0), 19)
-	assert_true(reached.has(exit_cell), "the bridge reaches the south exit")
+	var exit_cell := Vector2i(35, floori(exit.position.y / 32.0))
+	assert_true(reached.has(exit_cell), "the bridge reaches the platform and the way on to Corridor 2")
+	assert_true(reached.has(Vector2i(20, 16)), "the bridge itself turns east to the platform")
 	var columns := {}
 	for cell: Vector2i in reached:
 		if cell.y >= 10:
 			columns[cell.x] = true
 	assert_gte(columns.size(), 5, "it winds: its spans do not all run down one line")
 	var narrowest := 99
-	# The bridge alone, between the spur round the barricade (west) and the path down to the east
+	# The bridge alone, between the spur to Radio/Officers (west) and the path down to the east
 	# platform.
 	for row in range(9, 18):
 		var width := 0
