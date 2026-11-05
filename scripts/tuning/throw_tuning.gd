@@ -15,5 +15,21 @@ extends Resource
 ## How far, in pixels, a prop he throws from his hold flies before it comes down.
 @export var throw_range: float
 
-## How far, in pixels, a prop a Shove knocks from where it stands flies.
+## How far, in pixels, a prop of knock_weight that a Shove knocks from where it stands flies. A
+## lighter prop flies further and a heavier one less, as the square root of knock_weight over its
+## own weight, kept within knock_scale_min and knock_scale_max of it.
 @export var knock_range: float
+
+## The weight a Shove knocks exactly knock_range (a barrel's).
+@export var knock_weight: float = 10.0
+
+## The least and the most of knock_range a Shove knocks any prop, however heavy or light.
+@export var knock_scale_min: float = 0.5
+@export var knock_scale_max: float = 1.5
+
+
+## How far, in pixels, a Shove knocks a prop of this weight.
+func knock_range_for(weight: float) -> float:
+	if weight <= 0.0:
+		return knock_range * knock_scale_max
+	return knock_range * clampf(sqrt(knock_weight / weight), knock_scale_min, knock_scale_max)

@@ -194,7 +194,7 @@ func throw(direction: Vector2, knocked := false) -> void:
 		_take_up()
 	_knocked = knocked
 	_direction = direction.normalized()
-	_left = throw_tuning.knock_range if knocked else throw_tuning.throw_range
+	_left = throw_tuning.knock_range_for(weight) if knocked else throw_tuning.throw_range
 	_range = _left
 	# Thrown from over his head, it flies from above his feet and comes down as it goes; knocked
 	# from the floor, it skids along it.

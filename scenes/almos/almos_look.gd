@@ -12,7 +12,9 @@ extends Node
 ## - for a moment after he casts Pull or Shove on an enemy or a thing (or at nothing), `pull_<side>`
 ##   or `shove_<side>` shows a small gesture of the hands: Shove gathers them and pushes the palms
 ##   out, Pull reaches out, closes on it and draws them in;
-## - while he rolls, `roll_<side>` plays once from its first frame each time a roll starts;
+## - while he rolls, `walk_<side>` plays from its first frame each time a roll starts: a Roll is a
+##   vanishing dash, made upright, not tumbling: he fades out and back in (Almos's dash_visibility), and leaves a
+##   trail of dark, shadowy copies of himself along its path, each fading away;
 ## - otherwise `walk_<side>` while he moves and `idle_<side>` while he stands.
 ## A name the sprite lacks is skipped. Facing left plays the side animations flipped, so they
 ## are drawn facing right. It only reads Almos: no gameplay depends on it.
@@ -33,11 +35,19 @@ const THROW_FRAMES := 12
 const GESTURE_FRAMES := 18
 const GESTURE_KEY := 4
 const GESTURE_EASE := 12
+# The shadow trail a dash leaves: a copy every this many physics frames, how long each takes to
+# fade, in seconds, how much of it shows at first, and its tint, a deep violet shadow. A look.
+const SHADOW_EVERY := 2
+const SHADOW_FADE := 0.45
+const SHADOW_ALPHA := 0.7
+const SHADOW_TINT := Color(0.16, 0.1, 0.28)
 
 var _almos: Node
 var _attacks: Node
 var _art: AnimatedSprite2D
 var _was_rolling := false
+# Physics frames since the dash began, for spacing its shadows.
+var _dash_frame := 0
 var _spell: Node
 var _throw_left := 0
 # The gesture of the last Pull or Shove, and how many physics frames it has shown for, or -1.
@@ -70,6 +80,8 @@ func update_look() -> void:
 		_art = get_parent().get_node_or_null("Art") as AnimatedSprite2D
 		if _art == null:
 			return
+	var visibility: Variant = _almos.get(&"dash_visibility")
+	_art.modulate.a = float(visibility) if visibility != null else 1.0
 	var side := side_for(_almos.facing)
 	# Only the side animations flip; up and down are drawn for themselves.
 	_art.flip_h = side == &"side" and (_almos.facing as Vector2).x < 0.0
@@ -83,10 +95,13 @@ func update_look() -> void:
 		_was_rolling = false
 		return
 	if _almos.rolling:
-		# A roll plays once from its first frame, each time one starts.
-		var roll := StringName("roll_" + side)
-		if not _was_rolling or _art.animation != roll:
-			_play(roll, true)
+		# A dash: he stays upright, striding, so that each shadow he leaves is his figure.
+		var stride := StringName("walk_" + side)
+		if not _was_rolling or _art.animation != stride:
+			_play(stride, true)
+		_dash_frame = 0 if not _was_rolling else _dash_frame + 1
+		if _dash_frame % SHADOW_EVERY == 0:
+			_leave_shadow()
 		_was_rolling = true
 		return
 	_was_rolling = false
@@ -196,3 +211,22 @@ func _play(animation_name: StringName, from_start := false) -> void:
 		_art.play(animation_name)
 	elif _art.animation != animation_name or not _art.is_playing():
 		_art.play(animation_name)
+
+
+# Leaves a still, dark copy of him as he looks now, where he is, fading away: one of the shadows of a dash.
+func _leave_shadow() -> void:
+	var world := (_almos as Node).get_parent()
+	if world == null or _art.sprite_frames == null or not _art.sprite_frames.has_animation(_art.animation):
+		return
+	var ghost := Sprite2D.new()
+	ghost.texture = _art.sprite_frames.get_frame_texture(_art.animation, _art.frame)
+	ghost.centered = _art.centered
+	ghost.offset = _art.offset
+	ghost.flip_h = _art.flip_h
+	ghost.z_index = (_almos as Node2D).z_index
+	ghost.modulate = Color(SHADOW_TINT, SHADOW_ALPHA)
+	world.add_child(ghost)
+	ghost.global_transform = _art.global_transform
+	var fade := ghost.create_tween()
+	fade.tween_property(ghost, "modulate:a", 0.0, SHADOW_FADE)
+	fade.tween_callback(ghost.queue_free)

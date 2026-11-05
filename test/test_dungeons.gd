@@ -156,6 +156,10 @@ func test_walking_through_every_exit_comes_to_the_entrance_of_the_exit_it_leads_
 		var destination := _exit(dungeons, _graph.exits[exit_id])
 		var action := _action_towards(room_exit)
 		var from := room_exit.entrance.global_position - (room_exit.global_position - room_exit.entrance.global_position).normalized() * (FROM_EXIT - room_exit.entrance.position.length())
+		# Where the floor before an exit is short (a landing over a chasm, as by Corridor 1's door to
+		# Radio/Officers), he sets off from its Entrance instead, so as not to start over the drop.
+		if _over_a_drop(room_exit.get_room(), from):
+			from = room_exit.entrance.global_position
 		_arrivals = []
 		dungeons.almos.global_position = from
 		_almos_input.press_action(action)
@@ -171,3 +175,15 @@ func test_walking_through_every_exit_comes_to_the_entrance_of_the_exit_it_leads_
 		assert_eq(_arrivals[0]["room"], destination.get_room(), "%s should lead into the Room of %s" % [exit_id, _graph.exits[exit_id]])
 		assert_almost_eq(_arrivals[0]["at"], destination.entrance.global_position, tolerance, "%s should put Almos at the Entrance of %s" % [exit_id, _graph.exits[exit_id]])
 		assert_eq(dungeons.current_room, destination.get_room(), "the Room of %s should be the current one" % _graph.exits[exit_id])
+
+
+# Whether this point, in global coordinates, is over one of this Room's Drops.
+func _over_a_drop(room: Node, point: Vector2) -> bool:
+	var drops := room.get_node_or_null("Drops")
+	if drops == null:
+		return false
+	for drop in drops.get_children():
+		var footprint := drop as Footprint
+		if footprint != null and Rect2(footprint.global_position - footprint.size / 2.0, footprint.size).has_point(point):
+			return true
+	return false

@@ -105,9 +105,10 @@ func test_he_has_a_six_frame_roll_for_every_side_that_plays_once() -> void:
 		assert_false(frames.get_animation_loop(roll), "%s plays once" % roll)
 
 
-func test_a_roll_plays_the_roll_for_the_side_he_rolls_toward_from_its_first_frame() -> void:
+func test_a_roll_is_an_upright_dash_that_fades_him_and_leaves_shadows() -> void:
 	var almos = _almos_input.spawn_almos()
 	var art := _art(almos)
+	var before: Array = almos.get_parent().get_children()
 	_almos_input.press_action(&"move_down")
 	_almos_input.press_action(&"roll")
 	await wait_physics_frames(2)
@@ -119,15 +120,22 @@ func test_a_roll_plays_the_roll_for_the_side_he_rolls_toward_from_its_first_fram
 			seen_rolling = true
 			break
 	assert_true(seen_rolling, "a tap of roll with a direction starts a roll")
-	assert_eq(art.animation, &"roll_down", "rolling down plays roll_down")
-	assert_lte(art.frame, 1, "the roll starts from its first frames")
-	_almos_input.release_everything()
-	for i in 60:
+	assert_eq(art.animation, &"walk_down", "dashing down he strides upright, facing down")
+	var faded := false
+	var shadows := 0
+	for i in 20:
 		await wait_physics_frames(1)
+		faded = faded or art.modulate.a < 0.5
 		if not almos.rolling:
 			break
+	for node in almos.get_parent().get_children():
+		if node is Sprite2D and not before.has(node):
+			shadows += 1
+	assert_true(faded, "he fades out in the dash")
+	assert_gte(shadows, 3, "a trail of shadows is left along the dash")
+	_almos_input.release_everything()
 	await wait_physics_frames(2)
-	assert_ne(art.animation, &"roll_down", "after the roll he walks or stands again")
+	assert_almost_eq(art.modulate.a, 1.0, 0.01, "after the dash he shows whole again")
 
 
 func test_he_has_an_attack_for_every_side_with_room_for_the_swing() -> void:

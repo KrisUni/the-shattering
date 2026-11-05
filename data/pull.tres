@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_cost")
-health_cost = 10.0
+health_cost = 0.0
 mana_cost = 10.0
 stamina_cost = 20.0
 target_range = 200.0

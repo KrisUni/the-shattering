@@ -9,7 +9,8 @@ const TILE := 32.0
 # In tiles. The Room is 36 by 20 tiles, plus a quarter-tile strip at the south wall.
 const COLUMNS := 36
 const ROWS := 20
-const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3"]
+# The north wall, and the short west wall either side of the doorway to Radio/Officers.
+const WALL_NAMES := ["WallTop1", "WallTop2", "WallTop3", "WallDoorNorth", "WallDoorSouth"]
 # No solid root is left below the lane: the chasm runs off the Room's west, east and south edges.
 const MASS_NAMES := []
 # The Drops that narrow the hall, with the passage south between them: open edges where the root

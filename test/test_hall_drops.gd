@@ -1,6 +1,6 @@
 extends GutTest
 ## Corridor 1's lane runs above a chasm, crossed by one winding bridge (narrow spans either side of a
-## landing) to the south exit: the chasm is made of Drops, open edges Almos can walk off, with a ragged
+## landing) down to a platform out in the chasm and on east to Corridor 2: the chasm is made of Drops, open edges Almos can walk off, with a ragged
 ## lip mirrored along the lane, and it runs off the Room's west, east and south edges with no wall. Walking or rolling off one is a Deadly fall (he drops out of sight and dies,
 ## and his Remains are left at the edge); an enemy Shoved or Pulled into one falls to its death and
 ## no enemy walks into one by itself; a barrel knocked into one is gone until enemies return. A
@@ -76,8 +76,8 @@ func test_the_chasm_has_a_mirrored_lip_and_runs_off_the_room() -> void:
 	assert_true(_in_the_chasm(Vector2(200, 644)), "off the south edge")
 
 
-func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_south_exit() -> void:
-	var exit := _room.get_node("Exits/to_radio_officers") as Node2D
+func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_east_platform() -> void:
+	var exit := _room.get_node("Exits/east_low") as Node2D
 	# A walk of firm ground from the lane down to the exit, a tile at a time, never stepping into the chasm.
 	var reached := {}
 	var frontier := [Vector2i(18, 6)]
@@ -90,23 +90,54 @@ func test_a_winding_bridge_crosses_the_chasm_from_the_lane_to_the_south_exit() -
 		reached[cell] = true
 		for step in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
 			frontier.append(cell + step)
-	var exit_cell := Vector2i(floori(exit.position.x / 32.0), 19)
-	assert_true(reached.has(exit_cell), "the bridge reaches the south exit")
+	var exit_cell := Vector2i(35, floori(exit.position.y / 32.0))
+	assert_true(reached.has(exit_cell), "the bridge reaches the platform and the way on to Corridor 2")
+	assert_true(reached.has(Vector2i(20, 16)), "the bridge itself turns east to the platform")
 	var columns := {}
 	for cell: Vector2i in reached:
 		if cell.y >= 10:
 			columns[cell.x] = true
 	assert_gte(columns.size(), 5, "it winds: its spans do not all run down one line")
 	var narrowest := 99
+	# The bridge alone, between the spur to Radio/Officers (west) and the path down to the east
+	# platform.
 	for row in range(9, 18):
 		var width := 0
-		for x in 36:
+		for x in range(13, 24):
 			if reached.has(Vector2i(x, row)):
 				width += 1
 		narrowest = mini(narrowest, width)
 	assert_eq(narrowest, 2, "it narrows to a span two tiles wide, room enough to pass")
 	for wall_name in ["MassWest", "MassEast", "MassWestEdge", "MassEastEdge", "WallBottom1", "WallBottom2"]:
 		assert_null(_room.get_node_or_null("Walls/" + wall_name), "no %s framing it" % wall_name)
+
+
+func test_a_path_from_the_east_ledge_leads_down_to_a_platform_and_on_to_corridor_2() -> void:
+	var exit := _room.get_node("Exits/east_low") as RoomExit
+	var entrance := exit.get_node("Entrance") as Node2D
+	assert_false(_in_the_chasm(exit.position + entrance.position), "his way in from Corridor 2 is firm ground")
+	# Firm ground, a tile at a time, from the lane down the east ledge to the platform and the exit.
+	var reached := {}
+	var frontier := [Vector2i(28, 6)]
+	while not frontier.is_empty():
+		var cell: Vector2i = frontier.pop_back()
+		if reached.has(cell) or cell.x < 0 or cell.x > 35 or cell.y < 6 or cell.y > 20:
+			continue
+		if _in_the_chasm(Vector2(cell) * 32.0 + Vector2(16, 16)):
+			continue
+		reached[cell] = true
+		for step in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			frontier.append(cell + step)
+	assert_true(reached.has(Vector2i(35, floori(exit.position.y / 32.0))), "the path reaches the east edge")
+	var platform := 0
+	for x in range(24, 32):
+		for y in range(13, 19):
+			if reached.has(Vector2i(x, y)):
+				platform += 1
+	assert_gte(platform, 20, "a small platform out in the chasm on the way")
+	var graph := load("res://data/dungeons_room_graph.tres") as RoomGraph
+	assert_eq(graph.exits.get("corridor_1/east_low"), "corridor_2/west_low", "it leads into Corridor 2")
+	assert_eq(graph.exits.get("corridor_2/west_low"), "corridor_1/east_low", "and back")
 
 
 func test_walking_off_the_edge_is_a_deadly_fall() -> void:
@@ -171,10 +202,13 @@ func test_an_enemy_shoved_into_a_drop_falls_to_its_death() -> void:
 
 
 func test_a_barrel_knocked_into_a_drop_is_gone_until_enemies_return() -> void:
-	var almos = _almos_at(ON_THE_LANE + Vector2(0, -70))
+	# On the east of the lane, where nothing but chasm is below it: under the west of the lane the
+	# spur round the barricade runs close enough to catch a barrel knocked off.
+	var east_of_the_lane := Vector2(1152.0 - ON_THE_LANE.x, ON_THE_LANE.y)
+	var almos = _almos_at(east_of_the_lane + Vector2(0, -70))
 	almos.facing = Vector2.DOWN
 	var barrel := BARREL_SCENE.instantiate() as HidingSpot
-	barrel.position = ON_THE_LANE + Vector2(0, -20)
+	barrel.position = east_of_the_lane + Vector2(0, -20)
 	_room.add_child(barrel)
 	var lift := barrel.get_node("Liftable")
 	await wait_physics_frames(2)

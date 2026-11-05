@@ -1,6 +1,6 @@
 extends GutTest
 ## Corridor 1, the hall Almos comes out into from Cell 3, is a stealth stretch: a lane three
-## Almos-widths wide that one guard walks in its east half while a second sits at the guard post,
+## Almos-widths wide that one guard walks in its west half while a second sits at the guard post in the east,
 ## past a rockfall, the stores and the post's barrels, to hide in while he goes by. Here: he patrols
 ## the whole length, the route and the doorways are clear, and in the real Dungeons he walks his whole
 ## round past Almos hidden in the barrel by Cell 3 without noticing him, while he catches him standing
@@ -58,7 +58,7 @@ func _path_blocked(room: Room, a: Vector2, b: Vector2) -> bool:
 	return result[0] < 1.0
 
 
-func test_one_guard_walks_the_east_half_of_the_hall() -> void:
+func test_one_guard_walks_the_west_half_of_the_hall() -> void:
 	var room := await _corridor_in_a_viewport()
 	var guards := _guards(room)
 	assert_eq(guards.size(), 2, "two guards: one walking the hall, one at the guard post")
@@ -73,10 +73,13 @@ func test_one_guard_walks_the_east_half_of_the_hall() -> void:
 	for point in guard.patrol:
 		xs.append(point.x)
 		assert_almost_eq(point.y, 176.0, 0.01, "his route runs down the middle of the lane")
-	# He keeps to the east half, from Cell 2's door to the east end: the west, by Cell 3, is quiet
-	# ground where Almos learns his powers.
-	assert_between(xs.min(), 640.0, 800.0, "it turns back by Cell 2's door")
-	assert_gt(xs.max(), 1024.0, "and reaches the east end")
+	# He keeps to the west half, from the rockfall to the middle of the hall, and starts at the west
+	# end: the guard post, in the east, is the other guard's.
+	assert_lt(xs.min(), 160.0, "it turns back by the rockfall")
+	assert_between(xs.max(), 480.0, 640.0, "and at the middle of the hall")
+	assert_lt(guard.position.x, 160.0, "he starts at the west end, the far side from the bench")
+	var post = guards.filter(func(g: Node) -> bool: return g.patrol.is_empty())[0]
+	assert_gt(post.position.x, 800.0, "the seated guard is at the post in the east")
 
 
 func test_the_furniture_leaves_every_cell_door_clear() -> void:

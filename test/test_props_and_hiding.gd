@@ -313,3 +313,15 @@ func test_an_enemys_health_bar_shows_once_it_is_hurt_with_a_trail() -> void:
 	# It drains down to the bar (which a jailer at rest slowly refills, so not to a fixed share).
 	assert_almost_eq(bar.trail_share(), health.current / health.maximum, 0.01, "then drains to the bar")
 	assert_lt(bar.trail_share(), 1.0, "having come down from where it was")
+
+
+func test_a_shove_knocks_a_light_prop_further_than_a_heavy_one() -> void:
+	var throw := load("res://data/throw.tres") as ThrowTuning
+	var barrel := (load("res://data/barrel_lift.tres") as LiftTuning).weight
+	var bowl := (load("res://data/bowl_lift.tres") as LiftTuning).weight
+	var bench := (load("res://data/bench_lift.tres") as LiftTuning).weight
+	assert_almost_eq(throw.knock_range_for(barrel), throw.knock_range, 0.01, "a barrel goes the knock range")
+	assert_gt(throw.knock_range_for(bowl), throw.knock_range_for(barrel), "a bowl further")
+	assert_lt(throw.knock_range_for(bench), throw.knock_range_for(barrel), "a bench less far")
+	assert_almost_eq(throw.knock_range_for(0.5), throw.knock_range * throw.knock_scale_max, 0.01, "never more than the most")
+	assert_almost_eq(throw.knock_range_for(1000.0), throw.knock_range * throw.knock_scale_min, 0.01, "never less than the least")

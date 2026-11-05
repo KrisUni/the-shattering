@@ -34,6 +34,8 @@ rooms = Dictionary[StringName, String]({
 exits = Dictionary[String, String]({
 "corridor_1/east": "corridor_2/west",
 "corridor_2/west": "corridor_1/east",
+"corridor_1/east_low": "corridor_2/west_low",
+"corridor_2/west_low": "corridor_1/east_low",
 "corridor_2/east": "corridor_3/west",
 "corridor_3/west": "corridor_2/east",
 "corridor_3/east": "corridor_4/west",

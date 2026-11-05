@@ -318,10 +318,13 @@ func test_a_low_attack_misses_almos_who_is_in_the_air_through_all_of_its_active_
 
 
 func test_a_low_attack_still_on_catches_almos_who_lands_while_it_is_active() -> void:
-	var low := _tuning.low_attack
-	var almos = _spawn_fight_with_low_attacks()
-	# His Jump ends in the middle of the swing's active frames.
+	# A low attack wound up for long enough that his whole Jump fits before the middle of its
+	# active frames, whatever the Jump's length.
 	var jump_frames := _jump_frames()
+	var low := _tuning.low_attack.duplicate() as AttackData
+	low.startup_frames = maxi(low.startup_frames, jump_frames - low.active_frames / 2 + 2)
+	var almos = _spawn_fight_with_low_attacks(low)
+	# His Jump ends in the middle of the swing's active frames.
 	var press_after := low.startup_frames + low.active_frames / 2 - jump_frames
 	assert_gte(press_after, 0, "the swing should not begin before his Jump can have started")
 	await _rig.wait_frames(maxi(0, press_after))
@@ -404,9 +407,12 @@ func test_a_parried_low_attack_is_negated_and_builds_the_parry_stagger() -> void
 
 # The enemy given only Low attacks to make, a little way below Almos, after him, and sampled.
 # Almos is sampled too, for whether he is in the air.
-func _spawn_fight_with_low_attacks():
+func _spawn_fight_with_low_attacks(low: Resource = null):
 	var almos = _almos_input.spawn_almos()
-	var tuning := _rig.tuning_with({"attack_pattern": _pattern([LOW])})
+	var overrides := {"attack_pattern": _pattern([LOW])}
+	if low != null:
+		overrides["low_attack"] = low
+	var tuning := _rig.tuning_with(overrides)
 	_rig.spawn_enemy(tuning, almos.position + Vector2.DOWN * ENEMY_DISTANCE)
 	_rig.set_target(almos, almos.health)
 	_rig.sample_also("airborne", func() -> bool: return almos.airborne)

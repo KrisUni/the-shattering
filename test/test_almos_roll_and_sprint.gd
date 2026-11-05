@@ -309,7 +309,7 @@ func test_a_tap_in_the_last_moments_of_a_roll_queues_another_that_starts_as_it_e
 
 
 func test_taps_in_the_last_moments_of_a_roll_queue_only_one_more_roll() -> void:
-	var tuning := _tuning_with({"roll_buffer_window": 0.25})
+	var tuning := _tuning_with({"roll_duration": 0.3, "roll_buffer_window": 0.25})
 	_spawn_almos(tuning)
 	_almos_input.press_action(&"move_right")
 	await wait_physics_frames(SETTLE_FRAMES)

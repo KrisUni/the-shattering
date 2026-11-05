@@ -501,12 +501,15 @@ func _target_hidden() -> bool:
 
 
 # Whether it notices the target now: a Sound hunter by the Noise he makes, any other enemy by Sight.
-# Nobody notices him in a Hiding spot.
+# Nobody notices him in a Hiding spot, and no enemy sees him while he has vanished in a dash.
 func _target_noticed() -> bool:
 	if _target_hidden():
 		return false
 	if tuning.sound_hunter:
 		return _target_in_earshot()
+	# Vanished in a dash, he is out of Sight; a Sound hunter still hears him.
+	if target.get(&"vanished") == true:
+		return false
 	return _target_in_sight()
 
 
