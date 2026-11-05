@@ -4,7 +4,10 @@
   15 frames, a seamless loop at 12 a second), tall and restless, tongues breaking off its top and a
   wisp of violet smoke above;
 - assets/shared/torch/flame_0-4.png: a torch's small, steadier flame (32x48, 5 frames at 8 a second);
-- assets/shared/torch/torch.png: the torch's bracket, a bowl on a wrapped pole (20x74).
+- assets/shared/torch/torch.png: the torch's bracket, a bowl on a wrapped pole (20x74);
+- assets/shared/checkpoint/campfire_0-11.png: the Checkpoint, a campfire (48x56, 12 frames, a
+  seamless loop at 10 a second): a ring of stones round two crossed logs and a bed of embers, with a
+  low flame on them.
 
 Drawn at 32 px: one art pixel is one world unit. The shapes are made at the first drawing's size and
 scaled (`scale`), so the flame keeps its rhythm while its bands, tongues and smoke get the detail.
@@ -146,6 +149,53 @@ def bracket():
     return pk.remove_orphans(c.render())
 
 
+STONE = pk.Material("#6b6270", tones=4, step=0.08, lit_step=0.09)
+LOG = pk.Material("#6e4f3b", tones=4, step=0.075, lit_step=0.085)
+ASH = pk.Material("#3a3036", tones=2, step=0.05)
+EMBERS = [(120, 58, 34), (176, 82, 30), (226, 128, 40), (247, 196, 104)]
+
+
+def campfire_base(frame, frames):
+    """The fire's bed, 48x56 with the flame left out: a ring of stones round a bed of ash and embers,
+    two logs crossed over it. The embers glow and fade with the loop."""
+    c = pk.Canvas(48, 56)
+    c.ellipse(24, 46, 15, 5.5, ASH, 0, form="flat", line=False)
+    # The ring: stones round the bed, the far ones higher and smaller, the near ones in front.
+    for i in range(10):
+        a = 2 * math.pi * i / 10 + 0.2
+        x, y = 24 + 17 * math.cos(a), 46 + 6.5 * math.sin(a)
+        near = math.sin(a) > 0
+        c.ellipse(x, y, 3.6 if near else 3.0, 2.6 if near else 2.2, STONE, 4 if near else 1)
+    # Two logs crossed over the bed.
+    c.capsule(7, 47, 35, 40, 2.8, LOG, 2)
+    c.capsule(41, 47, 13, 40, 2.8, LOG, 3)
+    c.capsule(15, 50, 33, 50, 2.4, LOG, 5)
+    image = c.render()
+    phase = 2 * math.pi * frame / frames
+    px = image.load()
+    for i, (ex, ey) in enumerate([(18, 46), (22, 47), (26, 45), (30, 47), (24, 48), (20, 44), (28, 44)]):
+        glow = 0.5 + 0.5 * math.sin(phase * (1 + i % 3) + i * 1.7)
+        colour = EMBERS[min(len(EMBERS) - 1, int(glow * len(EMBERS)))]
+        if px[ex, ey][3] == 0 or px[ex, ey][:3] in [ASH.ramp[0], ASH.ramp[-1]] or True:
+            px[ex, ey] = colour + (255,)
+    return image
+
+
+def campfire(frame, frames):
+    """A frame of the campfire: its bed with a low, broad flame standing on the logs."""
+    image = campfire_base(frame, frames)
+    fire = flame(22, 40, frames, frame, sway=1.6, tongues=2, smoke=True, base_ratio=0.8, seed=2.6, scale=2)
+    image.alpha_composite(fire, (13, 6))
+    # The near logs and stones stay in front of the flame's foot.
+    front = campfire_base(frame, frames).crop((0, 44, 48, 56))
+    for y in range(front.height):
+        for x in range(front.width):
+            p = front.getpixel((x, y))
+            if p[3] and y + 44 >= 47:
+                image.putpixel((x, y + 44), p)
+    return pk.remove_orphans(image)
+
+
 def main():
     root = sys.argv[1] if len(sys.argv) > 1 else "assets/shared"
     for f in range(15):
@@ -155,6 +205,8 @@ def main():
         pk.save(flame(32, 48, 5, f, sway=1.2, tongues=1, smoke=False, base_ratio=0.55, seed=1.9, scale=2),
                 os.path.join(root, "torch", "flame_%d.png" % f))
     pk.save(bracket(), os.path.join(root, "torch", "torch.png"))
+    for f in range(12):
+        pk.save(campfire(f, 12), os.path.join(root, "checkpoint", "campfire_%d.png" % f))
 
 
 if __name__ == "__main__":
