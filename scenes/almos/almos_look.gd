@@ -12,7 +12,9 @@ extends Node
 ## - for a moment after he casts Pull or Shove on an enemy or a thing (or at nothing), `pull_<side>`
 ##   or `shove_<side>` shows a small gesture of the hands: Shove gathers them and pushes the palms
 ##   out, Pull reaches out, closes on it and draws them in;
-## - while he rolls, `roll_<side>` plays once from its first frame each time a roll starts;
+## - while he rolls, `roll_<side>` plays once from its first frame each time a roll starts. A
+##   Roll is a vanishing dash: he fades out and back in (Almos's dash_visibility), and a fading
+##   afterimage of him is left where it began;
 ## - otherwise `walk_<side>` while he moves and `idle_<side>` while he stands.
 ## A name the sprite lacks is skipped. Facing left plays the side animations flipped, so they
 ## are drawn facing right. It only reads Almos: no gameplay depends on it.
@@ -33,6 +35,11 @@ const THROW_FRAMES := 12
 const GESTURE_FRAMES := 18
 const GESTURE_KEY := 4
 const GESTURE_EASE := 12
+# How long, in seconds, the afterimage a dash leaves takes to fade, and how much of it shows at first.
+# Its tint is a cold, ghostly blue. A look.
+const AFTERIMAGE_FADE := 0.3
+const AFTERIMAGE_ALPHA := 0.55
+const AFTERIMAGE_TINT := Color(0.62, 0.72, 1.0)
 
 var _almos: Node
 var _attacks: Node
@@ -70,6 +77,8 @@ func update_look() -> void:
 		_art = get_parent().get_node_or_null("Art") as AnimatedSprite2D
 		if _art == null:
 			return
+	var visibility: Variant = _almos.get(&"dash_visibility")
+	_art.modulate.a = float(visibility) if visibility != null else 1.0
 	var side := side_for(_almos.facing)
 	# Only the side animations flip; up and down are drawn for themselves.
 	_art.flip_h = side == &"side" and (_almos.facing as Vector2).x < 0.0
@@ -85,6 +94,8 @@ func update_look() -> void:
 	if _almos.rolling:
 		# A roll plays once from its first frame, each time one starts.
 		var roll := StringName("roll_" + side)
+		if not _was_rolling:
+			_leave_afterimage()
 		if not _was_rolling or _art.animation != roll:
 			_play(roll, true)
 		_was_rolling = true
@@ -196,3 +207,22 @@ func _play(animation_name: StringName, from_start := false) -> void:
 		_art.play(animation_name)
 	elif _art.animation != animation_name or not _art.is_playing():
 		_art.play(animation_name)
+
+
+# Leaves a still, fading copy of him as he looks now, where he stands: the place a dash began.
+func _leave_afterimage() -> void:
+	var world := (_almos as Node).get_parent()
+	if world == null or _art.sprite_frames == null or not _art.sprite_frames.has_animation(_art.animation):
+		return
+	var ghost := Sprite2D.new()
+	ghost.texture = _art.sprite_frames.get_frame_texture(_art.animation, _art.frame)
+	ghost.centered = _art.centered
+	ghost.offset = _art.offset
+	ghost.flip_h = _art.flip_h
+	ghost.z_index = (_almos as Node2D).z_index
+	ghost.modulate = Color(AFTERIMAGE_TINT, AFTERIMAGE_ALPHA)
+	world.add_child(ghost)
+	ghost.global_transform = _art.global_transform
+	var fade := ghost.create_tween()
+	fade.tween_property(ghost, "modulate:a", 0.0, AFTERIMAGE_FADE)
+	fade.tween_callback(ghost.queue_free)

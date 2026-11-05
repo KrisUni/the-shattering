@@ -211,7 +211,7 @@ A slower, harder swing that can be charged by holding and builds more Stagger th
 _Avoid_: Strong attack, power attack, charge attack
 
 **Spell**:
-A channelled ability with its own button (the `cast_spell` action). Spells are Pull and Shove. One button (the `switch_spell` action) switches the selected Spell, in the order Pull, Shove and round again (Storm draw is not selectable: it comes from a Parry); a held flame selects Shove and locks it until the flame is thrown or out, then the selection returns. Until Almos has his Mana bar, a Spell costs Health and Stamina; after, Mana and Stamina. A press that cannot act or cannot be paid does nothing and spends nothing.
+A channelled ability with its own button (the `cast_spell` action). Spells are Pull and Shove. One button (the `switch_spell` action) switches the selected Spell, in the order Pull, Shove and round again (Storm draw is not selectable: it comes from a Parry); a held flame selects Shove and locks it until the flame is thrown or out, then the selection returns. Until Almos has his Mana bar, a Spell costs Health and Stamina (for the demo, its Health cost is nothing); after, Mana and Stamina. A press that cannot act or cannot be paid does nothing and spends nothing.
 _Avoid_: Magic, ability, skill, cast
 
 **Shove**:
@@ -231,7 +231,7 @@ Burning started by a fireball, or by touching a lit torch in hand to something f
 _Avoid_: Flames, burning, blaze
 
 **Roll**:
-The player's preferred defence: a quick evasive move in any direction that costs stamina and briefly makes the player untouchable.
+The player's preferred defence: a quick evasive move in any direction that costs stamina, a vanishing dash. Almos fades out and back in as he dashes, leaving a fading afterimage where it began, and for almost all of it he is untouchable, passes through enemies and is out of every enemy's Sight (a Sound hunter still hears it).
 _Avoid_: Dodge, dash, evade
 
 **Sprint**:

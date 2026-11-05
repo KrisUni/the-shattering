@@ -67,6 +67,21 @@ var rolling: bool:
 	get:
 		return _state == State.ROLLING
 
+## Whether he has vanished: all through a Roll, a vanishing dash. No enemy notices him then, and he
+## passes through enemies.
+var vanished: bool:
+	get:
+		return rolling
+
+## How much of him shows, from 1 (all) to 0 (none): through a Roll he fades out over its first
+## quarter, is gone for its middle and fades back in over its last quarter. Only a look.
+var dash_visibility: float:
+	get:
+		if not rolling:
+			return 1.0
+		var t := clampf(_roll_time / maxf(tuning.roll_duration, 0.001), 0.0, 1.0)
+		return clampf(maxf(1.0 - t * 4.0, t * 4.0 - 3.0), 0.0, 1.0)
+
 ## How far from him, in pixels, a Sound hunter hears him in this physics frame: the largest of the
 ## radii of what he is doing, 0 when he walks, stands, Blocks or Jumps with no attack. Sprinting,
 ## a Roll and any attack under way (a swing, a Heavy attack charge, a Jump attack, a Critical hit)
@@ -1167,4 +1182,8 @@ func _roll(delta: float) -> void:
 	var step := minf(delta, tuning.roll_duration - _roll_time)
 	_roll_time += step
 	velocity = _roll_direction * tuning.roll_distance / tuning.roll_duration * step / delta
+	# Vanished, he passes through enemies.
+	var mask := collision_mask
+	collision_mask = mask & ~AlmosJump.ENEMY_BODY
 	move_and_slide()
+	collision_mask = mask
