@@ -220,22 +220,22 @@ func test_a_knocked_barrel_that_hits_nothing_comes_to_rest_whole() -> void:
 	assert_true(barrel.is_in_group(&"hiding_spots"), "a hiding spot still")
 
 
-func test_pull_takes_what_he_aims_at_not_a_nearer_thing_behind_him() -> void:
+func test_pull_takes_the_nearest_thing_all_round_him_not_only_ahead() -> void:
 	var almos = _almos_input.spawn_almos()
 	almos.facing = Vector2.RIGHT
-	var behind := _place(BARREL_SCENE, almos, Vector2(-60, 0))
-	var ahead := _place(BARREL_SCENE, almos, Vector2(120, 0))
+	var near := _place(BARREL_SCENE, almos, Vector2(-60, 0))
+	var far := _place(BARREL_SCENE, almos, Vector2(120, 0))
 	await wait_physics_frames(2)
 	await _tap(&"cast_spell")
 	await wait_physics_frames(_wind_up_frames())
 	var spell := almos.get_node("Spell") as AlmosSpell
-	assert_eq(spell.held_object, ahead.get_node("Liftable"), "the barrel ahead of him, which he aims at")
-	assert_eq(behind.get_node("Liftable").state, Liftable.State.RESTING, "not the nearer one behind him")
+	assert_eq(spell.held_object, near.get_node("Liftable"), "the barrel behind him, being nearer")
+	assert_eq(far.get_node("Liftable").state, Liftable.State.RESTING, "not the one ahead")
 
 
 func test_pull_takes_a_nearer_barrel_before_a_torch_further_off() -> void:
 	var almos = _almos_input.spawn_almos()
-	almos.facing = Vector2.DOWN
+	almos.facing = Vector2.RIGHT
 	var barrel := _place(BARREL_SCENE, almos, Vector2(0, 40))
 	var torch := _place(preload("res://scenes/world/torch.tscn"), almos, Vector2(-100, 0))
 	await wait_physics_frames(2)

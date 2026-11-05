@@ -359,16 +359,15 @@ func test_pull_leaves_an_enemy_outside_the_range_and_spends_nothing() -> void:
 	_assert_nothing_was_spent()
 
 
-func test_pull_is_aimed_and_leaves_an_enemy_behind_him() -> void:
+func test_pull_takes_an_enemy_behind_him_all_round_not_only_in_a_cone() -> void:
 	_set_up_room(OPEN_FLOOR, OPEN_FLOOR + Vector2(-NEAR * 2.0, 0.0))
 	PullReach.clear(_room, [_enemy])
 	assert_eq(_almos.facing, Vector2.RIGHT, "control: he faces away from it")
-	var start: Vector2 = _enemy.global_position
 
 	await _cast()
-	await wait_physics_frames(MARGIN_FRAMES * 4)
+	await _wait_for_the_slide(_pull)
 
-	assert_almost_eq(_enemy.global_position, start, Vector2(0.5, 0.5), "not pulled in from behind")
+	assert_almost_eq(_enemy.global_position.distance_to(_almos.global_position), _pull.distance, DISTANCE_TOLERANCE, "pulled in from behind")
 
 
 func test_pull_takes_a_lit_torch_in_range_first_and_leaves_the_enemy() -> void:

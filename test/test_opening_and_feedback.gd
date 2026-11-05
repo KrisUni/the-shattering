@@ -221,7 +221,6 @@ func test_a_shove_with_nothing_in_reach_sends_a_wave_too() -> void:
 
 func test_a_pull_on_a_barrel_sends_a_wave_that_lands_on_it() -> void:
 	var almos = _almos_input.spawn_almos()
-	almos.facing = Vector2.RIGHT
 	var barrel := _place(BARREL_SCENE, almos, Vector2(70, 0))
 	_watch_waves(almos)
 	await wait_physics_frames(2)
@@ -246,7 +245,6 @@ func test_a_pull_for_a_flame_sends_no_wave() -> void:
 
 func test_a_wardrobe_visibly_shudders_toward_him_at_a_pull() -> void:
 	var almos = _almos_input.spawn_almos()
-	almos.facing = Vector2.RIGHT
 	var wardrobe := _place(WARDROBE_SCENE, almos, Vector2(80, 0))
 	var look := wardrobe.get_node("Look") as Node2D
 	await wait_physics_frames(2)
