@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/main_entrance.tscn" id="1_door"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/locked_door.png" id="2_art"]
+
+[sub_resource type="RectangleShape2D" id="Shape_side_door"]
+size = Vector2(32, 64)
+
+[node name="LockedDoor" instance=ExtResource("1_door")]
+
+[node name="CollisionShape2D" parent="."]
+shape = SubResource("Shape_side_door")
+
+[node name="Shape" parent="Look"]
+visible = false
+polygon = PackedVector2Array(-16, -32, 16, -32, 16, 32, -16, 32)
+
+[node name="Art" type="Sprite2D" parent="Look"]
+texture = ExtResource("2_art")
+
+[node name="Label" parent="."]
+visible = false
+text = "Locked door"

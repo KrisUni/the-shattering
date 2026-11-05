@@ -34,6 +34,7 @@ func before_each() -> void:
 
 func after_each() -> void:
 	_almos_input.release_everything()
+	WorldState.reset()
 
 
 # The Dungeons in the test's scene tree, shown in a view of VIEW_SIZE. The test frees it.
@@ -148,6 +149,10 @@ func test_walking_through_every_exit_comes_to_the_entrance_of_the_exit_it_leads_
 	# Path blockers (Cell 3's roots) close exits; burn them out so that every exit can be walked through.
 	for blocker in dungeons.find_children("*", "PathBlocker", true, false):
 		(blocker as PathBlocker).flammable.burn_out_now()
+	# Corridor 2's east door is locked: he has the Jailer's key, and it is opened.
+	WorldState.record_taken(&"dungeons/jailers_key")
+	for door in dungeons.find_children("*", "MainEntrance", true, false):
+		(door as MainEntrance).open_with_key()
 	await wait_physics_frames(2)
 	var tolerance := Vector2(TOLERANCE, TOLERANCE)
 

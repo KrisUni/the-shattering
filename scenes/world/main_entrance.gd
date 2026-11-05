@@ -1,6 +1,7 @@
 class_name MainEntrance
 extends StaticBody2D
-## The Main entrance: a locked door that is the Dungeons' way out. While shut it is a solid body that
+## A locked door that the Jailer's key opens: the Main entrance, the Dungeons' way out, and Corridor
+## 2's east door (scenes/world/locked_door.tscn, the same door set in a side wall). While shut it is a solid body that
 ## blocks Almos. A tap of Interact beside it while Almos has the Jailer's key opens it: it stops
 ## blocking and is drawn open. The opening is not recorded anywhere, so each time the room is built
 ## the door stands shut again, and with the key a tap opens it once more. It is in the group
