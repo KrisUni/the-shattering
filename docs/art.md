@@ -38,6 +38,7 @@ The old base, Lospec's Oil 6 (cream `#fbf5ef`, sand `#f2d3ab`, dusty rose `#c69f
 - The dark is a dithered overlay drawn from the gameplay light, so it looks as dark as enemies treat it.
 - Each dark zone goes two or three steps toward navy.
 - Each lit torch or Fire cuts a circle of exactly its light radius, rimmed in Fire amber.
+- A wall hides what lies behind it from Almos: the circle is cut short at every wall of the Room (`scenes/world/darkness.gd`, each wall's collision box), though a wall's own face shows. Corridor 2's circle is smaller than the hall's (280 units against 340).
 
 ## References
 
@@ -454,9 +455,18 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 #### Corridor 2 floor and walls
 
 - **Thing:** Corridor 2 (the floor and walls of the Room)
-- **Source pack and files:** The same tiles as Corridor 1. Floor under the whole Room; north walls two tiles of face either side of the Interviews doorway; south walls one tile plus the strip either side of the WCs' and the Lockers' doorways; an east wall in the east-wall tile (3,1) above and below the locked door. The hall's chasm runs on through it in the deep root tile (0,2), edged by the chasm rim (`scenes/world/chasm_edge.gd`), between the high road along the north wall and the low road's ledge, stair runs and the Lockers' landing; three flights of stairs (`stair_flight.png`) lie over the chasm.
+- **Source pack and files:** The same tiles as Corridor 1. Floor under the whole Room; north walls two tiles of face either side of the Interviews doorway; a whole south wall, one tile plus the strip; an east wall in the east-wall tile (3,1) above and below the locked door. Along the high road's south side the dividing wall, `WallDivide`, two tiles of north face (sand lip, navy base) seen from the low road. The hall's chasm runs on through it in the deep root tile (0,2), edged by the chasm rim (`scenes/world/chasm_edge.gd`), under the dividing wall and round the low road's ledge, stair runs and the landing between flights; three flights of stairs (`stair_flight.png`) lie over the chasm. The store cupboard is a block of wall at the top of the first flight, its top in the south wall top tile (4,1) and its face in the strip tile (5,1), with its door in its east face dressed in Corridor 1's door frame (`door_frame.png`, `CupboardDoorFrame`) and a side lantern above it (`CupboardDoorLamp`).
 - **Size in art px:** 32x32 per tile; the Room is 36x20 tiles plus the strip.
 - **Palette notes and accents used:** As Corridor 1. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
+#### Store cupboard
+
+- **Thing:** Store cupboard
+- **Source pack and files:** The same tiles and shell as Radio/Officers (a small room in the middle of a full Room, root masses round it), its door in the east wall of the small room instead of the north. Dressed with the Dungeons' barrels, sacks, crate stack, clay pot and bucket, and a side lantern (`lamp_side.tscn`) on its west wall.
+- **Size in art px:** 32x32 per tile.
+- **Palette notes and accents used:** As Radio/Officers. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 

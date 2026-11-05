@@ -101,7 +101,7 @@ func _all_rects() -> Dictionary:
 
 
 func test_every_dungeons_room_has_walls_to_check() -> void:
-	assert_eq(_all_rects().size(), 24, "24 Dungeons Rooms should have Walls")
+	assert_eq(_all_rects().size(), 23, "23 Dungeons Rooms should have Walls")
 
 
 func test_every_wall_edge_across_the_room_is_a_multiple_of_32() -> void:

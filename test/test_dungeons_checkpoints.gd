@@ -1,7 +1,7 @@
 extends GutTest
 ## The Dungeons hold three Checkpoints: one in the Lobby, at the middle of the main hall, one in
-## Back corridor 1, just past the Back entrance, and one in Corridor 2, on the low road by the WCs'
-## door. Reception has none. Until Almos rests at one, a Death returns him to Cell 3; resting at one saves the changes made so far and makes it his return point.
+## Back corridor 1, just past the Back entrance, and one in Corridor 2, on the low road near where
+## Almos comes in. Reception has none. Until Almos rests at one, a Death returns him to Cell 3; resting at one saves the changes made so far and makes it his return point.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 

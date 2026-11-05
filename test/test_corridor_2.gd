@@ -1,18 +1,21 @@
 extends GutTest
 ## Corridor 2, the guards' crossing east of the hall. Corridor 1's chasm runs on through it, and its
-## two ways in from the hall never meet until the locked door at its east edge, which the Jailer's key
-## opens. The high road runs along the north wall, in from the hall's lane, past the Interviews door,
-## and three Nar jailers keep it: one at his post by the Interviews door, facing south, and two on
-## rounds that cross. The low road runs in from the platform along the south wall, past the WCs'
-## door and a Checkpoint, then winds over the chasm on switchback stairs, up, down past the Lockers'
-## door and up again, with a dead end on the way, to the landing before the same door. No Jump, not
-## even a sprinting one, carries Almos from one road to the other.
+## two ways in never meet, nor see each other until the last steps before the locked door at its east edge, which the
+## Jailer's key opens. The high road is a short strip along the north wall, in from the hall's lane,
+## past the Interviews door, with a wall along its south side that hides it from the rest of the
+## Room; three Nar jailers keep it, one at his post by the Interviews door, facing south, and two on
+## rounds that cross. The low road runs in from the platform along the south wall, past a
+## Checkpoint, then winds over the chasm on switchback stairs, up, along, down and up again, to the
+## landing before the same door. At the top of the first flight, on his left, is the door to the
+## store cupboard. No Jump, not even a sprinting one, carries Almos from one road to the other.
 
 const CORRIDOR_1_PATH := "res://scenes/areas/dungeons/corridor_1.tscn"
 const CORRIDOR_2_PATH := "res://scenes/areas/dungeons/corridor_2.tscn"
 const TUNING_PATH := "res://data/player_tuning.tres"
 const KEY := &"dungeons/jailers_key"
 const TILE := 32.0
+# In tiles: how near the landing before the door the low road comes before the high road shows.
+const NEAR_THE_DOOR := 4
 const COLUMNS := 36
 const ROWS := 19
 
@@ -97,12 +100,13 @@ func _span(room: Node2D, exit_name: String) -> Vector2:
 	return Vector2(exit.position.y - size.y / 2.0, exit.position.y + size.y / 2.0)
 
 
-# The landing before the locked door: firm ground within two tiles of its Entrance.
+# The landing before the locked door, where the roads meet: the two columns before it, from the
+# high road's way down to it to the low road's way up to it.
 func _landing() -> Dictionary:
 	var door := _cell_of(_entrance(_room, "east"))
 	var cells := {}
 	for x in range(door.x - 1, door.x + 1):
-		for y in range(door.y - 2, door.y + 3):
+		for y in range(door.y - 4, door.y + 3):
 			cells[Vector2i(x, y)] = true
 	return cells
 
@@ -121,6 +125,9 @@ func test_the_chasm_runs_on_from_the_hall_across_the_rooms_edge() -> void:
 	var here := _chasm_cells(_room)
 	var hall := _chasm_cells(_hall)
 	for row in range(2, 19):
+		if _in_a_wall(Vector2i(0, row)):
+			assert_true(hall.has(Vector2i(35, row)), "row %d: the wall stands where the hall's chasm meets it" % row)
+			continue
 		assert_eq(here.has(Vector2i(0, row)), hall.has(Vector2i(35, row)), "row %d meets the hall's east edge" % row)
 
 
@@ -155,17 +162,52 @@ func test_no_jump_carries_him_from_one_road_to_the_other() -> void:
 func test_the_side_doors_are_shared_out_between_the_roads() -> void:
 	var roads := _roads()
 	assert_true(roads["high"].has(_cell_of(_entrance(_room, "to_interviews"))), "Interviews is off the high road")
-	assert_true(roads["low"].has(_cell_of(_entrance(_room, "to_wcs"))), "the WCs are off the low road")
-	assert_true(roads["low"].has(_cell_of(_entrance(_room, "to_lockers_showers"))), "and so are the Lockers")
+	assert_true(roads["low"].has(_cell_of(_entrance(_room, "to_store_cupboard"))), "the store cupboard is off the low road")
+	var exits := _room.get_node("Exits").get_children().map(func(exit: Node) -> String: return str(exit.name))
+	exits.sort()
+	assert_eq(exits, ["east", "to_interviews", "to_store_cupboard", "west", "west_low"], "no other door: the south wall is whole")
 
 
-func test_the_low_road_winds_over_three_flights_of_stairs_with_a_dead_end() -> void:
+func test_the_store_cupboards_door_is_on_his_left_at_the_top_of_the_first_flight() -> void:
+	var flight := _room.get_node("Stairs/FlightUp") as Sprite2D
+	var top := flight.position + Vector2(flight.texture.get_width() / 2.0, 0.0)
+	var door := (_room.get_node("Exits/to_store_cupboard") as Node2D).position
+	assert_lt(door.x, flight.position.x, "west of the flight: on his left as he comes up")
+	assert_lt(absf(door.y - (top.y - TILE)), TILE * 1.5, "level with the flight's top")
+	assert_lt(door.distance_to(top), TILE * 3.0, "a step or two from it")
+
+
+func test_the_wall_hides_each_road_from_the_other() -> void:
+	var darkness := _room.get_node("Darkness") as Darkness
+	var eye := Node2D.new()
+	_room.add_child(eye)
+	darkness.target = eye
+	var roads := _roads()
+	var hidden := 0
+	var landing := _landing()
+	for at: Vector2i in roads["low"]:
+		# In the last few steps before the landing, where the roads meet, the high road's way down
+		# to it comes into sight.
+		if landing.keys().any(func(cell: Vector2i) -> bool: return maxi(absi(cell.x - at.x), absi(cell.y - at.y)) <= NEAR_THE_DOOR):
+			continue
+		eye.position = Vector2(at) * TILE + Vector2(TILE / 2.0, TILE / 2.0)
+		for cell: Vector2i in roads["high"]:
+			var point := _room.to_global(Vector2(cell) * TILE + Vector2(TILE / 2.0, TILE / 2.0))
+			assert_false(darkness.shows(point), "from %s on the low road, %s on the high road is out of sight" % [at, cell])
+			hidden += 1
+	assert_gt(hidden, 0, "control: there was something to hide")
+	# The wall hides it: without walls, the dark circle alone would show some of it.
+	eye.position = Vector2(14 * TILE, 12.5 * TILE)
+	assert_true(eye.global_position.distance_to(_room.to_global(Vector2(14 * TILE, 6 * TILE))) < darkness.sight_radius,
+		"control: the high road is within his circle from the stairs")
+
+
+func test_the_low_road_winds_over_three_flights_of_stairs() -> void:
 	var flights := _room.get_node("Stairs").get_children()
 	assert_eq(flights.size(), 3, "three flights")
 	var chasm := _chasm_cells(_room)
 	var low: Dictionary = _roads()["low"]
 	var door := _cell_of(_entrance(_room, "east"))
-	var rows := []
 	for flight in flights:
 		var sprite := flight as Sprite2D
 		var rect := Rect2(sprite.position, sprite.texture.get_size())
@@ -179,16 +221,6 @@ func test_the_low_road_winds_over_three_flights_of_stairs_with_a_dead_end() -> v
 		var blocked := chasm.duplicate()
 		blocked.merge(cells)
 		assert_false(_reached_from(_cell_of(_entrance(_room, "west_low")), blocked).has(door), "the way goes over %s" % sprite.name)
-	# A dead end: low road ground well off the shortest way, a spur he walks out along and back.
-	var ground := low.duplicate()
-	ground.merge(_landing())
-	var from_start := _distances(_cell_of(_entrance(_room, "west_low")), ground)
-	var to_door := _distances(door, ground)
-	var shortest: int = from_start[door]
-	var deepest := 0
-	for cell: Vector2i in low:
-		deepest = maxi(deepest, from_start[cell] + to_door[cell] - shortest)
-	assert_gte(deepest, 6, "the stairs have a dead end at least three tiles deep")
 
 
 func test_a_locked_door_shuts_the_way_east_until_the_jailers_key_opens_it() -> void:
@@ -206,13 +238,13 @@ func test_a_locked_door_shuts_the_way_east_until_the_jailers_key_opens_it() -> v
 	assert_true(door.open_with_key(), "with the key it opens")
 
 
-func test_a_checkpoint_stands_on_the_low_road_by_the_wcs_door() -> void:
+func test_a_checkpoint_stands_on_the_low_road_near_where_he_comes_in() -> void:
 	var checkpoints := _room.find_children("*", "", true, false).filter(
 		func(node: Node) -> bool: return node.is_in_group(&"checkpoints"))
 	assert_eq(checkpoints.size(), 1, "one Checkpoint")
 	var at := (checkpoints[0] as Node2D).position
 	assert_true(_roads()["low"].has(_cell_of(at)), "on the low road")
-	assert_lt(at.distance_to(_entrance(_room, "to_wcs")), 128.0, "by the WCs' door")
+	assert_lt(at.distance_to(_entrance(_room, "west_low")), 160.0, "a few steps from where he comes in")
 
 
 func test_the_guards_keep_the_high_road() -> void:
