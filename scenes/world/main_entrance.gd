@@ -22,6 +22,9 @@ var open: bool:
 
 # The tint of its look when the door stands open, a dim shade of its shut one.
 const OPEN_TINT := Color(1.0, 1.0, 1.0, 0.25)
+# A door with a Leaf of its own swings it open about its hinge instead: a quarter turn into the hall,
+# a little past and back, over this long, in seconds. A look.
+const SWING_TIME := 0.5
 
 
 ## Opens it if Almos has the key, and says whether it is open now. A door that is open stays open.
@@ -29,7 +32,13 @@ func open_with_key() -> bool:
 	if not _open and WorldState.is_taken(key):
 		_open = true
 		set_deferred(&"collision_layer", 0)
-		_look.modulate = OPEN_TINT
+		var leaf := _look.get_node_or_null(^"Leaf") as Node2D
+		if leaf != null:
+			var swing := leaf.create_tween()
+			swing.tween_property(leaf, ^"rotation", PI / 2.0 + 0.12, SWING_TIME * 0.75).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+			swing.tween_property(leaf, ^"rotation", PI / 2.0, SWING_TIME * 0.25).set_ease(Tween.EASE_IN_OUT)
+		else:
+			_look.modulate = OPEN_TINT
 	return _open
 
 

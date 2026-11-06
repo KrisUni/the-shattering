@@ -41,6 +41,11 @@
 [ext_resource type="PackedScene" path="res://scenes/world/weapon_pickup.tscn" id="50_pickup"]
 [ext_resource type="Resource" path="res://data/sword.tres" id="51_sword"]
 [ext_resource type="PackedScene" path="res://scenes/world/lamp_side.tscn" id="52_lamp_side"]
+[ext_resource type="Script" path="res://scenes/world/glow_pulse.gd" id="96_pulse"]
+[ext_resource type="Shader" path="res://assets/shared/sway/sway.gdshader" id="97_sway"]
+[sub_resource type="ShaderMaterial" id="Material_sway"]
+shader = ExtResource("97_sway")
+
 [sub_resource type="RectangleShape2D" id="Shape_128x16"]
 size = Vector2(128, 16)
 
@@ -443,18 +448,22 @@ z_index = -1
 position = Vector2(40, 50)
 scale = Vector2(-1, 1)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Hanging3" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(300, 50)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Hanging5" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(640, 50)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Hanging8" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(1120, 46)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Growth" type="Node2D" parent="."]
 z_index = -1
@@ -501,33 +510,40 @@ texture = ExtResource("40_moss0")
 [node name="Fungus1" type="Sprite2D" parent="Growth"]
 position = Vector2(90, 112)
 texture = ExtResource("44_fungus0")
+script = ExtResource("96_pulse")
 
 [node name="Fungus2" type="Sprite2D" parent="Growth"]
 position = Vector2(70, 112)
 scale = Vector2(-1, 1)
 texture = ExtResource("45_fungus1")
+script = ExtResource("96_pulse")
 
 [node name="Fungus3" type="Sprite2D" parent="Growth"]
 position = Vector2(1094, 112)
 scale = Vector2(-1, 1)
 texture = ExtResource("44_fungus0")
+script = ExtResource("96_pulse")
 
 [node name="Fungus4" type="Sprite2D" parent="Growth"]
 position = Vector2(236, 240)
 texture = ExtResource("45_fungus1")
+script = ExtResource("96_pulse")
 
 [node name="Fungus5" type="Sprite2D" parent="Growth"]
 position = Vector2(508, 432)
 texture = ExtResource("44_fungus0")
+script = ExtResource("96_pulse")
 
 [node name="Fungus6" type="Sprite2D" parent="Growth"]
 position = Vector2(960, 262)
 scale = Vector2(-1, 1)
 texture = ExtResource("45_fungus1")
+script = ExtResource("96_pulse")
 
 [node name="Fungus7" type="Sprite2D" parent="Growth"]
 position = Vector2(356, 206)
 texture = ExtResource("45_fungus1")
+script = ExtResource("96_pulse")
 
 [node name="RoofLight" type="Sprite2D" parent="."]
 z_index = -1

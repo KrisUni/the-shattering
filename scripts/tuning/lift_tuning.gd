@@ -23,3 +23,7 @@ extends Resource
 ## Whether it breaks apart where a throw from his hold ends (or where a knock sends it into a wall or
 ## an enemy), gone until enemies return, rather than coming to rest. A barrel does.
 @export var breaks := false
+
+## How it looks breaking: "staves" for a barrel, its art cut into staves with hoops rolling off;
+## "shards" for something fired, as a clay pot, its art cut into small broken pieces. A look.
+@export var pieces := &"staves"

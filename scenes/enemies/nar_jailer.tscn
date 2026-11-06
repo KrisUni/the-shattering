@@ -23,8 +23,21 @@
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_0.png" id="t_death_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_1.png" id="t_death_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/death_2.png" id="t_death_2"]
-[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_0.png" id="t_sit_0"]
-[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_1.png" id="t_sit_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/hurt_0.png" id="e_hurt_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/hurt_1.png" id="e_hurt_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/look_0.png" id="e_look_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/look_1.png" id="e_look_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/look_2.png" id="e_look_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/look_3.png" id="e_look_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/startle_0.png" id="e_startle_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/startle_1.png" id="e_startle_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/rise_0.png" id="e_rise_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/rise_1.png" id="e_rise_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/rise_2.png" id="e_rise_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_0.png" id="e_sit_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_1.png" id="e_sit_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_2.png" id="e_sit_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_jailer/sit_3.png" id="e_sit_3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(32, 32)
@@ -42,17 +55,6 @@ animations = [{
 "loop": true,
 "name": &"idle",
 "speed": 2.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("t_sit_0")
-}, {
-"duration": 1.0,
-"texture": ExtResource("t_sit_1")
-}],
-"loop": true,
-"name": &"sit",
-"speed": 1.5
 }, {
 "frames": [{
 "duration": 1.0,
@@ -149,6 +151,86 @@ animations = [{
 "loop": false,
 "name": &"death",
 "speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_hurt_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_hurt_1")
+}],
+"loop": false,
+"name": &"hurt",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_look_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_look_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_look_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_look_3")
+}],
+"loop": false,
+"name": &"look",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_startle_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_startle_1")
+}],
+"loop": false,
+"name": &"startle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_rise_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_rise_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_rise_2")
+}],
+"loop": false,
+"name": &"rise",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_sit_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sit_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sit_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sit_3")
+}],
+"loop": true,
+"name": &"sit",
+"speed": 2.5
 }]
 
 [node name="NarJailer" instance=ExtResource("1_enemy")]

@@ -91,6 +91,7 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_side_4.png" id="27_attack_side_4"]
 [ext_resource type="Script" path="res://scenes/almos/spell_look.gd" id="28_spell_look"]
 [ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="29_flammable"]
+[ext_resource type="Script" path="res://scenes/world/heat_shimmer.gd" id="h_shimmer"]
 
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_0.png" id="sw_attack_down_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_1.png" id="sw_attack_down_1"]
@@ -126,6 +127,135 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/shove_side_0.png" id="g_shove_side_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/shove_side_1.png" id="g_shove_side_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/shove_side_2.png" id="g_shove_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_down_0.png" id="m_sprint_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_down_1.png" id="m_sprint_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_down_2.png" id="m_sprint_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_down_3.png" id="m_sprint_down_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_down_4.png" id="m_sprint_down_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_down_5.png" id="m_sprint_down_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_up_0.png" id="m_sprint_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_up_1.png" id="m_sprint_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_up_2.png" id="m_sprint_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_up_3.png" id="m_sprint_up_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_up_4.png" id="m_sprint_up_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_up_5.png" id="m_sprint_up_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_side_0.png" id="m_sprint_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_side_1.png" id="m_sprint_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_side_2.png" id="m_sprint_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_side_3.png" id="m_sprint_side_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_side_4.png" id="m_sprint_side_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sprint_side_5.png" id="m_sprint_side_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_down_0.png" id="m_jump_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_down_1.png" id="m_jump_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_down_2.png" id="m_jump_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_up_0.png" id="m_jump_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_up_1.png" id="m_jump_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_up_2.png" id="m_jump_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_side_0.png" id="m_jump_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_side_1.png" id="m_jump_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/jump_side_2.png" id="m_jump_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hurt_down_0.png" id="m_hurt_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hurt_down_1.png" id="m_hurt_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hurt_up_0.png" id="m_hurt_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hurt_up_1.png" id="m_hurt_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hurt_side_0.png" id="m_hurt_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hurt_side_1.png" id="m_hurt_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/block_down_0.png" id="m_block_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/block_up_0.png" id="m_block_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/block_side_0.png" id="m_block_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_0.png" id="m_fidget_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_1.png" id="m_fidget_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_2.png" id="m_fidget_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_3.png" id="m_fidget_down_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_4.png" id="m_fidget_down_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_5.png" id="m_fidget_down_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_6.png" id="m_fidget_down_6"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_down_7.png" id="m_fidget_down_7"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_0.png" id="m_fidget_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_1.png" id="m_fidget_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_2.png" id="m_fidget_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_3.png" id="m_fidget_up_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_4.png" id="m_fidget_up_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_5.png" id="m_fidget_up_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_6.png" id="m_fidget_up_6"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_up_7.png" id="m_fidget_up_7"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_0.png" id="m_fidget_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_1.png" id="m_fidget_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_2.png" id="m_fidget_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_3.png" id="m_fidget_side_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_4.png" id="m_fidget_side_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_5.png" id="m_fidget_side_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_6.png" id="m_fidget_side_6"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/fidget_side_7.png" id="m_fidget_side_7"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/parry_down_0.png" id="n_parry_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/parry_down_1.png" id="n_parry_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_down_0.png" id="n_sip_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_down_1.png" id="n_sip_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_down_2.png" id="n_sip_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_down_0.png" id="n_hold_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_down_1.png" id="n_hold_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_down_2.png" id="n_hold_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_down_3.png" id="n_hold_down_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_down_4.png" id="n_hold_down_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_down_5.png" id="n_hold_down_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_down_0.png" id="n_winded_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_down_1.png" id="n_winded_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_down_2.png" id="n_winded_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_down_3.png" id="n_winded_down_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_down_0.png" id="n_death_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_down_1.png" id="n_death_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_down_2.png" id="n_death_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_down_0.png" id="n_attack_greatsword_down_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_down_1.png" id="n_attack_greatsword_down_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_down_2.png" id="n_attack_greatsword_down_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_down_3.png" id="n_attack_greatsword_down_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_down_4.png" id="n_attack_greatsword_down_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/parry_up_0.png" id="n_parry_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/parry_up_1.png" id="n_parry_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_up_0.png" id="n_sip_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_up_1.png" id="n_sip_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_up_2.png" id="n_sip_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_up_0.png" id="n_hold_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_up_1.png" id="n_hold_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_up_2.png" id="n_hold_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_up_3.png" id="n_hold_up_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_up_4.png" id="n_hold_up_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_up_5.png" id="n_hold_up_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_up_0.png" id="n_winded_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_up_1.png" id="n_winded_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_up_2.png" id="n_winded_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_up_3.png" id="n_winded_up_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_up_0.png" id="n_death_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_up_1.png" id="n_death_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_up_2.png" id="n_death_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_up_0.png" id="n_attack_greatsword_up_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_up_1.png" id="n_attack_greatsword_up_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_up_2.png" id="n_attack_greatsword_up_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_up_3.png" id="n_attack_greatsword_up_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_up_4.png" id="n_attack_greatsword_up_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/parry_side_0.png" id="n_parry_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/parry_side_1.png" id="n_parry_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_side_0.png" id="n_sip_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_side_1.png" id="n_sip_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/sip_side_2.png" id="n_sip_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_side_0.png" id="n_hold_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_side_1.png" id="n_hold_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_side_2.png" id="n_hold_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_side_3.png" id="n_hold_side_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_side_4.png" id="n_hold_side_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/hold_side_5.png" id="n_hold_side_5"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_side_0.png" id="n_winded_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_side_1.png" id="n_winded_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_side_2.png" id="n_winded_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/winded_side_3.png" id="n_winded_side_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_side_0.png" id="n_death_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_side_1.png" id="n_death_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/death_side_2.png" id="n_death_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_side_0.png" id="n_attack_greatsword_side_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_side_1.png" id="n_attack_greatsword_side_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_side_2.png" id="n_attack_greatsword_side_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_side_3.png" id="n_attack_greatsword_side_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/almos/attack_greatsword_side_4.png" id="n_attack_greatsword_side_4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(32, 32)
@@ -608,6 +738,654 @@ animations = [{
 "loop": false,
 "name": &"shove_side",
 "speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_down_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_down_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_down_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_down_5")
+}],
+"loop": true,
+"name": &"sprint_down",
+"speed": 14.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_up_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_up_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_up_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_up_5")
+}],
+"loop": true,
+"name": &"sprint_up",
+"speed": 14.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_side_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_side_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_side_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_sprint_side_5")
+}],
+"loop": true,
+"name": &"sprint_side",
+"speed": 14.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_jump_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_jump_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_jump_down_2")
+}],
+"loop": false,
+"name": &"jump_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_jump_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_jump_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_jump_up_2")
+}],
+"loop": false,
+"name": &"jump_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_jump_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_jump_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_jump_side_2")
+}],
+"loop": false,
+"name": &"jump_side",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_hurt_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_hurt_down_1")
+}],
+"loop": false,
+"name": &"hurt_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_hurt_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_hurt_up_1")
+}],
+"loop": false,
+"name": &"hurt_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_hurt_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_hurt_side_1")
+}],
+"loop": false,
+"name": &"hurt_side",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_block_down_0")
+}],
+"loop": true,
+"name": &"block_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_block_up_0")
+}],
+"loop": true,
+"name": &"block_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_block_side_0")
+}],
+"loop": true,
+"name": &"block_side",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_5")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_6")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_down_7")
+}],
+"loop": false,
+"name": &"fidget_down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_5")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_6")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_up_7")
+}],
+"loop": false,
+"name": &"fidget_up",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_5")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_6")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("m_fidget_side_7")
+}],
+"loop": false,
+"name": &"fidget_side",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_parry_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_parry_down_1")
+}],
+"loop": false,
+"name": &"parry_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_sip_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_sip_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_sip_down_2")
+}],
+"loop": false,
+"name": &"sip_down",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_hold_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_down_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_down_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_down_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_down_5")
+}],
+"loop": true,
+"name": &"hold_down",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_winded_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_down_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_down_3")
+}],
+"loop": true,
+"name": &"winded_down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_death_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_death_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_death_down_2")
+}],
+"loop": false,
+"name": &"death_down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_down_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_down_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_down_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_down_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_down_4")
+}],
+"loop": false,
+"name": &"attack_greatsword_down",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_parry_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_parry_up_1")
+}],
+"loop": false,
+"name": &"parry_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_sip_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_sip_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_sip_up_2")
+}],
+"loop": false,
+"name": &"sip_up",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_hold_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_up_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_up_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_up_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_up_5")
+}],
+"loop": true,
+"name": &"hold_up",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_winded_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_up_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_up_3")
+}],
+"loop": true,
+"name": &"winded_up",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_death_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_death_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_death_up_2")
+}],
+"loop": false,
+"name": &"death_up",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_up_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_up_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_up_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_up_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_up_4")
+}],
+"loop": false,
+"name": &"attack_greatsword_up",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_parry_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_parry_side_1")
+}],
+"loop": false,
+"name": &"parry_side",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_sip_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_sip_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_sip_side_2")
+}],
+"loop": false,
+"name": &"sip_side",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_hold_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_side_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_side_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_side_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_hold_side_5")
+}],
+"loop": true,
+"name": &"hold_side",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_winded_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_side_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_winded_side_3")
+}],
+"loop": true,
+"name": &"winded_side",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_death_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_death_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_death_side_2")
+}],
+"loop": false,
+"name": &"death_side",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_side_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_side_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_side_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_side_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("n_attack_greatsword_side_4")
+}],
+"loop": false,
+"name": &"attack_greatsword_side",
+"speed": 0.0
 }]
 
 [node name="Almos" type="CharacterBody2D"]
@@ -688,6 +1466,10 @@ visible = false
 
 [node name="Art" parent="HeldFlame/Flame" index="0"]
 visible = false
+
+[node name="Shimmer" type="Node2D" parent="HeldFlame/Flame"]
+position = Vector2(0, -10)
+script = ExtResource("h_shimmer")
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
 collision_layer = 2

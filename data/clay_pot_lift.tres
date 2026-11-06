@@ -8,3 +8,4 @@ weight = 6.0
 damage = 8.0
 knockback = 25.0
 breaks = true
+pieces = &"shards"

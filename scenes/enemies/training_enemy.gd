@@ -261,7 +261,19 @@ func _enter_tree() -> void:
 	own_stagger.drain_pause = tuning.stagger_drain_pause
 
 
+# Its own count of physics frames, which the Break, the guard pause and the drag are timed by. It
+# counts every physics frame from the start of the frame, as the engine's own count does, but not
+# while the game is paused (a hit-stop), so a freeze never eats into a Break.
+var _ticks := 0
+
+
+func _count_tick() -> void:
+	if not get_tree().paused:
+		_ticks += 1
+
+
 func _ready() -> void:
+	get_tree().physics_frame.connect(_count_tick)
 	health.depleted.connect(_on_depleted)
 	assert(not tuning.attack_pattern.is_empty(), "attack_pattern in the tuning needs at least one attack")
 	assert(
@@ -303,7 +315,7 @@ func _physics_process(_delta: float) -> void:
 	if not _dead:
 		_update_pursuit()
 	# The Break runs for break_frames physics frames; it is free in the frame after the last.
-	if _broken and Engine.get_physics_frames() >= _break_end_frame:
+	if _broken and _ticks >= _break_end_frame:
 		_broken = false
 	if attacking:
 		_frame += 1
@@ -315,7 +327,7 @@ func _physics_process(_delta: float) -> void:
 					_facing = _to_target().normalized()
 				_begin_attack()
 			elif _kind == EnemyTuning.AttackKind.COMBO and _swing + 1 >= tuning.combo.size():
-				_pause_end_frame = Engine.get_physics_frames() + tuning.guard_pause_frames
+				_pause_end_frame = _ticks + tuning.guard_pause_frames
 	if _broken:
 		velocity = Vector2.ZERO
 	# One that has died in this frame starts nothing new, but the frame is played out all the
@@ -438,8 +450,8 @@ func _update_pursuit() -> void:
 				# The count starts on the first frame it is free to head for the spot, after any
 				# attack that was already under way.
 				if _drag_start_frame < 0:
-					_drag_start_frame = Engine.get_physics_frames()
-				if Engine.get_physics_frames() - _drag_start_frame >= tuning.lose_sight_frames:
+					_drag_start_frame = _ticks
+				if _ticks - _drag_start_frame >= tuning.lose_sight_frames:
 					_dragging = false
 					end_pursuit()
 			return
@@ -560,7 +572,7 @@ func _act_freely() -> void:
 		_facing = to_target.normalized()
 	if to_target.length() <= tuning.attack_range:
 		# Free but not attacking: it guards until the pause after its combo is over.
-		if Engine.get_physics_frames() < _pause_end_frame:
+		if _ticks < _pause_end_frame:
 			return
 		# It makes the next attack in its order, whatever came of the one before.
 		if _dragging:
@@ -607,7 +619,7 @@ func _begin_attack() -> void:
 func _walk_to_follow_place() -> void:
 	_frame = -1
 	_set_strike(false)
-	if _broken and Engine.get_physics_frames() >= _break_end_frame:
+	if _broken and _ticks >= _break_end_frame:
 		_broken = false
 	if _broken:
 		velocity = Vector2.ZERO
@@ -803,8 +815,10 @@ func _build_stagger(amount: float) -> void:
 # The Break begins at once: the attack under way is over with its Hitbox off, so that a strike
 # due later in this frame does not land, and the meter is emptied.
 func _begin_break() -> void:
+	# The guard giving way: the game freezes a moment longer than for a blow.
+	GameFeel.guard_broken()
 	_broken = true
-	_break_end_frame = Engine.get_physics_frames() + tuning.break_frames
+	_break_end_frame = _ticks + tuning.break_frames
 	_pause_end_frame = 0
 	_front_hits = 0
 	_frame = -1

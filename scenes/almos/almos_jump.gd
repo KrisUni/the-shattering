@@ -61,6 +61,12 @@ var height_level: int:
 	get:
 		return _level
 
+## How far through the Jump he is, from 0 at the press to 1 as he comes down; 0 on the ground.
+## Only for his look.
+var progress: float:
+	get:
+		return clampf(_time / tuning.jump_duration, 0.0, 1.0) if _airborne else 0.0
+
 var _airborne := false
 var _level := 0
 var _time := 0.0

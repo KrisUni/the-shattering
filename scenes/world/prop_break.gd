@@ -26,12 +26,16 @@ func _ready() -> void:
 
 
 ## Breaks this art (as drawn at this offset and scale, relative to this node) into pieces, flying
-## mostly along the way given (the way it was thrown).
-func shatter(texture: Texture2D, offset: Vector2, art_scale: Vector2, along: Vector2) -> void:
+## mostly along the way given (the way it was thrown): staves and hoops for a barrel, or, with
+## "shards", small broken pieces for something fired, as a clay pot.
+func shatter(texture: Texture2D, offset: Vector2, art_scale: Vector2, along: Vector2, kind := &"staves") -> void:
 	_floor = 4.0
 	var size := texture.get_size()
-	var columns := ceili(size.x / STAVE_WIDTH)
 	var image := texture.get_image()
+	if kind == &"shards":
+		_shards(texture, image, size, offset, art_scale, along)
+		return
+	var columns := ceili(size.x / STAVE_WIDTH)
 	for i in columns:
 		var x := i * STAVE_WIDTH
 		var width := mini(STAVE_WIDTH, int(size.x) - x)
@@ -71,6 +75,45 @@ func shatter(texture: Texture2D, offset: Vector2, art_scale: Vector2, along: Vec
 			"velocity": Vector2(side * 55.0 + along.x * 30.0, -70.0),
 			"bounced": false,
 		})
+
+
+# Cuts the art into small, uneven shards that scatter and spin, with no hoops.
+func _shards(texture: Texture2D, image: Image, size: Vector2, offset: Vector2, art_scale: Vector2, along: Vector2) -> void:
+	var y := 0
+	var row := 0
+	while y < int(size.y):
+		var height := 3 + (row * 5) % 3
+		var x := 0
+		var column := 0
+		while x < int(size.x):
+			var width := 3 + (row * 3 + column * 7) % 3
+			var region := Rect2(x, y, mini(width, int(size.x) - x), mini(height, int(size.y) - y))
+			x += width
+			column += 1
+			if image != null and _empty(image, region):
+				continue
+			var sprite := Sprite2D.new()
+			sprite.texture = texture
+			sprite.region_enabled = true
+			sprite.region_rect = region
+			sprite.scale = art_scale
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			var centre := offset + (region.position + region.size / 2.0 - size / 2.0) * art_scale
+			sprite.position = centre
+			add_child(sprite)
+			var out := Vector2(centre.x - offset.x, (centre.y - offset.y) * 0.5).normalized()
+			if out.is_zero_approx():
+				out = Vector2.UP
+			var seed := float(row * 11 + column)
+			var speed := 60.0 + 60.0 * absf(sin(seed * 2.3))
+			_pieces.append({
+				"sprite": sprite,
+				"velocity": out * speed + along * 50.0 + Vector2(0.0, -70.0 - 50.0 * absf(cos(seed * 1.7))),
+				"spin": (8.0 + 6.0 * absf(sin(seed))) * (1.0 if out.x >= 0.0 else -1.0),
+				"bounced": false,
+			})
+		y += height
+		row += 1
 
 
 ## Whether it has run its course.

@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_lit_1.png" id="l_1"]
 [ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_lit_2.png" id="l_2"]
 [ext_resource type="Texture2D" path="res://assets/shared/lamp/lamp_lit_3.png" id="l_3"]
+[ext_resource type="Script" path="res://scenes/world/lantern_stir.gd" id="s_stir"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_lamp"]
 animations = [{
@@ -43,3 +44,6 @@ sprite_frames = SubResource("SpriteFrames_lamp")
 [node name="Glow" parent="Flame" index="1"]
 position = Vector2(0, 30)
 strength = 0.4
+
+[node name="Stir" type="Node" parent="."]
+script = ExtResource("s_stir")

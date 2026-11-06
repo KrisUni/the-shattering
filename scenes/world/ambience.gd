@@ -67,6 +67,22 @@ func _draw() -> void:
 			_pixel(land + Vector2(spread, 0.0), Color(WATER_LIGHT, a))
 			_pixel(land + Vector2(-spread * 0.5, -PIXEL * 2.0 * (1.0 - s)), Color(WATER, a))
 			_pixel(land + Vector2(spread * 0.5, -PIXEL * 2.0 * (1.0 - s)), Color(WATER, a))
+	# Puddles: where each drip lands the water has pooled, a faint sheen on the floor, and each splash
+	# sends a ring out across it.
+	for i in drips.size():
+		var land := drips[i] + Vector2(0.0, drip_fall)
+		for k in range(-2, 3):
+			_pixel(land + Vector2(k * PIXEL, PIXEL), Color(WATER, 0.16 if absi(k) == 2 else 0.24))
+		_pixel(land + Vector2(-PIXEL, PIXEL), Color(WATER_LIGHT, 0.12 + 0.08 * sin(t * 1.7 + i)))
+		var period := 2.8 + 2.4 * _rand(i + 200)
+		var phase := fposmod(t + _rand(i + 250) * period, period) - 1.95
+		if phase >= 0.0 and phase < 0.7:
+			var s := phase / 0.7
+			var rx := 3.0 + 7.0 * s
+			var ry := 1.0 + 2.0 * s
+			for k in 12:
+				var a := TAU * k / 12.0
+				_pixel(land + Vector2(cos(a) * rx, PIXEL + sin(a) * ry).snappedf(PIXEL), Color(WATER_LIGHT, 0.35 * (1.0 - s)))
 	# Updraft: pale motes rise out of the chasm, sway, and fade as they come up.
 	if updraft_area.size != Vector2.ZERO:
 		for i in updraft_count:

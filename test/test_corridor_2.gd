@@ -286,3 +286,15 @@ func test_barrels_to_hide_in_stand_on_the_high_road() -> void:
 
 func test_the_room_is_dark() -> void:
 	assert_not_null(_room.get_node_or_null("Darkness"), "he sees only a circle around himself")
+
+
+func test_only_the_dividing_wall_hides_what_is_behind_it() -> void:
+	var marked := _room.get_node("Walls").get_children().filter(func(wall: Node) -> bool: return wall.get_meta(&"hides_beyond", false) == true)
+	assert_eq(marked.map(func(wall: Node) -> String: return str(wall.name)), ["WallDivide"], "only the wall between the roads cuts off the view")
+	# The store cupboard's low block casts no shadow: past it, across the chasm, still shows.
+	var darkness := _room.get_node("Darkness") as Darkness
+	var eye := Node2D.new()
+	_room.add_child(eye)
+	darkness.target = eye
+	eye.position = Vector2(200, 566)
+	assert_true(darkness.shows(_room.to_global(Vector2(150, 360))), "beyond the cupboard, the chasm shows")

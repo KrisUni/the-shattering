@@ -878,22 +878,32 @@ def stair_flight(w=64, h=96):
 
 
 def locked_door(w=32, h=96):
-    """The locked door in Corridor 2's east wall, seen from above: its opening is two tiles (64 px),
-    from row 16 of the picture to row 80. An oak lintel and sill lie across the wall's top at its ends,
-    and between them the shut leaf fills the passage, its planks banded in iron, with an iron lock
-    plate on its hall side, at the west, where the Jailer's key goes."""
+    """The doorway of Corridor 2's locked east door, seen from above, without its leaf: its opening is
+    two tiles (64 px), from row 16 of the picture to row 80. An oak lintel and sill lie across the wall's
+    top at its ends, and between them the passage runs on under the wall into the dark. The leaf is
+    its own picture (locked_door_leaf), so it can swing open."""
     c = canvas(w, h)
+    shadow = M("#1f1b26", tones=2, step=0.04, outline="#141019")
+    c.box(0, 16, w - 1, 80, shadow, 0.5)
     c.box(0, 4, w - 1, 16, WOOD, 4, form="cylinder")
     c.box(0, 80, w - 1, 92, WOOD, 4, form="cylinder")
-    c.box(6, 16, 26, 80, WOOD_OLD, 3, form="cylinder")
-    for y in range(22, 78, 8):
-        c.dot(8, y, WOOD_OLD.ramp[0])
-        c.dot(22, y + 3, WOOD_OLD.ramp[0])
-    for y in (26, 70):
-        c.box(6, y, 26, y + 2, IRON_DARK, 3.2)
-    c.box(2, 42, 9, 54, IRON, 3.5)
-    c.dot(5, 48, IRON_DARK.ramp[0])
-    c.dot(4, 44, GLINT)
+    return out(c)
+
+
+def locked_door_leaf(w=20, h=64):
+    """The locked door's leaf, seen from above as it stands shut in the doorway: its planks banded in
+    iron, an iron lock plate on its hall side (the west), where the Jailer's key goes. Its hinge is at
+    its top left corner, so it swings open into the hall about it."""
+    c = canvas(w, h)
+    c.box(0, 0, w - 1, h - 1, WOOD_OLD, 3, form="cylinder")
+    for y in range(6, h - 2, 8):
+        c.dot(2, y, WOOD_OLD.ramp[0])
+        c.dot(16, y + 3, WOOD_OLD.ramp[0])
+    for y in (10, 54):
+        c.box(0, y, w - 1, y + 2, IRON_DARK, 3.2)
+    c.box(0, 26, 5, 38, IRON, 3.5)
+    c.dot(2, 32, IRON_DARK.ramp[0])
+    c.dot(1, 28, GLINT)
     return out(c)
 
 
@@ -901,6 +911,7 @@ PICTURES = {
     "dungeons/furniture/barrel.png": barrel,
     "dungeons/furniture/stair_flight.png": stair_flight,
     "dungeons/furniture/locked_door.png": locked_door,
+    "dungeons/furniture/locked_door_leaf.png": locked_door_leaf,
     "dungeons/furniture/bench.png": bench,
     "dungeons/furniture/crate_stack.png": crate_stack,
     "dungeons/furniture/sacks.png": sacks,
