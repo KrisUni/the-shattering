@@ -19,6 +19,13 @@ extends Node
 ##   himself;
 ## - in the air, `jump_<side>`: a crouch to spring from, tucked with the arms up, a crouch to land;
 ## - while he Blocks, `block_<side>`: weight down, both forearms up before him;
+## - while he Parries, `parry_<side>`: the forearm swept out across the blow while the window is
+##   open, then drawn back;
+## - while he Sips, `sip_<side>`, once: the Flask to his mouth, the head tipped back to drink;
+## - while he holds a flame or a prop over his head, `hold_<side>`, walking with it or standing;
+## - when he dies, `death_<side>`, once: he buckles, drops to his knees and falls on his side (not
+##   in a fall down a Drop, which shows itself);
+## - out of breath and standing, `winded_<side>`: bent over, hands on his knees, his back heaving;
 ## - otherwise `sprint_<side>` while he Sprints, `walk_<side>` while he walks, and `idle_<side>` while
 ##   he stands; after he has stood still a while he fidgets, once, with `fidget_<side>`.
 ## Dust kicks up from his feet as he Sprints, sets off or pulls up from a Sprint, and as he takes off
@@ -135,6 +142,11 @@ func update_look() -> void:
 		return
 	if _almos.rolling or _almos.dead:
 		_gesture_frame = -1
+	if _almos.dead and not _almos.rolling:
+		_was_rolling = false
+		if _almos.get(&"falling_down_a_drop") != true:
+			_play(StringName("death_" + side), _art.animation != StringName("death_" + side))
+		return
 	if _show_gesture(side):
 		_was_rolling = false
 		return
@@ -153,12 +165,31 @@ func update_look() -> void:
 		_still_for = 0.0
 		_fidgeting = false
 		return
+	if _almos.get(&"parrying") == true and _hold(StringName("parry_" + side), 0 if _almos.get(&"parry_window_open") == true else 1):
+		_still_for = 0.0
+		_fidgeting = false
+		return
 	if _almos.get(&"blocking") == true and _hold(StringName("block_" + side), 0):
+		_still_for = 0.0
+		_fidgeting = false
+		return
+	if _almos.get(&"sipping") == true and _has(StringName("sip_" + side)):
+		_play(StringName("sip_" + side), _art.animation != StringName("sip_" + side))
 		_still_for = 0.0
 		_fidgeting = false
 		return
 	var moving: bool = not _almos.dead and (_almos as CharacterBody2D).velocity.length() > WALK_SPEED
 	var sprinting: bool = moving and _almos.get(&"sprinting") == true
+	if _spell != null and _spell.get(&"holding") == true and _has(StringName("hold_" + side)):
+		_still_for = 0.0
+		_fidgeting = false
+		if moving:
+			_play(StringName("hold_" + side))
+		else:
+			_hold(StringName("hold_" + side), 0)
+		_was_moving = moving
+		_was_sprinting = false
+		return
 	if moving:
 		_still_for = 0.0
 		_fidgeting = false
@@ -181,8 +212,14 @@ func update_look() -> void:
 	_was_sprinting = sprinting
 
 
-# He stands: idle, and now and then, after a still while, a fidget, once, before idling again.
+# He stands: idle, and now and then, after a still while, a fidget, once, before idling again;
+# out of breath, bent over getting it back.
 func _stand(side: StringName) -> void:
+	if _almos.get(&"out_of_breath") == true and _has(StringName("winded_" + side)):
+		_fidgeting = false
+		_still_for = 0.0
+		_play(StringName("winded_" + side))
+		return
 	var fidget := StringName("fidget_" + side)
 	var awake: bool = (_almos as Node).is_physics_processing() and not _almos.dead
 	if _fidgeting:

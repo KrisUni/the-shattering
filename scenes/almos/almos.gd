@@ -113,6 +113,17 @@ var sipping: bool:
 	get:
 		return flasks.sipping
 
+## Whether he is out of breath: his Stamina ran out in a Sprint, and he cannot Sprint again until
+## he lets go of it. Read by his look.
+var out_of_breath: bool:
+	get:
+		return _out_of_breath
+
+## Whether the Death he died is a fall down a Drop, which his look shows by itself. Read by his look.
+var falling_down_a_drop: bool:
+	get:
+		return _fell_down_a_drop
+
 ## Whether Almos is sprinting.
 var sprinting: bool:
 	get:

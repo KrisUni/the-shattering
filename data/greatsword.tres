@@ -71,3 +71,4 @@ jump_attack = SubResource("Resource_jump_attack")
 critical_range = 48.0
 critical_attack = SubResource("Resource_critical")
 attack_buffer_frames = 8
+look = &"greatsword"

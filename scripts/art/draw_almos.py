@@ -433,6 +433,65 @@ def fidget_poses(view):
             Pose(bob=1, blink=True)]
 
 
+def parry_poses(view):
+    """A Parry: the forearm swept out across the blow to turn it aside, then drawn back."""
+    if view == "side":
+        return [Pose(crouch=1, lean=1, hands=((7, -7), (2, -3)), feet=((3, 0), (-3, 0)), tail=-1),
+                Pose(crouch=1, hands=((4, -3), (1, -1)), feet=((2, 0), (-2, 0)))]
+    return [Pose(crouch=1, hands=((5, -8), (-1, -2)), tail=1), Pose(crouch=1, hands=((3, -4), (0, -1)))]
+
+
+def sip_poses(view):
+    """A Sip: the Flask raised to his mouth, the head tipped back to drink, and drinking still."""
+    if view == "side":
+        return [Pose(hands=((2, -9), (0, 0))), Pose(head=(-1, -1), lean=-1, hands=((2, -13), (0, 0))),
+                Pose(head=(-1, -1), lean=-1, bob=1, hands=((2, -13), (0, 0)))]
+    return [Pose(hands=((0, 0), (-3, -10))), Pose(head=(0, -1), hands=((0, 0), (-4, -15))),
+            Pose(head=(0, -1), bob=1, hands=((0, 0), (-4, -15)))]
+
+
+def hold_poses(view):
+    """Holding a flame or a prop over his head in both hands: standing (the first frame), and walking
+    with it held up (all six)."""
+    poses = []
+    for p in walk_poses(view):
+        p.hands = ((1, -18), (0, -18)) if view == "side" else ((-1, -19), (1, -19))
+        p.robe_flare = 0
+        poses.append(p)
+    poses[0].feet = ((0, 0), (0, 0))
+    return poses
+
+
+def winded_poses(view):
+    """Out of Stamina: bent over, hands on his knees, his back heaving as he gets his breath."""
+    if view == "side":
+        base = dict(crouch=2, lean=2, hands=((3, 5), (2, 5)), feet=((2, 0), (-2, 0)))
+    else:
+        base = dict(crouch=2, hands=((2, 6), (-2, 6)))
+    return [Pose(bob=0, **base), Pose(bob=1, **base), Pose(bob=0, tail=1, **base), Pose(bob=1, blink=True, **base)]
+
+
+def death_frames():
+    """His Death: he buckles, drops to his knees and falls on his side, limp. Drawn side on, on the
+    64x64 canvas of the attacks (feet on row 55), since lying he is longer than a standing frame is
+    wide, and shown for every side."""
+    ox, oy = 16, 8
+    buckle = pk.Canvas(64, 64)
+    side(Pose(crouch=3, lean=-2, hands=((3, 3), (-3, 0)), feet=((3, 0), (-2, 0)), tail=2), buckle, ox, oy)
+    kneel = pk.Canvas(64, 64)
+    side(Pose(crouch=7, lean=3, hands=((6, 6), (3, 5)), feet=((4, 0), (-5, 0)), tail=1), kneel, ox, oy)
+    saved = pk.LIGHT
+    pk.LIGHT = (-saved[1], saved[0], saved[2])
+    slack = render(side(Pose(hands=((1, 2), (-1, 2)))))
+    pk.LIGHT = saved
+    lying = slack.transpose(pk.Image.Transpose.ROTATE_270)
+    box = lying.getbbox()
+    body = lying.crop(box)
+    flat = pk.Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    flat.alpha_composite(body, ((64 - body.width) // 2, 56 - body.height))
+    return [render(buckle), render(kneel), flat]
+
+
 def roll_frames(view):
     images = []
     draw = side if view == "side" else (lambda p, **kw: front(p, back=(view == "up"), **kw))
@@ -469,8 +528,11 @@ SWORD_SWING = {
 }
 
 
-def sword(c, hand, angle, z, length=SWORD_LENGTH):
-    """The sword, its grip in the hand and its blade out along the angle."""
+def sword(c, hand, angle, z, length=SWORD_LENGTH, great=False):
+    """The sword, its grip in the hand and its blade out along the angle; great, the greatsword: a
+    longer, broader blade with a fuller, a wider guard and a long two-handed grip."""
+    if great:
+        return greatsword(c, hand, angle, z)
     hx, hy = hand
     dx, dy = math.cos(angle), math.sin(angle)
     px, py = -dy, dx
@@ -482,8 +544,26 @@ def sword(c, hand, angle, z, length=SWORD_LENGTH):
     c.dot(int(hx + dx * length * 0.5), int(hy + dy * length * 0.5), SWORD_GLINT)
 
 
-def attack_frames(view, with_sword=False):
-    """The five frames of a swing for the view; with_sword, the sword is in his hand."""
+GREATSWORD_LENGTH = 25
+
+
+def greatsword(c, hand, angle, z):
+    hx, hy = hand
+    dx, dy = math.cos(angle), math.sin(angle)
+    px, py = -dy, dx
+    gx, gy = hx + dx * 3.0, hy + dy * 3.0
+    c.capsule(gx, gy, hx + dx * GREATSWORD_LENGTH, hy + dy * GREATSWORD_LENGTH, 2.3, SWORD_BLADE, z, r2=0.8)
+    for k in range(4, GREATSWORD_LENGTH - 6):
+        c.dot(int(hx + dx * k), int(hy + dy * k), SWORD_BLADE.ramp[0])
+    c.capsule(gx - px * 4.4, gy - py * 4.4, gx + px * 4.4, gy + py * 4.4, 1.1, SWORD_GUARD, z + 0.2)
+    c.capsule(hx - dx * 5.0, hy - dy * 5.0, gx, gy, 0.9, SWORD_GRIP, z + 0.1)
+    c.ellipse(hx - dx * 5.8, hy - dy * 5.8, 1.6, 1.6, SWORD_GUARD, z + 0.2)
+    c.dot(int(hx + dx * GREATSWORD_LENGTH * 0.45), int(hy + dy * GREATSWORD_LENGTH * 0.45), SWORD_GLINT)
+
+
+def attack_frames(view, with_sword=False, great=False):
+    """The five frames of a swing for the view; with_sword, the sword is in his hand (great, the
+    greatsword, swung in both hands)."""
     images = []
     ox, oy = 16, 8
     for phase in ATTACK_PHASES:
@@ -498,7 +578,7 @@ def attack_frames(view, with_sword=False):
             side(Pose(hands=hands, lean=lean, feet=feet, crouch=crouch, tail=-lean), c, ox, oy)
             if with_sword:
                 angle, behind = SWORD_SWING["side"][phase]
-                sword(c, c.hand, angle, 0.3 if behind else 7.9)
+                sword(c, c.hand, angle, 0.3 if behind else 7.9, great=great)
             if phase == "strike":
                 smear(c, 33, 30, 22, -1.35, 1.05, 6.5)
             elif phase == "follow":
@@ -522,7 +602,7 @@ def attack_frames(view, with_sword=False):
             if with_sword:
                 angle, behind = SWORD_SWING[view][phase]
                 hx, hy, hz = c.hands[arm]
-                sword(c, (hx, hy), angle, 0.3 if behind else hz + 0.3)
+                sword(c, (hx, hy), angle, 0.3 if behind else hz + 0.3, great=great)
             if phase in ("strike", "follow"):
                 fade = 1.0 if phase == "strike" else 0.6
                 if not back:
@@ -556,6 +636,12 @@ def frames():
         out["roll_" + view] = roll_frames(view)
         out["attack_" + view] = attack_frames(view)
         out["attack_sword_" + view] = attack_frames(view, with_sword=True)
+        out["attack_greatsword_" + view] = attack_frames(view, with_sword=True, great=True)
+        out["parry_" + view] = [render(draw(p)) for p in parry_poses(view)]
+        out["sip_" + view] = [render(draw(p)) for p in sip_poses(view)]
+        out["hold_" + view] = [render(draw(p)) for p in hold_poses(view)]
+        out["winded_" + view] = [render(draw(p)) for p in winded_poses(view)]
+        out["death_" + view] = death_frames()
         out["pull_" + view] = gesture_frames("pull", view)
         out["shove_" + view] = gesture_frames("shove", view)
     return out

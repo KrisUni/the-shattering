@@ -117,3 +117,49 @@ func test_standing_still_a_while_he_fidgets_once_then_idles() -> void:
 	assert_eq(_art(almos).animation, &"fidget_down", "he fidgets")
 	await wait_seconds(2.0)
 	assert_eq(_art(almos).animation, &"idle_down", "then stands idle again")
+
+
+func test_he_has_the_remaining_poses_for_every_side() -> void:
+	var almos = _almos_input.spawn_almos()
+	var frames := _art(almos).sprite_frames
+	var counts := {&"parry": 2, &"sip": 3, &"hold": 6, &"winded": 4, &"death": 3, &"attack_greatsword": 5}
+	for pose: StringName in counts:
+		for side in ["down", "up", "side"]:
+			var animation_name := StringName("%s_%s" % [pose, side])
+			assert_true(frames.has_animation(animation_name), "he has %s" % animation_name)
+			if frames.has_animation(animation_name):
+				assert_eq(frames.get_frame_count(animation_name), counts[pose], "%s has its frames" % animation_name)
+	assert_eq((load("res://data/greatsword.tres") as WeaponData).look, &"greatsword", "the greatsword names its own swing")
+
+
+func test_parrying_he_sweeps_his_forearm_across() -> void:
+	var almos = _almos_input.spawn_almos()
+	await wait_physics_frames(2)
+	_almos_input.press_action(&"parry")
+	var parried := false
+	for i in 12:
+		await wait_physics_frames(1)
+		if _art(almos).animation == &"parry_down":
+			parried = true
+	assert_true(parried, "he parries")
+
+
+func test_sipping_he_drinks_from_the_flask() -> void:
+	var almos = _almos_input.spawn_almos()
+	await wait_physics_frames(2)
+	_almos_input.press_action(&"sip_health")
+	var drank := false
+	for i in 20:
+		await wait_physics_frames(1)
+		if almos.sipping and _art(almos).animation == &"sip_down":
+			drank = true
+	assert_true(drank, "he drinks")
+
+
+func test_dying_he_slumps_to_the_floor() -> void:
+	var almos = _almos_input.spawn_almos()
+	await wait_physics_frames(2)
+	(almos.get_node("Health") as Health).take_damage(100000.0)
+	await wait_physics_frames(3)
+	assert_true(almos.dead, "control: he is dead")
+	assert_eq(_art(almos).animation, &"death_down", "he slumps")
