@@ -1,4 +1,4 @@
-"""Draws Almos at 32 px: every frame of idle, walk, roll, attack, pull and shove for down, up and side.
+"""Draws Almos at 32 px: every frame of idle, fidget, walk, sprint, jump, hurt, block, roll, attack, pull and shove for down, up and side.
 
     python3 scripts/art/draw_almos.py [OUT_DIR] [--sheet SHEET.png]
 
@@ -192,7 +192,7 @@ def front(pose, c=None, ox=0, oy=0, back=False):
             c.hands = [None, None]
         c.hands[i] = (hx, hy, z + 0.5)
     mantle(c, 16 + ox, top + 0.5, o=o)
-    head(c, pose, 16 + ox, 11 + b * 0.5 + oy, view="up" if back else "down")
+    head(c, pose, 16 + ox + pose.head[0], 11 + b * 0.5 + oy + pose.head[1], view="up" if back else "down")
     return c
 
 
@@ -369,6 +369,70 @@ def walk_poses(view):
     return poses
 
 
+def sprint_poses(view):
+    """A run: a longer stride than the walk, the body pitched forward, the arms pumping and the hood
+    tail and robe streaming."""
+    poses = []
+    for i in range(6):
+        p = i / 6.0 * 2 * math.pi
+        s = math.sin(p)
+        co = math.cos(p)
+        bob = 1 if i in (1, 4) else (-1 if i in (0, 3) else 0)
+        if view == "side":
+            near = (round(6.5 * co), max(0, round(3.4 * s)))
+            far = (round(-6.5 * co), max(0, round(-3.4 * s)))
+            hands = ((round(-5.0 * co) + 1, -1 + round(abs(co))), (round(5.0 * co) + 1, -1))
+            poses.append(Pose(bob=bob, feet=(near, far), hands=hands, tail=-2 + round(-co * 0.5), lean=2,
+                              robe_flare=2 if i in (0, 3) else 1))
+        else:
+            left = (0, max(0, round(3.2 * s)))
+            right = (0, max(0, round(-3.2 * s)))
+            hands = ((round(-0.8 * co), round(-2.5 * co) - 1), (round(0.8 * co), round(2.5 * co) - 1))
+            poses.append(Pose(bob=bob, feet=(left, right), hands=hands, tail=round(1.6 * s), robe_flare=1))
+    return poses
+
+
+def jump_poses(view):
+    """The Jump: a crouch to spring from, tucked in the air with the arms up for balance, and a
+    crouch to take the landing."""
+    if view == "side":
+        return [Pose(crouch=3, lean=2, hands=((-3, 1), (-2, 1)), feet=((2, 0), (-2, 0)), tail=1),
+                Pose(feet=((4, 4), (-3, 3)), hands=((3, -6), (-2, -5)), lean=1, tail=-2, robe_flare=2),
+                Pose(crouch=2, lean=1, hands=((2, -1), (-1, -1)), feet=((3, 0), (-3, 0)), tail=1)]
+    return [Pose(crouch=3, hands=((-1, 2), (1, 2)), tail=1),
+            Pose(feet=((0, 4), (0, 3)), hands=((-2, -7), (2, -7)), tail=-1, robe_flare=2),
+            Pose(crouch=2, hands=((-2, -1), (2, -1)), tail=1, robe_flare=1)]
+
+
+def hurt_poses(view):
+    """A flinch from a hit: knocked back a step, the head snapped back and the arms thrown up, then
+    gathering himself."""
+    if view == "side":
+        return [Pose(lean=-2, head=(-1, 0), hands=((-1, -7), (-3, -5)), feet=((1, 0), (-4, 1)), crouch=1, tail=2),
+                Pose(lean=-1, hands=((0, -3), (-2, -2)), feet=((2, 0), (-3, 0)), crouch=1, tail=1)]
+    return [Pose(head=(0, -1), hands=((-3, -8), (3, -8)), crouch=1, tail=2, robe_flare=1),
+            Pose(hands=((-2, -3), (2, -3)), crouch=1, tail=1)]
+
+
+def block_poses(view):
+    """Guarding: weight down, both forearms up before him."""
+    if view == "side":
+        return [Pose(crouch=2, lean=1, hands=((4, -8), (3, -7)), feet=((3, 0), (-3, 0)))]
+    return [Pose(crouch=2, hands=((3, -9), (-3, -9)))]
+
+
+def fidget_poses(view):
+    """Now and then as he stands: he glances one way, then the other, tugs his hood straight and
+    settles, with a blink at the end."""
+    if view == "side":
+        return [Pose(), Pose(head=(1, 0)), Pose(head=(1, 0), tail=1), Pose(head=(-1, 0), tail=-1),
+                Pose(head=(0, -1), hands=((1, -16), (0, 0)), tail=1), Pose(hands=((1, -16), (0, 0))),
+                Pose(bob=1), Pose(bob=1, blink=True)]
+    return [Pose(), Pose(head=(-1, 0)), Pose(head=(-1, 0), tail=-1), Pose(head=(1, 0), tail=1),
+            Pose(head=(1, 0)), Pose(hands=((0, 0), (-3, -17))), Pose(hands=((0, 0), (-3, -17)), tail=1),
+            Pose(bob=1, blink=True)]
+
+
 def roll_frames(view):
     images = []
     draw = side if view == "side" else (lambda p, **kw: front(p, back=(view == "up"), **kw))
@@ -484,6 +548,11 @@ def frames():
             draw = (lambda back: (lambda p, **kw: front(p, back=back, **kw)))(view == "up")
         out["idle_" + view] = [render(draw(p)) for p in idle_poses()]
         out["walk_" + view] = [render(draw(p)) for p in walk_poses(view)]
+        out["sprint_" + view] = [render(draw(p)) for p in sprint_poses(view)]
+        out["jump_" + view] = [render(draw(p)) for p in jump_poses(view)]
+        out["hurt_" + view] = [render(draw(p)) for p in hurt_poses(view)]
+        out["block_" + view] = [render(draw(p)) for p in block_poses(view)]
+        out["fidget_" + view] = [render(draw(p)) for p in fidget_poses(view)]
         out["roll_" + view] = roll_frames(view)
         out["attack_" + view] = attack_frames(view)
         out["attack_sword_" + view] = attack_frames(view, with_sword=True)
