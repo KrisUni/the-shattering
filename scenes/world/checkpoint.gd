@@ -1,10 +1,10 @@
 class_name Checkpoint
 extends Node2D
-## A Checkpoint: an arch-tree shoot, drawn as a placeholder glowing sapling. Almos rests at it
+## A Checkpoint: a campfire, its flame looping over a ring of stones. Almos rests at it
 ## by tapping Interact within reach, and it flashes when he does. It is in the group
 ## "checkpoints", which is where Almos looks for one, and has no body, so he walks through it.
 
-## What it is tinted while it flashes: a white brighter than the placeholder's own colours,
+## What it is tinted while it flashes: a white brighter than the campfire's own colours,
 ## which a plain white tint would not be. It is a look, not a tuning number.
 const FLASH_TINT := Color(3.0, 3.0, 2.2)
 

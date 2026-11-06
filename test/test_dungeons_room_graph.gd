@@ -8,7 +8,7 @@ const GRAPH_PATH := "res://data/dungeons_room_graph.tres"
 const DUNGEONS_ROOMS: Array[StringName] = [
 	&"cell_2", &"cell_3", &"radio_officers",
 	&"corridor_1", &"corridor_2", &"corridor_3", &"corridor_4",
-	&"interviews", &"interview_surveillance", &"wcs", &"lockers_showers",
+	&"interviews", &"interview_surveillance", &"store_cupboard",
 	&"kitchenette_staff_mess", &"archives_evidence", &"store_room",
 	&"meeting_room_1", &"meeting_room_2", &"chiefs_office", &"officers",
 	&"reception", &"lobby",

@@ -3,8 +3,9 @@ extends GutTest
 ## entrance. He stays at his post rather than patrolling, and once killed he stays dead: through a
 ## Death and through a rest at a Checkpoint. Asleep, he notices Almos by Sight as the seated guard in
 ## Corridor 1 does; he faces his desk. A sword hangs on the armoury's rack, and taking it wakes him at
-## once: Almos goes by stealth for the key, or takes the sword and fights. Apart from the ordinary guards patrolling Corridor 1 (see
-## test_corridor_1_stealth.gd), no other Room of the Dungeons holds an enemy.
+## once: Almos goes by stealth for the key, or takes the sword and fights. Apart from the ordinary guards of Corridor 1 (see
+## test_corridor_1_stealth.gd) and of Corridor 2 (see test_corridor_2.gd), no other Room of the
+## Dungeons holds an enemy.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
@@ -50,15 +51,20 @@ func test_radio_officers_holds_exactly_one_enemy() -> void:
 	assert_eq(_enemies_in(_room(host, &"radio_officers")).size(), 1, "Radio/Officers should hold one enemy")
 
 
-func test_no_other_room_of_the_dungeons_holds_an_enemy_but_corridor_1s_patrols() -> void:
+func test_no_other_room_of_the_dungeons_holds_an_enemy_but_the_corridors_guards() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 
 	var radio_officers := _room(host, &"radio_officers")
 	var corridor_1 := _room(host, &"corridor_1")
+	var corridor_2 := _room(host, &"corridor_2")
 	var elsewhere := _enemies_in(host.current_space).filter(func(enemy: Node) -> bool:
-		return not radio_officers.is_ancestor_of(enemy) and not corridor_1.is_ancestor_of(enemy))
-	assert_eq(elsewhere.size(), 0, "no enemy should stand outside Radio/Officers and Corridor 1")
+		return not radio_officers.is_ancestor_of(enemy) and not corridor_1.is_ancestor_of(enemy) \
+			and not corridor_2.is_ancestor_of(enemy))
+	assert_eq(elsewhere.size(), 0, "no enemy should stand outside Radio/Officers and Corridors 1 and 2")
+	assert_eq(_enemies_in(corridor_2).size(), 3, "Corridor 2 holds three guards")
+	for enemy in _enemies_in(corridor_2):
+		assert_false(enemy.named, "Corridor 2's guards are ordinary")
 	for enemy in _enemies_in(corridor_1):
 		assert_false(enemy.named, "Corridor 1's guards are ordinary")
 	var walking := _enemies_in(corridor_1).filter(func(enemy: Node) -> bool: return enemy.patrol.size() > 0)

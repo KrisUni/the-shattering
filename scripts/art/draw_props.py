@@ -811,6 +811,24 @@ def sword_floor(w=32, h=10):
     return out(c)
 
 
+def greatsword_floor(w=48, h=14):
+    """A greatsword left lying among the stores: a long, broad blade of grey iron pointing right
+    with a fuller down its middle, a wide crossguard, a long two-handed grip bound in leather and a
+    heavy pommel, a glint along its lit flat."""
+    c = canvas(w, h)
+    c.capsule(14, 7, 45, 6.5, 2.6, SWORD_BLADE, 1, r2=0.9)
+    for x in range(16, 38):
+        c.dot(x, 7, SWORD_BLADE.ramp[0])
+    c.capsule(13, 1, 13, 13, 1.4, SWORD_GUARD, 2)
+    c.capsule(4, 7, 12, 7, 1.1, SWORD_GRIP, 1.5)
+    for x in (6, 9):
+        c.dot(x, 7, SWORD_GRIP.ramp[0])
+    c.ellipse(2.5, 7, 2.0, 2.0, SWORD_GUARD, 2)
+    for x in (22, 23, 24):
+        c.dot(x, 5, GLINT)
+    return out(c)
+
+
 def door_frame(w=44, h=104):
     """The doorway to Radio/Officers in the hall's short west wall, seen from above. Its opening is
     two tiles (64 px) from row 12 of the picture to row 76: under the wall the passage runs on into
@@ -839,8 +857,50 @@ def door_frame(w=44, h=104):
     return out(c)
 
 
+def stair_flight(w=64, h=96):
+    """A flight of steps cut into the chasm's root and packed earth, seen from above, two tiles wide
+    and three long: eight treads, each lit along its top edge from the top left and dropping to a dark
+    riser below it, between two low kerbs of root. Which way it climbs is left for the eye to guess."""
+    c = canvas(w, h)
+    earth = M("#6a5a62", tones=4, step=0.07, lit_step=0.08)
+    riser = M("#3a3140", tones=2, step=0.04, outline="#241f2c")
+    root = M("#4d3f48", tones=3, step=0.06)
+    step = h // 8
+    for i in range(8):
+        y = i * step
+        c.box(4, y, w - 5, y + step - 4, earth, 2, form="cylinder")
+        c.box(4, y + step - 4, w - 5, y + step - 1, riser, 1.5)
+        for x in range(9 + (i * 7) % 11, w - 8, 17):
+            c.dot(x, y + 3, earth.ramp[0])
+    c.box(0, 0, 4, h - 1, root, 3, form="cylinder")
+    c.box(w - 5, 0, w - 1, h - 1, root, 3, form="cylinder")
+    return out(c)
+
+
+def locked_door(w=32, h=96):
+    """The locked door in Corridor 2's east wall, seen from above: its opening is two tiles (64 px),
+    from row 16 of the picture to row 80. An oak lintel and sill lie across the wall's top at its ends,
+    and between them the shut leaf fills the passage, its planks banded in iron, with an iron lock
+    plate on its hall side, at the west, where the Jailer's key goes."""
+    c = canvas(w, h)
+    c.box(0, 4, w - 1, 16, WOOD, 4, form="cylinder")
+    c.box(0, 80, w - 1, 92, WOOD, 4, form="cylinder")
+    c.box(6, 16, 26, 80, WOOD_OLD, 3, form="cylinder")
+    for y in range(22, 78, 8):
+        c.dot(8, y, WOOD_OLD.ramp[0])
+        c.dot(22, y + 3, WOOD_OLD.ramp[0])
+    for y in (26, 70):
+        c.box(6, y, 26, y + 2, IRON_DARK, 3.2)
+    c.box(2, 42, 9, 54, IRON, 3.5)
+    c.dot(5, 48, IRON_DARK.ramp[0])
+    c.dot(4, 44, GLINT)
+    return out(c)
+
+
 PICTURES = {
     "dungeons/furniture/barrel.png": barrel,
+    "dungeons/furniture/stair_flight.png": stair_flight,
+    "dungeons/furniture/locked_door.png": locked_door,
     "dungeons/furniture/bench.png": bench,
     "dungeons/furniture/crate_stack.png": crate_stack,
     "dungeons/furniture/sacks.png": sacks,
@@ -882,6 +942,7 @@ PICTURES = {
     "dungeons/cells/cell_carving.png": cell_carving,
     "dungeons/bones/fallen_jailer.png": fallen_jailer,
     "dungeons/furniture/sword_floor.png": sword_floor,
+    "dungeons/furniture/greatsword_floor.png": greatsword_floor,
     "dungeons/furniture/door_frame.png": door_frame,
 }
 

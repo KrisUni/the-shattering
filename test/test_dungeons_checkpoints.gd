@@ -1,7 +1,7 @@
 extends GutTest
-## The Dungeons hold only two Checkpoints: one in the Lobby, at the middle of the main hall, and one in
-## Back corridor 1, just past the Back entrance. Reception has none. Until Almos rests at one, a Death
-## returns him to Cell 3; resting at one saves the changes made so far and makes it his return point.
+## The Dungeons hold three Checkpoints: one in the Lobby, at the middle of the main hall, one in
+## Back corridor 1, just past the Back entrance, and one in Corridor 2, on the low road near where
+## Almos comes in. Reception has none. Until Almos rests at one, a Death returns him to Cell 3; resting at one saves the changes made so far and makes it his return point.
 
 const AlmosInput := preload("res://test/helpers/almos_input.gd")
 
@@ -41,11 +41,18 @@ func after_each() -> void:
 	WorldState.reset()
 
 
-func test_the_dungeons_hold_exactly_two_checkpoints() -> void:
+func test_the_dungeons_hold_exactly_three_checkpoints() -> void:
 	var host := _host_in_the_dungeons()
 	await wait_physics_frames(2)
 
-	assert_eq(_checkpoints_in(host.current_space).size(), 2, "the Dungeons should hold two Checkpoints")
+	assert_eq(_checkpoints_in(host.current_space).size(), 3, "the Dungeons should hold three Checkpoints")
+
+
+func test_corridor_2_holds_exactly_one_checkpoint() -> void:
+	var host := _host_in_the_dungeons()
+	await wait_physics_frames(2)
+
+	assert_eq(_checkpoints_in(_room(host, &"corridor_2")).size(), 1, "Corridor 2 should hold one Checkpoint")
 
 
 func test_the_lobby_holds_exactly_one_checkpoint() -> void:

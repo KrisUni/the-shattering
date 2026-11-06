@@ -16,8 +16,8 @@ What used to be rules is now guidance. Each colour still marks something well, s
 
 | Colour | Good for | Hex |
 |--------|----------|-----|
-| Fire amber | Torches, lamps, Fire, the fireball, burning things | `#f29a2e` |
-| Arch-tree glow, pale gold-green | Checkpoint shoots, glowing fungus, the tree's light | `#c9e06b` |
+| Fire amber | Torches, lamps, Fire, the fireball, burning things, the Checkpoint's campfire | `#f29a2e` |
+| Arch-tree glow, pale gold-green | Glowing fungus, the tree's light | `#c9e06b` |
 | Ilion violet-magenta | Ilion, drained magic, a Seal breaking | `#d23fd0` |
 
 The old base, Lospec's Oil 6 (cream `#fbf5ef`, sand `#f2d3ab`, dusty rose `#c69fa5`, base violet `#8b6d9c`, slate indigo `#494d7e`, navy `#272744`), is what the art so far is drawn in. It stays in `assets/palette/` as a starting point, not a limit, and `scripts/recolour_palette.py` can still map an image onto it (or onto any `.hex` palette given with `--palette`) when that helps an asset sit with the rest.
@@ -38,6 +38,7 @@ The old base, Lospec's Oil 6 (cream `#fbf5ef`, sand `#f2d3ab`, dusty rose `#c69f
 - The dark is a dithered overlay drawn from the gameplay light, so it looks as dark as enemies treat it.
 - Each dark zone goes two or three steps toward navy.
 - Each lit torch or Fire cuts a circle of exactly its light radius, rimmed in Fire amber.
+- A wall hides what lies behind it from Almos: the circle is cut short at every wall of the Room (`scenes/world/darkness.gd`, each wall's collision box), though a wall's own face shows. Corridor 2's circle is smaller than the hall's (280 units against 340).
 
 ## References
 
@@ -231,11 +232,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Checkpoint
 
 - **Thing:** Checkpoint
-- **Source pack and files:**
-- **Size in art px:**
-- **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Source pack and files:** Drawn for this game (no pack) by `scripts/art/draw_fire.py` (`campfire`), into `assets/shared/checkpoint/campfire_0-11.png`: a campfire seen from above, a ring of grey stones round a bed of ash, two logs crossed over it and a third across the front, embers glowing and fading among them, and a low flame drawn as the torch and Fire flames are, with a wisp of smoke. The near logs and stones are drawn over the flame's foot. An `AnimatedSprite2D` named `Art` in its `Look` plays it (`burn`), its bed on the Checkpoint's position (offset -18); a lamp glow (`scenes/world/lamp_glow.gd`) hangs under it as an amber pool, only a look. The placeholder sapling's polygons are hidden, not deleted.
+- **Size in art px:** 48x56 (12 frames).
+- **Palette notes and accents used:** Stones in cool greys, logs in warm root browns, the flame in hard bands from a deep amber rim through Fire amber and sand to a cream core, smoke in muted violets.
+- **Animations and poses needed:** One looping burn (12 frames, 10 a second). It still flashes white when Almos rests.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Fungus
 
@@ -276,8 +277,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
   - `scrolls.png`: bark scrolls dropped by the shelves; floor dressing with no collision.
   - `key_crate.png` and `key_crate_open.png` (`scenes/world/key_crate.tscn`, `KeyCrate`): the single crate the Jailer's key is kept in, solid on its 28x16 footprint, not liftable. Shut, an iron hasp on its lid; once the key is taken, open and empty, its lid up against its back, the inside dark. The key inside it does not show.
   - `sword_floor.png`: the fallen jailer's sword lying on Corridor 1's bridge below the barricade, the `art` of its `WeaponPickup` (`scenes/world/weapon_pickup.gd` shows a pickup's `art` in place of its placeholder bar where it has one).
+  - `greatsword_floor.png`: the greatsword lying in the Store cupboard, the `art` of its `WeaponPickup`: a long, broad blade of grey iron pointing right with a fuller, a wide crossguard, a long leather-bound two-handed grip and a heavy pommel, a glint along its flat.
+  - `stair_flight.png` (Sprite2Ds under Corridor 2's `Stairs`, their top left on the grid, z -1): a flight of steps cut into the chasm's root and packed earth, two tiles wide and three long, seen from above, eight treads each lit along its top and dropping to a dark riser, between two low root kerbs. Every flight is drawn the same, so which way it climbs is left to guess. Only a look: the flight's tiles are firm ground, not Drops.
+  - `locked_door.png` (`scenes/world/locked_door.tscn`, `LockedDoor`, the Main entrance's door set in a side wall, its body 32x64 in the doorway): Corridor 2's east door, seen from above, an oak lintel and sill across the east wall's top and the shut leaf between them, its planks banded in iron, an iron lock plate on its hall side. Open, it is dimmed as the Main entrance is.
   - `door_frame.png` (a Sprite2D, `DoorFrame`, its top left at x 0, y 500): the oak frame of Corridor 1's door to Radio/Officers in its short west wall, seen from above: a lintel beam over the opening's north end and a sill beam at its south end, laid across the wall's top, a squared post at the hall side of each, the passage under the wall dark, and the iron-banded door swung open back along the wall's foot below it. The side lantern above it (`DoorLamp`, `lamp_side.tscn`, 12 units in from the wall) gives it its light.
-- **Size in art px:** Crate stack 48x52, bench 60x18, spear rack 36x52, sacks 36x22, desk 40x72, stool 16x14, bookshelf 60x64, weapon rack 60x60 (and its taken picture), armour stand 26x54, scrolls 28x14, key crate 32x34, floor sword 32x10, door frame 44x104.
+- **Size in art px:** Crate stack 48x52, bench 60x18, spear rack 36x52, sacks 36x22, desk 40x72, stool 16x14, bookshelf 60x64, weapon rack 60x60 (and its taken picture), armour stand 26x54, scrolls 28x14, key crate 32x34, floor sword 32x10, floor greatsword 48x14, door frame 44x104, stair flight 64x96, locked door 32x96.
 - **Palette notes and accents used:** Warm brown wood (lighter on the tops seen from above), crates with a framed front and a pale brace, burlap sacks tied with rope, iron spear heads with a glint. Radio/Officers's books in muted violet, rust, moss, ochre and slate; sand bark sheets; grey iron. No accent.
 - **Animations and poses needed:** None.
 - **Status:** in the game in Corridor 1 and Radio/Officers (first draft; the owner checks the look in the editor)
@@ -449,9 +453,27 @@ The bars are drawn to fit each cell's front: `cell_bars_64.png`, `cell_bars_80.p
 - **Animations and poses needed:** None.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
+#### Corridor 2 floor and walls
+
+- **Thing:** Corridor 2 (the floor and walls of the Room)
+- **Source pack and files:** The same tiles as Corridor 1. Floor under the whole Room; north walls two tiles of face either side of the Interviews doorway; a whole south wall, one tile plus the strip; an east wall in the east-wall tile (3,1) above and below the locked door. Along the high road's south side the dividing wall, `WallDivide`, two tiles of north face (sand lip, navy base) seen from the low road. The hall's chasm runs on through it in the deep root tile (0,2), edged by the chasm rim (`scenes/world/chasm_edge.gd`), under the dividing wall and round the low road's ledge, stair runs and the landing between flights; three flights of stairs (`stair_flight.png`) lie over the chasm. The store cupboard is a block of wall at the top of the first flight, its top in the south wall top tile (4,1) and its face in the strip tile (5,1), with its door in its east face dressed in Corridor 1's door frame (`door_frame.png`, `CupboardDoorFrame`) and a side lantern above it (`CupboardDoorLamp`).
+- **Size in art px:** 32x32 per tile; the Room is 36x20 tiles plus the strip.
+- **Palette notes and accents used:** As Corridor 1. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
+#### Store cupboard
+
+- **Thing:** Store cupboard
+- **Source pack and files:** The same tiles as Radio/Officers: a small room, 8 by 6 tiles inside (smaller than a cell), in the middle of a full Room, root masses in the deep root tile (0,2) all round it; a north face of two tiles, side walls in the side tiles, a south wall in the south wall top and strip; its door in the east wall. Dressed with the Dungeons' barrels, sacks, clay pot and bucket, a side lantern (`lamp_side.tscn`) on its west wall, and the greatsword (`greatsword_floor.png`) lying on the floor.
+- **Size in art px:** 32x32 per tile.
+- **Palette notes and accents used:** As Radio/Officers. No accent.
+- **Animations and poses needed:** None.
+- **Status:** in the game (first draft; the owner checks the look in the editor)
+
 #### The other Rooms' floor and walls
 
-- **Thing:** Every other Room of the Dungeons (Cells 1 and 2, Corridors 2 to 4, the Lobby, Reception, the offices, Interviews, the meeting and staff rooms, the Store room, the back corridors and the Cave)
+- **Thing:** Every other Room of the Dungeons (Cells 1 and 2, Corridors 3 and 4, the Lobby, Reception, the offices, Interviews, the meeting and staff rooms, the Store room, the back corridors and the Cave)
 - **Source pack and files:** The same tiles as Cell 3 (`assets/shared/dungeon_tiles/dungeon_tiles.tres`, no new tiles), laid by the same rule from each Room's walls: floor under the whole Room (plus the strip under a south doorway), north walls two tiles of face, side walls one tile, south walls one tile plus the strip, every doorway open. Two root columns (`root_vein_column.png`) on each Room's north wall, clear of the doorways.
 - **Size in art px:** 32x32 per tile; each Room is 36x20 tiles plus the strip.
 - **Palette notes and accents used:** As Cell 3. No accent.
