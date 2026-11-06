@@ -147,7 +147,23 @@ def frames():
     out["death"] = death()
     # sit: seated on the guard post's bench, the sword across his knees, a slow breath.
     sit = dict(crouch=5, feet=((5, 0), (4, 0)), sword_angle=-0.1)
-    out["sit"] = [pose(hands=((5, 1), (4, 1)), **sit), pose(bob=1, hands=((5, 1), (4, 1)), **sit)]
+    # A slow seated breath: the chest lifts, the head nods a little, the hands shift on the blade.
+    out["sit"] = [pose(hands=((5, 1), (4, 1)), **sit), pose(bob=-1, hands=((5, 0), (4, 0)), tail=1, **sit),
+                  pose(hands=((5, 1), (4, 1)), **sit), pose(bob=1, head=(1, 0), hands=((5, 2), (4, 2)), **sit)]
+    hang = dict(sword_angle=1.15, sword_length=17)
+    # hurt: rocked back by a blow, head snapped back, then gathering himself.
+    out["hurt"] = [pose(lean=-2, head=(-1, 0), hands=((-1, -3), (-4, -2)), feet=((1, 0), (-4, 1)), crouch=1, tail=2, sword_angle=1.7),
+                   pose(lean=-1, hands=((1, 0), (-2, 0)), feet=((2, 0), (-3, 0)), crouch=1, tail=1, **hang)]
+    # look: a patrol's pause, a glance back over his shoulder and round again.
+    out["look"] = [pose(hands=((2, 0), (0, 0)), **hang), pose(head=(-1, 0), lean=-1, hands=((2, 0), (0, 0)), tail=1, **hang),
+                   pose(head=(-1, 0), lean=-1, bob=1, hands=((2, 0), (0, 0)), tail=1, **hang), pose(head=(1, 0), hands=((2, 0), (0, 0)), **hang)]
+    # startle: he jerks up as he notices Almos, then drops into a guard, the sword up before him.
+    out["startle"] = [pose(bob=-2, lean=-1, hands=((3, -6), (-2, -4)), feet=((1, 2), (-1, 1)), tail=2, sword_angle=-0.6),
+                      pose(crouch=2, lean=1, hands=((6, -3), (1, -2)), feet=((4, 0), (-4, 0)), sword_angle=-0.4)]
+    # rise: getting up from the bench.
+    out["rise"] = [pose(crouch=4, lean=3, hands=((6, 2), (5, 3)), feet=((5, 0), (3, 0)), sword_angle=0.4),
+                   pose(crouch=2, lean=2, hands=((4, 1), (2, 1)), feet=((4, 0), (-1, 0)), sword_angle=0.9),
+                   pose(hands=((2, 0), (0, 0)), **hang)]
     return out
 
 

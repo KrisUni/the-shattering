@@ -3,10 +3,13 @@ extends Node
 ## Makes an enemy's sprite show what the enemy is doing. It looks for an AnimatedSprite2D named
 ## Art in the enemy's Look; with none it does nothing, and the enemy tints its whole look as it
 ## always did. With one, it plays the animation for the enemy's state (idle, walk, strike, low,
-## unblockable, break, death, and sit or sleep at a seated post; a name the sprite lacks is
-## skipped; hurt is not played yet, since it needs a hurt signal from the enemy, which is still
-## open) and draws the wind-up flashes on the sprite itself, in palette colours, with a shader
-## that leaves its alpha alone.
+## unblockable, break, and sit or sleep at a seated post; a name the sprite lacks is skipped) and
+## draws the wind-up flashes on the sprite itself, in palette colours, with a shader that leaves its
+## alpha alone. Over those it shows, for a moment each: hurt, a flinch when a blow costs it Health;
+## startle, a jerk into guard as it notices Almos; rise, getting up from its seat or out of its
+## sleep; and look, a glance round while a patrol pauses at one of its points. When it dies it is
+## gone at once, as ever, but it leaves its body behind as a look: a copy that plays death, the
+## buckle, the knees and the fall, lies a moment and fades away.
 ## It only reads the enemy and the sprite: no gameplay depends on it.
 
 # The palette's lightest colour (the white flash) and its Danger red. Looks, not tuning.
@@ -28,12 +31,37 @@ var _enemy: Node
 var _art: AnimatedSprite2D
 var _material: ShaderMaterial
 var _broken_frames := 0
+# Physics frames still to show of the flinch, the startle and the rise, or 0.
+var _hurt_left := 0
+var _startle_left := 0
+var _rise_left := 0
+var _last_health := -1.0
+var _was_pursuing := false
+var _was_seated := false
 var _shown_attack_frame := -1
 var _has_played := false
 
 
+# For how many physics frames a flinch and a startle show. Looks.
+const HURT_FRAMES := 14
+const STARTLE_FRAMES := 16
+# How long the body lies before it fades, and how long the fade takes, in seconds. Looks.
+const BODY_LIES := 0.7
+const BODY_FADES := 0.9
+
+
 func _ready() -> void:
 	_enemy = get_parent().get_parent()
+	var health: Node = (_enemy as Node).get_node_or_null(^"Health")
+	if health != null and health.has_signal(&"changed"):
+		_last_health = float(health.get(&"current"))
+		health.changed.connect(func() -> void:
+			var now := float(health.get(&"current"))
+			if now < _last_health:
+				_hurt_left = HURT_FRAMES
+			_last_health = now)
+	if _enemy.has_signal(&"died"):
+		_enemy.died.connect(_leave_body)
 
 
 func _physics_process(_delta: float) -> void:
@@ -54,6 +82,7 @@ func update_look() -> void:
 		_art.material = _material
 	_turn_with_enemy()
 	_broken_frames = _broken_frames + 1 if _enemy.broken else 0
+	_note_moments()
 	_show_flash()
 	_play(_animation_name())
 
@@ -79,13 +108,70 @@ func _animation_name() -> StringName:
 			EnemyTuning.AttackKind.UNBLOCKABLE:
 				return &"unblockable"
 		return &"strike"
+	if _hurt_left > 0 and _has(&"hurt"):
+		return &"hurt"
+	if _startle_left > 0 and _has(&"startle"):
+		return &"startle"
+	if _rise_left > 0 and _has(&"rise"):
+		return &"rise"
 	if not (_enemy as CharacterBody2D).velocity.is_zero_approx():
 		return &"walk"
 	if _enemy.has_method(&"sleeping") and _enemy.sleeping():
 		return &"sleep"
 	if _enemy.has_method(&"sitting") and _enemy.sitting():
 		return &"sit"
+	var patrol: Variant = _enemy.get(&"patrol")
+	if patrol is PackedVector2Array and (patrol as PackedVector2Array).size() > 0 and not _enemy.in_pursuit:
+		return &"look"
 	return &"idle"
+
+
+func _has(animation: StringName) -> bool:
+	return _art.sprite_frames != null and _art.sprite_frames.has_animation(animation)
+
+
+# Counts down the moments it shows for a while, and starts them: a startle as it takes up the chase,
+# a rise as it leaves its seat or its sleep.
+func _note_moments() -> void:
+	_hurt_left = maxi(_hurt_left - 1, 0)
+	_startle_left = maxi(_startle_left - 1, 0)
+	_rise_left = maxi(_rise_left - 1, 0)
+	var pursuing: bool = _enemy.in_pursuit
+	if pursuing and not _was_pursuing:
+		_startle_left = STARTLE_FRAMES
+	_was_pursuing = pursuing
+	var seated: bool = (_enemy.has_method(&"sitting") and _enemy.sitting()) \
+		or (_enemy.has_method(&"sleeping") and _enemy.sleeping())
+	if _was_seated and not seated and not _enemy.dead and _has(&"rise"):
+		var frames := _art.sprite_frames
+		_rise_left = ceili(frames.get_frame_count(&"rise") / maxf(frames.get_animation_speed(&"rise"), 0.1) * 60.0)
+		# Getting up comes before the startle: it jerks awake, then stands.
+		_startle_left = 0
+	_was_seated = seated
+
+
+# It died and is gone: its body is left as a look, falling as it dies, lying a moment and fading.
+func _leave_body() -> void:
+	if _art == null or not is_instance_valid(_art) or not _has(&"death"):
+		return
+	var world := (_enemy as Node).get_parent()
+	if world == null:
+		return
+	var body := AnimatedSprite2D.new()
+	body.sprite_frames = _art.sprite_frames
+	body.offset = _art.offset
+	body.centered = _art.centered
+	body.flip_h = _art.flip_h
+	body.z_index = (_enemy as Node2D).z_index
+	world.add_child(body)
+	body.global_transform = _art.global_transform
+	body.play(&"death")
+	var frames := _art.sprite_frames
+	var falling := frames.get_frame_count(&"death") / maxf(frames.get_animation_speed(&"death"), 0.1)
+	var fade := body.create_tween()
+	fade.tween_interval(falling + BODY_LIES)
+	fade.tween_property(body, ^"modulate:a", 0.0, BODY_FADES)
+	fade.tween_callback(body.queue_free)
 
 
 # Plays this animation, if the sprite has it. It starts over when it changes and at the first

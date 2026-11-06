@@ -202,7 +202,22 @@ def frames():
     # The desk itself is its own picture behind him.
     asleep = dict(crouch=5, lean=3, feet=((6, 0), (5, 0)), hands=((9, -4), (8, -5)),
                   sword_at=((23, 37), 1.95, 0.2), sword_length=17)
-    out["sleep"] = [pose(head=(5, 11), **asleep), pose(head=(5, 11), bob=1, **asleep)]
+    # Asleep he breathes deep and slow: his back and shoulders rise, hold and sink again.
+    out["sleep"] = [pose(head=(5, 11), bob=1, **asleep), pose(head=(5, 11), **asleep),
+                    pose(head=(5, 10), bob=-1, **asleep), pose(head=(5, 10), bob=-1, **asleep),
+                    pose(head=(5, 11), **asleep), pose(head=(5, 11), bob=1, **asleep)]
+    hang = dict(sword_angle=1.2, sword_length=22)
+    out["hurt"] = [pose(lean=-2, head=(-1, 0), hands=((-1, -3), (-4, -2)), feet=((1, 0), (-4, 1)), crouch=1, sword_angle=1.7, sword_length=20),
+                   pose(lean=-1, hands=((1, 0), (-2, 0)), feet=((2, 0), (-3, 0)), crouch=1, **hang)]
+    out["look"] = [pose(hands=((2, 0), (0, 0)), **hang), pose(head=(-1, 0), lean=-1, hands=((2, 0), (0, 0)), **hang),
+                   pose(head=(-1, 0), lean=-1, bob=1, hands=((2, 0), (0, 0)), **hang), pose(head=(1, 0), hands=((2, 0), (0, 0)), **hang)]
+    out["startle"] = [pose(bob=-2, lean=-1, hands=((3, -6), (-2, -4)), feet=((1, 2), (-1, 1)), sword_angle=-0.6, sword_length=20),
+                      pose(crouch=2, lean=1, hands=((6, -3), (1, -2)), feet=((4, 0), (-4, 0)), sword_angle=-0.4, sword_length=20)]
+    # rise: heavy in his armour, he pushes up off the desk, takes up the longsword and stands.
+    out["rise"] = [pose(head=(4, 8), crouch=5, lean=3, feet=((6, 0), (5, 0)), hands=((9, -2), (8, -3)), sword_at=((23, 37), 1.95, 0.2), sword_length=17),
+                   pose(head=(2, 3), crouch=4, lean=3, feet=((6, 0), (4, 0)), hands=((8, 1), (7, 0)), sword_at=((23, 37), 1.95, 0.2), sword_length=17),
+                   pose(crouch=2, lean=2, hands=((4, 2), (2, 1)), feet=((4, 0), (-1, 0)), sword_angle=1.0, sword_length=20),
+                   pose(hands=((2, 0), (0, 0)), **hang)]
     return out
 
 

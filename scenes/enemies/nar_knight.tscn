@@ -24,8 +24,24 @@
 [ext_resource type="Texture2D" path="res://assets/characters/nar_knight/death_0.png" id="t_death_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_knight/death_1.png" id="t_death_1"]
 [ext_resource type="Texture2D" path="res://assets/characters/nar_knight/death_2.png" id="t_death_2"]
-[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_0.png" id="t_sleep_0"]
-[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_1.png" id="t_sleep_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/hurt_0.png" id="e_hurt_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/hurt_1.png" id="e_hurt_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/look_0.png" id="e_look_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/look_1.png" id="e_look_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/look_2.png" id="e_look_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/look_3.png" id="e_look_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/startle_0.png" id="e_startle_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/startle_1.png" id="e_startle_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/rise_0.png" id="e_rise_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/rise_1.png" id="e_rise_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/rise_2.png" id="e_rise_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/rise_3.png" id="e_rise_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_0.png" id="e_sleep_0"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_1.png" id="e_sleep_1"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_2.png" id="e_sleep_2"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_3.png" id="e_sleep_3"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_4.png" id="e_sleep_4"]
+[ext_resource type="Texture2D" path="res://assets/characters/nar_knight/sleep_5.png" id="e_sleep_5"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flammable"]
 size = Vector2(32, 32)
@@ -43,17 +59,6 @@ animations = [{
 "loop": true,
 "name": &"idle",
 "speed": 2.0
-}, {
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("t_sleep_0")
-}, {
-"duration": 1.0,
-"texture": ExtResource("t_sleep_1")
-}],
-"loop": true,
-"name": &"sleep",
-"speed": 1.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -150,6 +155,98 @@ animations = [{
 "loop": false,
 "name": &"death",
 "speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_hurt_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_hurt_1")
+}],
+"loop": false,
+"name": &"hurt",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_look_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_look_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_look_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_look_3")
+}],
+"loop": false,
+"name": &"look",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_startle_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_startle_1")
+}],
+"loop": false,
+"name": &"startle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_rise_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_rise_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_rise_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_rise_3")
+}],
+"loop": false,
+"name": &"rise",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("e_sleep_0")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sleep_1")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sleep_2")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sleep_3")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sleep_4")
+},
+{
+"duration": 1.0,
+"texture": ExtResource("e_sleep_5")
+}],
+"loop": true,
+"name": &"sleep",
+"speed": 2.5
 }]
 
 [node name="NarKnight" instance=ExtResource("1_enemy")]
