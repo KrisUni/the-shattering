@@ -1,8 +1,11 @@
 class_name Darkness
 extends Node2D
 ## The dark of a Room that is not seen all at once: everything in it is black but a circle around
-## Almos, and within it nothing behind one of the Room's walls: a wall hides what lies beyond it,
-## though its own face shows. Torches and Fires show no light through it: only he sees. The circle's edge fades softly
+## Almos, and within it nothing behind a wall of the Room that is marked to hide what is behind it
+## (its `hides_beyond` metadata set true), though the wall's own face shows. Only walls tall enough to
+## read as cutting off the view are marked, such as the one between Corridor 2's two roads: a low
+## block or a door's jamb casting long shadows would look wrong in the three-quarter view. Torches
+## and Fires show no light through it: only he sees. The circle's edge fades softly
 ## and wide, in fine dithered steps on the art pixel grid. Only a look: what enemies see
 ## by is the gameplay light (LightZone.light_at), not this.
 ##
@@ -164,14 +167,15 @@ func _global_walls() -> Array[Rect2]:
 	return rects
 
 
-# The Room's walls: each collision rectangle of a StaticBody2D under its Walls node.
+# The Room's walls that hide what is behind them: each collision rectangle of a StaticBody2D under
+# its Walls node with `hides_beyond` set.
 func _collect_walls() -> void:
 	_walls.clear()
 	var walls := get_parent().get_node_or_null("Walls") if get_parent() != null else null
 	if walls == null:
 		return
 	for body in walls.get_children():
-		if not body is StaticBody2D:
+		if not body is StaticBody2D or body.get_meta(&"hides_beyond", false) != true:
 			continue
 		for child in body.get_children():
 			var shape := child as CollisionShape2D

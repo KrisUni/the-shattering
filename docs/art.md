@@ -46,7 +46,7 @@ The old base, Lospec's Oil 6 (cream `#fbf5ef`, sand `#f2d3ab`, dusty rose `#c69f
 - The dark is a dithered overlay drawn from the gameplay light, so it looks as dark as enemies treat it.
 - Each dark zone goes two or three steps toward navy.
 - Each lit torch or Fire cuts a circle of exactly its light radius, rimmed in Fire amber.
-- A wall hides what lies behind it from Almos: the circle is cut short at every wall of the Room (`scenes/world/darkness.gd`, each wall's collision box), though a wall's own face shows. Corridor 2's circle is smaller than the hall's (280 units against 340).
+- A wall marked to hide what lies behind it (`hides_beyond` metadata on its body) cuts Almos's circle short (`scenes/world/darkness.gd`, the wall's collision box), though the wall's own face shows. Only Corridor 2's dividing wall is marked, so its two roads stay out of each other's sight; low blocks and door jambs are left unmarked, since the long hard shadows they would cast look wrong in the three-quarter view. Corridor 2's circle is smaller than the hall's (280 units against 340).
 
 ## References
 
@@ -153,7 +153,7 @@ Each sheet has these fields:
 
   - `parry` (2, held: the forearm swept out across the blow while the Parry window is open, then drawn back).
   - `sip` (3 at 4 a second, once: the Flask raised to his mouth, the head tipped back to drink).
-  - `hold` (6 at 10 a second): a flame or a prop held over his head in both hands, walking with it; standing, its first frame.
+  - `hold` (6 at 10 a second): a prop held over his head in both hands, walking with it; standing, its first frame. Not for a held flame, which burns at his own place: with one he walks and stands as ever.
   - `winded` (4 at 6 a second): out of breath and standing, bent over with his hands on his knees, his back heaving.
   - `death` (3 at 6 a second, once, 64x64 as the attacks): he buckles, drops to his knees and falls on his side, limp; drawn side on and shown for every side. A fall down a Drop shows itself instead.
   - `attack_greatsword` (5, 64x64, as `attack`): the swing with the greatsword in his hand, a longer, broader blade with a fuller, a wide guard and a long grip (`data/greatsword.tres` has `look = greatsword`).
