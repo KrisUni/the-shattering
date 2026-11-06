@@ -27,6 +27,8 @@ The old base, Lospec's Oil 6 (cream `#fbf5ef`, sand `#f2d3ab`, dusty rose `#c69f
 - A cue is a pose plus a brief flash, never colour alone.
 - **Normal wind-up:** the pose, with a cream flash at its start.
 - **Unblockable wind-up:** the pose, a cream flash, then Danger red held to the end of the wind-up, with its own sound.
+- **Hit-stop:** when a blow lands, on Almos or an enemy, blocked or not, the whole game freezes for a moment so it reads as heavy: 0.05 s for a blow, 0.09 s for a Critical hit, 0.08 s for a Parry and 0.11 s for a Break (`scripts/game_feel.gd`). Fire's ticks and fireballs do not freeze it. The freeze is a pause of the game, so no timer or Break runs on through it.
+- **Pace:** the whole game runs at 85% of real time, everything alike (`GameFeel.SPEED`).
 
 ### How Looks animate
 

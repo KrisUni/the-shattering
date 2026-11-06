@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.7")
 [autoload]
 
 WorldState="*res://scripts/world_state.gd"
+GameFeel="*res://scripts/game_feel.gd"
 
 [display]
 

@@ -111,6 +111,8 @@ func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low:
 			_announce_landed(stagger, from, critical, damage_only)
 		return Outcome.LANDED
 	if (parries_damage_only or not damage_only) and is_parried.call(from):
+		if not damage_only:
+			GameFeel.parried()
 		return Outcome.PARRIED
 	health.take_damage(damage_through.call(damage, from))
 	if not unheard:
@@ -123,4 +125,6 @@ func _announce_landed(stagger: float, from: Vector2, critical: bool, damage_only
 	if damage_only:
 		landed_damage_only.emit(from)
 	else:
+		# A blow: the game freezes a moment, so it reads as heavy (not for Fire's ticks or a fireball).
+		GameFeel.blow_landed(critical)
 		landed.emit(stagger, from, critical)

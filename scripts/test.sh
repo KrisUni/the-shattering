@@ -29,7 +29,10 @@ fi
 # wall-clock time. That holds because 60 matches the project's physics tick rate
 # (Godot's default, physics/common/physics_ticks_per_second, which project.godot
 # does not set). Keep the two equal: if the tick rate ever changes, change this
-# flag with it. -gpaint_after=0 (a GUT option) stops GUT from inserting a
+# flag with it. In play the game runs slower (scripts/game_feel.gd lowers the tick
+# rate and the clock together, so a physics frame stays 1/60 of a second of game
+# time) and freezes a moment when a blow lands; GameFeel switches both off under
+# GUT, so every test counts the same frames it always did. -gpaint_after=0 (a GUT option) stops GUT from inserting a
 # frame between tests based on how much wall-clock time has passed.
 args=(--headless --fixed-fps 60 --path "$ROOT" -s addons/gut/gut_cmdln.gd -gpaint_after=0)
 if [[ $# -gt 0 ]]; then
