@@ -91,6 +91,7 @@
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_side_4.png" id="27_attack_side_4"]
 [ext_resource type="Script" path="res://scenes/almos/spell_look.gd" id="28_spell_look"]
 [ext_resource type="PackedScene" path="res://scenes/world/flammable.tscn" id="29_flammable"]
+[ext_resource type="Script" path="res://scenes/world/heat_shimmer.gd" id="h_shimmer"]
 
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_0.png" id="sw_attack_down_0"]
 [ext_resource type="Texture2D" path="res://assets/characters/almos/attack_sword_down_1.png" id="sw_attack_down_1"]
@@ -1465,6 +1466,10 @@ visible = false
 
 [node name="Art" parent="HeldFlame/Flame" index="0"]
 visible = false
+
+[node name="Shimmer" type="Node2D" parent="HeldFlame/Flame"]
+position = Vector2(0, -10)
+script = ExtResource("h_shimmer")
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health")]
 collision_layer = 2

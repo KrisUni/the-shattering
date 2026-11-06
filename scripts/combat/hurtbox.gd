@@ -113,11 +113,30 @@ func _receive(damage: float, from: Vector2, stagger: float, critical: bool, low:
 	if (parries_damage_only or not damage_only) and is_parried.call(from):
 		if not damage_only:
 			GameFeel.parried()
+			_show_meeting(from, true)
 		return Outcome.PARRIED
-	health.take_damage(damage_through.call(damage, from))
+	var through: float = damage_through.call(damage, from)
+	if through < damage - 0.001 and not damage_only:
+		_show_meeting(from, false)
+	health.take_damage(through)
 	if not unheard:
 		_announce_landed(stagger, from, critical, damage_only)
 	return Outcome.LANDED
+
+
+# Where a blow meets a guard, a look only: iron sparks for a Parry, a spray of them and a puff of dust
+# kicked from the feet for a Block.
+func _show_meeting(from: Vector2, parried: bool) -> void:
+	var body := get_parent() as Node2D
+	if body == null or body.get_parent() == null or not body.is_inside_tree():
+		return
+	var toward := (from - body.global_position).normalized()
+	var at := body.global_position + toward * 12.0 + Vector2(0.0, -14.0)
+	if parried:
+		SparkBurst.strike(body.get_parent(), at, toward, 10, 16.0)
+	else:
+		SparkBurst.strike(body.get_parent(), at, toward, 4, 8.0)
+		DustPuff.kick(body.get_parent(), body.global_position + Vector2(0.0, 2.0), 4, 6.0, -toward)
 
 
 # A damage-only hit is told apart from one that builds Stagger.

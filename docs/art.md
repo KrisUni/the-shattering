@@ -29,6 +29,10 @@ The old base, Lospec's Oil 6 (cream `#fbf5ef`, sand `#f2d3ab`, dusty rose `#c69f
 - **Unblockable wind-up:** the pose, a cream flash, then Danger red held to the end of the wind-up, with its own sound.
 - **Hit-stop:** when a blow lands, on Almos or an enemy, blocked or not, the whole game freezes for a moment so it reads as heavy: 0.05 s for a blow, 0.09 s for a Critical hit, 0.08 s for a Parry and 0.11 s for a Break (`scripts/game_feel.gd`). Fire's ticks and fireballs do not freeze it. The freeze is a pause of the game, so no timer or Break runs on through it.
 - **Pace:** the whole game runs at 85% of real time, everything alike (`GameFeel.SPEED`).
+- **Where blows meet** (`scripts/combat/hurtbox.gd`, looks only, drawn in code on the art pixel grid): a Parry throws ten short iron sparks (`scenes/world/spark_burst.gd`) from where the blow met the guard, cooling from cream through sand to steel; a Block throws a smaller spray of four and a puff of dust from the blocker's feet (`DustPuff`). A blow taken in full throws neither.
+- **A jailer's blow** leaves an arc through the air (`scenes/enemies/blade_smear.gd`, on its `Look`), a crescent in cream and sand swept from over the shoulder down across its front while the blow is live, as Almos's swing smear is.
+- **A guard straining:** once an enemy's Stagger is 70% full, short of a Break, its figure shakes a pixel each way.
+- **Spells:** a curl of violet smoke rises from a torch whose flame Pull takes (`scenes/world/smoke_curl.gd`); faint threads of heat rise off a held flame (`scenes/world/heat_shimmer.gd`, `HeldFlame/Flame/Shimmer`); what a Shove sends flying, a prop or an enemy, leaves pale arcs in the air in its wake (`scenes/world/air_ripple.gd`).
 
 ### How Looks animate
 

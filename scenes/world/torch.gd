@@ -44,6 +44,9 @@ func draw() -> bool:
 		return false
 	_lit = false
 	_show()
+	# A curl of smoke rises where the flame was: only a look.
+	if _flame is Node2D and is_inside_tree() and get_parent() != null:
+		SmokeCurl.rise_from(get_parent(), (_flame as Node2D).global_position)
 	put_out.emit()
 	return true
 

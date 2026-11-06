@@ -31,6 +31,8 @@ var _enemy: Node
 var _art: AnimatedSprite2D
 var _material: ShaderMaterial
 var _broken_frames := 0
+var _smear: BladeSmear
+var _striking_for := 0
 # Physics frames still to show of the flinch, the startle and the rise, or 0.
 var _hurt_left := 0
 var _startle_left := 0
@@ -83,6 +85,8 @@ func update_look() -> void:
 	_turn_with_enemy()
 	_broken_frames = _broken_frames + 1 if _enemy.broken else 0
 	_note_moments()
+	_show_smear()
+	_show_strain()
 	_show_flash()
 	_play(_animation_name())
 
@@ -124,6 +128,35 @@ func _animation_name() -> StringName:
 	if patrol is PackedVector2Array and (patrol as PackedVector2Array).size() > 0 and not _enemy.in_pursuit:
 		return &"look"
 	return &"idle"
+
+
+# For how many physics frames a blow's arc sweeps. A look.
+const SMEAR_FRAMES := 6
+# How full the Stagger is before the guard starts to shake, as a share of it. A look.
+const STRAIN_FROM := 0.7
+
+
+# The sword's arc through a live blow.
+func _show_smear() -> void:
+	if _smear == null:
+		_smear = BladeSmear.new()
+		get_parent().add_child(_smear)
+	if _enemy.dead or not _enemy.get(&"striking"):
+		_striking_for = 0
+		_smear.clear()
+		return
+	_striking_for += 1
+	_smear.show_at(float(_striking_for) / float(SMEAR_FRAMES), _enemy.facing)
+
+
+# As its Stagger nears a Break, its guard strains: the figure shakes, a pixel each way.
+func _show_strain() -> void:
+	var stagger: Node = (_enemy as Node).get_node_or_null(^"Stagger")
+	var shaking := false
+	if stagger != null and not _enemy.broken and not _enemy.dead:
+		var capacity := float(stagger.get(&"capacity"))
+		shaking = capacity > 0.0 and float(stagger.get(&"current")) / capacity >= STRAIN_FROM
+	_art.position.x = (1.0 if (Engine.get_process_frames() / 3) % 2 == 0 else -1.0) if shaking else 0.0
 
 
 func _has(animation: StringName) -> bool:

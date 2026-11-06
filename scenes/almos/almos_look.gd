@@ -378,9 +378,12 @@ func _show_casting(side: StringName) -> bool:
 	return true
 
 
-func _begin_gesture(pulling: bool, _target: Node2D) -> void:
+func _begin_gesture(pulling: bool, target: Node2D) -> void:
 	_gesture = &"pull_" if pulling else &"shove_"
 	_gesture_frame = 0
+	# What a Shove sends flying leaves the air rippling in its wake.
+	if not pulling and target != null and is_instance_valid(target) and target.get_parent() != null:
+		AirRipple.trail(target.get_parent(), target)
 
 
 # Shows the gesture of a Pull or Shove just cast, for its few frames. Whether it did.
