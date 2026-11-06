@@ -925,6 +925,7 @@ func _pick_up_a_pickup_in_reach() -> bool:
 	# One with an id is noted taken until the next rest, so that a Death puts it back.
 	if nearest.id != &"":
 		WorldState.record_taken(nearest.id)
+	PickupLift.lift(nearest)
 	nearest.queue_free()
 	return true
 

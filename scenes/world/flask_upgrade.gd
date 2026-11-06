@@ -21,4 +21,5 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	WorldState.record_kept(id)
 	almos.flasks.add_charges(1)
+	PickupLift.lift(self)
 	queue_free()

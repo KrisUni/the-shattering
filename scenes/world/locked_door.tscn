@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/world/main_entrance.tscn" id="1_door"]
 [ext_resource type="Texture2D" path="res://assets/dungeons/furniture/locked_door.png" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/dungeons/furniture/locked_door_leaf.png" id="3_leaf"]
 
 [sub_resource type="RectangleShape2D" id="Shape_side_door"]
 size = Vector2(32, 64)
@@ -17,6 +18,11 @@ polygon = PackedVector2Array(-16, -32, 16, -32, 16, 32, -16, 32)
 
 [node name="Art" type="Sprite2D" parent="Look"]
 texture = ExtResource("2_art")
+
+[node name="Leaf" type="Sprite2D" parent="Look"]
+position = Vector2(-10, -32)
+texture = ExtResource("3_leaf")
+centered = false
 
 [node name="Label" parent="."]
 visible = false

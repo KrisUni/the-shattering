@@ -82,6 +82,9 @@ var _home_layers: Array[int] = []
 var _home_z := 0
 var _dust: Node2D
 var _shudder_left := 0
+# Physics frames still to show of the wobble it settles with after it lands, or 0. A look.
+var _wobble_left := 0
+const WOBBLE_FRAMES := 18
 var _shudder_way := Vector2.ZERO
 # Whether this flight is a knock from the floor rather than a throw from his hold.
 var _knocked := false
@@ -215,6 +218,12 @@ func _physics_process(delta: float) -> void:
 		var strain := _shudder_way * SHUDDER_LEAN * (float(_shudder_left) / SHUDDER_FRAMES)
 		var offset := Vector2(jolt, -2.0 if _shudder_left % 8 < 2 else 0.0) + strain
 		_set_look_offset(offset.snappedf(OpenMapCamera.ART_PIXEL) if _shudder_left > 0 else Vector2.ZERO)
+	if _wobble_left > 0 and _state == State.RESTING and _shudder_left == 0:
+		_wobble_left -= 1
+		# It rocks one way and the other, each swing smaller, and settles.
+		var swing := 2.0 if _wobble_left > WOBBLE_FRAMES * 2 / 3 else 1.0
+		var side := 1.0 if (_wobble_left / 3) % 2 == 0 else -1.0
+		_set_look_offset(Vector2(side * swing, 0.0) if _wobble_left > 0 else Vector2.ZERO)
 	match _state:
 		State.GRIPPED:
 			_set_look_offset(Vector2(GRIP_SHAKE if Engine.get_physics_frames() % 2 == 0 else -GRIP_SHAKE, 0.0))
@@ -341,7 +350,9 @@ func _break_apart(at: Vector2) -> void:
 		var pieces: Node2D = BREAK_SCRIPT.new()
 		_prop.get_parent().add_child(pieces)
 		pieces.global_position = at
-		pieces.call(&"shatter", art.texture, art.position + (_prop.global_position - at), art.scale, _direction)
+		var kind: Variant = tuning.get(&"pieces") if tuning != null else null
+		pieces.call(&"shatter", art.texture, art.position + (_prop.global_position - at), art.scale, _direction,
+			kind if kind is StringName else &"staves")
 	else:
 		_burst(at)
 	_prop.global_position = at.snappedf(OpenMapCamera.ART_PIXEL)
@@ -422,6 +433,7 @@ func _come_to_rest() -> void:
 		_dust.call(&"stop")
 	_dust = null
 	if was_flying:
+		_wobble_left = WOBBLE_FRAMES
 		landed.emit()
 
 
