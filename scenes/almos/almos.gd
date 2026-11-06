@@ -386,6 +386,8 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	# Things that react to him as a look (a lantern's flame leaning as he dashes by) find him here.
+	add_to_group(&"almos")
 	health.depleted.connect(_fall)
 	# Whichever Weapon is in hand is the one his attacks make. A switch is only made when he is not
 	# in an attack, and a drop only when he is free, so nothing is handed over in the middle of one.

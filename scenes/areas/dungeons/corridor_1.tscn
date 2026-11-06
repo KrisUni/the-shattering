@@ -42,6 +42,10 @@
 [ext_resource type="Resource" path="res://data/sword.tres" id="51_sword"]
 [ext_resource type="PackedScene" path="res://scenes/world/lamp_side.tscn" id="52_lamp_side"]
 [ext_resource type="Script" path="res://scenes/world/glow_pulse.gd" id="96_pulse"]
+[ext_resource type="Shader" path="res://assets/shared/sway/sway.gdshader" id="97_sway"]
+[sub_resource type="ShaderMaterial" id="Material_sway"]
+shader = ExtResource("97_sway")
+
 [sub_resource type="RectangleShape2D" id="Shape_128x16"]
 size = Vector2(128, 16)
 
@@ -444,18 +448,22 @@ z_index = -1
 position = Vector2(40, 50)
 scale = Vector2(-1, 1)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Hanging3" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(300, 50)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Hanging5" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(640, 50)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Hanging8" type="Sprite2D" parent="WallGrowth"]
 position = Vector2(1120, 46)
 texture = ExtResource("43_hang")
+material = SubResource("Material_sway")
 
 [node name="Growth" type="Node2D" parent="."]
 z_index = -1

@@ -12,6 +12,8 @@ const RADIUS := 36
 ## How far it flickers, as a share of its brightness.
 @export var flicker := 0.18
 
+const MOTES := preload("res://scenes/world/lamp_motes.gd")
+
 static var _shared: Texture2D
 
 var _time := 0.0
@@ -28,6 +30,11 @@ func _ready() -> void:
 	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	material = add
 	_seed = fposmod(global_position.x * 0.37 + global_position.y * 0.11, 10.0)
+	# Motes of dust drift in its light and catch it.
+	var motes := Node2D.new()
+	motes.name = "Motes"
+	motes.set_script(MOTES)
+	add_child(motes)
 
 
 func _process(delta: float) -> void:
@@ -36,7 +43,7 @@ func _process(delta: float) -> void:
 	var t := _time + _seed
 	var wave := 0.5 * sin(t * 2.3) + 0.3 * sin(t * 5.1 + 1.7) + 0.2 * sin(t * 13.0)
 	var a := strength * (1.0 + flicker * wave)
-	modulate = Color(1.0, 1.0, 1.0, clampf(a, 0.0, 1.0))
+	self_modulate = Color(1.0, 1.0, 1.0, clampf(a, 0.0, 1.0))
 	var breathe := 1.0 + 0.03 * sin(t * 3.0)
 	scale = Vector2(2.0, 2.0) * breathe
 

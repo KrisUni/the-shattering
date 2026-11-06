@@ -39,7 +39,17 @@ var _last_exit_from: Dictionary[Room, RoomExit] = {}
 @onready var _room_zoom: Vector2 = _camera.zoom
 
 
+## What the whole screen does as he goes: a fade in from black at each Room, the low-Health
+## vignette and the rest's flash. Only looks.
+var screen_effects: ScreenEffects
+
+
 func _ready() -> void:
+	screen_effects = ScreenEffects.new()
+	screen_effects.name = "ScreenEffects"
+	screen_effects.almos = almos
+	add_child(screen_effects)
+	room_changed.connect(func(_room: Room) -> void: screen_effects.fade_in())
 	for child in get_children():
 		for room_exit in child.find_children("*", "RoomExit", true, false):
 			room_exit.used.connect(_on_exit_used)

@@ -3,7 +3,8 @@ extends Node2D
 ## The edge of a chasm made of Drops: where the floor gives way, a crumbling earth lip, then the
 ## face of the earth falling away below it, fading through the root's dark into the deep root the
 ## chasm is filled with, with a few root ends hanging into it. Along a side where the floor runs
-## beside the chasm, a thin rim fades into it. Drawn in code on the art pixel grid, from the Drops'
+## beside the chasm, a thin rim fades into it. The root ends sway in the air rising out of it, and a
+## thin fog drifts slowly over its depths. Drawn in code on the art pixel grid, from the Drops'
 ## footprints on the 32-unit tile grid, so it follows any shape they make. Only a look.
 
 ## The node whose children are the Drops (Footprints) of the chasm.
@@ -28,12 +29,25 @@ const ROOT := Color("343459")
 const ROOT_TIP := Color("494d7e")
 
 var _cells := {}
+var _time := 0.0
+var _since_drawn := 0.0
+# How often it is drawn again for the sway and the fog, in seconds, and the fog's colour. Looks.
+const REDRAW := 0.15
+const FOG := Color(0.62, 0.58, 0.74)
 
 
 func _ready() -> void:
 	z_index = -1
 	_collect()
 	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	_time += delta
+	_since_drawn += delta
+	if _since_drawn >= REDRAW and not _cells.is_empty():
+		_since_drawn = 0.0
+		queue_redraw()
 
 
 ## Whether this tile (in the Room's tile grid) is in the chasm.
@@ -69,6 +83,25 @@ func _draw() -> void:
 			_rim(origin + Vector2(TILE - PIXEL, 0.0), -1, px)
 		if floor_above:
 			_face(cell, origin, px)
+	_fog()
+
+
+# A thin fog over the depths: soft banks, drifting slowly, drawn as a sparse dither of pale pixels in
+# 4-unit blocks, so it reads as haze and never hides what is below it.
+func _fog() -> void:
+	var block := 4.0
+	for cell: Vector2i in _cells:
+		if not in_chasm(cell + Vector2i.UP):
+			continue
+		var origin := Vector2(cell) * TILE
+		for bx in int(TILE / block):
+			for by in int(TILE / block):
+				if (bx + by + cell.x + cell.y) % 2 == 1:
+					continue
+				var at := origin + Vector2(bx, by) * block
+				var bank := sin(at.x * 0.021 + _time * 0.12) * sin(at.y * 0.05 - _time * 0.08 + at.x * 0.013)
+				if bank > 0.35:
+					draw_rect(Rect2(at, Vector2(block, block)), Color(FOG, 0.06 + 0.1 * (bank - 0.35)))
 
 
 # The face below a floor edge: its rows, with the lip's edge broken here and there, and a root end or
@@ -89,7 +122,10 @@ func _face(cell: Vector2i, origin: Vector2, px: int) -> void:
 		if seed % 11 == 3:
 			var length := 3 + seed % 5
 			for row in range(FACE.size() - 2, FACE.size() - 2 + length):
-				_pixel(origin + Vector2(column, row) * PIXEL, ROOT_TIP if row == FACE.size() - 3 + length else ROOT)
+				# Its lower end sways in the rising air, a pixel each way.
+				var down := float(row - (FACE.size() - 2)) / float(length)
+				var sway := roundf(sin(_time * 1.3 + float(seed % 17)) * down * 1.4)
+				_pixel(origin + Vector2(column + sway, row) * PIXEL, ROOT_TIP if row == FACE.size() - 3 + length else ROOT)
 
 
 # A thin rim down a side where the floor runs beside the chasm, fading inward.
