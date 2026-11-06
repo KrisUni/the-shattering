@@ -163,3 +163,14 @@ func test_dying_he_slumps_to_the_floor() -> void:
 	await wait_physics_frames(3)
 	assert_true(almos.dead, "control: he is dead")
 	assert_eq(_art(almos).animation, &"death_down", "he slumps")
+
+
+func test_holding_a_flame_he_moves_as_ever_and_a_prop_lifts_his_arms() -> void:
+	var almos = _almos_input.spawn_almos()
+	await wait_physics_frames(2)
+	var spell: Node = almos.get_node("Spell")
+	spell.set(&"_holding", true)
+	await wait_physics_frames(3)
+	assert_eq(spell.holding_flame, true, "control: he holds a flame")
+	assert_ne(_art(almos).animation, &"hold_down", "a held flame does not lift his arms over his head")
+	spell.set(&"_holding", false)

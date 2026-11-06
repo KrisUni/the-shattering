@@ -451,7 +451,7 @@ def sip_poses(view):
 
 
 def hold_poses(view):
-    """Holding a flame or a prop over his head in both hands: standing (the first frame), and walking
+    """Holding a prop over his head in both hands: standing (the first frame), and walking
     with it held up (all six)."""
     poses = []
     for p in walk_poses(view):

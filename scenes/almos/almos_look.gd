@@ -22,7 +22,8 @@ extends Node
 ## - while he Parries, `parry_<side>`: the forearm swept out across the blow while the window is
 ##   open, then drawn back;
 ## - while he Sips, `sip_<side>`, once: the Flask to his mouth, the head tipped back to drink;
-## - while he holds a flame or a prop over his head, `hold_<side>`, walking with it or standing;
+## - while he holds a prop over his head, `hold_<side>`, walking with it or standing (a held flame
+##   burns at his own place, so with one he walks and stands as ever);
 ## - when he dies, `death_<side>`, once: he buckles, drops to his knees and falls on his side (not
 ##   in a fall down a Drop, which shows itself);
 ## - out of breath and standing, `winded_<side>`: bent over, hands on his knees, his back heaving;
@@ -180,7 +181,10 @@ func update_look() -> void:
 		return
 	var moving: bool = not _almos.dead and (_almos as CharacterBody2D).velocity.length() > WALK_SPEED
 	var sprinting: bool = moving and _almos.get(&"sprinting") == true
-	if _spell != null and _spell.get(&"holding") == true and _has(StringName("hold_" + side)):
+	# A prop he lifts floats over his head, so his arms go up to it; a held flame burns at his own
+	# place, so he moves as ever with it.
+	var holding_a_prop: bool = _spell != null and _spell.get(&"holding") == true and _spell.get(&"holding_flame") != true
+	if holding_a_prop and _has(StringName("hold_" + side)):
 		_still_for = 0.0
 		_fidgeting = false
 		if moving:
