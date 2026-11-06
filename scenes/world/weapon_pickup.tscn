@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scenes/world/weapon_pickup.gd" id="1_script"]
+[ext_resource type="Script" path="res://scenes/world/glint.gd" id="90_glint"]
 
 [node name="WeaponPickup" type="Node2D" groups=["weapon_pickups"]]
 script = ExtResource("1_script")
@@ -10,3 +11,6 @@ script = ExtResource("1_script")
 [node name="Bar" type="Polygon2D" parent="Look"]
 color = Color(0.75, 0.72, 0.62, 1)
 polygon = PackedVector2Array(-14, -3, 14, -3, 14, 3, -14, 3)
+
+[node name="Glint" type="Node2D" parent="Look"]
+script = ExtResource("90_glint")

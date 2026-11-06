@@ -62,7 +62,7 @@ What the Nar and the arch tree are is in `CONTEXT.md` (**Nar**, **Arch tree**). 
 
 ### Dungeons
 
-- **Mood (the owner's polish pass):** a damp, dim root-prison. The floor is packed earth in muted mauve-browns with a few pebbles, roots and one short crack among its four tiles; the woven walls are a shade deeper, with faint veins of the tree's pale gold-green light. A cool grade over the whole Dungeons (a CanvasModulate named `Grade`) lets every flame read warm: each lit torch, lamp and Fire throws a flickering, dithered amber pool, added onto what is under it (`scenes/world/lamp_glow.gd`, under the Flame, so it goes out with it). Furniture and cell props are warm, muted wood. Each Room has a little life (`scenes/world/ambience.gd`): dust drifting in the light and the cells' window shafts, water dripping from the north walls with a splash, and pale motes rising out of the hall's chasm. Moss is kept sparse.
+- **Mood (the owner's polish pass):** a damp, dim root-prison. The floor is packed earth in muted mauve-browns with a few pebbles, roots and one short crack among its four tiles; the woven walls are a shade deeper, with faint veins of the tree's pale gold-green light. A cool grade over the whole Dungeons (a CanvasModulate named `Grade`) lets every flame read warm: each lit torch, lamp and Fire throws a flickering, dithered amber pool, added onto what is under it (`scenes/world/lamp_glow.gd`, under the Flame, so it goes out with it). Furniture and cell props are warm, muted wood. Each Room has a little life (`scenes/world/ambience.gd`): dust drifting in the light and the cells' window shafts, water dripping from the north walls with a splash, and pale motes rising out of the hall's chasm. Moss is kept sparse. The small glowing fungus on the walls and floors (`fungus_0`, `fungus_1`) swells and ebbs in brightness, slowly, each on its own beat (`scenes/world/glow_pulse.gd`).
 
 - Root and packed earth, not stone.
 - The wood is veined with the tree's glowing light.
@@ -135,7 +135,15 @@ Each sheet has these fields:
   - `attack_sword` (5 frames, 64x64, as `attack`): the same swing with the sword in his hand while he carries one, a short blade of grey iron with a crossguard, a wrapped grip and a pommel (drawn by `scripts/art/draw_almos.py`, like the jailer's). Side: drawn back over his shoulder, swung down in front. Down: raised over his head, swung down toward the viewer. Up: low at his side, swung up away from the viewer. The smear still shows the arc. A Weapon's `look` (`data/sword.tres` has `sword`) names its own swing; one with none, or with no swing drawn, plays the plain `attack`.
   - `pull` and `shove` (3 frames each, 32x48): a small gesture of the hands for a moment after a Pull or Shove is cast on an enemy or a thing (or at nothing), 18 physics frames, its middle frame from the 4th to the 12th. Shove gathers the hands to the chest, pushes the palms out and eases back; Pull reaches out, closes on it and draws the hands in. A Spell's wind-up (drawing a flame, gripping a prop) and a throw show the attack frames instead, as before.
 
-  The side frames face right and are flipped for left; a diagonal shows the side. Still owed: Block, Parry, Sip, Jump, the limp Death pose, and a weapon drawn in hand outside the sword's swing; until then the Block and Parry shapes and the death tint show over the sprite. The sword's strike box (`Sword/Look/Shape`) is transparent now that the smear shows the swing; it stays for the code and tests that measure it. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
+  - `sprint` (6 frames at 14 a second): a run, a longer stride than the walk with the feet lifted higher, the body pitched forward and bobbing, the arms pumping and the hood tail and robe streaming. Played while he Sprints.
+  - `jump` (3 frames, picked from how far through the Jump he is, `AlmosJump.progress`): a crouch to spring from (the first 18%), tucked in the air with the feet drawn up and the arms raised for balance, and a crouch to take the landing (from 82%).
+  - `hurt` (2 frames, 16 physics frames from any loss of Health, the second from the 7th): a flinch, knocked back with the head snapped back and the arms thrown up, then gathering himself. It shows over a walk or a stand, not over a swing, a cast, a gesture or a dash.
+  - `block` (1 frame, held while he Blocks): weight down, both forearms up before him.
+  - `fidget` (8 frames at 6 a second, once): after he has stood still for 5 to 8 seconds he glances one way and the other, tugs his hood straight and settles with a blink, then stands idle again and the wait starts over. Not while he is held still (the opening) or dead.
+
+  Dust (`scenes/world/dust_puff.gd`, a `DustPuff` left in his parent, drawn in code on the art pixel grid in the floor's own earth, its motes bursting out, rising a little and fading in 0.4 s) kicks up from his feet: behind him on each foot strike of a Sprint and as he sets off into one, ahead of him as he pulls up from one, a small puff as he springs into a Jump and a ring of it as he lands. Landing also dips his figure (`Art`, not his `Look`) two art pixels down into the crouch, coming back up over 6 physics frames. Walking kicks up none.
+
+  The side frames face right and are flipped for left; a diagonal shows the side. Still owed: Parry, Sip, the limp Death pose, and a weapon drawn in hand outside the sword's swing; until then the Parry shape, the Block shape over his `block` pose, and the death tint show over the sprite. The sword's strike box (`Sword/Look/Shape`) is transparent now that the smear shows the swing; it stays for the code and tests that measure it. The torches hung on him (`CarriedTorch`, `HeldFlame`) show only their flame. Pointed ears are left off, since whether the Nar have them is not decided.
 - **Status:** in the game (fifth draft, the first in free colour; the owner checks the look in the editor)
 
 #### Nar jailer
@@ -235,7 +243,7 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Source pack and files:** Drawn for this game (no pack) by `scripts/art/draw_fire.py` (`campfire`), into `assets/shared/checkpoint/campfire_0-11.png`: a campfire seen from above, a ring of grey stones round a bed of ash, two logs crossed over it and a third across the front, embers glowing and fading among them, and a low flame drawn as the torch and Fire flames are, with a wisp of smoke. The near logs and stones are drawn over the flame's foot. An `AnimatedSprite2D` named `Art` in its `Look` plays it (`burn`), its bed on the Checkpoint's position (offset -18); a lamp glow (`scenes/world/lamp_glow.gd`) hangs under it as an amber pool, only a look. The placeholder sapling's polygons are hidden, not deleted.
 - **Size in art px:** 48x56 (12 frames).
 - **Palette notes and accents used:** Stones in cool greys, logs in warm root browns, the flame in hard bands from a deep amber rim through Fire amber and sand to a cream core, smoke in muted violets.
-- **Animations and poses needed:** One looping burn (12 frames, 10 a second). It still flashes white when Almos rests.
+- **Animations and poses needed:** One looping burn (12 frames, 10 a second). Embers rise off it (`scenes/world/ember_sparks.gd`, `Sparks` under its `Art`): a few single-pixel sparks at a time lift from the flames, drift up and sideways and cool from cream through sand and Fire amber to a dull brown before they go out. It still flashes white when Almos rests.
 - **Status:** in the game (first draft; the owner checks the look in the editor)
 
 #### Fungus
@@ -316,11 +324,11 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 #### Weapon pickup
 
 - **Thing:** Weapon, lying in a Room
-- **Source pack and files:**
+- **Source pack and files:** A placeholder bar, or the pickup's own `art` where it has one (`sword_floor.png`, `greatsword_floor.png`).
 - **Size in art px:**
 - **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Animations and poses needed:** A glint (`scenes/world/glint.gd`, `Look/Glint`) catches the eye on it: every 2.6 s a small four-pointed sparkle in cream and sand flares at a spot on it and fades in 0.45 s, each pickup on its own beat, so it reads apart from the floor dressing.
+- **Status:** not chosen (the glint is in the game)
 
 #### Armour pickup
 
@@ -337,8 +345,8 @@ Creatures have no shared rule. Each one's look is decided when its assets arrive
 - **Source pack and files:**
 - **Size in art px:**
 - **Palette notes and accents used:**
-- **Animations and poses needed:**
-- **Status:** not chosen
+- **Animations and poses needed:** The same glint as a Weapon pickup (`Look/Glint`).
+- **Status:** not chosen (the glint is in the game)
 
 #### Jailer's key
 
